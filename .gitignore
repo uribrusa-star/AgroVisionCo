@@ -1,0 +1,35 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.pnp.cjs
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+/build/
+
+# Production
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Misc
+.DS_Store
+*.pem
+
+# PWA files
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+public/swe-worker-*.js
+public/sw.js.map
+public/workbox-*.js.map
+public/worker-*.js.map
+public/swe-worker-*.js.map
