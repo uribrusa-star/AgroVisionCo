@@ -1,12 +1,8 @@
-
 'use client';
 
-import React, { useContext, useMemo, useState, useTransition, useRef } from 'react';
-import Image from 'next/image';
+import React, { useContext, useMemo, useState, useTransition } from 'react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
-import html2canvas from 'html2canvas';
-
+import autoTable from 'jspdf-autotable'; // Importación directa corregida
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,15 +10,26 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Calendar, HardHat, Info, Trash2, FileDown } from 'lucide-react';
+import { Calendar, FileDown, Info, Trash2 } from 'lucide-react';
 import type { PackagingLog } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
-// Extend jsPDF with autoTable
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: any) => jsPDF;
-  lastAutoTable: { finalY: number };
-}
+// Función para convertir el logo a Base64 de forma segura
+const getBase64ImageFromUrl = async (url: string): Promise<string> => {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return '';
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    return '';
+  }
+};
 
 function PackagingHistoryComponent() {
   const { loading, packagingLogs, deletePackagingLog, currentUser, establishmentData } = useContext(AppDataContext);
@@ -30,23 +37,19 @@ function PackagingHistoryComponent() {
   const [isPending, startTransition] = useTransition();
   const [isPdfPending, startPdfTransition] = useTransition();
   const { toast } = useToast();
-  const logoRef = useRef<HTMLDivElement>(null);
 
   const canManage = currentUser?.role === 'Productor' || currentUser?.role === 'Encargado';
 
   const sortedLogs = useMemo(() =>
-    [...(packagingLogs || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [...(packagingLogs || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     [packagingLogs]
   );
-  
+
   const handleDelete = (logId: string) => {
     startTransition(async () => {
-        await deletePackagingLog(logId);
-        toast({
-            title: "Registro Eliminado",
-            description: "El registro de embalaje ha sido eliminado.",
-        });
-        setSelectedLog(null);
+      await deletePackagingLog(logId);
+      toast({ title: "Registro Eliminado", description: "El registro ha sido eliminado." });
+      setSelectedLog(null);
     });
   }
 
@@ -56,203 +59,130 @@ function PackagingHistoryComponent() {
     startPdfTransition(async () => {
       toast({ title: 'Generando Recibo', description: 'Por favor espere...' });
       try {
-        const doc = new jsPDF() as jsPDFWithAutoTable;
-        let logoPngDataUri = '';
-
-        if (logoRef.current) {
-          const canvas = await html2canvas(logoRef.current, { backgroundColor: null });
-          logoPngDataUri = canvas.toDataURL('image/png');
+        const doc = new jsPDF();
+        
+        // Carga del Logo
+        const logoBase64 = await getBase64ImageFromUrl('/logo.png');
+        if (logoBase64) {
+          doc.addImage(logoBase64, 'PNG', 15, 12, 18, 18);
         }
 
-        if (logoPngDataUri) {
-          doc.addImage(logoPngDataUri, 'PNG', 15, 12, 15, 15);
-        }
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(16);
+        // Cabecera
+        doc.setFont('helvetica', 'bold').setFontSize(16);
         doc.text(establishmentData.producer, 40, 22);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        doc.setTextColor(150);
+        doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(150);
         doc.text(`${establishmentData.location.locality}, ${establishmentData.location.province}`, 40, 28);
         
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22).setFont('helvetica', 'bold').setTextColor(0);
         doc.text('RECIBO DE PAGO POR EMBALAJE', 105, 50, { align: 'center' });
 
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(80);
+        doc.setFontSize(11).setFont('helvetica', 'normal').setTextColor(80);
         doc.text(`Fecha: ${new Date(selectedLog.date).toLocaleDateString('es-AR')}`, 195, 60, { align: 'right' });
 
         const bodyY = 80;
-        doc.setFontSize(12);
+        doc.setFontSize(12).setTextColor(0);
         doc.text(`Por medio del presente, se deja constancia de que ${selectedLog.packerName} ha recibido el pago por los servicios de embalaje detallados a continuación:`, 15, bodyY, { maxWidth: 180 });
 
         const tableBody = [
-            ['Kilos Embalados', `${selectedLog.kilogramsPackaged.toLocaleString('es-AR')} kg`],
-            ['Horas Trabajadas', `${selectedLog.hoursWorked.toLocaleString('es-AR')} hs`],
-            ['Costo por Hora', `$${selectedLog.costPerHour.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`],
-            ['Total Pagado', `$${selectedLog.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
+          ['Kilos Embalados', `${selectedLog.kilogramsPackaged.toLocaleString('es-AR')} kg`],
+          ['Horas Trabajadas', `${selectedLog.hoursWorked.toLocaleString('es-AR')} hs`],
+          ['Costo por Hora', `$${selectedLog.costPerHour.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`],
+          ['Total Pagado', `$${selectedLog.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
         ];
         
-        doc.autoTable({
-            startY: bodyY + 25,
-            body: tableBody,
-            theme: 'grid',
-            headStyles: { fillColor: [38, 70, 83] },
-            styles: { fontSize: 12, cellPadding: 3 },
-            columnStyles: { 0: { fontStyle: 'bold', fillColor: '#f8f9fa' } }
+        // SOLUCIÓN AL ERROR CRÍTICO: Usar autoTable como función independiente
+        autoTable(doc, {
+          startY: bodyY + 25,
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [38, 70, 83] },
+          styles: { fontSize: 12, cellPadding: 3 },
+          columnStyles: { 0: { fontStyle: 'bold', fillColor: '#f8f9fa' } }
         });
 
-        const finalY = (doc as any).lastAutoTable.finalY || 150;
-        doc.setFontSize(11);
-        doc.text('Firma del Embalador: _________________________', 15, finalY + 30);
+        // @ts-ignore - Obtener la posición final de la tabla
+        const finalY = doc.lastAutoTable?.finalY || 150;
+
+        doc.setFontSize(11).text('Firma del Embalador: _________________________', 15, finalY + 30);
         doc.text(`Aclaración: ${selectedLog.packerName}`, 15, finalY + 40);
 
-        doc.setFontSize(9);
-        doc.setTextColor(150);
+        doc.setFontSize(9).setTextColor(150);
         doc.text('Este es un comprobante no válido como factura.', 105, 280, { align: 'center' });
 
-        doc.save(`Recibo_Embalaje_${selectedLog.packerName.replace(' ', '_')}_${new Date(selectedLog.date).toLocaleDateString('sv-SE')}.pdf`);
+        doc.save(`Recibo_Embalaje_${selectedLog.packerName.replace(/\s+/g, '_')}.pdf`);
         toast({ title: '¡Recibo Generado!', description: 'El archivo PDF se ha descargado exitosamente.' });
       
       } catch (error) {
         console.error("PDF generation error:", error);
-        toast({ title: 'Error', description: 'No se pudo generar el recibo en PDF.', variant: 'destructive'});
+        toast({ title: 'Error', description: 'No se pudo generar el recibo.', variant: 'destructive' });
       }
     });
   }
 
   return (
     <>
-       {/* Hidden Logo for PDF generation */}
-       <div style={{ position: 'fixed', opacity: 0, zIndex: -100, left: 0, top: 0, width: 'auto', height: 'auto' }} aria-hidden="true">
-          <div ref={logoRef} style={{width: '96px', height: '96px'}}>
-              <Image src="/logo.png" alt="AgroVision Logo" width={96} height={96} />
-          </div>
-       </div>
-       
       <Card>
         <CardHeader>
           <CardTitle>Historial de Embalaje</CardTitle>
-          <CardDescription>Un registro de los últimos trabajos de embalaje. Haga clic para ver detalles.</CardDescription>
+          <CardDescription>Registro de trabajos realizados. Haz clic para ver detalles.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="max-h-[400px] overflow-auto">
-            <div className="relative w-full overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Embalador</TableHead>
-                    <TableHead className="text-right">Kilos</TableHead>
-                    <TableHead className="text-right">Costo</TableHead>
+          <div className="max-h-[400px] overflow-auto border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Embalador</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow><TableCell colSpan={3}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                ) : sortedLogs.map(log => (
+                  <TableRow key={log.id} onClick={() => setSelectedLog(log)} className="cursor-pointer hover:bg-muted/50 transition-colors">
+                    <TableCell>{new Date(log.date).toLocaleDateString('es-ES')}</TableCell>
+                    <TableCell className="font-medium">{log.packerName}</TableCell>
+                    <TableCell className="text-right font-bold">${log.payment.toLocaleString('es-AR')}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading && (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                          <Skeleton className="h-8 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && sortedLogs.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">No hay registros de embalaje.</TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && sortedLogs.map(log => (
-                    <TableRow key={log.id} onClick={() => setSelectedLog(log)} className="cursor-pointer">
-                      <TableCell>{new Date(log.date).toLocaleDateString('es-ES')}</TableCell>
-                      <TableCell className="font-medium">{log.packerName}</TableCell>
-                      <TableCell className="text-right">{log.kilogramsPackaged.toLocaleString('es-ES')} kg</TableCell>
-                      <TableCell className="text-right font-bold">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
-       <Dialog open={!!selectedLog} onOpenChange={(isOpen) => !isOpen && setSelectedLog(null)}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={!!selectedLog} onOpenChange={(isOpen) => !isOpen && setSelectedLog(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md rounded-lg">
           {selectedLog && (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Info className="h-5 w-5" />
-                   Detalles del Registro de Embalaje
-                </DialogTitle>
-                 <DialogDescription>
-                    Revisión del registro de embalaje y pago.
-                </DialogDescription>
+                <DialogTitle className="flex items-center gap-2"><Info className="h-5 w-5 text-primary" /> Detalles</DialogTitle>
+                <DialogDescription>Revisión del registro y generación de comprobante.</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4 max-h-[80vh] overflow-y-auto pr-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(selectedLog.date).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</span>
-                  </div>
-                  <Card>
-                      <CardContent className="p-4 space-y-4">
-                           <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Embalador</span>
-                              <span className="font-semibold">{selectedLog.packerName}</span>
-                           </div>
-                            <hr />
-                           <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Kilos Embalados</span>
-                              <span className="font-semibold">{selectedLog.kilogramsPackaged.toLocaleString('es-ES')} kg</span>
-                           </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Horas Trabajadas</span>
-                              <span className="font-semibold">{selectedLog.hoursWorked.toLocaleString('es-ES')} hs</span>
-                           </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Costo por Hora</span>
-                              <span className="font-semibold">${selectedLog.costPerHour.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
-                           </div>
-                           <hr />
-                           <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-muted-foreground">Pago Total Calculado</span>
-                              <span className="font-bold text-lg text-primary">${selectedLog.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
-                           </div>
-                      </CardContent>
-                  </Card>
+              <div className="space-y-4 py-2">
+                <Card className="shadow-none border-muted">
+                  <CardContent className="p-4 space-y-3 text-sm">
+                    <div className="flex justify-between"><span>Embalador</span><span className="font-semibold">{selectedLog.packerName}</span></div>
+                    <div className="flex justify-between"><span>Kilos</span><span>{selectedLog.kilogramsPackaged} kg</span></div>
+                    <div className="flex justify-between"><span>Horas</span><span>{selectedLog.hoursWorked} hs</span></div>
+                    <hr />
+                    <div className="flex justify-between items-center"><span className="font-bold">Total Pago</span><span className="text-lg font-bold text-primary">${selectedLog.payment.toLocaleString('es-AR')}</span></div>
+                  </CardContent>
+                </Card>
               </div>
-
-               <DialogFooter className="flex-row justify-between w-full pt-2">
-                  <div className="flex gap-2">
-                    {canManage && (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="icon" disabled={isPending}>
-                                    <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Eliminar</span>
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Esta acción no se puede deshacer. Esto eliminará permanentemente el registro de embalaje y reajustará las estadísticas del embalador.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(selectedLog.id)}>Continuar y Eliminar</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    )}
-                    <Button variant="outline" onClick={handleGenerateReceipt} disabled={isPdfPending || !canManage}>
-                        <FileDown className="h-4 w-4 mr-2" />
-                        {isPdfPending ? "Generando..." : "Generar Recibo"}
+              <DialogFooter className="flex flex-col gap-2 pt-2">
+                <Button variant="outline" onClick={handleGenerateReceipt} disabled={isPdfPending} className="w-full">
+                  <FileDown className="h-4 w-4 mr-2" /> {isPdfPending ? "Generando..." : "Descargar PDF"}
+                </Button>
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <Button variant="secondary" onClick={() => setSelectedLog(null)}>Cerrar</Button>
+                  {canManage && (
+                    <Button variant="destructive" onClick={() => handleDelete(selectedLog.id)} disabled={isPending}>
+                      <Trash2 className="h-4 w-4 mr-2" /> Eliminar
                     </Button>
-                  </div>
-                  <Button onClick={() => setSelectedLog(null)} variant="secondary">Cerrar</Button>
+                  )}
+                </div>
               </DialogFooter>
             </>
           )}
