@@ -31,8 +31,8 @@ const LogSchema = z.object({
     required_error: "El estado de desarrollo es requerido.",
   }),
   batchId: z.string().optional(),
-  flowerCount: z.coerce.number().optional(),
-  fruitCount: z.coerce.number().optional(),
+  flowerCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().optional()),
+  fruitCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().optional()),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
   images: z.array(z.object({
     url: z.string().url("Debe ser una URL de imagen válida.").or(z.literal('')),
@@ -55,8 +55,8 @@ export function PhenologyLogForm() {
       date: new Date(),
       developmentState: undefined,
       batchId: 'general',
-      flowerCount: 0,
-      fruitCount: 0,
+      flowerCount: undefined,
+      fruitCount: undefined,
       notes: '',
       images: [{ url: '' }],
     },
@@ -92,8 +92,8 @@ export function PhenologyLogForm() {
         date: new Date(),
         developmentState: undefined,
         batchId: 'general',
-        flowerCount: 0,
-        fruitCount: 0,
+        flowerCount: undefined,
+        fruitCount: undefined,
         notes: '',
         images: [{ url: '' }],
       });
@@ -212,9 +212,16 @@ export function PhenologyLogForm() {
                     name="flowerCount"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Nº Flores (aprox.)</FormLabel>
+                        <FormLabel>Nº Flores (aprox.) - Opcional</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="ej., 5" {...field} disabled={!canManage || isPending} />
+                        <Input 
+                          type="number" 
+                          placeholder="Dejar vacío si no aplica" 
+                          {...field} 
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
+                          disabled={!canManage || isPending} 
+                        />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -225,9 +232,16 @@ export function PhenologyLogForm() {
                     name="fruitCount"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Nº Frutos (aprox.)</FormLabel>
+                        <FormLabel>Nº Frutos (aprox.) - Opcional</FormLabel>
                         <FormControl>
-                        <Input type="number" placeholder="ej., 3" {...field} disabled={!canManage || isPending} />
+                        <Input 
+                          type="number" 
+                          placeholder="Dejar vacío si no aplica" 
+                          {...field} 
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(e.target.value === '' ? undefined : e.target.value)}
+                          disabled={!canManage || isPending} 
+                        />
                         </FormControl>
                         <FormMessage />
                     </FormItem>

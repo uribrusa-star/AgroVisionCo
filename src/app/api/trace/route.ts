@@ -25,15 +25,15 @@ export async function GET(request: Request) {
 
     const batchId = harvest.batchNumber;
 
-    // Fetch last 5 agronomist logs for this batch
-    const agronomistLogsRef = collection(db, 'agronomistLogs');
+    // Fetch last 5 phenology logs for this batch
+    const phenologyLogsRef = collection(db, 'phenologyLogs');
     const logsQuery = query(
-      agronomistLogsRef,
+      phenologyLogsRef,
       where('batchId', '==', batchId),
       limit(5)
     );
     const logsSnapshot = await getDocs(logsQuery);
-    const agronomistLogs = logsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const phenologyLogs = logsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     // For this prototype, we'll return a subset of data.
     // In a real app, you might want to fetch establishment data too.
@@ -41,11 +41,13 @@ export async function GET(request: Request) {
       harvestDate: harvest.date,
       batchId: harvest.batchNumber,
       collectorName: harvest.collector.name,
-      agronomistLogs: agronomistLogs.map(log => ({
+      phenologyLogs: phenologyLogs.map(log => ({
           date: log.date,
-          type: log.type,
-          product: log.product,
-          notes: log.notes
+          developmentState: log.developmentState,
+          flowerCount: log.flowerCount,
+          fruitCount: log.fruitCount,
+          notes: log.notes,
+          images: log.images
       })),
     };
 

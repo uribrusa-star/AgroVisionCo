@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Calendar, Sprout, User, CheckCircle, Info, Truck, Package, Leaf, TestTube2, Droplet, AlertCircle, Home } from 'lucide-react';
+import { Calendar, Sprout, User, CheckCircle, Info, Truck, Package, Leaf, TestTube2, Droplet, AlertCircle, Home, Flower, Grape, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -14,22 +14,23 @@ type TraceabilityData = {
     harvestDate: string;
     batchId: string;
     collectorName: string;
-    agronomistLogs: {
+    phenologyLogs: {
         date: string;
-        type: string;
-        product?: string;
+        developmentState: string;
+        flowerCount?: number;
+        fruitCount?: number;
         notes: string;
+        images?: { url: string; hint?: string }[];
     }[];
 }
 
-const logIcons: { [key: string]: React.ElementType } = {
-    'Fertilización': TestTube2,
-    'Fumigación': Leaf,
-    'Riego': Droplet,
-    'Sanidad': Leaf,
-    'Labor Cultural': Sprout,
-    'Condiciones Ambientales': Info,
-    'Control': CheckCircle,
+const phenologyIcons: { [key: string]: React.ElementType } = {
+    'Floración': Flower,
+    'Fructificación': Grape,
+    'Maduración': Sun,
+    'Desarrollo foliar': Leaf,
+    'Fase de fruto verde': Sprout,
+    'Cambio de color (Vire)': Sun,
 };
 
 export default function TracePage() {
@@ -195,32 +196,64 @@ export default function TracePage() {
                     </CardContent>
                 </Card>
                 
-                 {data.agronomistLogs.length > 0 && (
+                 {data.phenologyLogs && data.phenologyLogs.length > 0 && (
                     <Card className="shadow-lg">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-2xl text-primary">
-                                <Leaf /> Historial Agronómico Reciente del Lote
+                                <Leaf /> Historial de Fenología del Lote
                             </CardTitle>
                              <CardDescription>
-                                Un vistazo a las últimas actividades de cuidado aplicadas al lote de origen.
+                                Evolución del estado de desarrollo del cultivo en el lote de origen.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ul className="space-y-4">
-                                {data.agronomistLogs.map((log, index) => {
-                                    const Icon = logIcons[log.type] || Info;
+                                {data.phenologyLogs.map((log, index) => {
+                                    const Icon = phenologyIcons[log.developmentState] || Info;
+                                    const firstImage = log.images && log.images.length > 0 ? log.images[0].url : null;
+                                    
                                     return (
-                                        <li key={index} className="flex items-start gap-4 p-3 bg-gray-50/50 rounded-md">
-                                            <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600">
-                                                <Icon className="h-5 w-5" />
+                                        <li key={index} className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gray-50/50 rounded-lg border border-gray-100">
+                                            <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm text-primary">
+                                                <Icon className="h-6 w-6" />
                                             </div>
-                                            <div>
-                                                <p className="font-semibold">{log.type}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    {log.product && <span className="font-medium">{log.product}: </span>}
+                                            <div className="flex-grow space-y-2">
+                                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                                    <p className="font-bold text-lg text-primary">{log.developmentState}</p>
+                                                    <p className="text-xs text-gray-400">{new Date(log.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                                </div>
+                                                
+                                                <p className="text-sm text-gray-600 leading-relaxed">
                                                     {log.notes}
                                                 </p>
-                                                <p className="text-xs text-gray-400 mt-1">{new Date(log.date).toLocaleDateString('es-ES')}</p>
+                                                
+                                                {(log.flowerCount && log.flowerCount > 0) || (log.fruitCount && log.fruitCount > 0) ? (
+                                                    <div className="flex flex-wrap gap-2 pt-1">
+                                                        {log.flowerCount && log.flowerCount > 0 ? (
+                                                            <span className="inline-flex items-center gap-1 text-xs font-medium bg-orange-50 text-orange-700 px-2.5 py-1 rounded-full border border-orange-100">
+                                                                <Flower className="h-3 w-3" />
+                                                                {log.flowerCount} Flores
+                                                            </span>
+                                                        ) : null}
+                                                        {log.fruitCount && log.fruitCount > 0 ? (
+                                                            <span className="inline-flex items-center gap-1 text-xs font-medium bg-red-50 text-red-700 px-2.5 py-1 rounded-full border border-red-100">
+                                                                <Grape className="h-3 w-3" />
+                                                                {log.fruitCount} Frutos
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+                                                ) : null}
+
+                                                {firstImage && (
+                                                    <div className="mt-3 relative w-full aspect-video rounded-xl overflow-hidden border shadow-sm">
+                                                        <Image 
+                                                            src={firstImage} 
+                                                            alt={`Imagen de ${log.developmentState}`} 
+                                                            fill 
+                                                            className="object-cover hover:scale-105 transition-transform duration-500"
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </li>
                                     );
