@@ -2,9 +2,11 @@
 'use client';
 
 import React, { useContext, useState } from 'react';
-import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow, Circle } from '@react-google-maps/api';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import { Leaf, Notebook, Weight } from 'lucide-react';
+import { Leaf, Notebook, Weight, AlertTriangle, Activity, Thermometer, FlaskConical } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 type MapProps = {
     center: {
@@ -21,6 +23,14 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
     
     const { harvests, agronomistLogs, phenologyLogs } = useContext(AppDataContext);
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
+
+    const getHotspotColor = (type: string) => {
+        if (type.includes('Plaga')) return "#EF4444"; // Red
+        if (type.includes('Enfermedad')) return "#F97316"; // Orange
+        if (type.includes('Deficiencia')) return "#EAB308"; // Yellow
+        if (type.includes('Exceso')) return "#A855F7"; // Purple
+        return "#3B82F6"; // Blue default
+    };
 
     const renderPolygons = () => {
         if (!geoJsonData || !geoJsonData.features) return null;
@@ -43,7 +53,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                         paths={paths}
                         options={{
                             fillColor: "#4A90E2",
-                            fillOpacity: 0.35,
+                            fillOpacity: 0.15,
                             strokeColor: "#4A90E2",
                             strokeOpacity: 0.8,
                             strokeWeight: 2,
@@ -53,9 +63,80 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 );
             });
     };
+
+    const renderHealthHotspots = () => {
+        return agronomistLogs
+            .filter(log => log.type === 'Sanidad' && log.latitude && log.longitude)
+            .map((log, index) => {
+                const color = getHotspotColor(log.product || '');
+                return (
+                    <Circle
+                        key={`hotspot-${log.id || index}`}
+                        center={{ lat: log.latitude!, lng: log.longitude! }}
+                        radius={4}
+                        options={{
+                            fillColor: color,
+                            fillOpacity: 0.6,
+                            strokeColor: color,
+                            strokeOpacity: 1,
+                            strokeWeight: 2,
+                        }}
+                        onClick={() => setActiveInfoWindow(`hotspot-${log.id || index}`)}
+                    />
+                );
+            });
+    };
     
     const renderInfoWindows = () => {
-        if (!activeInfoWindow || !geoJsonData || !geoJsonData.features) return null;
+        if (!activeInfoWindow) return null;
+
+        // Case 1: Hotspot InfoWindow
+        if (activeInfoWindow.startsWith('hotspot-')) {
+            const logId = activeInfoWindow.replace('hotspot-', '');
+            const log = agronomistLogs.find(l => (l.id === logId) || (`${agronomistLogs.indexOf(l)}` === logId));
+            
+            if (!log || !log.latitude || !log.longitude) return null;
+
+            return (
+                <InfoWindow
+                    position={{ lat: log.latitude, lng: log.longitude }}
+                    onCloseClick={() => setActiveInfoWindow(null)}
+                >
+                    <div className="p-2 max-w-[240px] text-foreground">
+                        <div className="flex items-center gap-2 mb-2">
+                             <div className="p-1 rounded bg-destructive/10 text-destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                             </div>
+                             <h4 className="font-bold text-sm">Alerta Sanitaria</h4>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="font-bold text-xs uppercase text-muted-foreground">Observación</p>
+                            <p className="text-sm font-semibold">{log.product}</p>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Fecha</p>
+                                    <p className="text-xs">{format(new Date(log.date), "dd/MM/yyyy")}</p>
+                                </div>
+                                {log.batchId && (
+                                    <div>
+                                        <p className="text-[10px] uppercase text-muted-foreground font-bold">Lote</p>
+                                        <p className="text-xs">{log.batchId}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <p className="text-xs bg-muted p-2 rounded italic">
+                                "{log.notes}"
+                            </p>
+                        </div>
+                    </div>
+                </InfoWindow>
+            );
+        }
+
+        // Case 2: Lot (Polygon) InfoWindow
+        if (!geoJsonData || !geoJsonData.features) return null;
 
         const activeFeature = geoJsonData.features.find((feature: any) => {
              const properties = feature.properties || {};
@@ -170,6 +251,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
             {renderPolygons()}
             {renderInfoWindows()}
             {renderMarkers()}
+            {renderHealthHotspots()}
         </GoogleMap>
     );
 };

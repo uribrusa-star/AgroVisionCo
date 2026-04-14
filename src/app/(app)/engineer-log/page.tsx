@@ -19,6 +19,8 @@ import { ActivityOmissionLogForm } from './activity-omission-log-form';
 import { Supplies } from './supplies';
 import { ApplicationRecommendation } from './application-recommendation';
 import { AgronomistReportGenerator } from './agronomist-report-generator';
+import { RecommendedActionsPanel } from './recommended-actions-panel';
+import { PhenologyEvolutionChart } from './phenology-evolution-chart';
 
 
 export default function EngineerLogPage() {
@@ -82,6 +84,8 @@ export default function EngineerLogPage() {
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Columna Izquierda: Visualización y Análisis */}
         <div className="space-y-8">
+            <PhenologyEvolutionChart />
+            {canManageApplications && <RecommendedActionsPanel />}
             {canManageApplications && <ApplicationRecommendation />}
             {canManageApplications && <AgronomistReportGenerator />}
             <PhenologyHistory />
@@ -102,7 +106,7 @@ export default function EngineerLogPage() {
             </>
           )}
           {!canManageApplications && (
-             <Card>
+            <Card>
                 <CardHeader>
                     <CardTitle>Acceso de solo lectura</CardTitle>
                 </CardHeader>

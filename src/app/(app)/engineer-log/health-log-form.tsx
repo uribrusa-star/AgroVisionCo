@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2, MapPin, Navigation } from 'lucide-react';
 import type { ImageWithHint } from '@/lib/types';
 
 const LogSchema = z.object({
@@ -34,6 +34,8 @@ const LogSchema = z.object({
   product: z.string().min(1, "El agente o nutriente observado es requerido."),
   severity: z.string().min(3, "La incidencia o severidad es requerida."),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
+  latitude: z.coerce.number().optional().or(z.literal('')),
+  longitude: z.coerce.number().optional().or(z.literal('')),
   images: z.array(z.object({
     url: z.string().url("Debe ser una URL de imagen válida.").or(z.literal('')),
   })).optional(),
@@ -45,6 +47,7 @@ export function HealthLogForm() {
   const { addAgronomistLog, currentUser, batches } = React.useContext(AppDataContext);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [isCapturingGps, setIsCapturingGps] = useState(false);
   
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo' || currentUser.role === 'Encargado';
@@ -58,6 +61,8 @@ export function HealthLogForm() {
       product: '',
       severity: '',
       notes: '',
+      latitude: '',
+      longitude: '',
       images: [{ url: '' }],
     },
   });
@@ -66,6 +71,40 @@ export function HealthLogForm() {
     control: form.control,
     name: "images"
   });
+
+  const handleCaptureGps = () => {
+    if (!navigator.geolocation) {
+        toast({
+            title: "No compatible",
+            description: "Su navegador no soporta geolocalización.",
+            variant: "destructive"
+        });
+        return;
+    }
+
+    setIsCapturingGps(true);
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            form.setValue('latitude', position.coords.latitude);
+            form.setValue('longitude', position.coords.longitude);
+            setIsCapturingGps(false);
+            toast({
+                title: "Ubicación capturada",
+                description: "Se han cargado las coordenadas actuales."
+            });
+        },
+        (error) => {
+            console.error(error);
+            setIsCapturingGps(false);
+            toast({
+                title: "Error de GPS",
+                description: "No se pudo obtener la ubicación. Verifique los permisos.",
+                variant: "destructive"
+            });
+        },
+        { enableHighAccuracy: true }
+    );
+  };
 
   const onSubmit = (data: LogFormValues) => {
     startTransition(() => {
@@ -80,6 +119,8 @@ export function HealthLogForm() {
         product: `${data.observationType}: ${data.product}`,
         notes: `Incidencia: ${data.severity}. Observaciones: ${data.notes}`,
         images: imagesWithHints,
+        latitude: data.latitude ? Number(data.latitude) : undefined,
+        longitude: data.longitude ? Number(data.longitude) : undefined,
       });
 
       toast({
@@ -94,6 +135,8 @@ export function HealthLogForm() {
         product: '',
         severity: '',
         notes: '',
+        latitude: '',
+        longitude: '',
         images: [{ url: '' }],
       });
     });
@@ -103,7 +146,7 @@ export function HealthLogForm() {
     <Card>
       <CardHeader>
         <CardTitle>Registrar Sanidad y Monitoreo</CardTitle>
-        <CardDescription>Observe plagas, enfermedades, deficiencias o excesos nutricionales.</CardDescription>
+        <CardDescription>Observe plagas, enfermedades, deficiencias o excesos nutricionales y asocie coordenadas.</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -228,6 +271,53 @@ export function HealthLogForm() {
                 )}
               />
             </div>
+
+            {/* Nueva sección de Georeferenciación */}
+            <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+                <div className="flex items-center justify-between">
+                    <FormLabel className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Ubicación Geográfica (Hotspot)</FormLabel>
+                    <Button 
+                        type="button" 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleCaptureGps}
+                        disabled={!canManage || isPending || isCapturingGps}
+                        className="h-8"
+                    >
+                        <Navigation className={cn("mr-2 h-3 w-3", isCapturingGps && "animate-pulse")} />
+                        {isCapturingGps ? 'Capturando...' : 'Capturar GPS'}
+                    </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                        control={form.control}
+                        name="latitude"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] uppercase font-bold text-muted-foreground">Latitud</FormLabel>
+                                <FormControl>
+                                    <Input type="number" step="any" placeholder="-31.9..." {...field} disabled={!canManage || isPending} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="longitude"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[10px] uppercase font-bold text-muted-foreground">Longitud</FormLabel>
+                                <FormControl>
+                                    <Input type="number" step="any" placeholder="-60.9..." {...field} disabled={!canManage || isPending} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+
             <FormField
               control={form.control}
               name="notes"
@@ -236,7 +326,7 @@ export function HealthLogForm() {
                   <FormLabel>Notas Adicionales</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describa la ubicación, síntomas, condiciones, etc."
+                      placeholder="Describa síntomas, condiciones ambientales, etc."
                       className="resize-none"
                       {...field}
                       disabled={!canManage || isPending}

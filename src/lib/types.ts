@@ -88,6 +88,8 @@ export type AgronomistLog = {
     images?: ImageWithHint[];
     diagnosis?: string;
     probability?: number;
+    latitude?: number;
+    longitude?: number;
 }
 
 export type PhenologyLog = {
