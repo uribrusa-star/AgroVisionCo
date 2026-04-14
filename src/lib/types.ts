@@ -204,6 +204,7 @@ export type Task = {
     status: TaskStatus;
     priority: TaskPriority;
     materials?: { supplyId: string, name: string, quantity: number }[];
+    batchId?: string;
     createdAt: string;
     dueDate?: string;
 };
