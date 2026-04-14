@@ -57,6 +57,7 @@ export const AppDataContext = React.createContext<AppData>({
   addCulturalPracticeLog: () => { throw new Error('Not implemented') },
   deleteCulturalPracticeLog: async () => { throw new Error('Not implemented') },
   addBatch: () => { throw new Error('Not implemented') },
+  editBatch: async () => { throw new Error('Not implemented') },
   deleteBatch: () => { throw new Error('Not implemented') },
   addCollectorPaymentLog: () => { throw new Error('Not implemented') },
   deleteCollectorPaymentLog: async () => { throw new Error('Not implemented') },
@@ -147,6 +148,24 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const fetchAllData = useCallback(async () => {
       if (!isClient) return;
       setLoading(true);
+
+      // Timeout de seguridad: Si después de 12 segundos no han cargado los datos, forzamos el fin de 'loading'
+      // para evitar que el usuario se quede atrapado en la pantalla de carga (común en iOS/Safari móvil).
+      const timeoutId = setTimeout(() => {
+        setLoading(currentLoading => {
+          if (currentLoading) {
+            console.warn("Fetch timeout reached. Forcing loading to false.");
+            toast({
+              title: "Carga demorada",
+              description: "Estamos teniendo problemas para conectar. Mostrando datos disponibles.",
+              variant: "default",
+            });
+            return false;
+          }
+          return currentLoading;
+        });
+      }, 12000);
+
       try {
         const usersCollectionRef = collection(db, 'users');
         const usersSnapshot = await getDocs(usersCollectionRef);
@@ -162,6 +181,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             } else {
               setUsers(usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[]);
             }
+
+            // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores)
+            const safeFetch = async <T,>(promise: Promise<T>, defaultValue: T): Promise<T> => {
+                try {
+                    return await promise;
+                } catch (e) {
+                    console.error("Error fetching specific collection:", e);
+                    return defaultValue;
+                }
+            };
 
             const [
               establishmentDocSnap,
@@ -181,30 +210,34 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               producerLogsSnapshot,
               transactionsSnapshot,
             ] = await Promise.all([
-              getDoc(doc(db, 'establishment', 'main')),
-              getDocs(collection(db, 'collectors')),
-              getDocs(collection(db, 'packers')),
-              getDocs(query(collection(db, 'harvests'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'agronomistLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'phenologyLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'predictionLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'diagnosisLogs'), orderBy('date', 'desc'))),
-              getDocs(collection(db, 'supplies')),
-              getDocs(query(collection(db, 'tasks'), orderBy('createdAt', 'desc'))),
-              getDocs(collection(db, 'batches')),
-              getDocs(query(collection(db, 'collectorPaymentLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'packagingLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'culturalPracticeLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'producerLogs'), orderBy('date', 'desc'))),
-              getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc'))),
+              safeFetch(getDoc(doc(db, 'establishment', 'main')), null),
+              safeFetch(getDocs(collection(db, 'collectors')), { docs: [] } as any),
+              safeFetch(getDocs(collection(db, 'packers')), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'harvests'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'agronomistLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'phenologyLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'predictionLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'diagnosisLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(collection(db, 'supplies')), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'tasks'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(collection(db, 'batches')), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'collectorPaymentLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'packagingLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'producerLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc'))), { docs: [] } as any),
             ]);
             
-            if (establishmentDocSnap.exists()) {
+            if (establishmentDocSnap?.exists()) {
               setEstablishmentData({ id: establishmentDocSnap.id, ...establishmentDocSnap.data() } as EstablishmentData);
+            } else if (establishmentDocSnap === null) {
+              // Si falló totalmente la carga de establecimiento, usamos el valor inicial para no romper la app
+              setEstablishmentData({ id: 'main', ...initialEstablishmentData });
             } else {
               await setDoc(doc(db, 'establishment', 'main'), initialEstablishmentData);
               setEstablishmentData({ id: 'main', ...initialEstablishmentData });
             }
+
             setCollectors(collectorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Collector[]);
             setPackers(packersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Packer[]);
             setHarvests(harvestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Harvest[]);
@@ -225,10 +258,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         console.error("Error fetching data from Firestore:", error);
         toast({
           title: "Error de Conexión",
-          description: "No se pudieron cargar los datos. Asegúrese de que Firestore esté configurado y con las reglas de seguridad correctas.",
+          description: "No se pudieron cargar los datos correctamente. Verifique su conexión.",
           variant: "destructive",
         })
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
       }
     }, [toast, isClient]);
@@ -793,16 +827,34 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
 
-    const addBatch = (batchData: Omit<Batch, 'id' | 'status' | 'preloadedDate'> & { id: string, preloadedDate: string, status: string }) => {
-        const newBatch = { ...batchData, status: 'pending' as 'pending' | 'completed' };
+    const addBatch = (batchData: Omit<Batch, 'status' | 'preloadedDate'> & { preloadedDate?: string, status?: 'pending' | 'completed' }) => {
+        const newBatch: Batch = { 
+            preloadedDate: new Date().toISOString(),
+            status: 'pending',
+            ...batchData, 
+        };
         setBatches(prev => [newBatch, ...prev]);
 
-        const batchRef = doc(db, 'batches', batchData.id);
+        const batchRef = doc(db, 'batches', newBatch.id);
         setDoc(batchRef, newBatch).catch(error => {
             console.error("Failed to add batch:", error);
-            setBatches(prev => prev.filter(b => b.id !== batchData.id));
+            setBatches(prev => prev.filter(b => b.id !== newBatch.id));
             toast({ title: "Error", description: "No se pudo agregar el lote.", variant: "destructive"});
         });
+    };
+
+    const editBatch = async (updatedBatch: Batch) => {
+        const originalBatches = [...batches];
+        setBatches(prev => prev.map(b => b.id === updatedBatch.id ? updatedBatch : b));
+
+        try {
+            const batchRef = doc(db, 'batches', updatedBatch.id);
+            await setDoc(batchRef, updatedBatch, { merge: true });
+        } catch (error) {
+            console.error("Failed to edit batch:", error);
+            setBatches(originalBatches);
+            toast({ title: "Error", description: "No se pudo editar el lote.", variant: "destructive"});
+        }
     };
 
     const deleteBatch = (batchId: string) => {
@@ -1040,6 +1092,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         addCulturalPracticeLog,
         deleteCulturalPracticeLog,
         addBatch,
+        editBatch,
         deleteBatch,
         addCollectorPaymentLog,
         deleteCollectorPaymentLog,

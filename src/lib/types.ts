@@ -44,11 +44,17 @@ export type Harvest = {
   traceabilityId: string;
 };
 
+export type BatchVariety = {
+  name: string;
+  plantCount?: number;
+};
+
 export type Batch = {
   id: string;
   preloadedDate: string;
   status: 'pending' | 'completed';
   completionDate?: string;
+  varieties?: BatchVariety[];
 }
 
 export type MonthlyData = {
@@ -320,7 +326,8 @@ export type AppData = {
   deletePackagingLog: (logId: string) => Promise<void>;
   addCulturalPracticeLog: (log: Omit<CulturalPracticeLog, 'id'>) => void;
   deleteCulturalPracticeLog: (logId: string) => Promise<void>;
-  addBatch: (batch: Omit<Batch, 'id' | 'status' | 'preloadedDate'> & { id: string, preloadedDate: string, status: string }) => void;
+  addBatch: (batch: Omit<Batch, 'status' | 'preloadedDate'> & { preloadedDate?: string, status?: 'pending' | 'completed' }) => void;
+  editBatch: (batch: Batch) => Promise<void>;
   deleteBatch: (batchId: string) => void;
   addCollectorPaymentLog: (log: Omit<CollectorPaymentLog, 'id' | 'traceabilityId'>) => void;
   deleteCollectorPaymentLog: (logId: string) => Promise<void>;

@@ -9,6 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Calendar, Sprout, User, CheckCircle, Info, Truck, Package, Leaf, TestTube2, Droplet, AlertCircle, Home, Flower, Grape, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type TraceabilityData = {
     harvestDate: string;
@@ -39,6 +41,8 @@ export default function TracePage() {
     const [data, setData] = useState<TraceabilityData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedLogInfo, setSelectedLogInfo] = useState<{ state: string; date: string } | null>(null);
 
     useEffect(() => {
         if (id) {
@@ -210,8 +214,6 @@ export default function TracePage() {
                             <ul className="space-y-4">
                                 {data.phenologyLogs.map((log, index) => {
                                     const Icon = phenologyIcons[log.developmentState] || Info;
-                                    const firstImage = log.images && log.images.length > 0 ? log.images[0].url : null;
-                                    
                                     return (
                                         <li key={index} className="flex flex-col sm:flex-row items-start gap-4 p-4 bg-gray-50/50 rounded-lg border border-gray-100">
                                             <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-sm text-primary">
@@ -244,14 +246,35 @@ export default function TracePage() {
                                                     </div>
                                                 ) : null}
 
-                                                {firstImage && (
-                                                    <div className="mt-3 relative w-full aspect-video rounded-xl overflow-hidden border shadow-sm">
-                                                        <Image 
-                                                            src={firstImage} 
-                                                            alt={`Imagen de ${log.developmentState}`} 
-                                                            fill 
-                                                            className="object-cover hover:scale-105 transition-transform duration-500"
-                                                        />
+                                                {log.images && log.images.length > 0 && (
+                                                    <div className={`mt-3 grid gap-2 ${log.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                                                        {log.images.map((img, imgIdx) => (
+                                                            <motion.div 
+                                                                key={imgIdx}
+                                                                whileHover={{ scale: 1.02 }}
+                                                                whileTap={{ scale: 0.98 }}
+                                                                className="relative aspect-square rounded-xl overflow-hidden border shadow-sm cursor-zoom-in group"
+                                                                onClick={() => {
+                                                                    setSelectedImage(img.url);
+                                                                    setSelectedLogInfo({ 
+                                                                        state: log.developmentState, 
+                                                                        date: new Date(log.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) 
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <Image 
+                                                                    src={img.url} 
+                                                                    alt={`${log.developmentState} - ${imgIdx + 1}`} 
+                                                                    fill 
+                                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 p-2 rounded-full shadow-lg">
+                                                                        <Info className="h-4 w-4 text-primary" />
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
                                                     </div>
                                                 )}
                                             </div>
@@ -278,6 +301,39 @@ export default function TracePage() {
                 <p className="text-sm text-gray-500">ID de Trazabilidad: <span className="font-mono">{id}</span></p>
                 <p className="text-xs text-gray-400 mt-1">Impulsado por AgroVision</p>
             </footer>
+
+            <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/95 border-none shadow-2xl">
+                    <DialogHeader className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent text-white opacity-0 hover:opacity-100 transition-opacity duration-300">
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            {selectedLogInfo?.state}
+                            <span className="text-sm font-normal opacity-80">— {selectedLogInfo?.date}</span>
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="relative w-full h-[80vh] flex items-center justify-center p-2 sm:p-4">
+                        <AnimatePresence mode="wait">
+                            {selectedImage && (
+                                <motion.div
+                                    key={selectedImage}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className="relative w-full h-full flex items-center justify-center"
+                                >
+                                    <Image
+                                        src={selectedImage}
+                                        alt="Imagen ampliada"
+                                        fill
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

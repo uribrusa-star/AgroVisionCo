@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PredictionHistory } from './prediction-history';
 import { PlantDiagnosisCard } from '../engineer-log/plant-diagnosis-card';
 import { DiagnosisHistory } from '../engineer-log/diagnosis-history';
+import { StrawberryExpertChat } from './strawberry-expert-chat';
 
 export default function PredictionsPage() {
   return (
@@ -27,14 +28,21 @@ export default function PredictionsPage() {
       </Alert>
 
       <div className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <YieldPredictionPanel />
-          <PredictionHistory />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className="lg:col-span-1">
+          <StrawberryExpertChat />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <PlantDiagnosisCard />
-          <DiagnosisHistory />
+        <div className="lg:col-span-1 space-y-8">
+            <YieldPredictionPanel />
+            <PlantDiagnosisCard />
         </div>
+        <div className="lg:col-span-1">
+            <PredictionHistory />
+        </div>
+        <div className="lg:col-span-1">
+            <DiagnosisHistory />
+        </div>
+      </div>
       </div>
     </>
   );

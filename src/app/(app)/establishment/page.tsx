@@ -489,7 +489,7 @@ export default function EstablishmentPage() {
           description="Defina las estrategias de manejo del cultivo y la logística de cosecha."
           schema={managementSchema}
           defaultValues={{ weeds: establishmentData.management.weeds, sanitaryPlan: establishmentData.management.sanitaryPlan, period: establishmentData.harvest.period, frequency: establishmentData.harvest.frequency }}
-          onSubmit={(values) => handleSubmit('management', { ...establishmentData.management, weeds: values.weeds, sanitaryPlan: values.sanitaryPlan, harvest: { ...establishmentData.harvest, period: values.period, frequency: values.frequency } })}
+          onSubmit={(values) => handleSubmit('management', values)}
         >
           {(form: any) => (
               <>

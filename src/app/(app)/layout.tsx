@@ -274,11 +274,31 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { currentUser, isClient, loading, tasks } = React.useContext(AppDataContext);
   const router = useRouter();
 
+  const [showResetButton, setShowResetButton] = useState(false);
+
   useEffect(() => {
     if (isClient && !loading && !currentUser) {
         router.replace('/');
     }
   }, [isClient, loading, currentUser, router]);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (loading) {
+      timeout = setTimeout(() => setShowResetButton(true), 8000);
+    } else {
+      setShowResetButton(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
+  const handleReset = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.clear();
+      window.sessionStorage.clear();
+      window.location.reload();
+    }
+  };
 
   const pendingTasksCount = React.useMemo(() => {
       if (!currentUser || !tasks) return 0;
@@ -288,10 +308,29 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   if (loading || !currentUser) {
     return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Verificando sesión...</p>
+        <div className="flex items-center justify-center h-screen bg-background">
+          <div className="flex flex-col items-center gap-4 text-center p-6 max-w-sm">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <div className="space-y-2">
+              <p className="font-semibold text-lg">Sincronizando con AgroVision...</p>
+              <p className="text-sm text-muted-foreground italic">Verificando sesión y descargando datos del campo.</p>
+            </div>
+            
+            {showResetButton && (
+              <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <p className="text-xs text-muted-foreground">
+                  Si esto tarda demasiado, puede haber un problema de conexión o con el almacenamiento del navegador.
+                </p>
+                <div className="flex flex-col gap-2">
+                   <Button variant="outline" onClick={() => window.location.reload()}>
+                      Reintentar Conexión
+                   </Button>
+                   <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleReset}>
+                      Omitir y Reiniciar Sesión
+                   </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
     );

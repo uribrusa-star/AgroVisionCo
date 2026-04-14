@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Sparkles, BrainCircuit, Upload, FlaskConical } from 'lucide-react';
+import { Sparkles, BrainCircuit, Upload, FlaskConical, AlertTriangle, CheckCircle2, ShieldAlert, Info } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,8 +65,12 @@ export function PlantDiagnosisCard() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({ title: "Imagen muy grande", description: "Por favor, suba una imagen de menos de 5MB.", variant: "destructive" });
+      if (file.size > 1 * 1024 * 1024) { // 1MB limit
+        toast({ 
+          title: "Imagen muy grande", 
+          description: "La imagen excede el límite de 1MB. Por favor, suba una imagen más pequeña.", 
+          variant: "destructive" 
+        });
         return;
       }
       const reader = new FileReader();
@@ -183,7 +187,7 @@ export function PlantDiagnosisCard() {
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                         <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
                                         <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Haga clic para subir</span> o arrastre aquí</p>
-                                        <p className="text-xs text-muted-foreground">PNG, JPG, JPEG (MAX. 5MB)</p>
+                                        <p className="text-xs text-muted-foreground">PNG, JPG, JPEG (MAX. 1MB)</p>
                                     </div>
                                 )}
                             </label>
@@ -247,33 +251,64 @@ export function PlantDiagnosisCard() {
               )}
 
               {diagnosisResult && (
-                <Card className="w-full bg-primary/5 border-primary/20">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex justify-between items-center">
-                        <span>Resultado del Diagnóstico</span>
-                        <Badge variant="secondary">{diagnosisResult.diagnosticoPrincipal}</Badge>
-                    </CardTitle>
+                <Card className={`w-full border-2 ${
+                  diagnosisResult.nivelDeConfianza === 'alto' ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20 dark:border-green-800' :
+                  diagnosisResult.nivelDeConfianza === 'medio' ? 'bg-blue-50/50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800' :
+                  'bg-yellow-50/50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800'
+                }`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <span>Resultado del Diagnóstico</span>
+                                {diagnosisResult.nivelDeConfianza === 'alto' ? <CheckCircle2 className="h-4 w-4 text-green-600" /> :
+                                 diagnosisResult.nivelDeConfianza === 'medio' ? <AlertTriangle className="h-4 w-4 text-blue-600" /> :
+                                 <ShieldAlert className="h-4 w-4 text-yellow-600" />}
+                            </CardTitle>
+                            <CardDescription>
+                                Confianza del análisis: 
+                                <Badge variant="secondary" className={`ml-2 capitalize ${
+                                    diagnosisResult.nivelDeConfianza === 'alto' ? 'bg-green-100 text-green-700' :
+                                    diagnosisResult.nivelDeConfianza === 'medio' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                    {diagnosisResult.nivelDeConfianza}
+                                </Badge>
+                            </CardDescription>
+                        </div>
+                        <Badge variant="default" className="text-sm px-3 py-1">{diagnosisResult.diagnosticoPrincipal}</Badge>
+                    </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                      {diagnosisResult.posiblesDiagnosticos.map((diag) => (
-                          <div key={diag.nombre}>
-                              <div className="flex justify-between items-center mb-1">
-                                  <p className="font-medium">{diag.nombre}</p>
-                                  <p className="text-sm font-bold">{diag.probabilidad}%</p>
-                              </div>
-                              <Progress value={diag.probabilidad} indicatorClassName={diag.probabilidad > 70 ? 'bg-destructive' : diag.probabilidad > 40 ? 'bg-yellow-500' : 'bg-primary'} />
-                              <p className="text-xs text-muted-foreground mt-1">{diag.descripcion}</p>
+                  <CardContent className="space-y-6">
+                      {diagnosisResult.mensajeIA && (
+                          <div className="p-3 rounded-md bg-yellow-100/50 border border-yellow-200 text-xs text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-800 dark:text-yellow-200 flex gap-2 items-start">
+                              <Info className="h-4 w-4 mt-0.5" />
+                              <p className="flex-1 italic">{diagnosisResult.mensajeIA}</p>
                           </div>
-                      ))}
-                      <Alert>
-                        <FlaskConical className="h-4 w-4" />
-                        <AlertTitle>Recomendación General</AlertTitle>
-                        <AlertDescription>{diagnosisResult.recomendacionGeneral}</AlertDescription>
+                      )}
+
+                      <div className="space-y-4">
+                        {diagnosisResult.posiblesDiagnosticos.map((diag) => (
+                            <div key={diag.nombre} className="bg-background/40 p-3 rounded-lg border border-border/40">
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="font-semibold text-sm">{diag.nombre}</p>
+                                    <p className="text-xs font-bold text-muted-foreground">{diag.probabilidad}%</p>
+                                </div>
+                                <Progress value={diag.probabilidad} className="h-1.5" indicatorClassName={diag.probabilidad > 70 ? 'bg-destructive' : diag.probabilidad > 40 ? 'bg-yellow-500' : 'bg-primary'} />
+                                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{diag.descripcion}</p>
+                            </div>
+                        ))}
+                      </div>
+
+                      <Alert className="bg-primary/5 border-primary/20">
+                        <FlaskConical className="h-4 w-4 text-primary" />
+                        <AlertTitle className="text-primary font-bold">Recomendación de Experto</AlertTitle>
+                        <AlertDescription className="text-sm mt-1">{diagnosisResult.recomendacionGeneral}</AlertDescription>
                       </Alert>
                   </CardContent>
-                   <CardFooter className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setIsCorrectionOpen(true)}>Corregir</Button>
-                        <Button onClick={handleValidation}>Validar Diagnóstico</Button>
+                   <CardFooter className="flex justify-end gap-2 border-t pt-4 mt-2">
+                        <Button variant="outline" size="sm" onClick={() => setIsCorrectionOpen(true)}>Corregir</Button>
+                        <Button size="sm" onClick={handleValidation}>Validar y Guardar</Button>
                    </CardFooter>
                 </Card>
               )}

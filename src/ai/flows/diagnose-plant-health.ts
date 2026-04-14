@@ -23,13 +23,15 @@ export type DiagnosePlantInput = z.infer<typeof DiagnosePlantInputSchema>;
 const PossibleDiagnosisSchema = z.object({
     nombre: z.string().describe('El nombre de la plaga o enfermedad (ej. "Oídio", "Araña Roja").'),
     probabilidad: z.number().min(0).max(100).describe('La probabilidad estimada de este diagnóstico (0-100).'),
-    descripcion: z.string().describe('Una breve descripción de por qué se considera este diagnóstico.'),
+    descripcion: z.string().describe('Una breve descripción detallada de por qué se considera este diagnóstico basándose en los síntomas visuales.'),
 });
 
 const DiagnosePlantOutputSchema = z.object({
   diagnosticoPrincipal: z.string().describe('El nombre del diagnóstico más probable.'),
   posiblesDiagnosticos: z.array(PossibleDiagnosisSchema).describe('Una lista de 1 a 3 posibles diagnósticos con su probabilidad.'),
-  recomendacionGeneral: z.string().describe('Una recomendación inicial y general para el manejo del problema detectado.'),
+  recomendacionGeneral: z.string().describe('Una recomendación técnica detallada para el manejo o confirmación del problema.'),
+  nivelDeConfianza: z.enum(['bajo', 'medio', 'alto']).describe('El nivel de confianza técnica del análisis basado en la claridad de la imagen y los síntomas.'),
+  mensajeIA: z.string().optional().describe('Un mensaje adicional para el usuario si la imagen no es clara o si hay dudas razonables.'),
 });
 export type DiagnosePlantOutput = z.infer<typeof DiagnosePlantOutputSchema>;
 
@@ -41,21 +43,21 @@ const prompt = ai.definePrompt({
   name: 'diagnosePlantPrompt',
   input: {schema: DiagnosePlantInputSchema},
   output: {schema: DiagnosePlantOutputSchema},
-  prompt: `Eres un Ingeniero Agrónomo experto en fitopatología del cultivo de frutilla. Tu tarea es analizar una imagen y una descripción para diagnosticar problemas sanitarios.
+  prompt: `Eres un Ingeniero Agrónomo experto en fitopatología y entomología aplicada al cultivo de frutilla (Fragaria x ananassa). Tu tarea es realizar un diagnóstico técnico preciso a partir de una imagen y una descripción.
 
-    **Base de Conocimiento de Plagas y Enfermedades Frecuentes en Frutilla:**
-    - **Enfermedades:** Botrytis (Moho Gris), Oídio (Cenicilla), Viruela, Antracnosis.
-    - **Plagas:** Araña Roja (Tetranychus urticae), Trips (Frankliniella occidentalis), Pulgones.
-    - **Otros:** Deficiencias nutricionales (Nitrógeno, Hierro, etc.), quemaduras por sol, daño por helada.
+    **Base de Conocimiento Especializada:**
+    - **Enfermedades Fúngicas:** Botrytis cinerea (podredumbre gris), Sphaerotheca macularis (Oídio), Mycosphaerella fragariae (Viruela), Colletotrichum spp. (Antracnosis), Phytophthora cactorum (Podredumbre de la corona).
+    - **Plagas:** Tetranychus urticae (Araña roja - monitorear telarañas y bronceado), Frankliniella occidentalis (Trips - daño en flores y deformación de frutos), Pulgones (Aphis spp. - melaza y enrollamiento).
+    - **Fisiopatías y Nutrición:** Deficiencia de Hierro (clorosis intervienenal en hojas jóvenes), Deficiencia de Nitrógeno (hojas viejas amarillentas), Escaldado por sol (frutos blancos/marrones), Albino (frutos sin color por exceso de N o falta de luz).
 
-    **Instrucciones:**
-    1.  Analiza la imagen ({{media url=photoDataUri}}) y la descripción del usuario ({{{description}}}).
-    2.  Compara los síntomas observados con tu base de conocimiento.
-    3.  Genera de 1 a 3 posibles diagnósticos. Para cada uno, asigna un nombre, una probabilidad (de 0 a 100) y una breve descripción justificando tu conclusión. La suma de probabilidades no tiene que ser 100.
-    4.  Identifica el diagnóstico más probable y asígnalo a 'diagnosticoPrincipal'.
-    5.  Basado en el diagnóstico principal, proporciona una recomendación inicial y general. Debe ser una acción preventiva o de monitoreo, no una aplicación de producto específica. Por ejemplo: "Aumentar ventilación en túneles", "Monitorear lotes vecinos", "Realizar análisis foliar para confirmar deficiencia".
-
-    Genera únicamente la salida JSON.
+    **Instrucciones de Análisis:**
+    1.  Examina la imagen ({{media url=photoDataUri}}) buscando patrones específicos: manchas, esporas, micelios, insectos, o decoloraciones.
+    2.  Cruza los hallazgos visuales con la descripción del usuario: "{{{description}}}".
+    3.  Si la imagen es borrosa, está muy lejos o no muestra una planta de frutilla con claridad, establece 'nivelDeConfianza' en 'bajo' y explica por qué en 'mensajeIA'.
+    4.  Genera 'diagnosticoPrincipal' y una lista de 'posiblesDiagnosticos' (máximo 3) con sus probabilidades.
+    5.  En 'recomendacionGeneral', proporciona pasos técnicos: monitoreo de lupa, ajuste de riego, remoción de material infectado, o pruebas de laboratorio. NO menciones marcas comerciales de agroquímicos.
+    
+    Responde estrictamente en formato JSON siguiendo el esquema definido.
     `,
 });
 

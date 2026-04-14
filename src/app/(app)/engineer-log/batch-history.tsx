@@ -7,15 +7,69 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Plus } from 'lucide-react';
+import type { Batch } from '@/lib/types';
+
+const EditBatchSchema = z.object({
+  id: z.string(),
+  varieties: z.array(z.object({
+    name: z.string().min(1, "El nombre de la variedad es obligatorio"),
+    plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
+  })).min(1, "Debe añadir al menos una variedad"),
+});
+
+type EditBatchValues = z.infer<typeof EditBatchSchema>;
 
 export function BatchHistory() {
-  const { loading, batches, deleteBatch, currentUser, harvests } = useContext(AppDataContext);
+  const { loading, batches, deleteBatch, editBatch, currentUser, harvests } = useContext(AppDataContext);
   const { toast } = useToast();
+  const [editingBatch, setEditingBatch] = React.useState<Batch | null>(null);
   
+  const editForm = useForm<EditBatchValues>({
+    resolver: zodResolver(EditBatchSchema),
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: editForm.control,
+    name: "varieties",
+  });
+
+  React.useEffect(() => {
+    if (editingBatch) {
+      editForm.reset({
+        id: editingBatch.id,
+        varieties: editingBatch.varieties && editingBatch.varieties.length > 0 
+          ? editingBatch.varieties 
+          : [{ name: '', plantCount: undefined }],
+      });
+    }
+  }, [editingBatch, editForm]);
+
+  const onEditSubmit = async (data: EditBatchValues) => {
+    if (!editingBatch) return;
+    
+    await editBatch({
+      ...editingBatch,
+      varieties: data.varieties,
+    });
+
+    toast({
+      title: "Lote Actualizado",
+      description: `Los datos del lote ${data.id} han sido guardados.`,
+    });
+    setEditingBatch(null);
+  };
+
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo' || currentUser.role === 'Encargado';
 
@@ -28,8 +82,6 @@ export function BatchHistory() {
   };
   
   const getBatchStatus = (batchId: string) => {
-      // If there is any harvest for this batch, it is considered 'completed' for this view's logic
-      // as we removed the explicit status change.
       return harvests.some(h => h.batchNumber === batchId) ? 'completed' : 'pending';
   }
 
@@ -47,6 +99,7 @@ export function BatchHistory() {
                 <TableRow>
                     <TableHead>ID Lote</TableHead>
                     <TableHead>Estado</TableHead>
+                    <TableHead>Variedades</TableHead>
                     <TableHead>Fecha Precarga</TableHead>
                     {canManage && <TableHead className="text-right">Acciones</TableHead>}
                 </TableRow>
@@ -54,14 +107,14 @@ export function BatchHistory() {
                 <TableBody>
                   {loading && (
                     <TableRow>
-                      <TableCell colSpan={canManage ? 4 : 3}>
+                      <TableCell colSpan={canManage ? 5 : 4}>
                         <Skeleton className="h-8 w-full" />
                       </TableCell>
                     </TableRow>
                   )}
                   {!loading && sortedBatches.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={canManage ? 4 : 3} className="text-center">No hay lotes registrados.</TableCell>
+                      <TableCell colSpan={canManage ? 5 : 4} className="text-center">No hay lotes registrados.</TableCell>
                     </TableRow>
                   )}
                   {!loading && sortedBatches.map((batch) => {
@@ -74,29 +127,131 @@ export function BatchHistory() {
                                 {status === 'completed' ? 'Cosechado' : 'Pendiente'}
                               </Badge>
                             </TableCell>
+                            <TableCell>
+                              {batch.varieties && batch.varieties.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {batch.varieties.map((v, i) => (
+                                    <Badge key={i} variant="outline" className="text-[10px]">
+                                      {v.name} {v.plantCount ? `(${v.plantCount})` : ''}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-xs italic">Sin variedades</span>
+                              )}
+                            </TableCell>
                             <TableCell>{new Date(batch.preloadedDate).toLocaleDateString('es-ES')}</TableCell>
                             {canManage && (
                               <TableCell className="text-right">
-                                  <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                          <Trash2 className="h-4 w-4" />
-                                          <span className="sr-only">Eliminar Lote</span>
-                                      </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                          <AlertDialogHeader>
-                                              <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
-                                              <AlertDialogDescription>
-                                                  Esta acción no se puede deshacer. Esto eliminará permanentemente el lote. Si este lote ya fue cosechado, los registros de cosecha asociados no serán eliminados pero quedarán sin un lote válido.
-                                              </AlertDialogDescription>
-                                          </AlertDialogHeader>
-                                          <AlertDialogFooter>
-                                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                              <AlertDialogAction onClick={() => handleDelete(batch.id)}>Continuar</AlertDialogAction>
-                                          </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                  </AlertDialog>
+                                  <div className="flex justify-end gap-2">
+                                    <Dialog open={editingBatch?.id === batch.id} onOpenChange={(open) => !open && setEditingBatch(null)}>
+                                      <DialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" onClick={() => setEditingBatch(batch)}>
+                                          <Edit className="h-4 w-4" />
+                                          <span className="sr-only">Editar Lote</span>
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-2xl">
+                                        <DialogHeader>
+                                          <DialogTitle>Editar Lote {batch.id}</DialogTitle>
+                                          <DialogDescription>Actualice las variedades y cantidades de plantas para este lote.</DialogDescription>
+                                        </DialogHeader>
+                                        <Form {...editForm}>
+                                          <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
+                                            <div className="space-y-4">
+                                              <div className="flex items-center justify-between">
+                                                <FormLabel className="text-base">Variedades Plantadas</FormLabel>
+                                                <Button 
+                                                  type="button" 
+                                                  variant="outline" 
+                                                  size="sm" 
+                                                  onClick={() => append({ name: '', plantCount: undefined })}
+                                                >
+                                                  <Plus className="h-4 w-4 mr-2" />
+                                                  Añadir Variedad
+                                                </Button>
+                                              </div>
+                                              
+                                              {fields.map((field, index) => (
+                                                <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-3 rounded-md">
+                                                  <div className="md:col-span-6">
+                                                    <FormField
+                                                      control={editForm.control}
+                                                      name={`varieties.${index}.name`}
+                                                      render={({ field }) => (
+                                                        <FormItem>
+                                                          <FormLabel className="text-xs">Variedad</FormLabel>
+                                                          <FormControl>
+                                                            <Input {...field} />
+                                                          </FormControl>
+                                                          <FormMessage />
+                                                        </FormItem>
+                                                      )}
+                                                    />
+                                                  </div>
+                                                  <div className="md:col-span-4">
+                                                    <FormField
+                                                      control={editForm.control}
+                                                      name={`varieties.${index}.plantCount`}
+                                                      render={({ field }) => (
+                                                        <FormItem>
+                                                          <FormLabel className="text-xs">Cant. Plantas</FormLabel>
+                                                          <FormControl>
+                                                            <Input 
+                                                              type="number" 
+                                                              {...field} 
+                                                              onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                                                            />
+                                                          </FormControl>
+                                                          <FormMessage />
+                                                        </FormItem>
+                                                      )}
+                                                    />
+                                                  </div>
+                                                  <div className="md:col-span-2 flex justify-end">
+                                                    <Button
+                                                      type="button"
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      onClick={() => remove(index)}
+                                                      disabled={fields.length === 1}
+                                                      className="text-destructive hover:text-destructive"
+                                                    >
+                                                      <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                            <DialogFooter>
+                                              <Button type="submit">Guardar Cambios</Button>
+                                            </DialogFooter>
+                                          </form>
+                                        </Form>
+                                      </DialogContent>
+                                    </Dialog>
+
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="sr-only">Eliminar Lote</span>
+                                        </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el lote {batch.id}.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(batch.id)}>Continuar</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
                               </TableCell>
                             )}
                         </TableRow>

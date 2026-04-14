@@ -77,41 +77,41 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title="Panel de Control" description="Estadísticas clave y actividad reciente." />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 mb-8">
-        <Card>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+        <Card className="hover:shadow-md transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cosecha Total</CardTitle>
-            <Weight className="h-4 w-4 text-muted-foreground" />
+            <Weight className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `${dashboardStats.totalHarvest.toLocaleString('es-ES', { maximumFractionDigits: 0 })} kg`}</div>
             <p className="text-xs text-muted-foreground">Acumulado de la temporada</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Costo de Mano de Obra</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `$${dashboardStats.totalLaborCost.toLocaleString('es-ES', { maximumFractionDigits: 0 })}`}</div>
             <p className="text-xs text-muted-foreground">Cosecha + Embalaje + Labores</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Rendimiento Promedio</CardTitle>
-            <BarChartIcon className="h-4 w-4 text-muted-foreground" />
+            <BarChartIcon className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `${dashboardStats.averageYield.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg/lote`}</div>
             <p className="text-xs text-muted-foreground">Promedio por lote cosechado</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Día Pico de Cosecha</CardTitle>
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <CalendarDays className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : (dashboardStats.peakDay || 'N/A')}</div>
@@ -119,12 +119,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
+        <div className="md:col-span-2 xl:col-span-2">
           <MonthlyHarvestChart harvests={harvests} />
         </div>
-        <CostDistributionChart />
-        <div className="lg:col-span-2">
+        <div className="md:col-span-1">
+          <CostDistributionChart />
+        </div>
+        <div className="md:col-span-2 xl:col-span-2">
             <Card>
             <CardHeader>
                 <CardTitle>Cosechas Recientes</CardTitle>
@@ -168,7 +170,7 @@ export default function DashboardPage() {
             </CardContent>
             </Card>
         </div>
-        <div className="lg:col-span-1">
+        <div className="md:col-span-1 xl:col-span-1">
             <Card>
                 <CardHeader>
                     <CardTitle>Ranking de Productividad</CardTitle>
@@ -202,11 +204,11 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
         </div>
-        <div className="lg:col-span-3">
+        <div className="md:col-span-2 xl:col-span-3">
           <BatchYieldChart />
         </div>
       </div>
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
         <ProductionPaymentHistory />
         <PackagingHistory />
       </div>

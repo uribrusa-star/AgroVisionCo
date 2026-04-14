@@ -2,11 +2,12 @@
 'use client';
 
 import React, { useContext, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Plus, Trash2 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription as FormDescriptionComponent, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -15,6 +16,10 @@ import { useToast } from '@/hooks/use-toast';
 
 const BatchLogSchema = z.object({
   id: z.string().regex(/^L\d{3}$/, "El ID del lote debe tener el formato L000 (ej., L014)."),
+  varieties: z.array(z.object({
+    name: z.string().min(1, "El nombre de la variedad es obligatorio"),
+    plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
+  })).min(1, "Debe añadir al menos una variedad"),
 });
 
 type BatchLogFormValues = z.infer<typeof BatchLogSchema>;
@@ -31,7 +36,13 @@ export function BatchLogForm() {
     resolver: zodResolver(BatchLogSchema),
     defaultValues: {
       id: '',
+      varieties: [{ name: '', plantCount: undefined }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "varieties",
   });
 
   const onSubmit = (data: BatchLogFormValues) => {
@@ -43,14 +54,16 @@ export function BatchLogForm() {
     startTransition(() => {
         addBatch({
             id: data.id,
-            preloadedDate: new Date().toISOString(),
-            status: 'pending',
+            varieties: data.varieties,
         });
         toast({
             title: "¡Lote Pre-cargado!",
-            description: `El lote ${data.id} está listo para ser cosechado.`,
+            description: `El lote ${data.id} con ${data.varieties.length} variedad(es) está listo.`,
         });
-        form.reset({id: ''});
+        form.reset({
+            id: '',
+            varieties: [{ name: '', plantCount: undefined }],
+        });
     });
   };
 
@@ -63,22 +76,94 @@ export function BatchLogForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent>
-            <FormField
-              control={form.control}
-              name="id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nuevo ID de Lote</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ej., L017" {...field} disabled={!canManage || isPending} />
-                  </FormControl>
-                  <FormDescriptionComponent>
-                    El formato debe ser 'L' seguido de 3 números.
-                  </FormDescriptionComponent>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nuevo ID de Lote</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ej., L017" {...field} disabled={!canManage || isPending} />
+                    </FormControl>
+                    <FormDescriptionComponent>
+                      El formato debe ser 'L' seguido de 3 números.
+                    </FormDescriptionComponent>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <FormLabel className="text-base">Variedades Plantadas</FormLabel>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => append({ name: '', plantCount: undefined })}
+                    disabled={!canManage || isPending}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Añadir Variedad
+                  </Button>
+                </div>
+                
+                {fields.map((field, index) => (
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md bg-muted/30">
+                    <div className="md:col-span-6">
+                      <FormField
+                        control={form.control}
+                        name={`varieties.${index}.name`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Nombre de Variedad</FormLabel>
+                            <FormControl>
+                              <Input placeholder="ej. San Andreas" {...field} disabled={!canManage || isPending} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-4">
+                      <FormField
+                        control={form.control}
+                        name={`varieties.${index}.plantCount`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Cant. Plantas (Opcional)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                placeholder="ej. 2500" 
+                                {...field} 
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                                disabled={!canManage || isPending} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-2 flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        disabled={!canManage || isPending || fields.length === 1}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Eliminar Variedad</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
           {canManage && (
             <CardFooter>
