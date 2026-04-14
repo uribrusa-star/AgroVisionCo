@@ -20,7 +20,8 @@ import { cn } from '@/lib/utils';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, MapPin, Navigation } from 'lucide-react';
+import { PlusCircle, Trash2, MapPin, Navigation, WifiOff } from 'lucide-react';
+import { useOnlineStatus } from '@/hooks/use-online-status';
 import type { ImageWithHint } from '@/lib/types';
 
 const LogSchema = z.object({
@@ -45,6 +46,7 @@ type LogFormValues = z.infer<typeof LogSchema>;
 
 export function HealthLogForm() {
   const { addAgronomistLog, currentUser, batches } = React.useContext(AppDataContext);
+  const isOnline = useOnlineStatus();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isCapturingGps, setIsCapturingGps] = useState(false);
@@ -145,7 +147,14 @@ export function HealthLogForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Registrar Sanidad y Monitoreo</CardTitle>
+        <div className="flex justify-between items-start">
+            <CardTitle>Registrar Sanidad y Monitoreo</CardTitle>
+            {!isOnline && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-100 text-amber-800 rounded-md text-[10px] font-bold border border-amber-200 uppercase">
+                    <WifiOff className="h-3 w-3" /> Modo Local
+                </div>
+            )}
+        </div>
         <CardDescription>Observe plagas, enfermedades, deficiencias o excesos nutricionales y asocie coordenadas.</CardDescription>
       </CardHeader>
       <Form {...form}>

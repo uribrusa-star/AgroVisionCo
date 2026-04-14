@@ -7,6 +7,8 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Leaf, Notebook, Weight, AlertTriangle, Activity, Thermometer, FlaskConical } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { WifiOff } from 'lucide-react';
 
 type MapProps = {
     center: {
@@ -17,6 +19,7 @@ type MapProps = {
 };
 
 const MapComponent = ({ center, geoJsonData }: MapProps) => {
+    const isOnline = useOnlineStatus();
     const { isLoaded, loadError } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     });
@@ -252,6 +255,20 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
             {renderInfoWindows()}
             {renderMarkers()}
             {renderHealthHotspots()}
+
+            {!isOnline && (
+                <div className="absolute inset-x-0 bottom-12 flex justify-center z-[100] pointer-events-none">
+                    <div className="bg-background/95 backdrop-blur-md border border-border shadow-2xl px-6 py-4 rounded-2xl flex flex-col items-center gap-2 max-w-[280px] pointer-events-auto">
+                        <div className="bg-destructive/10 p-2 rounded-full text-destructive">
+                            <WifiOff className="h-6 w-6" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-bold text-sm">Modo Offline</h3>
+                            <p className="text-[10px] text-muted-foreground">La capa satelital puede no cargar. Los datos de lotes y hotspots guardados localmente siguen visibles.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </GoogleMap>
     );
 };

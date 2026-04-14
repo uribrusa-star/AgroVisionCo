@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Bug, Hand, Leaf, SprayCan, Wind, Thermometer, Trash2, PlusCircle, Image as ImageIcon } from 'lucide-react';
+import { MoreHorizontal, Bug, Hand, Leaf, SprayCan, Wind, Thermometer, Trash2, PlusCircle, Image as ImageIcon, MapPin, Navigation } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { AgronomistLog, AgronomistLogType, ImageWithHint } from '@/lib/types';
@@ -26,10 +26,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const LogSchema = z.object({
+  date: z.string().min(1, "La fecha es requerida."),
   type: z.enum(['Fertilización', 'Fumigación', 'Control', 'Sanidad', 'Labor Cultural', 'Riego', 'Condiciones Ambientales']),
   batchId: z.string().optional(),
   product: z.string().optional(),
+  quantityUsed: z.coerce.number().optional(),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
+  diagnosis: z.string().optional(),
+  probability: z.coerce.number().optional(),
+  latitude: z.coerce.number().optional(),
+  longitude: z.coerce.number().optional(),
   images: z.array(z.object({
     url: z.string().url("Debe ser una URL de imagen válida.").or(z.literal('')),
   })).optional(),
@@ -43,6 +49,7 @@ export function ApplicationHistory() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AgronomistLog | null>(null);
+  const [isCapturingGps, setIsCapturingGps] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   if (!currentUser) return null; // Guard clause
@@ -60,10 +67,16 @@ export function ApplicationHistory() {
   useEffect(() => {
     if (selectedLog && isEditDialogOpen) {
       form.reset({
+        date: selectedLog.date,
         type: selectedLog.type,
         batchId: selectedLog.batchId || 'general',
         product: selectedLog.product,
+        quantityUsed: selectedLog.quantityUsed,
         notes: selectedLog.notes,
+        diagnosis: selectedLog.diagnosis,
+        probability: selectedLog.probability,
+        latitude: selectedLog.latitude,
+        longitude: selectedLog.longitude,
         images: selectedLog.images?.map(img => ({ url: img.url })) || [{ url: '' }],
       });
     }
@@ -100,10 +113,16 @@ export function ApplicationHistory() {
 
           editAgronomistLog({
             ...selectedLog,
+            date: values.date,
             type: values.type as AgronomistLogType,
             batchId: values.batchId === 'general' ? undefined : values.batchId,
             product: values.product,
+            quantityUsed: values.quantityUsed,
             notes: values.notes,
+            diagnosis: values.diagnosis,
+            probability: values.probability,
+            latitude: values.latitude,
+            longitude: values.longitude,
             images: imagesWithHints,
           });
           toast({
@@ -115,6 +134,39 @@ export function ApplicationHistory() {
       });
     }
   };
+
+  const captureGPS = () => {
+    setIsCapturingGps(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          form.setValue('latitude', position.coords.latitude);
+          form.setValue('longitude', position.coords.longitude);
+          setIsCapturingGps(false);
+          toast({
+            title: "GPS Capturado",
+            description: "Coordenadas actualizadas con éxito.",
+          });
+        },
+        (error) => {
+          console.error("Error capturing GPS:", error);
+          setIsCapturingGps(false);
+          toast({
+            title: "Error GPS",
+            description: "No se pudo obtener la ubicación. Por favor ingrésela manualmente.",
+            variant: "destructive",
+          });
+        }
+      );
+    } else {
+      setIsCapturingGps(false);
+      toast({
+        title: "Error",
+        description: "Su navegador no soporta geolocalización.",
+        variant: "destructive",
+      });
+    }
+  }
 
   const getTypeInfo = (type: AgronomistLog['type']) => {
     switch (type) {
@@ -237,6 +289,19 @@ export function ApplicationHistory() {
             </DialogHeader>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-6">
+                <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Fecha y Hora</FormLabel>
+                        <FormControl>
+                            <Input type="datetime-local" {...field} disabled={!canManage || isPending} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
                 <div className="grid md:grid-cols-2 gap-4">
                     <FormField
                     control={form.control}
@@ -287,6 +352,100 @@ export function ApplicationHistory() {
                       )}
                     />
                 </div>
+
+                {(form.watch('type') === 'Fertilización' || form.watch('type') === 'Fumigación') && (
+                    <FormField
+                        control={form.control}
+                        name="quantityUsed"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Cantidad Utilizada (kg/L)</FormLabel>
+                            <FormControl>
+                                <Input type="number" step="0.01" {...field} disabled={!canManage || isPending} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                )}
+
+                {form.watch('type') === 'Sanidad' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold flex items-center gap-2">
+                                <Navigation className="h-4 w-4" /> Georreferenciación (GPS)
+                            </h4>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={captureGPS}
+                                disabled={isCapturingGps || isPending}
+                            >
+                                <MapPin className="mr-2 h-4 w-4" />
+                                {isCapturingGps ? "Capturando..." : "Obtener Ubicación Actual"}
+                            </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="latitude"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-[10px] uppercase text-muted-foreground font-bold">Latitud</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" step="any" {...field} disabled={!canManage || isPending} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="longitude"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-[10px] uppercase text-muted-foreground font-bold">Longitud</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" step="any" {...field} disabled={!canManage || isPending} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                             <FormField
+                                control={form.control}
+                                name="diagnosis"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Diagnóstico</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="ej. Arañuela" {...field} disabled={!canManage || isPending} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="probability"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Certeza (%)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" {...field} disabled={!canManage || isPending} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+                )}
+
                  <FormField
                     control={form.control}
                     name="product"

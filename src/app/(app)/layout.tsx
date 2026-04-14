@@ -25,6 +25,7 @@ import { StrawberryIcon, NotebookPen } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppDataContext } from '@/context/app-data-context.tsx';
+import { ConnectivityBanner } from '@/components/connectivity-banner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -336,6 +337,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarFooter>
           </Sidebar>
           <div className="flex-1 flex flex-col">
+            <ConnectivityBanner />
             <header className="flex h-14 items-center gap-4 border-b bg-card/80 backdrop-blur-sm px-6 sticky top-0 z-30 md:hidden">
                 <SidebarTrigger>
                   <Menu className="h-6 w-6" />

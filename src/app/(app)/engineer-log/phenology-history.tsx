@@ -26,7 +26,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const LogSchema = z.object({
-  developmentState: z.enum(['Floración', 'Fructificación', 'Maduración'], {
+  date: z.string().min(1, "La fecha es requerida."),
+  developmentState: z.enum([
+    'Plantación', 'Desarrollo foliar', 'Floración', 'Caida de petalos', 
+    'Fase de fruto verde', 'Fructificación', 'Cambio de color (Vire)', 
+    'Maduracion comercial', 'Maduración'
+  ], {
     required_error: "El estado de desarrollo es requerido.",
   }),
   batchId: z.string().optional(),
@@ -63,6 +68,7 @@ export function PhenologyHistory() {
   useEffect(() => {
     if (selectedLog && isEditDialogOpen) {
       form.reset({
+        date: selectedLog.date,
         developmentState: selectedLog.developmentState,
         batchId: selectedLog.batchId || 'general',
         flowerCount: selectedLog.flowerCount,
@@ -105,6 +111,7 @@ export function PhenologyHistory() {
 
           editPhenologyLog({
             ...selectedLog,
+            date: values.date,
             developmentState: values.developmentState,
             batchId: values.batchId === 'general' ? undefined : values.batchId,
             flowerCount: values.flowerCount,
@@ -244,6 +251,19 @@ export function PhenologyHistory() {
             </DialogHeader>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-6">
+                <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Fecha y Hora</FormLabel>
+                        <FormControl>
+                            <Input type="datetime-local" {...field} disabled={!canManage || isPending} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
                <div className="grid md:grid-cols-2 gap-4">
                  <FormField
                     control={form.control}
@@ -258,8 +278,14 @@ export function PhenologyHistory() {
                             </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                                <SelectItem value="Plantación">Plantación</SelectItem>
+                                <SelectItem value="Desarrollo foliar">Desarrollo foliar</SelectItem>
                                 <SelectItem value="Floración">Floración</SelectItem>
+                                <SelectItem value="Caida de petalos">Caida de petalos</SelectItem>
+                                <SelectItem value="Fase de fruto verde">Fase de fruto verde</SelectItem>
                                 <SelectItem value="Fructificación">Fructificación</SelectItem>
+                                <SelectItem value="Cambio de color (Vire)">Cambio de color (Vire)</SelectItem>
+                                <SelectItem value="Maduracion comercial">Maduracion comercial</SelectItem>
                                 <SelectItem value="Maduración">Maduración</SelectItem>
                             </SelectContent>
                         </Select>

@@ -326,6 +326,7 @@ export type AppData = {
   deleteCollectorPaymentLog: (logId: string) => Promise<void>;
   updateEstablishmentData: (data: Partial<EstablishmentData>) => Promise<void>;
   addProducerLog: (log: Omit<ProducerLog, 'id'>) => void;
+  editProducerLog: (log: ProducerLog) => void;
   deleteProducerLog: (logId: string) => void;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (transactionId: string) => Promise<void>;

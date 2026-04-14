@@ -62,6 +62,7 @@ export const AppDataContext = React.createContext<AppData>({
   deleteCollectorPaymentLog: async () => { throw new Error('Not implemented') },
   updateEstablishmentData: async () => { throw new Error('Not implemented') },
   addProducerLog: () => { throw new Error('Not implemented') },
+  editProducerLog: () => { throw new Error('Not implemented') },
   deleteProducerLog: () => { throw new Error('Not implemented') },
   addTransaction: () => { throw new Error('Not implemented') },
   deleteTransaction: async () => { throw new Error('Not implemented') },
@@ -908,6 +909,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+    const editProducerLog = (updatedLog: ProducerLog) => {
+        const originalLogs = producerLogs;
+        setProducerLogs(prev => prev.map(l => l.id === updatedLog.id ? updatedLog : l));
+
+        const logRef = doc(db, 'producerLogs', updatedLog.id);
+        const { id, ...data } = updatedLog;
+        setDoc(logRef, data, { merge: true }).catch(error => {
+            console.error("Failed to edit producer log:", error);
+            setProducerLogs(originalLogs);
+            toast({ title: "Error", description: "No se pudo editar la nota.", variant: "destructive"});
+        });
+    };
+
     const deleteProducerLog = (logId: string) => {
         const originalLogs = producerLogs;
         setProducerLogs(prev => prev.filter(l => l.id !== logId));
@@ -1031,6 +1045,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         deleteCollectorPaymentLog,
         updateEstablishmentData,
         addProducerLog,
+        editProducerLog,
         deleteProducerLog,
         addTransaction,
         deleteTransaction,

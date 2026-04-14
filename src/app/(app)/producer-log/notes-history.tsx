@@ -2,8 +2,11 @@
 
 'use client';
 
-import React, { useContext, useMemo, useState, useTransition } from 'react';
+import React, { useContext, useMemo, useState, useTransition, useEffect } from 'react';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,12 +19,42 @@ import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Pencil } from 'lucide-react';
+
+const LogSchema = z.object({
+  date: z.string().min(1, "La fecha es requerida."),
+  type: z.enum(['Nota', 'Actividad Omitida']),
+  notes: z.string().min(5, "La nota debe tener al menos 5 caracteres."),
+  omittedActivity: z.string().optional(),
+});
+
+type LogFormValues = z.infer<typeof LogSchema>;
 
 export function NotesHistory() {
-  const { loading, producerLogs, deleteProducerLog, currentUser } = useContext(AppDataContext);
+  const { loading, producerLogs, editProducerLog, deleteProducerLog, currentUser } = useContext(AppDataContext);
   const { toast } = useToast();
   const [selectedLog, setSelectedLog] = useState<ProducerLog | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const form = useForm<LogFormValues>({
+    resolver: zodResolver(LogSchema),
+  });
+
+  useEffect(() => {
+    if (selectedLog && isEditDialogOpen) {
+      form.reset({
+        date: selectedLog.date,
+        type: selectedLog.type || 'Nota',
+        notes: selectedLog.notes,
+        omittedActivity: selectedLog.omittedActivity || '',
+      });
+    }
+  }, [selectedLog, isEditDialogOpen, form]);
 
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor';
@@ -48,6 +81,26 @@ export function NotesHistory() {
         setSelectedLog(null);
     });
   }
+
+  const onEditSubmit = (values: LogFormValues) => {
+    if (selectedLog) {
+      startTransition(() => {
+        editProducerLog({
+          ...selectedLog,
+          date: values.date,
+          type: values.type as any,
+          notes: values.notes,
+          omittedActivity: values.type === 'Actividad Omitida' ? values.omittedActivity : undefined,
+        });
+        toast({
+          title: "Observación Actualizada",
+          description: "El registro ha sido actualizado exitosamente.",
+        });
+        setIsEditDialogOpen(false);
+        setSelectedLog(null);
+      });
+    }
+  };
 
 
   return (
@@ -174,12 +227,23 @@ export function NotesHistory() {
                     </div>
                      <DialogFooter className="flex flex-row justify-between w-full pt-2">
                         {canManage ? (
-                           <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="icon" disabled={isPending}>
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Eliminar</span>
+                           <>
+                             <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="icon" disabled={isPending}>
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Eliminar</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                onClick={() => setIsEditDialogOpen(true)}
+                                disabled={isPending}
+                              >
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">Editar</span>
                               </Button>
-                            </AlertDialogTrigger>
+                           </>
                         ) : <div />}
                         <Button onClick={() => setSelectedLog(null)} variant="secondary">Cerrar</Button>
                     </DialogFooter>
@@ -198,6 +262,100 @@ export function NotesHistory() {
                 </AlertDialog>
             );
             })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Editar Observación</DialogTitle>
+            <DialogDescription>
+              Actualice los detalles de su nota o actividad omitida.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onEditSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha y Hora</FormLabel>
+                    <FormControl>
+                      <Input type="datetime-local" {...field} disabled={isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Registro</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isPending}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccione un tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Nota">Nota Personal</SelectItem>
+                        <SelectItem value="Actividad Omitida">Actividad Omitida</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {form.watch('type') === 'Actividad Omitida' && (
+                <FormField
+                  control={form.control}
+                  name="omittedActivity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Actividad Omitida</FormLabel>
+                      <FormControl>
+                        <Input placeholder="ej. Riego Programado" {...field} disabled={isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{form.watch('type') === 'Actividad Omitida' ? 'Razón / Notas' : 'Notas'}</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Escriba sus observaciones aquí..." 
+                        className="min-h-[100px]"
+                        {...field} 
+                        disabled={isPending} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isPending}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Guardando..." : "Guardar Cambios"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </>
