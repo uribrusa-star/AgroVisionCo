@@ -11,6 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { ImageWithHint } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,7 +24,10 @@ import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 const LogSchema = z.object({
-  developmentState: z.enum(['Floración', 'Fructificación', 'Maduración'], {
+  date: z.date({
+    required_error: "La fecha es requerida.",
+  }),
+  developmentState: z.enum(['Plantación', 'Desarrollo foliar', 'Floración', 'Caida de petalos', 'Fase de fruto verde', 'Fructificación', 'Cambio de color (Vire)', 'Maduracion comercial', 'Maduración'], {
     required_error: "El estado de desarrollo es requerido.",
   }),
   batchId: z.string().optional(),
@@ -43,6 +52,7 @@ export function PhenologyLogForm() {
   const form = useForm<LogFormValues>({
     resolver: zodResolver(LogSchema),
     defaultValues: {
+      date: new Date(),
       developmentState: undefined,
       batchId: 'general',
       flowerCount: 0,
@@ -64,7 +74,7 @@ export function PhenologyLogForm() {
             .map(img => ({ url: img.url, hint: 'crop phenology' }));
       
       addPhenologyLog({
-        date: new Date().toISOString(),
+        date: data.date.toISOString(),
         developmentState: data.developmentState,
         batchId: data.batchId === 'general' ? undefined : data.batchId,
         flowerCount: data.flowerCount,
@@ -79,6 +89,7 @@ export function PhenologyLogForm() {
       });
 
       form.reset({
+        date: new Date(),
         developmentState: undefined,
         batchId: 'general',
         flowerCount: 0,
@@ -99,51 +110,101 @@ export function PhenologyLogForm() {
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="developmentState"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Estado de Desarrollo</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Seleccione un estado" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="Floración">Floración</SelectItem>
-                                <SelectItem value="Fructificación">Fructificación</SelectItem>
-                                <SelectItem value="Maduración">Maduración</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-                <FormField
-                    control={form.control}
-                    name="batchId"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Lote (Opcional)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Observación General" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="general">Observación General</SelectItem>
-                            {batches.map(b => (
-                                <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Fecha de Observación</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            disabled={!canManage || isPending}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: es })
+                            ) : (
+                              <span>Seleccione una fecha</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("2020-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="batchId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lote (Opcional)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Observación General" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="general">Observación General</SelectItem>
+                        {batches.map(b => (
+                          <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid md:grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="developmentState"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado de Desarrollo</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccione un estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Plantación">Plantación</SelectItem>
+                        <SelectItem value="Desarrollo foliar">Desarrollo foliar</SelectItem>
+                        <SelectItem value="Floración">Floración</SelectItem>
+                        <SelectItem value="Caida de petalos">Caida de petalos</SelectItem>
+                        <SelectItem value="Fase de fruto verde">Fase de fruto verde</SelectItem>
+                        <SelectItem value="Fructificación">Fructificación</SelectItem>
+                        <SelectItem value="Cambio de color (Vire)">Cambio de color (Vire)</SelectItem>
+                        <SelectItem value="Maduracion comercial">Maduracion comercial</SelectItem>
+                        <SelectItem value="Maduración">Maduración</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className="grid md:grid-cols-2 gap-4">
                 <FormField

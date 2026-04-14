@@ -11,6 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +24,9 @@ import { PlusCircle, Trash2 } from 'lucide-react';
 import type { ImageWithHint } from '@/lib/types';
 
 const LogSchema = z.object({
+  date: z.date({
+    required_error: "La fecha es requerida.",
+  }),
   observationType: z.enum(['Plaga', 'Enfermedad', 'Deficiencia', 'Exceso'], {
     required_error: "El tipo de observación es requerido.",
   }),
@@ -43,6 +52,7 @@ export function HealthLogForm() {
   const form = useForm<LogFormValues>({
     resolver: zodResolver(LogSchema),
     defaultValues: {
+      date: new Date(),
       observationType: undefined,
       batchId: 'general',
       product: '',
@@ -64,7 +74,7 @@ export function HealthLogForm() {
             .map(img => ({ url: img.url, hint: 'crop disease pest deficiency'}));
 
       addAgronomistLog({
-        date: new Date().toISOString(),
+        date: data.date.toISOString(),
         type: 'Sanidad',
         batchId: data.batchId === 'general' ? undefined : data.batchId,
         product: `${data.observationType}: ${data.product}`,
@@ -78,6 +88,7 @@ export function HealthLogForm() {
       });
 
       form.reset({
+        date: new Date(),
         observationType: undefined,
         batchId: 'general',
         product: '',
@@ -97,7 +108,74 @@ export function HealthLogForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
-             <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Fecha de Observación</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            disabled={!canManage || isPending}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: es })
+                            ) : (
+                              <span>Seleccione una fecha</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("2020-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="batchId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lote (Opcional)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Observación General" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="general">Observación General</SelectItem>
+                        {batches.map(b => (
+                          <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
                 <FormField
                 control={form.control}
                 name="observationType"
@@ -147,29 +225,6 @@ export function HealthLogForm() {
                     </FormControl>
                     <FormMessage />
                 </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="batchId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lote (Opcional)</FormLabel>
-                     <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Observación General" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="general">Observación General</SelectItem>
-                          {batches.map(b => (
-                            <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                          ))}
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
                 )}
               />
             </div>

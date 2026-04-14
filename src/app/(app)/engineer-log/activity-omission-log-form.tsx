@@ -8,15 +8,24 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { AppDataContext } from '@/context/app-data-context.tsx';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { AppDataContext } from '@/context/app-data-context.tsx';
 import { ImageWithHint } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 const LogSchema = z.object({
+  date: z.date({
+    required_error: "La fecha es requerida.",
+  }),
   omittedActivity: z.string().min(1, "Debe seleccionar una actividad."),
   notes: z.string().min(10, "La razón debe tener al menos 10 caracteres."),
   images: z.array(z.object({
@@ -37,6 +46,7 @@ export function ActivityOmissionLogForm() {
   const form = useForm<LogFormValues>({
     resolver: zodResolver(LogSchema),
     defaultValues: { 
+        date: new Date(),
         omittedActivity: '',
         notes: '',
         images: [{ url: '' }],
@@ -55,7 +65,7 @@ export function ActivityOmissionLogForm() {
             .map(img => ({ url: img.url, hint: 'field problem' }));
 
       addProducerLog({
-        date: new Date().toISOString(),
+        date: data.date.toISOString(),
         notes: data.notes,
         type: 'Actividad Omitida',
         omittedActivity: data.omittedActivity,
@@ -67,7 +77,12 @@ export function ActivityOmissionLogForm() {
         description: "La falta de actividad ha sido registrada en la bitácora del productor.",
       });
 
-      form.reset();
+      form.reset({
+        date: new Date(),
+        omittedActivity: '',
+        notes: '',
+        images: [{ url: '' }],
+      });
     });
   };
   
@@ -80,29 +95,73 @@ export function ActivityOmissionLogForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="omittedActivity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Actividad Omitida</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={isPending || !canManage}>
+            <div className="grid md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Fecha de la Actividad Omitida</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
                         <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Seleccione una actividad..." />
-                        </SelectTrigger>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            disabled={!canManage || isPending}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP", { locale: es })
+                            ) : (
+                              <span>Seleccione una fecha</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
                         </FormControl>
-                        <SelectContent>
-                            <SelectItem value="Labores Culturales">Labores Culturales</SelectItem>
-                            <SelectItem value="Fertilización">Fertilización</SelectItem>
-                            <SelectItem value="Fumigación">Fumigación</SelectItem>
-                            <SelectItem value="Riego">Riego</SelectItem>
-                        </SelectContent>
-                    </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("2020-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="omittedActivity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actividad Omitida</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isPending || !canManage}>
+                          <FormControl>
+                          <SelectTrigger>
+                              <SelectValue placeholder="Seleccione una actividad..." />
+                          </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                              <SelectItem value="Labores Culturales">Labores Culturales</SelectItem>
+                              <SelectItem value="Fertilización">Fertilización</SelectItem>
+                              <SelectItem value="Fumigación">Fumigación</SelectItem>
+                              <SelectItem value="Riego">Riego</SelectItem>
+                          </SelectContent>
+                      </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
              <FormField
               control={form.control}
               name="notes"

@@ -3,7 +3,6 @@
 import React, { useContext, useTransition, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +13,7 @@ import { summarizeAgronomistReport } from '@/ai/flows/summarize-agronomist-repor
 import { FileDown, Sparkles } from 'lucide-react';
 
 
-// Extend jsPDF with autoTable
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: any) => jsPDF;
-  lastAutoTable: { finalY: number };
-}
+
 
 
 export function AgronomistReportGenerator() {
@@ -56,7 +51,7 @@ export function AgronomistReportGenerator() {
       });
 
       try {
-        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4'}) as jsPDFWithAutoTable;
+        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4'});
         const pageHeight = doc.internal.pageSize.height;
         const pageWidth = doc.internal.pageSize.width;
         let logoPngDataUri = '';

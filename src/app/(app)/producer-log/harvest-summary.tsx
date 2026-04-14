@@ -4,7 +4,7 @@
 import React, { useContext, useTransition, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -177,7 +177,7 @@ export function HarvestSummary() {
             doc.setFontSize(10);
             doc.setTextColor(80);
 
-            doc.autoTable({
+            autoTable(doc, {
                 head,
                 body,
                 startY: yPos,
@@ -186,7 +186,7 @@ export function HarvestSummary() {
                 bodyStyles: { textColor: 80, font: 'helvetica', halign: 'center' },
                 alternateRowStyles: { fillColor: [245, 245, 245] },
             });
-            yPos = doc.lastAutoTable.finalY + 15;
+            yPos = (doc as any).lastAutoTable?.finalY + 15 || yPos + 20;
         }
 
         const addCharts = async () => {

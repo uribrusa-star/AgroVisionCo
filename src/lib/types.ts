@@ -93,7 +93,7 @@ export type AgronomistLog = {
 export type PhenologyLog = {
     id: string;
     date: string;
-    developmentState: 'Floración' | 'Fructificación' | 'Maduración';
+    developmentState: 'Plantación' | 'Desarrollo foliar' | 'Floración' | 'Caida de petalos' | 'Fase de fruto verde' | 'Fructificación' | 'Cambio de color (Vire)' | 'Maduracion comercial' | 'Maduración';
     batchId?: string;
     flowerCount?: number;
     fruitCount?: number;

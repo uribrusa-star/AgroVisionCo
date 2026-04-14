@@ -4,7 +4,7 @@
 import React, { useContext, useMemo, useState, useTransition, useRef } from 'react';
 import Image from 'next/image';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +96,7 @@ function PackagingHistoryComponent() {
             ['Total Pagado', `$${selectedLog.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
         ];
         
-        doc.autoTable({
+        autoTable(doc, {
             startY: bodyY + 25,
             body: tableBody,
             theme: 'grid',
@@ -105,7 +105,7 @@ function PackagingHistoryComponent() {
             columnStyles: { 0: { fontStyle: 'bold', fillColor: '#f8f9fa' } }
         });
 
-        const finalY = (doc as any).lastAutoTable.finalY || 150;
+        const finalY = (doc as any).lastAutoTable?.finalY || 150;
         doc.setFontSize(11);
         doc.text('Firma del Embalador: _________________________', 15, finalY + 30);
         doc.text(`Aclaración: ${selectedLog.packerName}`, 15, finalY + 40);
