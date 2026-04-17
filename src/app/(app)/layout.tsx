@@ -6,9 +6,7 @@ import { HardHat, Leaf, LayoutDashboard, Check, Loader2, PackageSearch, Menu, Bu
 import React, { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+
 
 import {
   SidebarProvider,
@@ -35,18 +33,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogClose,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useToast } from "@/hooks/use-toast"
 
 
 const allNavItems = [
@@ -63,252 +49,24 @@ const allNavItems = [
   { href: '/users', label: 'Usuarios', icon: BookUser, roles: ['Productor'] },
 ];
 
-const PasswordSchema = z.object({
-  newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
-  confirmPassword: z.string(),
-}).refine(data => data.newPassword === data.confirmPassword, {
-  message: "Las contraseñas no coinciden.",
-  path: ["confirmPassword"],
-});
-
-const ProfileSchema = z.object({
-  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
-  email: z.string().email("Por favor, ingrese un correo válido.").optional(),
-  notificationEmail: z.string().email("Por favor, ingrese un correo de notificación válido.").or(z.literal("")).optional(),
-});
-
-
 function UserMenu() {
-  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile, saveFcmToken } = React.useContext(AppDataContext);
-  const router = useRouter();
-  const { toast } = useToast();
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
-
-  const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
-    resolver: zodResolver(PasswordSchema),
-    defaultValues: { newPassword: '', confirmPassword: '' },
-  });
-
-  const profileForm = useForm<z.infer<typeof ProfileSchema>>({
-    resolver: zodResolver(ProfileSchema),
-    defaultValues: { name: currentUser?.name || '', email: currentUser?.email || '', notificationEmail: currentUser?.notificationEmail || '' },
-  });
+  const { currentUser } = React.useContext(AppDataContext);
   
   if(!currentUser) return null;
   
-  const handleLogout = () => {
-    setCurrentUser(null, false);
-    fetch('/api/logout', { method: 'POST' }).then(() => {
-        router.push('/');
-    });
-  }
-
-  const onPasswordSubmit = (values: z.infer<typeof PasswordSchema>) => {
-    if(!currentUser) return;
-    startTransition(async () => {
-        try {
-            await updateUserPassword(currentUser.id, values.newPassword);
-            toast({
-                title: "Contraseña Actualizada",
-                description: "Su contraseña ha sido cambiada exitosamente.",
-            });
-            setIsPasswordDialogOpen(false);
-            passwordForm.reset();
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo actualizar la contraseña.",
-                variant: "destructive",
-            });
-        }
-    });
-  }
-
-  const onProfileSubmit = (values: z.infer<typeof ProfileSchema>) => {
-    if(!currentUser) return;
-    startTransition(async () => {
-        try {
-            await updateUserProfile(currentUser.id, { name: values.name, notificationEmail: values.notificationEmail });
-            toast({
-                title: "Perfil Actualizado",
-                description: "Su nombre y correo de notificaciones han sido actualizados.",
-            });
-            setIsProfileDialogOpen(false);
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "No se pudo actualizar el perfil.",
-                variant: "destructive",
-            });
-        }
-    });
-  };
-
-  useEffect(() => {
-    if (currentUser) {
-        profileForm.reset({ name: currentUser.name, email: currentUser.email, notificationEmail: currentUser.notificationEmail || '' });
-    }
-  }, [currentUser, profileForm, isProfileDialogOpen]);
-  
   return (
-      <>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="justify-start gap-2 w-full p-2 h-12">
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://picsum.photos/seed/${currentUser?.avatar || 'user'}/40/40`} alt={currentUser?.name || 'Usuario'} />
-                    <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="text-left">
-                    <p className="text-sm font-medium text-sidebar-foreground">{currentUser?.name || 'Usuario'}</p>
-                    <p className="text-xs text-muted-foreground">{currentUser?.email || ''}</p>
-                </div>
-            </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start" className="w-56">
-                <DropdownMenuLabel>Mi Perfil</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setIsProfileDialogOpen(true)}>
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    <span>Editar Perfil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setIsPasswordDialogOpen(true)}>
-                    <KeyRound className="mr-2 h-4 w-4" />
-                    <span>Cambiar Contraseña</span>
-                </DropdownMenuItem>
-                
-                <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Dialog open={isProfileDialogOpen} onOpenChange={setIsProfileDialogOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Editar Perfil</DialogTitle>
-                    <DialogDescription>
-                        Actualice su nombre y configure un correo electrónico para recibir notificaciones.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50 mb-4">
-                  <div className="space-y-0.5">
-                    <h4 className="text-sm font-medium">Alertas Rápidas (Push)</h4>
-                    <p className="text-xs text-muted-foreground">Recibe alertas en la pantalla en tiempo real.</p>
-                  </div>
-                  {notificationPermission === 'granted' ? (
-                     <div className="flex items-center gap-2">
-                       <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full dark:bg-green-900/30 dark:text-green-400">Activado</span>
-                       {!(currentUser?.fcmTokens && currentUser.fcmTokens.length > 0) && (
-                         <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={async () => {
-                               const token = await requestPermissionAndGetToken();
-                               if(token) {
-                                  saveFcmToken(token);
-                               }
-                            }}
-                         >
-                            Vincular Código
-                         </Button>
-                       )}
-                     </div>
-                  ) : (
-                     <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={async () => {
-                           const token = await requestPermissionAndGetToken();
-                           if(token) {
-                              const context = React.useContext(AppDataContext);
-                              context.saveFcmToken(token);
-                           }
-                        }}
-                     >
-                        Permitir
-                     </Button>
-                  )}
-                </div>
-                <Form {...profileForm}>
-                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                        <FormField control={profileForm.control} name="name" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Nombre</FormLabel>
-                                <FormControl><Input {...field} disabled={isPending} /></FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <FormField control={profileForm.control} name="email" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Correo de Inicio de Sesión</FormLabel>
-                                <FormControl><Input type="email" {...field} disabled={true} /></FormControl>
-                                <FormDescription>
-                                  Este correo es su nombre de usuario y no puede ser modificado.
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                         <FormField control={profileForm.control} name="notificationEmail" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Correo para Notificaciones</FormLabel>
-                                <FormControl><Input type="email" {...field} placeholder="ej. alertas@miempresa.com" disabled={isPending} /></FormControl>
-                                 <FormDescription>
-                                  Recibirá alertas de tareas y otras notificaciones en esta dirección. Si lo deja en blanco, se usará su correo de inicio de sesión.
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        <DialogFooter>
-                            <DialogClose asChild><Button type="button" variant="secondary">Cancelar</Button></DialogClose>
-                            <Button type="submit" disabled={isPending}>{isPending ? "Guardando..." : "Guardar Cambios"}</Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
-
-        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Cambiar Contraseña</DialogTitle>
-                    <DialogDescription>
-                        Ingrese una nueva contraseña para su cuenta.
-                    </DialogDescription>
-                </DialogHeader>
-                <Form {...passwordForm}>
-                    <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-                         <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Nueva Contraseña</FormLabel>
-                                    <FormControl><Input type="password" {...field} disabled={isPending} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Confirmar Nueva Contraseña</FormLabel>
-                                    <FormControl><Input type="password" {...field} disabled={isPending} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <DialogFooter>
-                            <DialogClose asChild><Button type="button" variant="secondary">Cancelar</Button></DialogClose>
-                            <Button type="submit" disabled={isPending}>{isPending ? "Guardando..." : "Guardar Contraseña"}</Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
-      </>
+      <Button variant="ghost" className="justify-start gap-2 w-full p-2 h-12" asChild>
+          <Link href="/profile">
+            <Avatar className="h-8 w-8">
+                <AvatarImage src={`https://picsum.photos/seed/${currentUser?.avatar || 'user'}/40/40`} alt={currentUser?.name || 'Usuario'} />
+                <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+            <div className="text-left overflow-hidden flex-1">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{currentUser?.name || 'Usuario'}</p>
+                <p className="text-xs text-muted-foreground truncate">{currentUser?.email || ''}</p>
+            </div>
+          </Link>
+      </Button>
   )
 }
 

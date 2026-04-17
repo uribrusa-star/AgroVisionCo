@@ -49,10 +49,31 @@ export function StrawberryExpertChat() {
     setIsLoading(true);
 
     // Generate context summary
-    const generateContext = () => {
-        if (!establishmentData) return "";
+    const generateContext = async () => {
+        let weatherText = "Datos Climáticos Activos: [Falló la conexión o clave de OpenWeather ausente]";
+        try {
+            const locationString = establishmentData?.location?.locality || 'Coronda';
+            const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+            if (apiKey) {
+                const wRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${locationString},ar&appid=${apiKey}&units=metric&lang=es`);
+                if (wRes.ok) {
+                    const wData = await wRes.json();
+                    weatherText = `🌤️ CONDICIONES CLIMÁTICAS EN TIEMPO REAL (${locationString}):
+- Temperatura Actual: ${wData.main.temp}°C (Sensación Térmica: ${wData.main.feels_like}°C)
+- Humedad Relativa: ${wData.main.humidity}%
+- Estado Atmosférico: ${wData.weather[0].description}
+- Viento: ${wData.wind.speed} m/s`;
+                }
+            }
+        } catch (e) {
+            console.warn("No se pudo obtener el clima para el chat", e);
+        }
 
-        let context = `Dato del Establecimiento:
+        if (!establishmentData) return weatherText;
+
+        let context = `${weatherText}
+
+Dato del Establecimiento:
 - Productor: ${establishmentData.producer}
 - Ubicación: ${establishmentData.location.locality}, ${establishmentData.location.province}
 - Sistema: ${establishmentData.system}
@@ -76,9 +97,11 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
     };
 
     try {
+      const liveContext = await generateContext();
+      
       const response = await expertChat({
         messages: newMessages,
-        context: generateContext(),
+        context: liveContext,
       });
 
       if (response && response.text) {
