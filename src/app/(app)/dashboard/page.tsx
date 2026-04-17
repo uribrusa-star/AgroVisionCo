@@ -15,6 +15,7 @@ import { CostDistributionChart } from './cost-distribution-chart';
 import { ProductionPaymentHistory } from '../production-payment-history';
 import { PackagingHistory } from '../data-entry/packaging-history';
 import { BatchYieldChart } from '../engineer-log/batch-yield-chart';
+import { PushNotificationBanner } from '@/components/push-notification-banner';
 
 
 export default function DashboardPage() {
@@ -77,6 +78,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title="Panel de Control" description="Estadísticas clave y actividad reciente." />
+      <PushNotificationBanner />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
         <Card className="hover:shadow-md transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

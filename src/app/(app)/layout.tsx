@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 import {
   SidebarProvider,
@@ -78,12 +79,13 @@ const ProfileSchema = z.object({
 
 
 function UserMenu() {
-  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile } = React.useContext(AppDataContext);
+  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile, saveFcmToken } = React.useContext(AppDataContext);
   const router = useRouter();
   const { toast } = useToast();
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
 
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
@@ -193,6 +195,47 @@ function UserMenu() {
                         Actualice su nombre y configure un correo electrónico para recibir notificaciones.
                     </DialogDescription>
                 </DialogHeader>
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50 mb-4">
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-medium">Alertas Rápidas (Push)</h4>
+                    <p className="text-xs text-muted-foreground">Recibe alertas en la pantalla en tiempo real.</p>
+                  </div>
+                  {notificationPermission === 'granted' ? (
+                     <div className="flex items-center gap-2">
+                       <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full dark:bg-green-900/30 dark:text-green-400">Activado</span>
+                       {!(currentUser?.fcmTokens && currentUser.fcmTokens.length > 0) && (
+                         <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={async () => {
+                               const token = await requestPermissionAndGetToken();
+                               if(token) {
+                                  saveFcmToken(token);
+                               }
+                            }}
+                         >
+                            Vincular Código
+                         </Button>
+                       )}
+                     </div>
+                  ) : (
+                     <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={async () => {
+                           const token = await requestPermissionAndGetToken();
+                           if(token) {
+                              const context = React.useContext(AppDataContext);
+                              context.saveFcmToken(token);
+                           }
+                        }}
+                     >
+                        Permitir
+                     </Button>
+                  )}
+                </div>
                 <Form {...profileForm}>
                     <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
                         <FormField control={profileForm.control} name="name" render={({ field }) => (

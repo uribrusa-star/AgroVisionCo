@@ -69,6 +69,7 @@ export const AppDataContext = React.createContext<AppData>({
   deleteTransaction: async () => { throw new Error('Not implemented') },
   updateUserPassword: async () => { throw new Error('Not implemented') },
   updateUserProfile: async () => { throw new Error('Not implemented') },
+  saveFcmToken: async () => { throw new Error('Not implemented') },
   isClient: false,
 });
 
@@ -1044,6 +1045,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const saveFcmToken = async (token: string) => {
+        if (!currentUser) return;
+        const currentTokens = currentUser.fcmTokens || [];
+        if (!currentTokens.includes(token)) {
+            const newTokens = [...currentTokens, token];
+            const userRef = doc(db, 'users', currentUser.id);
+            await setDoc(userRef, { fcmTokens: newTokens }, { merge: true });
+            
+            setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, fcmTokens: newTokens } : u));
+            setCurrentUser({ ...currentUser, fcmTokens: newTokens }, true);
+        }
+    };
+
     const value = {
         loading,
         currentUser,
@@ -1104,6 +1118,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         deleteTransaction,
         updateUserPassword,
         updateUserProfile,
+        saveFcmToken,
         isClient
     };
 

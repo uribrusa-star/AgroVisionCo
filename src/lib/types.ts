@@ -10,6 +10,7 @@ export type User = {
   avatar: string;
   role: UserRole;
   password?: string; // Added for mock authentication
+  fcmTokens?: string[];
 };
 
 export type Collector = {
@@ -340,5 +341,6 @@ export type AppData = {
   deleteTransaction: (transactionId: string) => Promise<void>;
   updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
   updateUserProfile: (userId: string, profileData: { name: string; notificationEmail?: string }) => Promise<void>;
+  saveFcmToken: (token: string) => Promise<void>;
   isClient: boolean;
 };
