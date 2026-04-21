@@ -30,6 +30,7 @@ const ProfileSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
   email: z.string().email("Por favor, ingrese un correo válido.").optional(),
   notificationEmail: z.string().email("Por favor, ingrese un correo de notificación válido.").or(z.literal("")).optional(),
+  avatar: z.string().url("Por favor, ingrese una URL válida.").or(z.literal("")).optional(),
 });
 
 export default function ProfilePage() {
@@ -46,12 +47,22 @@ export default function ProfilePage() {
 
   const profileForm = useForm<z.infer<typeof ProfileSchema>>({
     resolver: zodResolver(ProfileSchema),
-    defaultValues: { name: currentUser?.name || '', email: currentUser?.email || '', notificationEmail: currentUser?.notificationEmail || '' },
+    defaultValues: { 
+      name: currentUser?.name || '', 
+      email: currentUser?.email || '', 
+      notificationEmail: currentUser?.notificationEmail || '',
+      avatar: currentUser?.avatar?.startsWith('http') ? currentUser.avatar : ''
+    },
   });
 
   useEffect(() => {
     if (currentUser) {
-        profileForm.reset({ name: currentUser.name, email: currentUser.email, notificationEmail: currentUser.notificationEmail || '' });
+        profileForm.reset({ 
+          name: currentUser.name, 
+          email: currentUser.email, 
+          notificationEmail: currentUser.notificationEmail || '',
+          avatar: currentUser.avatar?.startsWith('http') ? currentUser.avatar : ''
+        });
     }
   }, [currentUser, profileForm]);
 
@@ -90,7 +101,12 @@ export default function ProfilePage() {
     if(!currentUser) return;
     startTransition(async () => {
         try {
-            await updateUserProfile(currentUser.id, { name: values.name, notificationEmail: values.notificationEmail });
+            const avatarToSave = values.avatar || currentUser.avatar; // Keep seed if URL is empty
+            await updateUserProfile(currentUser.id, { 
+              name: values.name, 
+              notificationEmail: values.notificationEmail,
+              avatar: avatarToSave
+            });
             toast({
                 title: "Perfil Actualizado",
                 description: "Sus datos básicos han sido guardados.",
@@ -104,6 +120,12 @@ export default function ProfilePage() {
         }
     });
   };
+
+  const getAvatarPreview = () => {
+    const avatar = profileForm.watch('avatar') || currentUser.avatar;
+    if (avatar.startsWith('http')) return avatar;
+    return `https://picsum.photos/seed/${avatar}/150/150`;
+  }
 
   const handlePushLink = async () => {
     const token = await requestPermissionAndGetToken();
@@ -125,7 +147,7 @@ export default function ProfilePage() {
         <div className="xl:col-span-1 flex flex-col gap-6">
             <Card className="flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
                 <Avatar className="h-32 w-32 mb-4 ring-4 ring-background shadow-lg">
-                    <AvatarImage src={`https://picsum.photos/seed/${currentUser.avatar}/150/150`} alt={currentUser.name} />
+                    <AvatarImage src={getAvatarPreview()} alt={currentUser.name} />
                     <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-2xl mt-4">{currentUser.name}</CardTitle>
@@ -180,16 +202,26 @@ export default function ProfilePage() {
                                     </FormItem>
                                 )} />
                             </div>
-                            <FormField control={profileForm.control} name="notificationEmail" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Correo de Respaldo para Notificaciones</FormLabel>
-                                    <FormControl><Input type="email" {...field} placeholder="ej. alertas@miempresa.com" disabled={isPending} className="bg-muted/30" /></FormControl>
-                                    <FormDescription>
-                                        Recibirá las alertas que caduquen o reportes a esta dirección. Déjelo en blanco si desea usar su correo principal.
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
+                                <FormField control={profileForm.control} name="notificationEmail" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Correo de Respaldo para Notificaciones</FormLabel>
+                                        <FormControl><Input type="email" {...field} placeholder="ej. alertas@miempresa.com" disabled={isPending} className="bg-muted/30" /></FormControl>
+                                        <FormDescription>
+                                            Recibirá las alertas que caduquen o reportes a esta dirección. Déjelo en blanco si desea usar su correo principal.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={profileForm.control} name="avatar" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>URL de Imagen de Perfil</FormLabel>
+                                        <FormControl><Input {...field} placeholder="https://ejemplo.com/mi-foto.jpg" disabled={isPending} className="bg-muted/30" /></FormControl>
+                                        <FormDescription>
+                                            Pegue una URL directa a una imagen (JPG, PNG). Si la deja en blanco, se usará un avatar generado aleatoriamente.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
                             <div className="flex justify-end pt-2">
                                 <Button type="submit" disabled={isPending} className="gap-2">
                                     <Save className="h-4 w-4" /> {isPending ? "Guardando..." : "Guardar Cambios"}

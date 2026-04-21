@@ -125,8 +125,15 @@ export default function UsersPage() {
                   <TableCell>
                     <div className="flex items-center gap-3 font-medium">
                       <Avatar>
-                        <AvatarImage src={`https://picsum.photos/seed/${user.avatar}/40/40`} alt={user.name} />
-                        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage 
+                          src={user.avatar?.startsWith('http') 
+                            ? user.avatar 
+                            : `https://picsum.photos/seed/${user.avatar}/40/40`} 
+                          alt="" 
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {user.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       {user.name}
                     </div>

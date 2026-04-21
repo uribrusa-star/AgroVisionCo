@@ -187,7 +187,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               await batch.commit();
               setUsers(availableUsers);
             } else {
-              setUsers(usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[]);
+              const fetchedUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
+              // Deduplicate by ID to be absolutely sure
+              const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
+              setUsers(uniqueUsers);
             }
 
             // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores)
@@ -1051,7 +1054,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const updateUserProfile = async (userId: string, profileData: { name: string; notificationEmail?: string }) => {
+    const updateUserProfile = async (userId: string, profileData: { name: string; notificationEmail?: string; avatar?: string }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, profileData, { merge: true });
         

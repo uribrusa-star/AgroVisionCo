@@ -59,7 +59,12 @@ function UserMenu() {
       <Button variant="ghost" className="justify-start gap-2 w-full p-2 h-12" asChild>
           <Link href="/profile">
             <Avatar className="h-8 w-8">
-                <AvatarImage src={`https://picsum.photos/seed/${currentUser?.avatar || 'user'}/40/40`} alt={currentUser?.name || 'Usuario'} />
+                <AvatarImage 
+                    src={currentUser?.avatar?.startsWith('http') 
+                        ? currentUser.avatar 
+                        : `https://picsum.photos/seed/${currentUser?.avatar || 'user'}/40/40`} 
+                    alt="" 
+                />
                 <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <div className="text-left overflow-hidden flex-1">
