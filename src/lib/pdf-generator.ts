@@ -438,19 +438,25 @@ export const generateAgronomistReportPDF = (
   yPos += totalConclusionHeight + 10;
 
   // Main Recommendation Highlight
-  const mainRecText = reportData.executiveSummary.mainRecommendation.toUpperCase();
-  const mainRecLines = doc.splitTextToSize(mainRecText, pageWidth - 45);
-  const mainRecHeight = (mainRecLines.length * 6) + 15;
+  const mainRecText = reportData.executiveSummary.mainRecommendation;
+  
+  // CRITICAL: Set font state BEFORE splitTextToSize to ensure correct width calculation
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  const mainRecLines = doc.splitTextToSize(mainRecText, pageWidth - 50); // Using 50 for safer margins
+  const mainRecHeight = (mainRecLines.length * 6) + 18;
 
   doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
   doc.roundedRect(15, yPos, pageWidth - 30, mainRecHeight, 2, 2, 'F');
+  
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text('RECOMENDACIÓN PRINCIPAL', 20, yPos + 8);
-  doc.setFontSize(12);
+  
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text(mainRecLines, 20, yPos + 16);
+  doc.text(mainRecLines, 20, yPos + 17);
 
   yPos += mainRecHeight + 15;
 
