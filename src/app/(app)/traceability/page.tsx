@@ -25,6 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateTraceabilityPDF, generateMonthlyProductionPDF } from '@/lib/pdf-generator';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TraceabilityPage() {
   const { 
@@ -35,6 +36,7 @@ export default function TraceabilityPage() {
     establishmentData,
     loading 
   } = useContext(AppDataContext);
+  const { toast } = useToast();
 
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
@@ -87,23 +89,87 @@ export default function TraceabilityPage() {
     return events.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [selectedBatchId, harvests, agronomistLogs, phenologyLogs]);
 
-  const handleExportTraceability = () => {
+  const handleExportTraceability = async () => {
     if (!selectedBatch) return;
-    const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
-    const batchAgLogs = agronomistLogs.filter(l => l.batchId === selectedBatchId);
-    const batchPhenology = phenologyLogs.filter(p => p.batchId === selectedBatchId);
+    
+    toast({
+      title: 'Generando Reporte',
+      description: 'Estamos preparando el historial de trazabilidad...',
+    });
 
-    generateTraceabilityPDF(selectedBatch, batchHarvests, batchAgLogs, batchPhenology, establishmentData);
+    try {
+      let logoPngDataUri = '';
+      try {
+        const response = await fetch('/logo.png');
+        const blob = await response.blob();
+        logoPngDataUri = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      } catch (e) {
+        console.error("Error loading logo:", e);
+      }
+
+      const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
+      const batchAgLogs = agronomistLogs.filter(l => l.batchId === selectedBatchId);
+      const batchPhenology = phenologyLogs.filter(p => p.batchId === selectedBatchId);
+
+      generateTraceabilityPDF(selectedBatch, batchHarvests, batchAgLogs, batchPhenology, establishmentData, logoPngDataUri);
+      
+      toast({
+        title: 'Reporte Generado',
+        description: 'El PDF de trazabilidad se ha descargado correctamente.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar el reporte PDF.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleExportMonthly = () => {
-    const [year, month] = selectedMonth.split('-').map(Number);
-    const date = new Date(year, month - 1);
-    const monthlyHarvests = harvests.filter(h => {
-        const hDate = new Date(h.date);
-        return hDate.getFullYear() === year && hDate.getMonth() === month - 1;
+  const handleExportMonthly = async () => {
+    toast({
+      title: 'Exportando Mes',
+      description: 'Generando reporte de producción mensual...',
     });
-    generateMonthlyProductionPDF(monthlyHarvests, date, establishmentData);
+
+    try {
+      let logoPngDataUri = '';
+      try {
+        const response = await fetch('/logo.png');
+        const blob = await response.blob();
+        logoPngDataUri = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      } catch (e) {
+        console.error("Error loading logo:", e);
+      }
+
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const date = new Date(year, month - 1);
+      const monthlyHarvests = harvests.filter(h => {
+          const hDate = new Date(h.date);
+          return hDate.getFullYear() === year && hDate.getMonth() === month - 1;
+      });
+
+      generateMonthlyProductionPDF(monthlyHarvests, date, establishmentData, logoPngDataUri);
+
+      toast({
+        title: 'Mes Exportado',
+        description: 'El reporte de producción mensual está listo.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo exportar el reporte mensual.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -235,8 +301,8 @@ export default function TraceabilityPage() {
                   </div>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px] pr-4">
-                  <div className="relative space-y-8 left-4">
+                <ScrollArea className="h-[600px]">
+                  <div className="relative space-y-8 ml-4 mr-2 pb-4">
                     {/* Vertical line */}
                     <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-border -ml-[1px]" />
                     
@@ -250,19 +316,21 @@ export default function TraceabilityPage() {
                           <event.icon className={cn("h-4 w-4", event.color)} />
                         </div>
                         
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider">
                               {format(event.date, "dd 'de' MMMM, yyyy", { locale: es })}
                             </span>
-                            <Badge variant="ghost" className="text-[10px] h-5 py-0">
-                                {event.type === 'phenology' ? 'Fenología' : event.type === 'harvest' ? 'Cosecha' : 'Log'}
+                            <Badge variant="secondary" className="text-[9px] h-5 py-0 px-2">
+                                {event.type === 'phenology' ? 'Fenología' : event.type === 'harvest' ? 'Cosecha' : 'Bitácora'}
                             </Badge>
                           </div>
-                          <h4 className="text-base font-semibold leading-none">{event.title}</h4>
-                          <p className="text-sm text-muted-foreground mt-1 bg-muted/30 p-2 rounded-md">
-                            {event.description}
-                          </p>
+                          <h4 className="text-sm md:text-base font-semibold leading-tight">{event.title}</h4>
+                          {event.description && (
+                            <p className="text-xs md:text-sm text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border/50 break-words">
+                              {event.description}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -273,11 +341,11 @@ export default function TraceabilityPage() {
                           <ArrowRight className="h-4 w-4 text-white" />
                         </div>
                         <div className="flex flex-col gap-1">
-                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                             <span className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider">
                               {format(new Date(selectedBatch.preloadedDate), "dd 'de' MMMM, yyyy", { locale: es })}
                             </span>
-                            <h4 className="text-base font-semibold">Inicio del Ciclo de Lote</h4>
-                            <p className="text-sm text-muted-foreground">Lote precargado en el sistema.</p>
+                            <h4 className="text-sm md:text-base font-semibold">Inicio del Ciclo de Lote</h4>
+                            <p className="text-xs md:text-sm text-muted-foreground">Lote precargado en el sistema.</p>
                         </div>
                     </div>
                   </div>
