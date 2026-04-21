@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Sparkles, RefreshCcw, Info } from 'lucide-react';
+import { Send, User, Bot, Sparkles, RefreshCcw, Info, BookOpen, Upload, Trash2, X, FileText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { expertChat, type ExpertChatInput, type ExpertChatOutput } from '@/ai/fl
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { AppDataContext } from '@/context/app-data-context.tsx';
+import { getRelevantKnowledge } from '@/ai/knowledge/strawberry-knowledge';
 
 interface Message {
   role: 'user' | 'model';
@@ -18,7 +19,9 @@ interface Message {
 }
 
 export function StrawberryExpertChat() {
-  const { establishmentData, harvests, agronomistLogs, phenologyLogs, batches, supplies, expertChatHistory, setExpertChatHistory } = React.useContext(AppDataContext);
+  const { establishmentData, harvests, agronomistLogs, phenologyLogs, batches, supplies, expertChatHistory, setExpertChatHistory, knowledgeBase, addKnowledgeItem, deleteKnowledgeItem } = React.useContext(AppDataContext);
+  const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -76,7 +79,20 @@ export function StrawberryExpertChat() {
 
         if (!establishmentData) return weatherText;
 
-        let context = `${weatherText}
+        const varieties = establishmentData.planting.variety.split(',').map(v => v.trim());
+        const specializedKnowledge = getRelevantKnowledge(varieties);
+
+        // Include user-uploaded knowledge
+        let userKnowledge = "";
+        if (knowledgeBase.length > 0) {
+            userKnowledge = "\nCONOCIMIENTO ADICIONAL CARGADO POR EL USUARIO:\n" + 
+                knowledgeBase.map(item => `--- ${item.title} ---\n${item.content}`).join('\n\n');
+        }
+
+        let context = `${specializedKnowledge}
+${userKnowledge}
+
+${weatherText}
 
 Dato del Establecimiento:
 - Productor: ${establishmentData.producer}
@@ -141,6 +157,57 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
     ]);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+        toast({ title: "Error", description: "Por favor, sube solo archivos PDF.", variant: "destructive" });
+        return;
+    }
+
+    setIsUploading(true);
+    try {
+        const pdfjs = await import('pdfjs-dist');
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const typedarray = new Uint8Array(event.target?.result as ArrayBuffer);
+                const pdf = await pdfjs.getDocument(typedarray).promise;
+                let fullText = "";
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                    fullText += pageText + "\n";
+                }
+
+                await addKnowledgeItem({
+                    title: file.name,
+                    content: fullText,
+                    type: 'pdf',
+                    date: new Date().toISOString()
+                });
+
+                toast({ title: "Éxito", description: "Documento indexado correctamente." });
+            } catch (err) {
+                console.error(err);
+                toast({ title: "Error", description: "No se pudo leer el PDF.", variant: "destructive" });
+            } finally {
+                setIsUploading(false);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    } catch (err) {
+        console.error(err);
+        toast({ title: "Error", description: "Error al cargar el procesador de PDF.", variant: "destructive" });
+        setIsUploading(false);
+    }
+  };
+
   return (
     <Card className="flex flex-col h-[600px] border-primary/20 bg-gradient-to-b from-background to-primary/5">
       <CardHeader className="border-b bg-card/50 backdrop-blur-sm">
@@ -157,13 +224,75 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
                     </CardDescription>
                 </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={handleReset} title="Limpiar chat">
-                <RefreshCcw className="h-4 w-4 text-muted-foreground" />
-            </Button>
+            <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={() => setIsKnowledgeOpen(!isKnowledgeOpen)} title="Base de conocimiento">
+                    <BookOpen className={`h-4 w-4 ${knowledgeBase.length > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={handleReset} title="Limpiar chat">
+                    <RefreshCcw className="h-4 w-4 text-muted-foreground" />
+                </Button>
+            </div>
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 p-0 overflow-hidden">
+      <CardContent className="flex-1 p-0 overflow-hidden relative">
+        {isKnowledgeOpen && (
+            <div className="absolute inset-0 bg-background/95 backdrop-blur-md z-20 p-4 border-b animate-in slide-in-from-top-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold flex items-center gap-2 text-primary">
+                        <BookOpen className="h-4 w-4" /> 
+                        Biblioteca Técnica ({knowledgeBase.length})
+                    </h3>
+                    <Button variant="ghost" size="icon" onClick={() => setIsKnowledgeOpen(false)}>
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+                
+                <div className="space-y-4">
+                    <div className="border-2 border-dashed border-primary/20 rounded-lg p-6 text-center hover:bg-primary/5 transition-colors cursor-pointer relative">
+                        <input 
+                            type="file" 
+                            className="absolute inset-0 opacity-0 cursor-pointer" 
+                            accept=".pdf"
+                            onChange={handleFileUpload}
+                            disabled={isUploading}
+                        />
+                        {isUploading ? (
+                             <div className="flex flex-col items-center gap-2">
+                                <RefreshCcw className="h-6 w-6 animate-spin text-primary" />
+                                <span className="text-xs font-medium">Procesando PDF...</span>
+                             </div>
+                        ) : (
+                            <div className="flex flex-col items-center gap-2">
+                                <Upload className="h-6 w-6 text-primary/60" />
+                                <span className="text-sm font-medium">Subir Manual Técnico (PDF)</span>
+                                <span className="text-[10px] text-muted-foreground">La IA lo usará para aprender de tu zona.</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <ScrollArea className="h-[300px]">
+                        <div className="space-y-2">
+                            {knowledgeBase.length === 0 ? (
+                                <p className="text-center text-xs text-muted-foreground py-10">No hay documentos cargados.</p>
+                            ) : (
+                                knowledgeBase.map((item) => (
+                                    <div key={item.id} className="flex items-center justify-between bg-card p-2 rounded border border-border/50 group">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                                            <span className="text-xs truncate font-medium">{item.title}</span>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive" onClick={() => deleteKnowledgeItem(item.id)}>
+                                            <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </ScrollArea>
+                </div>
+            </div>
+        )}
         <ScrollArea className="h-full px-4 py-6" ref={scrollAreaRef}>
           <div className="space-y-4">
             {expertChatHistory.map((m, i) => (

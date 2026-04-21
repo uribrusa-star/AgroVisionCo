@@ -280,6 +280,13 @@ export type Transaction = {
     pricePerUnit?: number;
 }
 
+export type KnowledgeItem = {
+    id: string;
+    title: string;
+    content: string;
+    type: 'pdf' | 'text';
+    date: string;
+};
 
 export type AppData = {
   loading: boolean;
@@ -302,6 +309,7 @@ export type AppData = {
   establishmentData: EstablishmentData | null;
   producerLogs: ProducerLog[];
   transactions: Transaction[];
+  knowledgeBase: KnowledgeItem[];
   expertChatHistory: { role: 'user' | 'model'; content: string }[];
   setExpertChatHistory: (history: { role: 'user' | 'model'; content: string }[]) => void;
   addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number) => Promise<string | undefined>;
@@ -341,6 +349,8 @@ export type AppData = {
   deleteProducerLog: (logId: string) => void;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
   deleteTransaction: (transactionId: string) => Promise<void>;
+  addKnowledgeItem: (item: Omit<KnowledgeItem, 'id'>) => Promise<void>;
+  deleteKnowledgeItem: (itemId: string) => Promise<void>;
   updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
   updateUserProfile: (userId: string, profileData: { name: string; notificationEmail?: string }) => Promise<void>;
   saveFcmToken: (token: string) => Promise<void>;

@@ -30,6 +30,7 @@ export const AppDataContext = React.createContext<AppData>({
   establishmentData: null,
   producerLogs: [],
   transactions: [],
+  knowledgeBase: [],
   expertChatHistory: [],
   setExpertChatHistory: () => {},
   addHarvest: async () => { throw new Error('Not implemented') },
@@ -69,10 +70,12 @@ export const AppDataContext = React.createContext<AppData>({
   deleteProducerLog: () => { throw new Error('Not implemented') },
   addTransaction: () => { throw new Error('Not implemented') },
   deleteTransaction: async () => { throw new Error('Not implemented') },
+  addKnowledgeItem: async () => { throw new Error('Not implemented') },
+  deleteKnowledgeItem: async () => { throw new Error('Not implemented') },
   updateUserPassword: async () => { throw new Error('Not implemented') },
   updateUserProfile: async () => { throw new Error('Not implemented') },
   saveFcmToken: async () => { throw new Error('Not implemented') },
-  isClient: false,
+  isClient: false
 });
 
 const usePersistentState = <T,>(key: string): [T, (value: T | null, rememberMe?: boolean) => void] => {
@@ -136,6 +139,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [establishmentData, setEstablishmentData] = useState<EstablishmentData | null>(null);
     const [producerLogs, setProducerLogs] = useState<ProducerLog[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
     const [expertChatHistory, setExpertChatHistory] = useState<{ role: 'user' | 'model'; content: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
@@ -213,6 +217,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               culturalPracticeLogsSnapshot,
               producerLogsSnapshot,
               transactionsSnapshot,
+              knowledgeSnapshot,
             ] = await Promise.all([
               safeFetch(getDoc(doc(db, 'establishment', 'main')), null),
               safeFetch(getDocs(collection(db, 'collectors')), { docs: [] } as any),
@@ -230,6 +235,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
               safeFetch(getDocs(query(collection(db, 'producerLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
               safeFetch(getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(collection(db, 'knowledge')), { docs: [] } as any),
             ]);
             
             if (establishmentDocSnap?.exists()) {
@@ -257,6 +263,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as CulturalPracticeLog[]);
             setProducerLogs(producerLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
             setTransactions(transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[]);
+            setKnowledgeBase(knowledgeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
         
       } catch (error) {
         console.error("Error fetching data from Firestore:", error);
@@ -919,6 +926,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 }
                 
                 await batchOp.commit();
+                await fetchAllData();
                 resolve();
             }
 
@@ -1023,6 +1031,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+    const addKnowledgeItem = async (item: Omit<KnowledgeItem, 'id'>) => {
+        await addDoc(collection(db, 'knowledge'), item);
+        await fetchAllData();
+    };
+
+    const deleteKnowledgeItem = async (itemId: string) => {
+        await deleteDoc(doc(db, 'knowledge', itemId));
+        await fetchAllData();
+    };
+
     const updateUserPassword = async (userId: string, newPassword: string) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, { password: newPassword }, { merge: true });
@@ -1082,6 +1100,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         establishmentData,
         producerLogs,
         transactions,
+        knowledgeBase,
         expertChatHistory,
         setExpertChatHistory,
         addHarvest,
@@ -1121,6 +1140,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         deleteProducerLog,
         addTransaction,
         deleteTransaction,
+        addKnowledgeItem,
+        deleteKnowledgeItem,
         updateUserPassword,
         updateUserProfile,
         saveFcmToken,
