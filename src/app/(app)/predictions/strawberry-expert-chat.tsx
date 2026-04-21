@@ -18,17 +18,22 @@ interface Message {
 }
 
 export function StrawberryExpertChat() {
-  const { establishmentData, harvests, agronomistLogs, phenologyLogs, batches } = React.useContext(AppDataContext);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'model',
-      content: '¡Hola! Soy tu consultor experto en frutilla para la zona de Coronda. ¿En qué puedo ayudarte hoy con tus variedades San Andreas, Marisma o Cleopatra?'
-    }
-  ]);
+  const { establishmentData, harvests, agronomistLogs, phenologyLogs, batches, supplies, expertChatHistory, setExpertChatHistory } = React.useContext(AppDataContext);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (expertChatHistory.length === 0) {
+      setExpertChatHistory([
+        {
+          role: 'model',
+          content: '¡Hola! Soy tu consultor experto en frutilla para la zona de Coronda. ¿En qué puedo ayudarte hoy con tus variedades San Andreas, Marisma o Cleopatra?'
+        }
+      ]);
+    }
+  }, [expertChatHistory.length, setExpertChatHistory]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -37,15 +42,15 @@ export function StrawberryExpertChat() {
             scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
     }
-  }, [messages]);
+  }, [expertChatHistory]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
     setInput('');
-    const newMessages = [...messages, { role: 'user', content: userMessage } as Message];
-    setMessages(newMessages);
+    const newMessages = [...expertChatHistory, { role: 'user', content: userMessage } as Message];
+    setExpertChatHistory(newMessages);
     setIsLoading(true);
 
     // Generate context summary
@@ -84,6 +89,11 @@ Dato del Establecimiento:
 Estado Actual de los Lotes:
 ${batches.map(b => `- Lote ${b.id}: Variedades: ${b.varieties?.map(v => `${v.name} (${v.plantCount || 'cant. no especificada'})`).join(', ') || 'Sin variedades asignadas'}, Estado: ${b.status}`).join('\n')}
 
+Inventario de Insumos (Disponible en el Establecimiento):
+${supplies.length > 0 
+    ? supplies.map(s => `- ${s.name} (${s.type}): Composición: ${s.info.activeIngredient}, Stock: ${s.stock !== undefined ? s.stock.toFixed(2) : 'N/A'} kg/L, Dosis: ${s.info.dose}`).join('\n')
+    : 'No hay insumos registrados en el inventario.'}
+
 Últimas Cosechas:
 ${harvests.slice(0, 5).map(h => `- ${new Date(h.date).toLocaleDateString()}: ${h.kilograms}kg en Lote ${h.batchNumber}`).join('\n')}
 
@@ -105,7 +115,7 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
       });
 
       if (response && response.text) {
-        setMessages(prev => [...prev, { role: 'model', content: response.text }]);
+        setExpertChatHistory([...newMessages, { role: 'model', content: response.text }]);
       } else {
         throw new Error('Sin respuesta del experto');
       }
@@ -123,7 +133,7 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
   };
 
   const handleReset = () => {
-    setMessages([
+    setExpertChatHistory([
         {
           role: 'model',
           content: 'Chat reiniciado. Estoy listo para tus nuevas consultas sobre el cultivo en Coronda.'
@@ -156,7 +166,7 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
       <CardContent className="flex-1 p-0 overflow-hidden">
         <ScrollArea className="h-full px-4 py-6" ref={scrollAreaRef}>
           <div className="space-y-4">
-            {messages.map((m, i) => (
+            {expertChatHistory.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start hover:bg-black/5 dark:hover:bg-white/5 transition-colors p-1 rounded-lg'}`}>
                 <div className={`flex gap-3 max-w-[85%] ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
                   <Avatar className={`h-8 w-8 mt-1 border ${m.role === 'user' ? 'border-primary/20' : 'border-secondary/20'}`}>

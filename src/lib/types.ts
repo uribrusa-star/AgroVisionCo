@@ -302,6 +302,8 @@ export type AppData = {
   establishmentData: EstablishmentData | null;
   producerLogs: ProducerLog[];
   transactions: Transaction[];
+  expertChatHistory: { role: 'user' | 'model'; content: string }[];
+  setExpertChatHistory: (history: { role: 'user' | 'model'; content: string }[]) => void;
   addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number) => Promise<string | undefined>;
   editCollector: (collector: Collector) => Promise<void>;
   deleteCollector: (collectorId: string) => void;

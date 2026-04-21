@@ -30,6 +30,8 @@ export const AppDataContext = React.createContext<AppData>({
   establishmentData: null,
   producerLogs: [],
   transactions: [],
+  expertChatHistory: [],
+  setExpertChatHistory: () => {},
   addHarvest: async () => { throw new Error('Not implemented') },
   editCollector: async () => { throw new Error('Not implemented') },
   deleteCollector: () => { throw new Error('Not implemented') },
@@ -134,6 +136,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [establishmentData, setEstablishmentData] = useState<EstablishmentData | null>(null);
     const [producerLogs, setProducerLogs] = useState<ProducerLog[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [expertChatHistory, setExpertChatHistory] = useState<{ role: 'user' | 'model'; content: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
 
@@ -1079,6 +1082,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         establishmentData,
         producerLogs,
         transactions,
+        expertChatHistory,
+        setExpertChatHistory,
         addHarvest,
         editCollector,
         deleteCollector,
