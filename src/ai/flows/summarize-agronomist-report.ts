@@ -12,26 +12,37 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeAgronomistReportInputSchema = z.object({
-  agronomistLogs: z
-    .string()
-    .describe('JSON string con la bitácora de aplicaciones, riegos, labores culturales, etc.'),
-  phenologyLogs: z
-    .string()
-    .describe('JSON string con la bitácora de seguimiento fenológico del cultivo.'),
+  agronomistLogs: z.string(),
+  phenologyLogs: z.string(),
+  establishmentData: z.string().optional(),
 });
 export type SummarizeAgronomistReportInput = z.infer<typeof SummarizeAgronomistReportInputSchema>;
 
 const SummarizeAgronomistReportOutputSchema = z.object({
-  technicalAnalysis: z
-    .string()
-    .describe(
-      'Análisis técnico y objetivo de las bitácoras. Interpreta las prácticas realizadas, su frecuencia y posible impacto.'
-    ),
-  conclusionsAndRecommendations: z
-    .string()
-    .describe(
-      'Conclusiones clave y recomendaciones agronómicas para mejorar el manejo del cultivo.'
-    ),
+  executiveSummary: z.object({
+    generalStatus: z.enum(['Óptimo', 'Atención', 'Riesgo']),
+    climateRisk: z.enum(['Bajo', 'Medio', 'Alto']),
+    conclusions: z.array(z.string()),
+    mainRecommendation: z.string(),
+  }),
+  technicalAnalysis: z.object({
+    climate: z.object({ desc: z.string(), risk: z.string() }),
+    phenology: z.object({ desc: z.string(), risk: z.string() }),
+    management: z.object({ desc: z.string(), risk: z.string() }),
+    health: z.object({ desc: z.string(), risk: z.string() }),
+  }),
+  alerts: z.array(z.object({
+    date: z.string(),
+    event: z.string(),
+    risk: z.enum(['Bajo', 'Medio', 'Alto', 'Crítico']),
+    recommendation: z.string(),
+  })),
+  recommendations: z.array(z.object({
+    title: z.string(),
+    problem: z.string(),
+    action: z.string(),
+  })),
+  aiInsight: z.string(),
 });
 export type SummarizeAgronomistReportOutput = z.infer<typeof SummarizeAgronomistReportOutputSchema>;
 
@@ -45,27 +56,28 @@ const prompt = ai.definePrompt({
     name: 'summarizeAgronomistReportPrompt',
     input: {schema: SummarizeAgronomistReportInputSchema},
     output: {schema: SummarizeAgronomistReportOutputSchema},
-    prompt: `Eres un consultor agrónomo experto en la producción de frutillas. Tu tarea es generar el contenido para un informe técnico en español, basado en las bitácoras proporcionadas. El informe debe ser profesional, técnico y orientado a la acción.
+    prompt: `Eres un consultor agrónomo senior especializado en frutillas en la región de Coronda, Argentina. 
+    Tu objetivo es analizar los datos del establecimiento y generar un reporte técnico de alta calidad para el productor.
 
-    **Instrucciones:**
-    1.  **Analiza los datos en silencio**: Revisa toda la información de la bitácora de actividades ({{{agronomistLogs}}}) y la bitácora de fenología ({{{phenologyLogs}}}).
-    2.  **Redacta las siguientes secciones en español, usando un lenguaje técnico y preciso:**
+    **Contexto del Establecimiento:**
+    {{{establishmentData}}}
 
-        *   **Análisis Técnico**: Redacta un análisis objetivo y detallado.
-            *   Evalúa las prácticas de manejo registradas. ¿Son consistentes? ¿Hay patrones en las aplicaciones de fertilizantes o fitosanitarios?
-            *   Relaciona las actividades de la bitácora con los estados fenológicos. ¿Se aplicaron los productos correctos en el momento adecuado (ej. fertilizantes de floración durante la floración)?
-            *   Identifica posibles áreas de mejora o riesgos basándote en las notas y observaciones de las bitácoras. Por ejemplo, si se registra "Botritis" y luego una "Fumigación", evalúa si la respuesta fue oportuna.
+    **Datos a analizar:**
+    - Bitácora Agronómica (Fertilizaciones, Riegos, Sanidad): {{{agronomistLogs}}}
+    - Bitácora de Fenología (Estados de crecimiento): {{{phenologyLogs}}}
 
-        *   **Conclusiones y Recomendaciones**: Basado en tu análisis, proporciona de 2 a 4 conclusiones clave y recomendaciones agronómicas.
-            *   Las recomendaciones deben ser específicas y técnicas. Por ejemplo: "Ajustar la dosis de nitrógeno en la etapa de fructificación para evitar un exceso de vigor vegetativo" o "Implementar un programa de monitoreo de ácaros más frecuente en los meses de mayor temperatura".
-            *   Justifica cada recomendación con los datos de las bitácoras.
+    **Instrucciones de Redacción:**
+    1. **Lenguaje Profesional**: Usa terminología técnica precisa (ej. "estrés hídrico", "presión de inóculo", "balance nutricional").
+    2. **Capacidad de Síntesis**: Evita párrafos largos. El reporte se mostrará en bloques visuales.
+    3. **Objetividad**: Basa tus juicios estrictamente en los datos proporcionados.
+    4. **Secciones:**
+       - **Executive Summary**: Determina el estado general basándote en la sanidad y fenología actual.
+       - **Technical Analysis**: Desglosa la situación en 4 áreas (Clima, Fenología, Manejo, Sanidad).
+       - **Alertas**: Identifica los eventos más críticos o riesgosos detectados en los últimos registros.
+       - **Recommendations**: Proporciona acciones concretas para resolver problemas detectados.
+       - **AI Insight**: Un párrafo integrador que analice la correlación entre el clima, la fenología y las prácticas realizadas.
 
-    **Datos para el Análisis:**
-    -   **Bitácora de Actividades Agronómicas**: {{{agronomistLogs}}}
-    -   **Bitácora de Fenología**: {{{phenologyLogs}}}
-
-    Genera únicamente el contenido para las secciones solicitadas en el formato de salida JSON especificado.
-    `,
+    Genera el JSON estructurado solicitado.`,
   });
 
 const summarizeAgronomistReportFlow = ai.defineFlow(

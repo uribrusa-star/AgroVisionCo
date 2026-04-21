@@ -1,9 +1,7 @@
 'use client';
 
-import React, { useContext, useTransition, useMemo, useRef } from 'react';
+import React, { useContext, useTransition, useMemo } from 'react';
 import Image from 'next/image';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -23,8 +21,6 @@ export function AgronomistReportGenerator() {
 
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo';
-
-  const logoRef = useRef<HTMLDivElement>(null);
   
   const handleGeneratePdf = () => {
     startTransition(async () => {
@@ -51,108 +47,38 @@ export function AgronomistReportGenerator() {
       });
 
       try {
-        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4'});
-        const pageHeight = doc.internal.pageSize.height;
-        const pageWidth = doc.internal.pageSize.width;
         let logoPngDataUri = '';
-
-        if (logoRef.current) {
-            const canvas = await html2canvas(logoRef.current, {backgroundColor: null, scale: 3});
-            logoPngDataUri = canvas.toDataURL('image/png');
+        try {
+          const response = await fetch('/logo.png');
+          const blob = await response.blob();
+          logoPngDataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } catch (e) {
+          console.error("Error loading logo:", e);
         }
-        
-        let yPos = 40;
-        const addPageFooter = (docInstance: jsPDF) => {
-            const pageCount = docInstance.internal.getNumberOfPages();
-            docInstance.setFont('helvetica', 'normal');
-            docInstance.setFontSize(9);
-            docInstance.setTextColor(150);
-            for(let i = 1; i <= pageCount; i++) {
-                docInstance.setPage(i);
-                docInstance.text(`Página ${i} de ${pageCount}`, pageWidth - 15, pageHeight - 10, { align: 'right'});
-                docInstance.text(`Informe Técnico Agronómico - AgroVision`, 15, pageHeight - 10);
-            }
-        };
-        
-        const addPageHeader = (docInstance: jsPDF) => {
-            if (logoPngDataUri) {
-              docInstance.addImage(logoPngDataUri, 'PNG', 15, 12, 15, 15);
-            }
-            docInstance.setFont('helvetica', 'bold');
-            docInstance.setFontSize(16);
-            docInstance.setTextColor(40);
-            docInstance.text("Informe Técnico Agronómico", pageWidth / 2, 22, { align: 'center' });
-            docInstance.setDrawColor(180);
-            docInstance.line(15, 30, pageWidth - 15, 30);
-            docInstance.setFont('helvetica', 'normal');
-            docInstance.setFontSize(10);
-            docInstance.setTextColor(80);
-        };
-        
-        const checkAndAddPage = () => {
-            if (yPos > pageHeight - 25) {
-                doc.addPage();
-                addPageHeader(doc);
-                yPos = 40;
-            }
-        };
-
-        const addSection = (title: string, content: string) => {
-            checkAndAddPage();
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(14);
-            doc.setTextColor(40);
-            doc.text(title, 15, yPos);
-            yPos += 8;
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.setTextColor(80);
-            
-            const splitContent = doc.splitTextToSize(content, pageWidth - 30);
-            splitContent.forEach((line: string) => {
-                checkAndAddPage();
-                doc.text(line, 15, yPos, { align: 'justify' });
-                yPos += 5;
-            });
-            yPos += 10;
-        };
-
-        // --- PDF GENERATION ---
-        
-        if (logoPngDataUri) {
-          doc.addImage(logoPngDataUri, 'PNG', pageWidth / 2 - 15, pageHeight / 3 - 10, 30, 30);
-        }
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(24);
-        doc.setTextColor(40);
-        doc.text('Informe Técnico Agronómico', pageWidth / 2, pageHeight / 2 + 10, { align: 'center' });
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(12);
-        doc.setTextColor(100);
-        doc.text(`Fecha del Informe: ${new Date().toLocaleDateString('es-ES')}`, pageWidth / 2, pageHeight / 2 + 20, { align: 'center' });
-        doc.text(establishmentData.producer, pageWidth / 2, pageHeight / 2 + 30, { align: 'center' });
 
         const aiInput = {
             agronomistLogs: JSON.stringify(agronomistLogs.slice(0, 50)),
             phenologyLogs: JSON.stringify(phenologyLogs.slice(0, 20)),
+            establishmentData: JSON.stringify(establishmentData),
         };
         const aiResult = await summarizeAgronomistReport(aiInput);
 
-        doc.addPage();
-        addPageHeader(doc);
+        const { generateAgronomistReportPDF } = await import('@/lib/pdf-generator');
         
-        addSection("Análisis Técnico (IA)", aiResult.technicalAnalysis);
-        addSection("Conclusiones y Recomendaciones (IA)", aiResult.conclusionsAndRecommendations);
-        
-        addPageFooter(doc);
-        
-        doc.save('Informe_Tecnico_Agronomico.pdf');
+        generateAgronomistReportPDF(
+            establishmentData,
+            currentUser.name,
+            aiResult,
+            logoPngDataUri
+        );
         
         toast({
             title: '¡Informe Generado!',
-            description: 'El archivo PDF se ha descargado exitosamente.',
+            description: 'El archivo PDF profesional se ha descargado exitosamente.',
         });
 
       } catch (error) {
@@ -180,11 +106,6 @@ export function AgronomistReportGenerator() {
             <p className="text-sm text-muted-foreground">
                 El informe compilará y analizará las últimas entradas de las bitácoras para ofrecer conclusiones y recomendaciones.
             </p>
-            <div style={{ position: 'fixed', opacity: 0, zIndex: -100, left: 0, top: 0, width: 'auto', height: 'auto' }} aria-hidden="true">
-              <div ref={logoRef} style={{width: '64px', height: '64px'}}>
-                 <Image src="/logo.png" alt="AgroVision Logo" width={64} height={64} />
-              </div>
-            </div>
         </CardContent>
         <CardFooter>
           <Button onClick={handleGeneratePdf} disabled={isPending || !canManage}>
