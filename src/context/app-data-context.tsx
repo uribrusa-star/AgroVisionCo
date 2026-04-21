@@ -191,20 +191,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               // Deduplicate by ID to be absolutely sure
               const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
               setUsers(uniqueUsers);
-
-              // Sync currentUser with latest data from Firestore
-              if (currentUser) {
-                const latestUserData = uniqueUsers.find(u => u.id === currentUser.id);
-                if (latestUserData) {
-                  // Check if critical fields changed (name, email, avatar, etc)
-                  const hasChanged = JSON.stringify(latestUserData) !== JSON.stringify(currentUser);
-                  if (hasChanged) {
-                    // Check if it was in localStorage to preserve "Remember Me"
-                    const isRemembered = typeof window !== 'undefined' && !!window.localStorage.getItem('currentUser');
-                    setCurrentUser(latestUserData, isRemembered);
-                  }
-                }
-              }
             }
 
             // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores)
