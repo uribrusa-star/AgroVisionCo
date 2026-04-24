@@ -160,7 +160,7 @@ const AIAlertsPanel = ({
     }
 
     return (
-        <Card>
+        <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Sparkles className="h-6 w-6 text-primary" />
@@ -171,7 +171,7 @@ const AIAlertsPanel = ({
                 </CardDescription>
             </CardHeader>
              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
@@ -317,8 +317,8 @@ export default function MapPage() {
         title="Mapa del Establecimiento"
         description="Visualice la finca, sus lotes y genere alertas climáticas con IA."
       />
-      <div className="grid grid-cols-1 gap-6 mt-6">
-        <Card>
+      <div className="flex flex-col w-full gap-6 mt-6 items-stretch">
+        <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <MapIcon className="h-6 w-6 text-primary" />
@@ -334,7 +334,7 @@ export default function MapPage() {
                 </div>
             </CardContent>
         </Card>
-         <Card>
+         <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     Mapa del Clima
@@ -366,9 +366,7 @@ export default function MapPage() {
                 </div>
             </CardContent>
         </Card>
-        <div>
-            <AIAlertsPanel mapCenter={mapCenter} onCoordsChange={setWindyCoords} />
-        </div>
+        <AIAlertsPanel mapCenter={mapCenter} onCoordsChange={setWindyCoords} />
       </div>
     </>
   );

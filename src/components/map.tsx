@@ -121,12 +121,17 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                                     <p className="text-[10px] uppercase text-muted-foreground font-bold">Fecha</p>
                                     <p className="text-xs">{format(new Date(log.date), "dd/MM/yyyy")}</p>
                                 </div>
-                                {log.batchId && (
+                                {(log.batchIds && log.batchIds.length > 0) ? (
+                                    <div>
+                                        <p className="text-[10px] uppercase text-muted-foreground font-bold">Lotes</p>
+                                        <p className="text-xs">{log.batchIds.join(', ')}</p>
+                                    </div>
+                                ) : (log.batchId && (
                                     <div>
                                         <p className="text-[10px] uppercase text-muted-foreground font-bold">Lote</p>
                                         <p className="text-xs">{log.batchId}</p>
                                     </div>
-                                )}
+                                ))}
                             </div>
 
                             <p className="text-xs bg-muted p-2 rounded italic">
@@ -163,8 +168,12 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         centerOfPolygon.lng /= paths.length;
 
         const lotHarvests = harvests.filter(h => h.batchNumber === activeInfoWindow);
-        const lotAgronomistLogs = agronomistLogs.filter(l => !l.batchId || l.batchId === activeInfoWindow);
-        const lotPhenologyLogs = phenologyLogs.filter(p => !p.batchId || p.batchId === activeInfoWindow);
+        const lotAgronomistLogs = agronomistLogs.filter(l => 
+          (l.batchIds && l.batchIds.includes(activeInfoWindow)) || (l.batchId === activeInfoWindow)
+        );
+        const lotPhenologyLogs = phenologyLogs.filter(p => 
+          (p.batchIds && p.batchIds.includes(activeInfoWindow)) || (p.batchId === activeInfoWindow)
+        );
         const totalKilos = lotHarvests.reduce((sum, h) => sum + h.kilograms, 0);
 
         return (

@@ -22,6 +22,7 @@ import type { Batch } from '@/lib/types';
 
 const EditBatchSchema = z.object({
   id: z.string(),
+  preloadedDate: z.string().min(1, "La fecha de precarga es obligatoria"),
   varieties: z.array(z.object({
     name: z.string().min(1, "El nombre de la variedad es obligatorio"),
     plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
@@ -49,6 +50,7 @@ export function BatchHistory() {
     if (editingBatch) {
       editForm.reset({
         id: editingBatch.id,
+        preloadedDate: editingBatch.preloadedDate.slice(0, 10),
         varieties: editingBatch.varieties && editingBatch.varieties.length > 0 
           ? editingBatch.varieties 
           : [{ name: '', plantCount: undefined, area: undefined }],
@@ -61,6 +63,7 @@ export function BatchHistory() {
     
     await editBatch({
       ...editingBatch,
+      preloadedDate: data.preloadedDate,
       varieties: data.varieties,
     });
 
@@ -159,6 +162,29 @@ export function BatchHistory() {
                                         </DialogHeader>
                                         <Form {...editForm}>
                                           <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="md:col-span-1">
+                                                    <FormItem>
+                                                        <FormLabel>ID del Lote</FormLabel>
+                                                        <Input value={batch.id} disabled />
+                                                    </FormItem>
+                                                </div>
+                                                <div className="md:col-span-1">
+                                                    <FormField
+                                                        control={editForm.control}
+                                                        name="preloadedDate"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Fecha de Precarga</FormLabel>
+                                                                <FormControl>
+                                                                    <Input type="date" {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                            </div>
                                             <div className="space-y-4">
                                               <div className="flex items-center justify-between">
                                                 <FormLabel className="text-base">Variedades Plantadas</FormLabel>

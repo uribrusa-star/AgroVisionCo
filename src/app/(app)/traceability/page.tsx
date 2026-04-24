@@ -51,10 +51,10 @@ export default function TraceabilityPage() {
 
     const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
     const batchAgLogs = agronomistLogs.filter(l => 
-      (!l.batchIds || l.batchIds.length === 0) || l.batchIds.includes(selectedBatchId)
+      (l.batchIds && l.batchIds.includes(selectedBatchId)) || (l.batchId === selectedBatchId)
     );
     const batchPhenology = phenologyLogs.filter(p => 
-      (!p.batchIds || p.batchIds.length === 0) || p.batchIds.includes(selectedBatchId)
+      (p.batchIds && p.batchIds.includes(selectedBatchId)) || (p.batchId === selectedBatchId)
     );
 
     const events = [
@@ -117,10 +117,10 @@ export default function TraceabilityPage() {
 
       const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
       const batchAgLogs = agronomistLogs.filter(l => 
-        (!l.batchIds || l.batchIds.length === 0) || l.batchIds.includes(selectedBatchId)
+        (l.batchIds && l.batchIds.includes(selectedBatchId)) || (l.batchId === selectedBatchId)
       );
       const batchPhenology = phenologyLogs.filter(p => 
-        (!p.batchIds || p.batchIds.length === 0) || p.batchIds.includes(selectedBatchId)
+        (p.batchIds && p.batchIds.includes(selectedBatchId)) || (p.batchId === selectedBatchId)
       );
 
       generateTraceabilityPDF(selectedBatch, batchHarvests, batchAgLogs, batchPhenology, establishmentData, logoPngDataUri);
