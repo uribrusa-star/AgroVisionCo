@@ -254,8 +254,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setCollectors(collectorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Collector[]);
             setPackers(packersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Packer[]);
             setHarvests(harvestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Harvest[]);
-            setAgronomistLogs(agronomistLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AgronomistLog[]);
-            setPhenologyLogs(phenologyLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PhenologyLog[]);
+            setAgronomistLogs(agronomistLogsSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
+            }) as AgronomistLog[]);
+            setPhenologyLogs(phenologyLogsSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
+            }) as PhenologyLog[]);
             setPredictionLogs(predictionLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PredictionLog[]);
             setDiagnosisLogs(diagnosisLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DiagnosisLog[]);
             setSupplies(suppliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supply[]);
@@ -263,7 +269,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setBatches(batchesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Batch[]);
             setCollectorPaymentLogs(collectorPaymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as CollectorPaymentLog[]);
             setPackagingLogs(packagingLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
-            setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as CulturalPracticeLog[]);
+            setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map(doc => {
+              const data = doc.data();
+              return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
+            }) as CulturalPracticeLog[]);
             setProducerLogs(producerLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
             setTransactions(transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[]);
             setKnowledgeBase(knowledgeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);

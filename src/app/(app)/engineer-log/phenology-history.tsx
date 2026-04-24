@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Flower, Grape, Sun, Trash2, PlusCircle, Image as ImageIcon } from 'lucide-react';
+import { MoreHorizontal, Flower, Grape, Sun, Trash2, PlusCircle, Image as ImageIcon, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { PhenologyLog, ImageWithHint } from '@/lib/types';
@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const LogSchema = z.object({
   date: z.string().min(1, "La fecha es requerida."),
@@ -34,7 +35,7 @@ const LogSchema = z.object({
   ], {
     required_error: "El estado de desarrollo es requerido.",
   }),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
   flowerCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().optional()),
   fruitCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().optional()),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
@@ -46,7 +47,7 @@ const LogSchema = z.object({
 type LogFormValues = z.infer<typeof LogSchema>;
 
 export function PhenologyHistory() {
-  const { loading, phenologyLogs, editPhenologyLog, deletePhenologyLog, currentUser, batches } = useContext(AppDataContext);
+  const { loading, phenologyLogs, addPhenologyLog, editPhenologyLog, deletePhenologyLog, currentUser, batches } = useContext(AppDataContext);
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -70,7 +71,7 @@ export function PhenologyHistory() {
       form.reset({
         date: selectedLog.date.slice(0, 16),
         developmentState: selectedLog.developmentState,
-        batchId: selectedLog.batchId || 'general',
+        batchIds: selectedLog.batchIds || (selectedLog.batchId ? [selectedLog.batchId] : []),
         flowerCount: selectedLog.flowerCount,
         fruitCount: selectedLog.fruitCount,
         notes: selectedLog.notes,
@@ -109,16 +110,18 @@ export function PhenologyHistory() {
             .filter(img => img.url)
             .map(img => ({ url: img.url, hint: 'crop phenology' }));
 
+          // Update the current log with the selected batches
           editPhenologyLog({
             ...selectedLog,
             date: values.date,
             developmentState: values.developmentState,
-            batchId: values.batchId === 'general' ? undefined : values.batchId,
+            batchIds: values.batchIds && values.batchIds.length > 0 ? values.batchIds : undefined,
             flowerCount: values.flowerCount,
             fruitCount: values.fruitCount,
             notes: values.notes,
             images: imagesWithHints,
           });
+
           toast({
             title: "Registro Actualizado",
             description: "La entrada del registro ha sido actualizada exitosamente.",
@@ -181,7 +184,9 @@ export function PhenologyHistory() {
                                 </Badge>
                             </TableCell>
                              <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                                {log.batchId ? <Badge variant="outline">{log.batchId}</Badge> : <span className="text-xs text-muted-foreground">General</span>}
+                                {log.batchIds && log.batchIds.length > 0 
+                                  ? <div className="flex flex-wrap gap-1">{log.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)}</div>
+                                  : <span className="text-xs text-muted-foreground">General</span>}
                             </TableCell>
                             <TableCell onClick={() => handleDetails(log)} className="text-xs cursor-pointer">
                                 <p>Flores: {log.flowerCount ?? '-'}</p>
@@ -295,23 +300,19 @@ export function PhenologyHistory() {
                     />
                     <FormField
                       control={form.control}
-                      name="batchId"
+                      name="batchIds"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Lote (Opcional)</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                              <FormControl>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Observación General" />
-                              </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="general">Observación General</SelectItem>
-                                {batches.map(b => (
-                                  <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                                ))}
-                              </SelectContent>
-                          </Select>
+                          <FormLabel>Lotes (Opcional - Dejar vacío para Observación General)</FormLabel>
+                          <FormControl>
+                            <MultiSelect
+                              options={batches.map(b => ({ label: b.id, value: b.id }))}
+                              selected={field.value || []}
+                              onChange={field.onChange}
+                              placeholder="Seleccionar lotes..."
+                              disabled={!canManage || isPending}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -454,10 +455,16 @@ export function PhenologyHistory() {
                                     <Badge variant={stateInfo.variant as any}>{stateInfo.label}</Badge>
                                 </div>
                                 
-                                {selectedLog.batchId && (
+                                {(selectedLog.batchIds || selectedLog.batchId) && (
                                   <div className="space-y-1">
-                                      <p className="text-sm font-medium text-muted-foreground">Lote</p>
-                                      <Badge variant="outline">{selectedLog.batchId}</Badge>
+                                      <p className="text-sm font-medium text-muted-foreground">Lotes</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {selectedLog.batchIds && selectedLog.batchIds.length > 0 ? (
+                                            selectedLog.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)
+                                        ) : (
+                                            <Badge variant="outline">{selectedLog.batchId}</Badge>
+                                        )}
+                                      </div>
                                   </div>
                                 )}
 
@@ -534,7 +541,16 @@ export function PhenologyHistory() {
                                 </Button>
                             </AlertDialogTrigger>
                         ) : <div />}
-                        <Button onClick={() => setIsDetailOpen(false)} variant="secondary">Cerrar</Button>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" onClick={() => {
+                                      setIsDetailOpen(false);
+                                      handleEdit(selectedLog);
+                                  }}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Editar
+                                  </Button>
+                                  <Button onClick={() => setIsDetailOpen(false)} variant="secondary">Cerrar</Button>
+                                </div>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>

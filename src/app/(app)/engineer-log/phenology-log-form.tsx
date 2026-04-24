@@ -22,6 +22,7 @@ import type { ImageWithHint } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2 } from 'lucide-react';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const LogSchema = z.object({
   date: z.date({
@@ -30,7 +31,7 @@ const LogSchema = z.object({
   developmentState: z.enum(['Plantación', 'Desarrollo foliar', 'Floración', 'Caida de petalos', 'Fase de fruto verde', 'Fructificación', 'Cambio de color (Vire)', 'Maduracion comercial', 'Maduración'], {
     required_error: "El estado de desarrollo es requerido.",
   }),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
   flowerCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().optional()),
   fruitCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().optional()),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
@@ -54,7 +55,7 @@ export function PhenologyLogForm() {
     defaultValues: {
       date: new Date(),
       developmentState: undefined,
-      batchId: 'general',
+      batchIds: [],
       flowerCount: undefined,
       fruitCount: undefined,
       notes: '',
@@ -76,7 +77,7 @@ export function PhenologyLogForm() {
       addPhenologyLog({
         date: data.date.toISOString(),
         developmentState: data.developmentState,
-        batchId: data.batchId === 'general' ? undefined : data.batchId,
+        batchIds: data.batchIds && data.batchIds.length > 0 ? data.batchIds : undefined,
         flowerCount: data.flowerCount,
         fruitCount: data.fruitCount,
         notes: data.notes,
@@ -91,7 +92,7 @@ export function PhenologyLogForm() {
       form.reset({
         date: new Date(),
         developmentState: undefined,
-        batchId: 'general',
+        batchIds: [],
         flowerCount: undefined,
         fruitCount: undefined,
         notes: '',
@@ -154,23 +155,19 @@ export function PhenologyLogForm() {
               />
               <FormField
                 control={form.control}
-                name="batchId"
+                name="batchIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lote (Opcional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Observación General" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="general">Observación General</SelectItem>
-                        {batches.map(b => (
-                          <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Lotes (Opcional - Dejar vacío para Observación General)</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={batches.map(b => ({ label: b.id, value: b.id }))}
+                        selected={field.value || []}
+                        onChange={field.onChange}
+                        placeholder="Seleccionar lotes..."
+                        disabled={!canManage || isPending}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

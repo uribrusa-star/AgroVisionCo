@@ -89,7 +89,7 @@ export type AgronomistLog = {
     id: string;
     date: string;
     type: AgronomistLogType;
-    batchId?: string;
+    batchIds?: string[];
     product?: string;
     quantityUsed?: number;
     supplies?: { supplyId: string, name: string, quantity: number }[];
@@ -106,7 +106,7 @@ export type PhenologyLog = {
     id: string;
     date: string;
     developmentState: 'Plantación' | 'Desarrollo foliar' | 'Floración' | 'Caida de petalos' | 'Fase de fruto verde' | 'Fructificación' | 'Cambio de color (Vire)' | 'Maduracion comercial' | 'Maduración';
-    batchId?: string;
+    batchIds?: string[];
     flowerCount?: number;
     fruitCount?: number;
     notes: string;
@@ -192,7 +192,7 @@ export type CulturalPracticeLog = {
     costPerHour: number;
     payment: number;
     notes: string;
-    batchId?: string;
+    batchIds?: string[];
 };
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed';

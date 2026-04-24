@@ -21,6 +21,7 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2, MapPin, Navigation, WifiOff } from 'lucide-react';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import type { ImageWithHint } from '@/lib/types';
 
@@ -31,7 +32,7 @@ const LogSchema = z.object({
   observationType: z.enum(['Plaga', 'Enfermedad', 'Deficiencia', 'Exceso'], {
     required_error: "El tipo de observación es requerido.",
   }),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
   product: z.string().min(1, "El agente o nutriente observado es requerido."),
   severity: z.string().min(3, "La incidencia o severidad es requerida."),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
@@ -59,7 +60,7 @@ export function HealthLogForm() {
     defaultValues: {
       date: new Date(),
       observationType: undefined,
-      batchId: 'general',
+      batchIds: [],
       product: '',
       severity: '',
       notes: '',
@@ -117,7 +118,7 @@ export function HealthLogForm() {
       addAgronomistLog({
         date: data.date.toISOString(),
         type: 'Sanidad',
-        batchId: data.batchId === 'general' ? undefined : data.batchId,
+        batchIds: data.batchIds && data.batchIds.length > 0 ? data.batchIds : undefined,
         product: `${data.observationType}: ${data.product}`,
         notes: `Incidencia: ${data.severity}. Observaciones: ${data.notes}`,
         images: imagesWithHints,
@@ -133,7 +134,7 @@ export function HealthLogForm() {
       form.reset({
         date: new Date(),
         observationType: undefined,
-        batchId: 'general',
+        batchIds: [],
         product: '',
         severity: '',
         notes: '',
@@ -205,23 +206,19 @@ export function HealthLogForm() {
               />
               <FormField
                 control={form.control}
-                name="batchId"
+                name="batchIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lote (Opcional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Observación General" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="general">Observación General</SelectItem>
-                        {batches.map(b => (
-                          <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Lotes (Opcional - Dejar vacío para Observación General)</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={batches.map(b => ({ label: b.id, value: b.id }))}
+                        selected={field.value || []}
+                        onChange={field.onChange}
+                        placeholder="Seleccionar lotes..."
+                        disabled={!canManage || isPending}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

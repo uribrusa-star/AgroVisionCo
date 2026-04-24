@@ -91,7 +91,7 @@ function CulturalPracticesHistoryComponent() {
 
         const tableBody = [
             ['Tipo de Labor', `${selectedLog.practiceType}`],
-            ['Lote', `${selectedLog.batchId || 'General'}`],
+            ['Lotes', `${selectedLog.batchIds && selectedLog.batchIds.length > 0 ? selectedLog.batchIds.join(', ') : 'General'}`],
             ['Horas Trabajadas', `${selectedLog.hoursWorked.toLocaleString('es-AR')} hs`],
             ['Costo por Hora', `$${selectedLog.costPerHour.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`],
             ['Total Pagado', `$${selectedLog.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
@@ -208,8 +208,14 @@ function CulturalPracticesHistoryComponent() {
                               <span className="font-semibold flex items-center gap-2"><HardHat className="h-4 w-4" /> {selectedLog.personnelName}</span>
                            </div>
                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Lote</span>
-                              <Badge variant="outline">{selectedLog.batchId || 'General'}</Badge>
+                              <span className="text-sm text-muted-foreground">Lotes</span>
+                              <div className="flex flex-wrap gap-1 justify-end max-w-[200px]">
+                                {selectedLog.batchIds && selectedLog.batchIds.length > 0 ? (
+                                    selectedLog.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)
+                                ) : (
+                                    <Badge variant="outline">General</Badge>
+                                )}
+                              </div>
                            </div>
                             <hr />
                            <div className="flex items-center justify-between">

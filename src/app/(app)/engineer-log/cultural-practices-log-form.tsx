@@ -13,10 +13,11 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const LogSchema = z.object({
   practiceType: z.string().min(1, "El tipo de labor es requerido."),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
   notes: z.string().min(5, "Las notas son requeridas."),
   personnelId: z.string().min(1, "Debe seleccionar un personal."),
   hoursWorked: z.coerce.number().min(0.5, "Las horas trabajadas son requeridas."),
@@ -37,7 +38,7 @@ export function CulturalPracticesLogForm() {
     resolver: zodResolver(LogSchema),
     defaultValues: {
       practiceType: '',
-      batchId: 'general',
+      batchIds: [],
       notes: '',
       personnelId: '',
       hoursWorked: 8,
@@ -73,7 +74,7 @@ export function CulturalPracticesLogForm() {
       addCulturalPracticeLog({
         date: new Date().toISOString(),
         practiceType: data.practiceType,
-        batchId: data.batchId === 'general' ? undefined : data.batchId,
+        batchIds: data.batchIds && data.batchIds.length > 0 ? data.batchIds : undefined,
         notes: data.notes,
         personnelId: selectedPersonnel.id,
         personnelName: selectedPersonnel.name.split(' (')[0],
@@ -90,7 +91,7 @@ export function CulturalPracticesLogForm() {
 
       form.reset({
         practiceType: '',
-        batchId: 'general',
+        batchIds: [],
         notes: '',
         personnelId: '',
         hoursWorked: 8,
@@ -134,25 +135,21 @@ export function CulturalPracticesLogForm() {
                     </FormItem>
                 )}
                 />
-                 <FormField
+                  <FormField
                     control={form.control}
-                    name="batchId"
+                    name="batchIds"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Lote (Opcional)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Labor General" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="general">Labor General</SelectItem>
-                            {batches.map(b => (
-                                <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
+                        <FormLabel>Lotes (Opcional - Dejar vacío para Labor General)</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={batches.map(b => ({ label: b.id, value: b.id }))}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                            placeholder="Seleccionar lotes..."
+                            disabled={!canManage || isPending}
+                          />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                     )}

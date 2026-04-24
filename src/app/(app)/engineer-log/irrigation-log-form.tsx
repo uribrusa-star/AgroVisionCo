@@ -22,13 +22,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useFieldArray } from 'react-hook-form';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const LogSchema = z.object({
   date: z.date({
     required_error: "La fecha es requerida.",
   }),
   type: z.enum(['Riego', 'Fertilización', 'Fumigación']),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
   product: z.string().optional(),
   quantityUsed: z.coerce.number().optional(),
   notes: z.string().min(5, "Las notas son requeridas."),
@@ -55,7 +56,7 @@ export function IrrigationLogForm() {
     defaultValues: {
       date: new Date(),
       type: 'Riego',
-      batchId: 'general',
+      batchIds: [],
       notes: '',
       dissolution: '',
       supplies: [],
@@ -96,7 +97,7 @@ export function IrrigationLogForm() {
       addAgronomistLog({
         date: data.date.toISOString(),
         type: data.type,
-        batchId: data.batchId === 'general' ? undefined : data.batchId,
+        batchIds: data.batchIds && data.batchIds.length > 0 ? data.batchIds : undefined,
         supplies: data.supplies,
         dissolution: data.dissolution,
         notes: data.notes,
@@ -110,7 +111,7 @@ export function IrrigationLogForm() {
       form.reset({
         date: new Date(),
         type: 'Riego',
-        batchId: 'general',
+        batchIds: [],
         notes: '',
         dissolution: '',
         supplies: [],
@@ -185,23 +186,19 @@ export function IrrigationLogForm() {
               />
               <FormField
                 control={form.control}
-                name="batchId"
+                name="batchIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lote (Opcional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Aplicación General" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="general">Aplicación General</SelectItem>
-                        {batches.map(b => (
-                          <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Lotes (Opcional - Dejar vacío para Aplicación General)</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={batches.map(b => ({ label: b.id, value: b.id }))}
+                        selected={field.value || []}
+                        onChange={field.onChange}
+                        placeholder="Seleccionar lotes..."
+                        disabled={!canManage || isPending}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

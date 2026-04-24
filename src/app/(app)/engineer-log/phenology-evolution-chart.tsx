@@ -49,17 +49,21 @@ export function PhenologyEvolutionChart() {
     const batchIds = new Set<string>();
 
     phenologyLogs.forEach(log => {
-      if (!log.batchId) return;
-      batchIds.add(log.batchId);
+      const logBatchIds = log.batchIds && log.batchIds.length > 0 ? log.batchIds : (log.batchId ? [log.batchId] : []);
+      if (logBatchIds.length === 0) return;
       
-      const dateKey = format(new Date(log.date), 'yyyy-MM-dd');
-      if (!dataByDate[dateKey]) dataByDate[dateKey] = {};
-      
-      const val = STATE_VALUES[log.developmentState] || 0;
-      // If multiple logs for same batch/day, take the most advanced one
-      if (!dataByDate[dateKey][log.batchId] || val > dataByDate[dateKey][log.batchId]) {
-        dataByDate[dateKey][log.batchId] = val;
-      }
+      logBatchIds.forEach(bId => {
+        batchIds.add(bId);
+        
+        const dateKey = format(new Date(log.date), 'yyyy-MM-dd');
+        if (!dataByDate[dateKey]) dataByDate[dateKey] = {};
+        
+        const val = STATE_VALUES[log.developmentState] || 0;
+        // If multiple logs for same batch/day, take the most advanced one
+        if (!dataByDate[dateKey][bId] || val > dataByDate[dateKey][bId]) {
+          dataByDate[dateKey][bId] = val;
+        }
+      });
     });
 
     const sortedDates = Object.keys(dataByDate).sort();
@@ -81,7 +85,10 @@ export function PhenologyEvolutionChart() {
 
   const batchesPresent = useMemo(() => {
       const set = new Set<string>();
-      phenologyLogs?.forEach(l => l.batchId && set.add(l.batchId));
+      phenologyLogs?.forEach(l => {
+          const ids = l.batchIds && l.batchIds.length > 0 ? l.batchIds : (l.batchId ? [l.batchId] : []);
+          ids.forEach(id => set.add(id));
+      });
       return Array.from(set);
   }, [phenologyLogs]);
 

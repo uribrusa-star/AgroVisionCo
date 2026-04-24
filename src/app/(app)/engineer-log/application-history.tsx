@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Bug, Hand, Leaf, SprayCan, Wind, Thermometer, Trash2, PlusCircle, Image as ImageIcon, MapPin, Navigation } from 'lucide-react';
+import { MoreHorizontal, Bug, Hand, Leaf, SprayCan, Wind, Thermometer, Trash2, PlusCircle, Image as ImageIcon, MapPin, Navigation, Edit } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { AgronomistLog, AgronomistLogType, ImageWithHint } from '@/lib/types';
@@ -24,11 +24,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const LogSchema = z.object({
   date: z.string().min(1, "La fecha es requerida."),
   type: z.enum(['Fertilización', 'Fumigación', 'Control', 'Sanidad', 'Labor Cultural', 'Riego', 'Condiciones Ambientales']),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
   product: z.string().optional(),
   quantityUsed: z.coerce.number().optional(),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
@@ -50,7 +51,7 @@ const LogSchema = z.object({
 type LogFormValues = z.infer<typeof LogSchema>;
 
 export function ApplicationHistory() {
-  const { loading, agronomistLogs, editAgronomistLog, deleteAgronomistLog, currentUser, batches, supplies } = useContext(AppDataContext);
+  const { loading, agronomistLogs, addAgronomistLog, editAgronomistLog, deleteAgronomistLog, currentUser, batches, supplies } = useContext(AppDataContext);
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -80,7 +81,7 @@ export function ApplicationHistory() {
       form.reset({
         date: selectedLog.date.slice(0, 16),
         type: selectedLog.type,
-        batchId: selectedLog.batchId || 'general',
+        batchIds: selectedLog.batchIds || (selectedLog.batchId ? [selectedLog.batchId] : []),
         product: selectedLog.product,
         quantityUsed: selectedLog.quantityUsed,
         notes: selectedLog.notes,
@@ -124,11 +125,12 @@ export function ApplicationHistory() {
             .filter(img => img.url)
             .map(img => ({ url: img.url, hint: 'crop disease pest'}));
 
+          // Update the current log with the selected batches
           editAgronomistLog({
             ...selectedLog,
             date: values.date,
             type: values.type as AgronomistLogType,
-            batchId: values.batchId === 'general' ? undefined : values.batchId,
+            batchIds: values.batchIds && values.batchIds.length > 0 ? values.batchIds : undefined,
             product: values.product,
             quantityUsed: values.quantityUsed,
             notes: values.notes,
@@ -140,6 +142,7 @@ export function ApplicationHistory() {
             images: imagesWithHints,
             supplies: values.supplies,
           });
+
           toast({
             title: "Registro Actualizado",
             description: "La entrada del registro ha sido actualizada exitosamente.",
@@ -238,7 +241,9 @@ export function ApplicationHistory() {
                           </Badge>
                         </TableCell>
                         <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                          {log.batchId ? <Badge variant="outline">{log.batchId}</Badge> : <span className="text-xs text-muted-foreground">General</span>}
+                          {log.batchIds && log.batchIds.length > 0 
+                            ? <div className="flex flex-wrap gap-1">{log.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)}</div>
+                            : <span className="text-xs text-muted-foreground">General</span>}
                         </TableCell>
                         <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
                           <p className="font-medium">
@@ -338,6 +343,7 @@ export function ApplicationHistory() {
                                 <SelectItem value="Condiciones Ambientales">Condiciones Ambientales</SelectItem>
                                 <SelectItem value="Riego">Riego</SelectItem>
                                 <SelectItem value="Fertilización">Fertilización</SelectItem>
+                                <SelectItem value="Fumigación">Fumigación</SelectItem>
                                 <SelectItem value="Sanidad">Sanidad</SelectItem>
                                 <SelectItem value="Labor Cultural">Labor Cultural</SelectItem>
                                 <SelectItem value="Control">Control</SelectItem>
@@ -349,23 +355,19 @@ export function ApplicationHistory() {
                     />
                     <FormField
                       control={form.control}
-                      name="batchId"
+                      name="batchIds"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Lote (Opcional)</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                              <FormControl>
-                              <SelectTrigger>
-                                  <SelectValue placeholder="Aplicación General" />
-                              </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="general">Aplicación General</SelectItem>
-                                {batches.map(b => (
-                                  <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                                ))}
-                              </SelectContent>
-                          </Select>
+                          <FormLabel>Lotes (Opcional - Dejar vacío para Aplicación General)</FormLabel>
+                          <FormControl>
+                            <MultiSelect
+                              options={batches.map(b => ({ label: b.id, value: b.id }))}
+                              selected={field.value || []}
+                              onChange={field.onChange}
+                              placeholder="Seleccionar lotes..."
+                              disabled={!canManage || isPending}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -650,10 +652,16 @@ export function ApplicationHistory() {
                                     <Badge variant={typeInfo.variant as any}>{typeInfo.label}</Badge>
                                 </div>
                                 
-                                {selectedLog.batchId && (
+                                {(selectedLog.batchIds || selectedLog.batchId) && (
                                   <div className="space-y-1">
-                                      <p className="text-sm font-medium text-muted-foreground">Lote</p>
-                                      <Badge variant="outline">{selectedLog.batchId}</Badge>
+                                      <p className="text-sm font-medium text-muted-foreground">Lotes</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {selectedLog.batchIds && selectedLog.batchIds.length > 0 ? (
+                                            selectedLog.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)
+                                        ) : (
+                                            <Badge variant="outline">{selectedLog.batchId}</Badge>
+                                        )}
+                                      </div>
                                   </div>
                                 )}
 
@@ -762,7 +770,16 @@ export function ApplicationHistory() {
                               </Button>
                             </AlertDialogTrigger>
                         ) : <div />}
-                        <Button onClick={() => setIsDetailOpen(false)} variant="secondary">Cerrar</Button>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" onClick={() => {
+                                      setIsDetailOpen(false);
+                                      handleEdit(selectedLog);
+                                  }}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Editar
+                                  </Button>
+                                  <Button onClick={() => setIsDetailOpen(false)} variant="secondary">Cerrar</Button>
+                                </div>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>

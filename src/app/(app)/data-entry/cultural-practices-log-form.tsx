@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const LogSchema = z.object({
   date: z.date({
@@ -28,7 +29,7 @@ const LogSchema = z.object({
   personId: z.string().min(1, "Debe seleccionar a una persona."),
   hoursWorked: z.coerce.number().min(0.5, "Las horas deben ser un número positivo."),
   costPerHour: z.coerce.number().min(1, "El costo por hora es requerido."),
-  batchId: z.string().optional(),
+  batchIds: z.array(z.string()).optional(),
 });
 
 type LogFormValues = z.infer<typeof LogSchema>;
@@ -57,7 +58,7 @@ export function CulturalPracticesLogForm() {
       personId: '',
       hoursWorked: 8,
       costPerHour: 0,
-      batchId: 'general',
+      batchIds: [],
     },
   });
 
@@ -71,6 +72,8 @@ export function CulturalPracticesLogForm() {
       
       const payment = data.hoursWorked * data.costPerHour;
 
+      const batchIdsToProcess = data.batchIds && data.batchIds.length > 0 ? data.batchIds : undefined;
+      
       addCulturalPracticeLog({
         date: data.date.toISOString(),
         practiceType: data.practiceType,
@@ -81,7 +84,7 @@ export function CulturalPracticesLogForm() {
         costPerHour: data.costPerHour,
         payment: payment,
         notes: `Pago por labor de ${data.practiceType}`,
-        batchId: data.batchId === 'general' ? undefined : data.batchId,
+        batchIds: batchIdsToProcess,
       });
 
       toast({
@@ -95,7 +98,7 @@ export function CulturalPracticesLogForm() {
         personId: '',
         hoursWorked: 8,
         costPerHour: 0,
-        batchId: 'general',
+        batchIds: [],
       });
     });
   };
@@ -202,23 +205,19 @@ export function CulturalPracticesLogForm() {
             />
             <FormField
                     control={form.control}
-                    name="batchId"
+                    name="batchIds"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Lote (Opcional)</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                            <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Labor General" />
-                            </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                            <SelectItem value="general">Labor General</SelectItem>
-                            {batches.map(b => (
-                                <SelectItem key={b.id} value={b.id}>{b.id}</SelectItem>
-                            ))}
-                            </SelectContent>
-                        </Select>
+                        <FormLabel>Lotes (Opcional - Dejar vacío para Labor General)</FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={batches.map(b => ({ label: b.id, value: b.id }))}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                            placeholder="Seleccionar lotes..."
+                            disabled={!canManage || isPending}
+                          />
+                        </FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
