@@ -299,12 +299,22 @@ export default function MapPage() {
     }
     return { lat: -31.953363, lng: -60.9346299 }; // Default center Coronda
   }, [parsedGeoJson, establishmentData]);
+
+  const establishmentCoords = useMemo(() => {
+    if (establishmentData?.location.coordinates) {
+        const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+        if (!isNaN(lat) && !isNaN(lng)) {
+            return { lat, lng };
+        }
+    }
+    return mapCenter;
+  }, [establishmentData, mapCenter]);
   
-  const [windyCoords, setWindyCoords] = useState({ lat: mapCenter.lat, lng: mapCenter.lng });
+  const [windyCoords, setWindyCoords] = useState({ lat: establishmentCoords.lat, lng: establishmentCoords.lng });
   
   useEffect(() => {
-    setWindyCoords({ lat: mapCenter.lat, lng: mapCenter.lng });
-  }, [mapCenter]);
+    setWindyCoords({ lat: establishmentCoords.lat, lng: establishmentCoords.lng });
+  }, [establishmentCoords]);
 
   const resetWindyMap = () => {
     setWindyCoords({ lat: -31.953363, lng: -60.9346299 });
@@ -366,7 +376,7 @@ export default function MapPage() {
                 </div>
             </CardContent>
         </Card>
-        <AIAlertsPanel mapCenter={mapCenter} onCoordsChange={setWindyCoords} />
+        <AIAlertsPanel mapCenter={establishmentCoords} onCoordsChange={setWindyCoords} />
       </div>
     </>
   );
