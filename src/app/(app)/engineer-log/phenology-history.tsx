@@ -68,7 +68,7 @@ export function PhenologyHistory() {
   useEffect(() => {
     if (selectedLog && isEditDialogOpen) {
       form.reset({
-        date: selectedLog.date,
+        date: selectedLog.date.slice(0, 16),
         developmentState: selectedLog.developmentState,
         batchId: selectedLog.batchId || 'general',
         flowerCount: selectedLog.flowerCount,

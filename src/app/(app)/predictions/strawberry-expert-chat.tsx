@@ -113,8 +113,13 @@ ${supplies.length > 0
 Últimas Cosechas:
 ${harvests.slice(0, 5).map(h => `- ${new Date(h.date).toLocaleDateString()}: ${h.kilograms}kg en Lote ${h.batchNumber}`).join('\n')}
 
-Bitácora del Agrónomo (Reciente):
-${agronomistLogs.slice(0, 5).map(l => `- ${new Date(l.date).toLocaleDateString()}: ${l.type} en Lote ${l.batchId || 'N/A'}: ${l.notes}`).join('\n')}
+${agronomistLogs.slice(0, 10).map(l => {
+    const products = l.supplies && l.supplies.length > 0 
+        ? l.supplies.map(s => `${s.name} (${s.quantity})`).join(', ')
+        : (l.product ? `${l.product} (${l.quantityUsed})` : 'Sin especificar');
+    const prep = l.dissolution ? ` [Preparación: ${l.dissolution}]` : '';
+    return `- ${new Date(l.date).toLocaleDateString()}: ${l.type} en Lote ${l.batchId || 'General'}. Productos: ${products}.${prep} Notas: ${l.notes}`;
+}).join('\n')}
 
 Estado Fenológico:
 ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}: Lote ${p.batchId} en etapa ${p.developmentState}`).join('\n')}

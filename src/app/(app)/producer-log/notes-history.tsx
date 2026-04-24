@@ -48,7 +48,7 @@ export function NotesHistory() {
   useEffect(() => {
     if (selectedLog && isEditDialogOpen) {
       form.reset({
-        date: selectedLog.date,
+        date: selectedLog.date.slice(0, 16),
         type: selectedLog.type || 'Nota',
         notes: selectedLog.notes,
         omittedActivity: selectedLog.omittedActivity || '',

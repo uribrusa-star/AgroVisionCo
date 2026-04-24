@@ -19,6 +19,9 @@ import { cn } from '@/lib/utils';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useFieldArray } from 'react-hook-form';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const LogSchema = z.object({
   date: z.date({
@@ -29,6 +32,12 @@ const LogSchema = z.object({
   product: z.string().optional(),
   quantityUsed: z.coerce.number().optional(),
   notes: z.string().min(5, "Las notas son requeridas."),
+  dissolution: z.string().optional(),
+  supplies: z.array(z.object({
+    supplyId: z.string().min(1, "Seleccione un insumo"),
+    name: z.string(),
+    quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor a 0"),
+  })).optional(),
 });
 
 type LogFormValues = z.infer<typeof LogSchema>;
@@ -47,10 +56,15 @@ export function IrrigationLogForm() {
       date: new Date(),
       type: 'Riego',
       batchId: 'general',
-      product: '',
-      quantityUsed: 0,
       notes: '',
+      dissolution: '',
+      supplies: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "supplies"
   });
   
   const applicationType = form.watch('type');
@@ -59,7 +73,7 @@ export function IrrigationLogForm() {
     if (applicationType === 'Riego') return [];
     const supplyTypeMap = {
       'Fertilización': 'Fertilizante',
-      'Fumigación': ['Fungicida', 'Insecticida', 'Acaricida'],
+      'Fumigación': ['Fungicida', 'Insecticida', 'Acaricida', 'Fertilizante'],
     };
     const targetType = supplyTypeMap[applicationType as keyof typeof supplyTypeMap];
     if (!targetType) return [];
@@ -69,10 +83,10 @@ export function IrrigationLogForm() {
 
 
   const onSubmit = (data: LogFormValues) => {
-    if (data.type !== 'Riego' && (!data.product || !data.quantityUsed || data.quantityUsed <= 0)) {
+    if (data.type !== 'Riego' && (!data.supplies || data.supplies.length === 0)) {
         toast({
             title: "Datos Incompletos",
-            description: "Para Fertilización o Fumigación, debe seleccionar un producto y especificar la cantidad utilizada.",
+            description: "Para Fertilización o Fumigación, debe agregar al menos un insumo.",
             variant: "destructive"
         });
         return;
@@ -83,8 +97,8 @@ export function IrrigationLogForm() {
         date: data.date.toISOString(),
         type: data.type,
         batchId: data.batchId === 'general' ? undefined : data.batchId,
-        product: data.product,
-        quantityUsed: data.quantityUsed,
+        supplies: data.supplies,
+        dissolution: data.dissolution,
         notes: data.notes,
       });
       
@@ -97,9 +111,9 @@ export function IrrigationLogForm() {
         date: new Date(),
         type: 'Riego',
         batchId: 'general',
-        product: '',
-        quantityUsed: 0,
         notes: '',
+        dissolution: '',
+        supplies: [],
       });
     });
   };
@@ -223,43 +237,118 @@ export function IrrigationLogForm() {
             </div>
              
             {applicationType !== 'Riego' && (
-                <div className="grid md:grid-cols-2 gap-4">
-                    <FormField
-                        control={form.control}
-                        name="product"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>{getProductLabel()}</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Seleccione un producto" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-base">Insumos / Productos</FormLabel>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => append({ supplyId: '', name: '', quantity: 0 })}
+                      disabled={isPending || !canManage}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Agregar Insumo
+                    </Button>
+                  </div>
+                  
+                  {fields.length === 0 && (
+                    <div className="text-center p-8 border-2 border-dashed rounded-lg text-muted-foreground">
+                      No se han agregado insumos. Haga clic en "Agregar Insumo".
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {fields.map((item, index) => (
+                      <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border p-3 rounded-lg bg-muted/30">
+                        <div className="md:col-span-7">
+                          <FormField
+                            control={form.control}
+                            name={`supplies.${index}.supplyId`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Producto</FormLabel>
+                                <Select 
+                                  onValueChange={(val) => {
+                                    field.onChange(val);
+                                    const s = availableSupplies.find(sup => sup.id === val);
+                                    if (s) form.setValue(`supplies.${index}.name`, s.name);
+                                  }} 
+                                  value={field.value} 
+                                  disabled={!canManage || isPending}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger size="sm">
+                                      <SelectValue placeholder="Seleccione un producto" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
                                     {availableSupplies.map(s => (
-                                        <SelectItem key={s.id} value={s.name}>{s.name} ({s.stock} kg/L disp.)</SelectItem>
+                                      <SelectItem key={s.id} value={s.id}>
+                                        {s.name} ({s.stock} {s.unit} disp.)
+                                      </SelectItem>
                                     ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="quantityUsed"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Dosis Aplicada (kg/L)</FormLabel>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-4">
+                          <FormField
+                            control={form.control}
+                            name={`supplies.${index}.quantity`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Cantidad</FormLabel>
                                 <FormControl>
-                                <Input type="number" step="0.1" {...field} placeholder="Ej: 5.5" disabled={!canManage || isPending} />
+                                  <Input 
+                                    type="number" 
+                                    step="any" 
+                                    {...field} 
+                                    placeholder="Ej: 5.5" 
+                                    disabled={!canManage || isPending} 
+                                    className="h-8"
+                                  />
                                 </FormControl>
                                 <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-1 flex justify-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            disabled={isPending || !canManage}
+                            className="text-destructive hover:text-destructive/80"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+            )}
+
+            {applicationType !== 'Riego' && (
+              <FormField
+                control={form.control}
+                name="dissolution"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preparación / Disolución (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Mochila 20L, Tanque 1000L" {...field} disabled={!canManage || isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <FormField

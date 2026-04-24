@@ -163,8 +163,8 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         centerOfPolygon.lng /= paths.length;
 
         const lotHarvests = harvests.filter(h => h.batchNumber === activeInfoWindow);
-        const lotAgronomistLogs = agronomistLogs.filter(l => l.batchId === activeInfoWindow);
-        const lotPhenologyLogs = phenologyLogs.filter(p => p.batchId === activeInfoWindow);
+        const lotAgronomistLogs = agronomistLogs.filter(l => !l.batchId || l.batchId === activeInfoWindow);
+        const lotPhenologyLogs = phenologyLogs.filter(p => !p.batchId || p.batchId === activeInfoWindow);
         const totalKilos = lotHarvests.reduce((sum, h) => sum + h.kilograms, 0);
 
         return (

@@ -91,6 +91,8 @@ export type AgronomistLog = {
     batchId?: string;
     product?: string;
     quantityUsed?: number;
+    supplies?: { supplyId: string, name: string, quantity: number }[];
+    dissolution?: string;
     notes: string;
     images?: ImageWithHint[];
     diagnosis?: string;

@@ -287,6 +287,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
        }
     }, [fetchAllData, currentUser]);
     
+    // Helper function to remove undefined values before saving to Firestore
+    const sanitizeForFirestore = (data: any) => {
+        return Object.fromEntries(
+            Object.entries(data).filter(([_, v]) => v !== undefined)
+        );
+    };
+    
     const addHarvest = async (harvestData: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number): Promise<string | undefined> => {
         const collector = collectors.find(c => c.id === harvestData.collector.id);
         if (!collector) {
@@ -567,23 +574,31 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const runAdd = async () => {
             const batch = writeBatch(db);
             const newLogRef = doc(collection(db, 'agronomistLogs'));
-            batch.set(newLogRef, log);
+            batch.set(newLogRef, sanitizeForFirestore(log));
             
             let lowStockAlertTriggered = false;
 
-            if ((log.type === 'Fertilización' || log.type === 'Fumigación') && log.product && log.quantityUsed) {
-                const supplyToUpdate = supplies.find(s => s.name === log.product);
+            const allSuppliesToUpdate = [...(log.supplies || [])];
+            if (log.product && log.quantityUsed) {
+                const existing = supplies.find(s => s.name === log.product);
+                if (existing && !allSuppliesToUpdate.find(s => s.supplyId === existing.id)) {
+                    allSuppliesToUpdate.push({ supplyId: existing.id, name: log.product, quantity: log.quantityUsed });
+                }
+            }
+
+            for (const supplyEntry of allSuppliesToUpdate) {
+                const supplyToUpdate = supplies.find(s => s.id === supplyEntry.supplyId);
                 if (supplyToUpdate && supplyToUpdate.stock !== undefined) {
                     const oldStock = supplyToUpdate.stock;
-                    const newStock = oldStock - log.quantityUsed;
+                    const newStock = oldStock - supplyEntry.quantity;
                     const supplyRef = doc(db, 'supplies', supplyToUpdate.id);
                     batch.update(supplyRef, { stock: newStock });
 
                     if (supplyToUpdate.lowStockThreshold !== undefined && newStock < supplyToUpdate.lowStockThreshold && oldStock >= supplyToUpdate.lowStockThreshold) {
-                       lowStockAlertTriggered = true;
-                       const producerUser = users.find(u => u.role === 'Productor');
-                       if (producerUser && currentUser) {
-                           const newTask: Omit<Task, 'id'> = {
+                        lowStockAlertTriggered = true;
+                        const producerUser = users.find(u => u.role === 'Productor');
+                        if (producerUser && currentUser) {
+                            const newTask: Omit<Task, 'id'> = {
                                 title: `Stock bajo: ${supplyToUpdate.name}`,
                                 description: `El stock de '${supplyToUpdate.name}' ha caído a ${newStock.toFixed(1)} kg/L, por debajo del umbral de ${supplyToUpdate.lowStockThreshold} kg/L. Se recomienda reponer.`,
                                 assignedTo: { id: producerUser.id, name: producerUser.name },
@@ -591,10 +606,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                                 status: 'pending',
                                 priority: 'media',
                                 createdAt: new Date().toISOString(),
-                           };
-                           const newTaskRef = doc(collection(db, 'tasks'));
-                           batch.set(newTaskRef, newTask);
-                       }
+                            };
+                            const newTaskRef = doc(collection(db, 'tasks'));
+                            batch.set(newTaskRef, newTask);
+                        }
                     }
                 }
             }
@@ -602,7 +617,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             await batch.commit();
             await fetchAllData();
             if (lowStockAlertTriggered) {
-                toast({ title: "Alerta de Stock Bajo", description: `Se ha creado una tarea para reponer ${log.product}.` });
+                toast({ title: "Alerta de Stock Bajo", description: `Se ha creado una tarea para reponer insumos.` });
             }
         }
     
@@ -619,7 +634,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         const logRef = doc(db, 'agronomistLogs', updatedLog.id);
         const { id, ...data } = updatedLog;
-        setDoc(logRef, data, { merge: true }).catch(error => {
+        setDoc(logRef, sanitizeForFirestore(data), { merge: true }).catch(error => {
             console.error("Failed to edit agronomist log:", error);
             setAgronomistLogs(originalLogs);
             toast({ title: "Error", description: "No se pudo editar el registro.", variant: "destructive"});
@@ -636,10 +651,18 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const batch = writeBatch(db);
             batch.delete(doc(db, 'agronomistLogs', logId));
 
-            if (logToDelete && (logToDelete.type === 'Fertilización' || logToDelete.type === 'Fumigación') && logToDelete.product && logToDelete.quantityUsed) {
-                const supplyToUpdate = supplies.find(s => s.name === logToDelete.product);
+            const allSuppliesToRestore = [...(logToDelete.supplies || [])];
+            if (logToDelete.product && logToDelete.quantityUsed) {
+                const existing = supplies.find(s => s.name === logToDelete.product);
+                if (existing && !allSuppliesToRestore.find(s => s.supplyId === existing.id)) {
+                    allSuppliesToRestore.push({ supplyId: existing.id, name: logToDelete.product, quantity: logToDelete.quantityUsed });
+                }
+            }
+
+            for (const supplyEntry of allSuppliesToRestore) {
+                const supplyToUpdate = supplies.find(s => s.id === supplyEntry.supplyId);
                 if (supplyToUpdate && supplyToUpdate.stock !== undefined) {
-                    const restoredStock = supplyToUpdate.stock + logToDelete.quantityUsed;
+                    const restoredStock = supplyToUpdate.stock + supplyEntry.quantity;
                     const supplyRef = doc(db, 'supplies', supplyToUpdate.id);
                     batch.update(supplyRef, { stock: restoredStock });
 
@@ -669,8 +692,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const addPhenologyLog = (log: Omit<PhenologyLog, 'id'>) => {
         const tempId = `phenologylog_${Date.now()}`;
         setPhenologyLogs(prev => [{ id: tempId, ...log }, ...prev]);
-
-        addDoc(collection(db, 'phenologyLogs'), log).then(ref => {
+    
+        addDoc(collection(db, 'phenologyLogs'), sanitizeForFirestore(log)).then(ref => {
             setPhenologyLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
         }).catch(error => {
             console.error("Failed to add phenology log:", error);
@@ -685,7 +708,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         const logRef = doc(db, 'phenologyLogs', updatedLog.id);
         const { id, ...data } = updatedLog;
-        setDoc(logRef, data, { merge: true }).catch(error => {
+        setDoc(logRef, sanitizeForFirestore(data), { merge: true }).catch(error => {
             console.error("Failed to edit phenology log:", error);
             setPhenologyLogs(originalLogs);
             toast({ title: "Error", description: "No se pudo editar el registro.", variant: "destructive"});

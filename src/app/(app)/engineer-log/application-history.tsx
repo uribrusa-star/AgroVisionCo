@@ -32,12 +32,18 @@ const LogSchema = z.object({
   product: z.string().optional(),
   quantityUsed: z.coerce.number().optional(),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
+  dissolution: z.string().optional(),
   diagnosis: z.string().optional(),
   probability: z.coerce.number().optional(),
   latitude: z.coerce.number().optional(),
   longitude: z.coerce.number().optional(),
   images: z.array(z.object({
     url: z.string().url("Debe ser una URL de imagen válida.").or(z.literal('')),
+  })).optional(),
+  supplies: z.array(z.object({
+    supplyId: z.string().optional(),
+    name: z.string(),
+    quantity: z.coerce.number(),
   })).optional(),
 });
 
@@ -64,20 +70,27 @@ export function ApplicationHistory() {
     name: "images"
   });
 
+  const { fields: supplyFields, append: appendSupply, remove: removeSupply } = useFieldArray({
+    control: form.control,
+    name: "supplies"
+  });
+
   useEffect(() => {
     if (selectedLog && isEditDialogOpen) {
       form.reset({
-        date: selectedLog.date,
+        date: selectedLog.date.slice(0, 16),
         type: selectedLog.type,
         batchId: selectedLog.batchId || 'general',
         product: selectedLog.product,
         quantityUsed: selectedLog.quantityUsed,
         notes: selectedLog.notes,
+        dissolution: selectedLog.dissolution || '',
         diagnosis: selectedLog.diagnosis,
         probability: selectedLog.probability,
         latitude: selectedLog.latitude,
         longitude: selectedLog.longitude,
         images: selectedLog.images?.map(img => ({ url: img.url })) || [{ url: '' }],
+        supplies: selectedLog.supplies || (selectedLog.product ? [{ name: selectedLog.product, quantity: selectedLog.quantityUsed || 0, supplyId: supplies.find(s => s.name === selectedLog.product)?.id || '' }] : []),
       });
     }
   }, [selectedLog, isEditDialogOpen, form]);
@@ -119,11 +132,13 @@ export function ApplicationHistory() {
             product: values.product,
             quantityUsed: values.quantityUsed,
             notes: values.notes,
+            dissolution: values.dissolution,
             diagnosis: values.diagnosis,
             probability: values.probability,
             latitude: values.latitude,
             longitude: values.longitude,
             images: imagesWithHints,
+            supplies: values.supplies,
           });
           toast({
             title: "Registro Actualizado",
@@ -226,7 +241,11 @@ export function ApplicationHistory() {
                           {log.batchId ? <Badge variant="outline">{log.batchId}</Badge> : <span className="text-xs text-muted-foreground">General</span>}
                         </TableCell>
                         <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                          <p className="font-medium">{log.product || '-'}</p>
+                          <p className="font-medium">
+                            {log.supplies && log.supplies.length > 0 
+                              ? log.supplies.map(s => s.name).join(', ') 
+                              : (log.product || '-')}
+                          </p>
                           <p className="text-sm text-muted-foreground max-w-xs truncate">{log.notes}</p>
                         </TableCell>
                         <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
@@ -354,19 +373,77 @@ export function ApplicationHistory() {
                 </div>
 
                 {(form.watch('type') === 'Fertilización' || form.watch('type') === 'Fumigación') && (
-                    <FormField
-                        control={form.control}
-                        name="quantityUsed"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Cantidad Utilizada (kg/L)</FormLabel>
-                            <FormControl>
-                                <Input type="number" step="0.01" {...field} disabled={!canManage || isPending} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <FormLabel>Insumos Utilizados</FormLabel>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => appendSupply({ name: '', quantity: 0, supplyId: '' })}
+                                disabled={isPending || !canManage}
+                            >
+                                <PlusCircle className="h-4 w-4 mr-2" /> Agregar
+                            </Button>
+                        </div>
+                        {supplyFields.map((item, index) => (
+                            <div key={item.id} className="grid grid-cols-12 gap-2 items-end border p-2 rounded-md">
+                                <div className="col-span-7">
+                                    <FormField
+                                        control={form.control}
+                                        name={`supplies.${index}.supplyId`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <Select 
+                                                    onValueChange={(val) => {
+                                                        field.onChange(val);
+                                                        const s = supplies.find(sup => sup.id === val);
+                                                        if (s) form.setValue(`supplies.${index}.name`, s.name);
+                                                    }} 
+                                                    value={field.value}
+                                                >
+                                                    <FormControl>
+                                                        <SelectTrigger size="sm">
+                                                            <SelectValue placeholder="Producto" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {supplies.map(s => (
+                                                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <div className="col-span-4">
+                                    <FormField
+                                        control={form.control}
+                                        name={`supplies.${index}.quantity`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <Input type="number" step="any" {...field} placeholder="Cant." className="h-8" />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                                <div className="col-span-1 flex justify-center">
+                                    <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={() => removeSupply(index)}
+                                        className="h-8 w-8 text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
 
                 {form.watch('type') === 'Sanidad' && (
@@ -446,6 +523,19 @@ export function ApplicationHistory() {
                     </div>
                 )}
 
+                 <FormField
+                    control={form.control}
+                    name="dissolution"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Preparación / Disolución</FormLabel>
+                        <FormControl>
+                        <Input placeholder="ej. Mochila 20L" {...field} disabled={!canManage || isPending} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
                  <FormField
                     control={form.control}
                     name="product"
@@ -567,18 +657,33 @@ export function ApplicationHistory() {
                                   </div>
                                 )}
 
-                                {selectedLog.product && (
-                                    <div className="space-y-1">
-                                        <p className="text-sm font-medium text-muted-foreground">Producto / Detalle</p>
-                                        <p className="font-semibold">{selectedLog.product}</p>
+                                {selectedLog.supplies && selectedLog.supplies.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-medium text-muted-foreground">Insumos Aplicados</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedLog.supplies.map((s, i) => (
+                                                <Badge key={i} variant="secondary" className="px-2 py-1">
+                                                    {s.name}: {s.quantity} kg/L
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </div>
-                                )}
+                                ) : (
+                                    <>
+                                        {selectedLog.product && (
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-muted-foreground">Producto / Detalle</p>
+                                                <p className="font-semibold">{selectedLog.product}</p>
+                                            </div>
+                                        )}
 
-                                {selectedLog.quantityUsed && selectedLog.quantityUsed > 0 && (
-                                    <div className="space-y-1">
-                                        <p className="text-sm font-medium text-muted-foreground">Cantidad Aplicada</p>
-                                        <p className="font-semibold">{selectedLog.quantityUsed} kg/L</p>
-                                    </div>
+                                        {selectedLog.quantityUsed && selectedLog.quantityUsed > 0 && (
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-medium text-muted-foreground">Cantidad Aplicada</p>
+                                                <p className="font-semibold">{selectedLog.quantityUsed} kg/L</p>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                                 
                                  {selectedLog.diagnosis && (
@@ -588,10 +693,17 @@ export function ApplicationHistory() {
                                     </div>
                                 )}
                                 
-                                <div className="space-y-1">
+                                 <div className="space-y-1">
                                     <p className="text-sm font-medium text-muted-foreground">Notas</p>
                                     <p className="text-foreground whitespace-pre-wrap">{selectedLog.notes}</p>
                                 </div>
+                                
+                                {selectedLog.dissolution && (
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-muted-foreground">Preparación / Disolución</p>
+                                        <p className="font-semibold">{selectedLog.dissolution}</p>
+                                    </div>
+                                )}
                                 
                                 {imagesToShow.length > 0 && (
                                     <div className="space-y-2">

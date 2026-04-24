@@ -123,7 +123,14 @@ export const generateTraceabilityPDF = (
 
   const events = [
     ...phenologyLogs.map(p => ({ date: new Date(p.date), type: 'Fenología', desc: p.developmentState, notes: p.notes })),
-    ...agronomistLogs.map(a => ({ date: new Date(a.date), type: `Bitácora: ${a.type}`, desc: a.product || '-', notes: a.notes })),
+    ...agronomistLogs.map(a => ({ 
+      date: new Date(a.date), 
+      type: `Bitácora: ${a.type}`, 
+      desc: (a.supplies && a.supplies.length > 0 
+        ? a.supplies.map(s => `${s.name} (${s.quantity})`).join(', ') 
+        : (a.product ? `${a.product} (${a.quantityUsed})` : '-')) + (a.dissolution ? ` [Prep: ${a.dissolution}]` : ''), 
+      notes: a.notes 
+    })),
     ...harvests.map(h => ({ date: new Date(h.date), type: 'Cosecha', desc: `${h.kilograms} kg`, notes: `ID: ${h.traceabilityId}` })),
   ].sort((a, b) => a.date.getTime() - b.date.getTime());
 

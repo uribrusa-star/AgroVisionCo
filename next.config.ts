@@ -27,7 +27,7 @@ const withPWA = withPWAInit({
       handler: 'NetworkFirst',
       options: {
         cacheName: 'other-requests-cache',
-        networkTimeoutSeconds: 10,
+        networkTimeoutSeconds: 30,
         expiration: {
           maxEntries: 50,
           maxAgeSeconds: 10 * 24 * 60 * 60, // 10 days
