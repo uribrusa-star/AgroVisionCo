@@ -25,6 +25,7 @@ const EditBatchSchema = z.object({
   varieties: z.array(z.object({
     name: z.string().min(1, "El nombre de la variedad es obligatorio"),
     plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
+    area: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
   })).min(1, "Debe añadir al menos una variedad"),
 });
 
@@ -50,7 +51,7 @@ export function BatchHistory() {
         id: editingBatch.id,
         varieties: editingBatch.varieties && editingBatch.varieties.length > 0 
           ? editingBatch.varieties 
-          : [{ name: '', plantCount: undefined }],
+          : [{ name: '', plantCount: undefined, area: undefined }],
       });
     }
   }, [editingBatch, editForm]);
@@ -132,7 +133,7 @@ export function BatchHistory() {
                                 <div className="flex flex-wrap gap-1">
                                   {batch.varieties.map((v, i) => (
                                     <Badge key={i} variant="outline" className="text-[10px]">
-                                      {v.name} {v.plantCount ? `(${v.plantCount})` : ''}
+                                      {v.name} {v.plantCount ? `(${v.plantCount})` : ''} {v.area ? `[${v.area} ha]` : ''}
                                     </Badge>
                                   ))}
                                 </div>
@@ -165,7 +166,7 @@ export function BatchHistory() {
                                                   type="button" 
                                                   variant="outline" 
                                                   size="sm" 
-                                                  onClick={() => append({ name: '', plantCount: undefined })}
+                                                  onClick={() => append({ name: '', plantCount: undefined, area: undefined })}
                                                 >
                                                   <Plus className="h-4 w-4 mr-2" />
                                                   Añadir Variedad
@@ -174,7 +175,7 @@ export function BatchHistory() {
                                               
                                               {fields.map((field, index) => (
                                                 <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-3 rounded-md">
-                                                  <div className="md:col-span-6">
+                                                  <div className="md:col-span-5">
                                                     <FormField
                                                       control={editForm.control}
                                                       name={`varieties.${index}.name`}
@@ -189,7 +190,7 @@ export function BatchHistory() {
                                                       )}
                                                     />
                                                   </div>
-                                                  <div className="md:col-span-4">
+                                                  <div className="md:col-span-3">
                                                     <FormField
                                                       control={editForm.control}
                                                       name={`varieties.${index}.plantCount`}
@@ -200,7 +201,9 @@ export function BatchHistory() {
                                                             <Input 
                                                               type="number" 
                                                               {...field} 
+                                                              value={field.value ?? ''}
                                                               onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                                                              className="h-8"
                                                             />
                                                           </FormControl>
                                                           <FormMessage />
@@ -208,7 +211,29 @@ export function BatchHistory() {
                                                       )}
                                                     />
                                                   </div>
-                                                  <div className="md:col-span-2 flex justify-end">
+                                                  <div className="md:col-span-3">
+                                                    <FormField
+                                                      control={editForm.control}
+                                                      name={`varieties.${index}.area`}
+                                                      render={({ field }) => (
+                                                        <FormItem>
+                                                          <FormLabel className="text-xs">Superficie (ha)</FormLabel>
+                                                          <FormControl>
+                                                            <Input 
+                                                              type="number" 
+                                                              step="0.01"
+                                                              {...field} 
+                                                              value={field.value ?? ''}
+                                                              onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                                                              className="h-8"
+                                                            />
+                                                          </FormControl>
+                                                          <FormMessage />
+                                                        </FormItem>
+                                                      )}
+                                                    />
+                                                  </div>
+                                                  <div className="md:col-span-1 flex justify-end">
                                                     <Button
                                                       type="button"
                                                       variant="ghost"

@@ -48,6 +48,7 @@ export type Harvest = {
 export type BatchVariety = {
   name: string;
   plantCount?: number;
+  area?: number; // In hectares
 };
 
 export type Batch = {

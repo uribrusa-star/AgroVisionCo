@@ -19,6 +19,7 @@ const BatchLogSchema = z.object({
   varieties: z.array(z.object({
     name: z.string().min(1, "El nombre de la variedad es obligatorio"),
     plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
+    area: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
   })).min(1, "Debe añadir al menos una variedad"),
 });
 
@@ -36,7 +37,7 @@ export function BatchLogForm() {
     resolver: zodResolver(BatchLogSchema),
     defaultValues: {
       id: '',
-      varieties: [{ name: '', plantCount: undefined }],
+      varieties: [{ name: '', plantCount: undefined, area: undefined }],
     },
   });
 
@@ -62,7 +63,7 @@ export function BatchLogForm() {
         });
         form.reset({
             id: '',
-            varieties: [{ name: '', plantCount: undefined }],
+            varieties: [{ name: '', plantCount: undefined, area: undefined }],
         });
     });
   };
@@ -101,7 +102,7 @@ export function BatchLogForm() {
                     type="button" 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => append({ name: '', plantCount: undefined })}
+                    onClick={() => append({ name: '', plantCount: undefined, area: undefined })}
                     disabled={!canManage || isPending}
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -111,7 +112,7 @@ export function BatchLogForm() {
                 
                 {fields.map((field, index) => (
                   <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md bg-muted/30">
-                    <div className="md:col-span-6">
+                    <div className="md:col-span-5">
                       <FormField
                         control={form.control}
                         name={`varieties.${index}.name`}
@@ -126,20 +127,22 @@ export function BatchLogForm() {
                         )}
                       />
                     </div>
-                    <div className="md:col-span-4">
+                    <div className="md:col-span-3">
                       <FormField
                         control={form.control}
                         name={`varieties.${index}.plantCount`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">Cant. Plantas (Opcional)</FormLabel>
+                            <FormLabel className="text-xs">Cant. Plantas (Opc.)</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
                                 placeholder="ej. 2500" 
                                 {...field} 
+                                value={field.value ?? ''}
                                 onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
                                 disabled={!canManage || isPending} 
+                                className="h-8"
                               />
                             </FormControl>
                             <FormMessage />
@@ -147,7 +150,31 @@ export function BatchLogForm() {
                         )}
                       />
                     </div>
-                    <div className="md:col-span-2 flex justify-end">
+                    <div className="md:col-span-3">
+                      <FormField
+                        control={form.control}
+                        name={`varieties.${index}.area`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Superficie (ha)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01"
+                                placeholder="ej. 0.2" 
+                                {...field} 
+                                value={field.value ?? ''}
+                                onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                                disabled={!canManage || isPending} 
+                                className="h-8"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="md:col-span-1 flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
