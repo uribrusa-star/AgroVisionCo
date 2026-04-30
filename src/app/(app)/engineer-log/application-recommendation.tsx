@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useContext, useState, useTransition } from 'react';
-import { Sparkles, BrainCircuit, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { Sparkles, BrainCircuit, AlertCircle, CheckCircle, Info, Save } from 'lucide-react';
 import { z } from 'zod';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +24,7 @@ const RecommendationSchema = z.object({
 type Recommendation = z.infer<typeof RecommendationSchema>;
 
 export function ApplicationRecommendation() {
-    const { supplies, agronomistLogs, phenologyLogs, establishmentData } = useContext(AppDataContext);
+    const { supplies, agronomistLogs, phenologyLogs, establishmentData, addTask, currentUser, users } = useContext(AppDataContext);
     const [isPending, startTransition] = useTransition();
     const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null);
     const { toast } = useToast();
@@ -83,6 +83,38 @@ export function ApplicationRecommendation() {
         }
     }
 
+    const handleSaveAsTask = (rec: Recommendation) => {
+        if (!currentUser) {
+            toast({ title: "Error", description: "Debe iniciar sesión para guardar tareas.", variant: "destructive" });
+            return;
+        }
+
+        const assignee = users.find(u => u.role === 'Encargado') || users.find(u => u.role === 'Productor') || currentUser;
+
+        const priorityMap: Record<string, 'baja' | 'media' | 'alta'> = {
+            'Alta': 'alta',
+            'Media': 'media',
+            'Baja': 'baja'
+        };
+
+        const newTask = {
+            title: `Aplicar: ${rec.suggestedProducts.join(', ') || rec.recommendation.substring(0, 30)}`,
+            description: `${rec.recommendation}\n\nJustificación: ${rec.reason}\n\nInsumos sugeridos: ${rec.suggestedProducts.join(', ')}`,
+            assignedTo: { id: assignee.id, name: assignee.name },
+            createdBy: { id: currentUser.id, name: currentUser.name },
+            status: 'pending' as const,
+            priority: priorityMap[rec.urgency] || 'media',
+            createdAt: new Date().toISOString(),
+        };
+
+        try {
+            addTask(newTask);
+            toast({ title: "Tarea Guardada", description: "La recomendación se ha guardado como una tarea pendiente." });
+        } catch (error) {
+            toast({ title: "Error", description: "No se pudo guardar la tarea.", variant: "destructive" });
+        }
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -132,6 +164,12 @@ export function ApplicationRecommendation() {
                                                     </div>
                                                 </>
                                             )}
+                                            <div className="mt-4 flex justify-end">
+                                                <Button variant="secondary" size="sm" onClick={() => handleSaveAsTask(rec)}>
+                                                    <Save className="w-4 h-4 mr-2" />
+                                                    Guardar como Tarea
+                                                </Button>
+                                            </div>
                                         </AlertDescription>
                                     </Alert>
                                 );
