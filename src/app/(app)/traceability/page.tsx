@@ -49,7 +49,7 @@ export default function TraceabilityPage() {
   const timelineEvents = useMemo(() => {
     if (!selectedBatchId) return [];
 
-    const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
+    const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId || h.batchNumber.split(',').map(s => s.trim()).includes(selectedBatchId));
     const batchAgLogs = agronomistLogs.filter(l => 
       (l.batchIds && l.batchIds.includes(selectedBatchId)) || (l.batchId === selectedBatchId)
     );
@@ -115,7 +115,7 @@ export default function TraceabilityPage() {
         console.error("Error loading logo:", e);
       }
 
-      const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
+      const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId || h.batchNumber.split(',').map(s => s.trim()).includes(selectedBatchId));
       const batchAgLogs = agronomistLogs.filter(l => 
         (l.batchIds && l.batchIds.includes(selectedBatchId)) || (l.batchId === selectedBatchId)
       );

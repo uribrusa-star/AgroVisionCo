@@ -18,18 +18,18 @@ const chartConfig = {
 function BatchYieldChartComponent() {
   const { loading, harvests } = useContext(AppDataContext);
 
-  const harvestedBatchIds = [...new Set(harvests.map(h => h.batchNumber))];
+  const harvestedBatchIds = [...new Set(harvests.flatMap(h => h.batchNumber.split(',').map(s => s.trim())))];
   
   // We want to show latest harvested batches, so we need to find the latest harvest date for each batch
   const batchLastHarvestDates = harvestedBatchIds.map(batchId => {
-      const dates = harvests.filter(h => h.batchNumber === batchId).map(h => new Date(h.date).getTime());
+      const dates = harvests.filter(h => h.batchNumber === batchId || h.batchNumber.split(',').map(s => s.trim()).includes(batchId)).map(h => new Date(h.date).getTime());
       return { batchId, lastDate: Math.max(...dates) };
   })
   .sort((a,b) => b.lastDate - a.lastDate)
   .slice(0,10);
 
   const chartData = batchLastHarvestDates.map(batchInfo => {
-    const batchHarvests = harvests.filter(h => h.batchNumber === batchInfo.batchId);
+    const batchHarvests = harvests.filter(h => h.batchNumber === batchInfo.batchId || h.batchNumber.split(',').map(s => s.trim()).includes(batchInfo.batchId));
     const totalKilos = batchHarvests.reduce((sum, h) => sum + h.kilograms, 0);
     return {
       batch: batchInfo.batchId,

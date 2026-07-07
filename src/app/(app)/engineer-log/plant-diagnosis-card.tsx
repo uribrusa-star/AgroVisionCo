@@ -65,10 +65,10 @@ export function PlantDiagnosisCard() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 1 * 1024 * 1024) { // 1MB limit
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast({ 
           title: "Imagen muy grande", 
-          description: "La imagen excede el límite de 1MB. Por favor, suba una imagen más pequeña.", 
+          description: "La imagen excede el límite de 5MB. Por favor, suba una imagen más pequeña.", 
           variant: "destructive" 
         });
         return;

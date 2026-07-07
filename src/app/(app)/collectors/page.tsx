@@ -29,7 +29,7 @@ const CollectorSchema = z.object({
 });
 
 export default function CollectorsPage() {
-  const { loading, collectors, harvests, addCollector, deleteCollector, currentUser } = React.useContext(AppDataContext);
+  const { loading, collectors, harvests, collectorPaymentLogs, addCollector, deleteCollector, currentUser } = React.useContext(AppDataContext);
   const [selectedCollector, setSelectedCollector] = useState<Collector | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -176,7 +176,23 @@ export default function CollectorsPage() {
                     )}
                   </TableRow>
                 ))}
-                {!loading && collectors.map((collector) => (
+                {!loading && collectors.map((collector) => {
+                  const collectorHarvests = harvests.filter(h => h.collector.id === collector.id);
+                  const collectorLogs = (collectorPaymentLogs || []).filter(l => l.collectorId === collector.id);
+                  
+                  const calculatedTotalHarvested = collectorHarvests.length > 0
+                    ? collectorHarvests.reduce((sum, h) => sum + h.kilograms, 0)
+                    : collector.totalHarvested;
+                    
+                  const calculatedHoursWorked = collectorLogs.length > 0
+                    ? collectorLogs.reduce((sum, l) => sum + l.hours, 0)
+                    : collector.hoursWorked;
+                    
+                  const calculatedProductivity = calculatedHoursWorked > 0
+                    ? calculatedTotalHarvested / calculatedHoursWorked
+                    : (collector.productivity || 0);
+
+                  return (
                   <TableRow key={collector.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -187,8 +203,8 @@ export default function CollectorsPage() {
                         <span className="font-medium">{collector.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{collector.totalHarvested.toLocaleString('es-ES')} kg</TableCell>
-                    <TableCell className="hidden lg:table-cell">{collector.productivity.toFixed(2)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{calculatedTotalHarvested.toLocaleString('es-ES')} kg</TableCell>
+                    <TableCell className="hidden lg:table-cell">{calculatedProductivity.toFixed(2)}</TableCell>
                     <TableCell className="hidden sm:table-cell">{new Date(collector.joinDate).toLocaleDateString('es-ES')}</TableCell>
                     {canManage && (
                     <TableCell>
@@ -226,7 +242,8 @@ export default function CollectorsPage() {
                     </TableCell>
                     )}
                   </TableRow>
-                ))}
+                );
+              })}
               </TableBody>
             </Table>
           </CardContent>

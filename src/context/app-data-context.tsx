@@ -34,6 +34,8 @@ export const AppDataContext = React.createContext<AppData>({
   expertChatHistory: [],
   setExpertChatHistory: () => {},
   addHarvest: async () => { throw new Error('Not implemented') },
+  addMultipleHarvests: async () => { throw new Error('Not implemented') },
+  editHarvest: async () => { throw new Error('Not implemented') },
   editCollector: async () => { throw new Error('Not implemented') },
   deleteCollector: () => { throw new Error('Not implemented') },
   addAgronomistLog: () => { throw new Error('Not implemented') },
@@ -359,6 +361,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             batch.set(newPaymentLogRef, paymentLog);
 
             await batch.commit();
+            setCollectors(prev => prev.map(c => {
+                if (c.id === harvestData.collector.id) {
+                    return {
+                        ...c,
+                        totalHarvested: newTotalHarvested,
+                        hoursWorked: newHoursWorked,
+                        productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0
+                    };
+                }
+                return c;
+            }));
             await fetchAllData();
             return newHarvestRef.id;
 
@@ -366,6 +379,151 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             console.error("Failed to add harvest and payment:", error);
             toast({ title: "Error", description: "No se pudo guardar la cosecha y el pago.", variant: "destructive"});
             return undefined;
+        }
+    };
+
+    const addMultipleHarvests = async (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number }[]): Promise<void> => {
+        try {
+            const batch = writeBatch(db);
+            let harvestsAdded = 0;
+            const updatedCollectors = new Map<string, { totalHarvested: number; hoursWorked: number }>();
+
+            for (const { harvest: harvestData, hoursWorked, ratePerKg } of harvestsData) {
+                const collector = collectors.find(c => c.id === harvestData.collector.id);
+                if (!collector) {
+                    console.error("Collector not found for id:", harvestData.collector.id);
+                    continue; // skip
+                }
+
+                const harvestDate = new Date(harvestData.date);
+                const dateString = `${harvestDate.getFullYear()}${(harvestDate.getMonth() + 1).toString().padStart(2, '0')}${harvestDate.getDate().toString().padStart(2, '0')}`;
+                
+                const todayStart = new Date(harvestDate.getFullYear(), harvestDate.getMonth(), harvestDate.getDate()).toISOString();
+                const todayEnd = new Date(harvestDate.getFullYear(), harvestDate.getMonth(), harvestDate.getDate(), 23, 59, 59, 999).toISOString();
+                const harvestsToday = harvests.filter(h => h.date >= todayStart && h.date <= todayEnd);
+                
+                const sequentialNumber = (harvestsToday.length + 1 + harvestsAdded).toString().padStart(3, '0');
+                const traceabilityId = `AGRO-${dateString}-${harvestData.batchNumber}-${sequentialNumber}`;
+
+                const harvestWithTraceability: Omit<Harvest, 'id'> = {
+                  ...harvestData,
+                  traceabilityId,
+                }
+
+                const newHarvestRef = doc(collection(db, 'harvests'));
+                batch.set(newHarvestRef, harvestWithTraceability);
+
+                const collectorRef = doc(db, 'collectors', harvestData.collector.id);
+                const prevStats = updatedCollectors.get(harvestData.collector.id) || { totalHarvested: collector.totalHarvested, hoursWorked: collector.hoursWorked };
+                const newTotalHarvested = prevStats.totalHarvested + harvestData.kilograms;
+                const newHoursWorked = prevStats.hoursWorked + hoursWorked;
+                updatedCollectors.set(harvestData.collector.id, { totalHarvested: newTotalHarvested, hoursWorked: newHoursWorked });
+
+                const updatedCollectorData = {
+                    totalHarvested: newTotalHarvested,
+                    hoursWorked: newHoursWorked,
+                    productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
+                };
+                batch.update(collectorRef, updatedCollectorData);
+                
+                const newPaymentLogRef = doc(collection(db, 'collectorPaymentLogs'));
+                const calculatedPayment = harvestData.kilograms * ratePerKg;
+                const paymentLog: Omit<CollectorPaymentLog, 'id'> = {
+                  harvestId: newHarvestRef.id, 
+                  date: harvestData.date,
+                  collectorId: harvestData.collector.id,
+                  collectorName: collector.name,
+                  kilograms: harvestData.kilograms,
+                  hours: hoursWorked,
+                  ratePerKg: ratePerKg,
+                  payment: calculatedPayment,
+                  traceabilityId,
+                };
+                batch.set(newPaymentLogRef, paymentLog);
+                harvestsAdded++;
+            }
+
+            if (harvestsAdded > 0) {
+                await batch.commit();
+                setCollectors(prev => prev.map(c => {
+                    const updatedStats = updatedCollectors.get(c.id);
+                    if (updatedStats) {
+                        return {
+                            ...c,
+                            totalHarvested: updatedStats.totalHarvested,
+                            hoursWorked: updatedStats.hoursWorked,
+                            productivity: updatedStats.hoursWorked > 0 ? updatedStats.totalHarvested / updatedStats.hoursWorked : 0
+                        };
+                    }
+                    return c;
+                }));
+                await fetchAllData();
+            }
+
+        } catch(error) {
+            console.error("Failed to add multiple harvests:", error);
+            toast({ title: "Error", description: "No se pudieron guardar las cosechas.", variant: "destructive"});
+        }
+    };
+
+    const editHarvest = async (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string }) => {
+        const oldLog = collectorPaymentLogs.find(l => l.id === logId);
+        const oldHarvest = harvests.find(h => h.id === harvestId);
+        const collector = collectors.find(c => c.id === oldLog?.collectorId);
+        
+        if (!oldLog || !oldHarvest || !collector) {
+            toast({ title: "Error", description: "No se encontró la información original.", variant: "destructive"});
+            return;
+        }
+
+        try {
+            const batch = writeBatch(db);
+            
+            const kiloDiff = updatedData.kilograms - oldLog.kilograms;
+            const hoursDiff = updatedData.hours - oldLog.hours;
+            
+            const newTotalHarvested = collector.totalHarvested + kiloDiff;
+            const newHoursWorked = collector.hoursWorked + hoursDiff;
+            
+            const collectorRef = doc(db, 'collectors', collector.id);
+            batch.update(collectorRef, {
+                totalHarvested: newTotalHarvested,
+                hoursWorked: newHoursWorked,
+                productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
+            });
+
+            const harvestRef = doc(db, 'harvests', harvestId);
+            batch.update(harvestRef, {
+                kilograms: updatedData.kilograms,
+                batchNumber: updatedData.batchNumber
+            });
+
+            const paymentLogRef = doc(db, 'collectorPaymentLogs', logId);
+            const calculatedPayment = updatedData.kilograms * updatedData.ratePerKg;
+            batch.update(paymentLogRef, {
+                kilograms: updatedData.kilograms,
+                hours: updatedData.hours,
+                ratePerKg: updatedData.ratePerKg,
+                payment: calculatedPayment
+            });
+
+            await batch.commit();
+            setCollectors(prev => prev.map(c => {
+                if (c.id === collector.id) {
+                    return {
+                        ...c,
+                        totalHarvested: newTotalHarvested,
+                        hoursWorked: newHoursWorked,
+                        productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0
+                    };
+                }
+                return c;
+            }));
+            await fetchAllData();
+            toast({ title: "Éxito", description: "Registro modificado exitosamente."});
+        } catch(error) {
+            console.error("Failed to edit harvest:", error);
+            toast({ title: "Error", description: "No se pudo editar el registro.", variant: "destructive"});
         }
     };
 
@@ -1139,6 +1297,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         expertChatHistory,
         setExpertChatHistory,
         addHarvest,
+        addMultipleHarvests,
+        editHarvest,
         editCollector,
         deleteCollector,
         addAgronomistLog,

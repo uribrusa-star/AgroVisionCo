@@ -13,7 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Calendar, Info, Trash2, FileDown, QrCode } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Calendar, Info, Trash2, FileDown, QrCode, Edit2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
@@ -42,9 +44,12 @@ function ProductionPaymentHistoryComponent() {
   const [isPending, startTransition] = useTransition();
   const [isPdfPending, startPdfTransition] = useTransition();
   const [selectedLog, setSelectedLog] = useState<CollectorPaymentLog | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({ kilograms: 0, hours: 0, ratePerKg: 0, batchNumber: '' });
   const [isLabelOpen, setIsLabelOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
+  const { editHarvest } = useContext(AppDataContext);
 
   if (!currentUser) return null;
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Encargado';
@@ -59,6 +64,27 @@ function ProductionPaymentHistoryComponent() {
       setSelectedLog(null);
     });
   }
+
+  const handleEditSubmit = () => {
+    if (!selectedLog) return;
+    startTransition(async () => {
+      await editHarvest(selectedLog.id, selectedLog.harvestId, editData);
+      setIsEditing(false);
+      setSelectedLog(null);
+    });
+  };
+
+  const openEdit = () => {
+      if (!selectedLog) return;
+      const harvest = getHarvestForLog(selectedLog);
+      setEditData({
+          kilograms: selectedLog.kilograms,
+          hours: selectedLog.hours,
+          ratePerKg: selectedLog.ratePerKg,
+          batchNumber: harvest?.batchNumber || ''
+      });
+      setIsEditing(true);
+  };
 
   const sortedLogs = useMemo(() =>
     [...collectorPaymentLogs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
@@ -198,7 +224,12 @@ function ProductionPaymentHistoryComponent() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedLog} onOpenChange={(isOpen) => !isOpen && setSelectedLog(null)}>
+      <Dialog open={!!selectedLog} onOpenChange={(isOpen) => {
+          if (!isOpen) {
+              setSelectedLog(null);
+              setIsEditing(false);
+          }
+      }}>
         <DialogContent className="max-w-[95vw] sm:max-w-xl rounded-lg">
           {selectedLog && (
             <>
@@ -209,81 +240,113 @@ function ProductionPaymentHistoryComponent() {
                 <DialogDescription>Información detallada del pago.</DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-4 py-2 max-h-[60vh] overflow-y-auto px-1">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>{new Date(selectedLog.date).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</span>
-                </div>
-                <Card className="shadow-none border-muted">
-                  <CardContent className="p-4 space-y-3 text-sm">
-                    <div className="flex justify-between"><span>Lote</span><Badge variant="secondary">{getHarvestForLog(selectedLog)?.batchNumber || 'N/A'}</Badge></div>
-                    <div className="flex justify-between"><span>Recolector</span><span className="font-semibold">{selectedLog.collectorName}</span></div>
-                    <hr />
-                    <div className="flex justify-between"><span>Kilos</span><span className="font-medium">{selectedLog.kilograms.toLocaleString()} kg</span></div>
-                    <div className="flex justify-between"><span>Tarifa</span><span>${selectedLog.ratePerKg.toLocaleString()}</span></div>
-                    <hr />
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-primary">Pago Total</span>
-                      <span className="font-bold text-lg text-primary">${selectedLog.payment.toLocaleString('es-AR')}</span>
+              {isEditing ? (
+                  <div className="grid gap-4 py-4 px-1 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-2">
+                        <Label>Lote</Label>
+                        <Input value={editData.batchNumber} onChange={e => setEditData({...editData, batchNumber: e.target.value})} disabled={isPending} />
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    <div className="space-y-2">
+                        <Label>Kilos</Label>
+                        <Input type="number" step="0.1" value={editData.kilograms} onChange={e => setEditData({...editData, kilograms: parseFloat(e.target.value) || 0})} disabled={isPending} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Horas Trabajadas</Label>
+                        <Input type="number" step="0.5" value={editData.hours} onChange={e => setEditData({...editData, hours: parseFloat(e.target.value) || 0})} disabled={isPending} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Tarifa por Kg</Label>
+                        <Input type="number" step="0.01" value={editData.ratePerKg} onChange={e => setEditData({...editData, ratePerKg: parseFloat(e.target.value) || 0})} disabled={isPending} />
+                    </div>
+                  </div>
+              ) : (
+                  <div className="grid gap-4 py-2 max-h-[60vh] overflow-y-auto px-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      <span>{new Date(selectedLog.date).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}</span>
+                    </div>
+                    <Card className="shadow-none border-muted">
+                      <CardContent className="p-4 space-y-3 text-sm">
+                        <div className="flex justify-between"><span>Lote</span><Badge variant="secondary">{getHarvestForLog(selectedLog)?.batchNumber || 'N/A'}</Badge></div>
+                        <div className="flex justify-between"><span>Recolector</span><span className="font-semibold">{selectedLog.collectorName}</span></div>
+                        <hr />
+                        <div className="flex justify-between"><span>Kilos</span><span className="font-medium">{selectedLog.kilograms.toLocaleString()} kg</span></div>
+                        <div className="flex justify-between"><span>Horas</span><span className="font-medium">{selectedLog.hours} hs</span></div>
+                        <div className="flex justify-between"><span>Tarifa</span><span>${selectedLog.ratePerKg.toLocaleString()}</span></div>
+                        <hr />
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-primary">Pago Total</span>
+                          <span className="font-bold text-lg text-primary">${selectedLog.payment.toLocaleString('es-AR')}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+              )}
 
               {/* MODIFICACIÓN: Footer adaptativo para móviles */}
               <DialogFooter className="flex flex-col gap-3 w-full sm:flex-col pt-4">
-                <Button 
-                  onClick={() => setSelectedLog(null)} 
-                  variant="secondary" 
-                  className="w-full order-1 shadow-sm"
-                >
-                  Cerrar
-                </Button>
+                {isEditing ? (
+                    <>
+                        <Button onClick={handleEditSubmit} disabled={isPending} className="w-full order-1 shadow-sm">
+                            {isPending ? 'Guardando...' : 'Guardar Cambios'}
+                        </Button>
+                        <Button onClick={() => setIsEditing(false)} variant="secondary" className="w-full order-2 shadow-sm" disabled={isPending}>
+                            Cancelar
+                        </Button>
+                    </>
+                ) : (
+                    <>
+                        <Button onClick={() => setSelectedLog(null)} variant="secondary" className="w-full order-1 shadow-sm">
+                        Cerrar
+                        </Button>
 
-                {canManage && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        className="w-full order-2 shadow-sm" 
-                        disabled={isPending}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" /> Eliminar Registro
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="max-w-[90vw] rounded-lg">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>¿Confirmar eliminación?</AlertDialogTitle>
-                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Volver</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(selectedLog.id)}>Eliminar</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        {canManage && (
+                            <div className="grid grid-cols-2 gap-2 w-full order-2">
+                                <Button variant="outline" onClick={openEdit} className="w-full shadow-sm text-[11px] h-10 px-1 sm:text-sm">
+                                    <Edit2 className="h-4 w-4 mr-1" /> Editar
+                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" className="w-full shadow-sm text-[11px] h-10 px-1 sm:text-sm" disabled={isPending}>
+                                        <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+                                    </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="max-w-[90vw] rounded-lg">
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>¿Confirmar eliminación?</AlertDialogTitle>
+                                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Volver</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(selectedLog.id)}>Eliminar</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 w-full order-3">
+                        <Button 
+                            variant="outline" 
+                            onClick={handleGenerateReceipt} 
+                            disabled={isPdfPending || !canManage}
+                            className="w-full text-[11px] h-10 px-1 sm:text-sm"
+                        >
+                            <FileDown className="h-4 w-4 mr-1" />
+                            {isPdfPending ? "..." : "Recibo"}
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setIsLabelOpen(true)} 
+                            disabled={!canManage}
+                            className="w-full text-[11px] h-10 px-1 sm:text-sm"
+                        >
+                            <QrCode className="h-4 w-4 mr-1" />
+                            Etiqueta
+                        </Button>
+                        </div>
+                    </>
                 )}
-
-                <div className="grid grid-cols-2 gap-2 w-full order-3">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleGenerateReceipt} 
-                    disabled={isPdfPending || !canManage}
-                    className="w-full text-[11px] h-10 px-1 sm:text-sm"
-                  >
-                    <FileDown className="h-4 w-4 mr-1" />
-                    {isPdfPending ? "..." : "Recibo"}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsLabelOpen(true)} 
-                    disabled={!canManage}
-                    className="w-full text-[11px] h-10 px-1 sm:text-sm"
-                  >
-                    <QrCode className="h-4 w-4 mr-1" />
-                    Etiqueta
-                  </Button>
-                </div>
               </DialogFooter>
             </>
           )}

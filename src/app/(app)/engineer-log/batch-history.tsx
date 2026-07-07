@@ -86,7 +86,7 @@ export function BatchHistory() {
   };
   
   const getBatchStatus = (batchId: string) => {
-      return harvests.some(h => h.batchNumber === batchId) ? 'completed' : 'pending';
+      return harvests.some(h => h.batchNumber === batchId || h.batchNumber.split(',').map(s => s.trim()).includes(batchId)) ? 'completed' : 'pending';
   }
 
   const sortedBatches = [...batches].sort((a, b) => new Date(b.preloadedDate).getTime() - new Date(a.preloadedDate).getTime());

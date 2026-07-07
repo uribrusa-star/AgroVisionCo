@@ -167,7 +167,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         centerOfPolygon.lat /= paths.length;
         centerOfPolygon.lng /= paths.length;
 
-        const lotHarvests = harvests.filter(h => h.batchNumber === activeInfoWindow);
+        const lotHarvests = harvests.filter(h => h.batchNumber === activeInfoWindow || h.batchNumber.split(',').map(s => s.trim()).includes(activeInfoWindow!));
         const lotAgronomistLogs = agronomistLogs.filter(l => 
           (l.batchIds && l.batchIds.includes(activeInfoWindow)) || (l.batchId === activeInfoWindow)
         );

@@ -16,6 +16,7 @@ import { ProductionPaymentHistory } from '../production-payment-history';
 import { PackagingHistory } from '../data-entry/packaging-history';
 import { BatchYieldChart } from '../engineer-log/batch-yield-chart';
 import { PushNotificationBanner } from '@/components/push-notification-banner';
+import { HarvestsOverTimeChart } from './harvests-over-time-chart';
 
 
 export default function DashboardPage() {
@@ -38,10 +39,13 @@ export default function DashboardPage() {
     const totalLaborCost = totalHarvestLaborCost + totalPackagingLaborCost + totalCulturalPracticeCost;
     
     const harvestsByBatch = harvests.reduce((acc, h) => {
-        if (!acc[h.batchNumber]) {
-            acc[h.batchNumber] = 0;
-        }
-        acc[h.batchNumber] += h.kilograms;
+        const batches = h.batchNumber.split(',').map(s => s.trim());
+        batches.forEach(b => {
+            if (!acc[b]) {
+                acc[b] = 0;
+            }
+            acc[b] += h.kilograms;
+        });
         return acc;
     }, {} as {[key: string]: number});
 
@@ -73,7 +77,32 @@ export default function DashboardPage() {
 
   const dashboardStats = calculateDashboardStats(harvests, collectorPaymentLogs, packagingLogs, culturalPracticeLogs);
   const sortedHarvests = [...(harvests || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const sortedCollectors = [...(collectors || [])].sort((a,b) => b.productivity - a.productivity);
+  
+  const collectorsWithDynamicStats = (collectors || []).map(collector => {
+    const collectorHarvests = (harvests || []).filter(h => h.collector.id === collector.id);
+    const collectorLogs = (collectorPaymentLogs || []).filter(l => l.collectorId === collector.id);
+    
+    const calculatedTotalHarvested = collectorHarvests.length > 0
+      ? collectorHarvests.reduce((sum, h) => sum + h.kilograms, 0)
+      : collector.totalHarvested;
+      
+    const calculatedHoursWorked = collectorLogs.length > 0
+      ? collectorLogs.reduce((sum, l) => sum + l.hours, 0)
+      : collector.hoursWorked;
+      
+    const calculatedProductivity = calculatedHoursWorked > 0
+      ? calculatedTotalHarvested / calculatedHoursWorked
+      : (collector.productivity || 0);
+
+    return {
+      ...collector,
+      productivity: calculatedProductivity,
+      totalHarvested: calculatedTotalHarvested,
+      hoursWorked: calculatedHoursWorked
+    };
+  });
+
+  const sortedCollectors = collectorsWithDynamicStats.sort((a,b) => b.productivity - a.productivity);
 
   return (
     <>
@@ -127,6 +156,9 @@ export default function DashboardPage() {
         </div>
         <div className="md:col-span-1">
           <CostDistributionChart />
+        </div>
+        <div className="md:col-span-2 xl:col-span-3">
+          <HarvestsOverTimeChart harvests={harvests} />
         </div>
         <div className="md:col-span-2 xl:col-span-2">
             <Card>

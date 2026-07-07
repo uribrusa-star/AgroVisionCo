@@ -37,14 +37,14 @@ export function YieldPredictionPanel() {
   const [selectedBatchId, setSelectedBatchId] = useState<string>('');
 
   const harvestedBatches = useMemo(() => {
-    const harvestedBatchIds = new Set(harvests.map(h => h.batchNumber));
+    const harvestedBatchIds = new Set(harvests.flatMap(h => h.batchNumber.split(',').map(s => s.trim())));
     return batches.filter(b => harvestedBatchIds.has(b.id));
   }, [batches, harvests]);
   
   const selectedBatchStats = useMemo(() => {
     if (!selectedBatchId) return null;
     
-    const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId);
+    const batchHarvests = harvests.filter(h => h.batchNumber === selectedBatchId || h.batchNumber.split(',').map(s => s.trim()).includes(selectedBatchId));
     if(batchHarvests.length === 0) return null;
 
     const totalKilos = batchHarvests.reduce((sum, h) => sum + h.kilograms, 0);
@@ -97,7 +97,7 @@ export function YieldPredictionPanel() {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const recentHarvests = harvests.filter(h => h.batchNumber === values.batchId && new Date(h.date) > thirtyDaysAgo);
+        const recentHarvests = harvests.filter(h => (h.batchNumber === values.batchId || h.batchNumber.split(',').map(s => s.trim()).includes(values.batchId)) && new Date(h.date) > thirtyDaysAgo);
         
         const recentAgronomistLogs = agronomistLogs.filter(log => 
             (log.batchId === values.batchId || !log.batchId) && new Date(log.date) > thirtyDaysAgo

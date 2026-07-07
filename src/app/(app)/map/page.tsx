@@ -24,17 +24,17 @@ import type { AgronomistLog } from "@/lib/types";
 const MapComponent = dynamic(() => import('@/components/map'), { ssr: false });
 
 const WindyMapEmbed = ({ lat, lng }: { lat: number, lng: number }) => {
-  const windyUrl = `https://embed.windy.com/embed.html?lat=${lat}&lon=${lng}&zoom=12&overlay=wind&product=ecmwf&menu_panels=wind,rain,temp&metricWind=default&metricTemp=default`;
+    const windyUrl = `https://embed.windy.com/embed.html?lat=${lat}&lon=${lng}&zoom=12&overlay=wind&product=ecmwf&menu_panels=wind,rain,temp&metricWind=default&metricTemp=default`;
 
-  return (
-    <iframe
-      width="100%"
-      height="100%"
-      src={windyUrl}
-      frameBorder="0"
-      title="Windy Map"
-    ></iframe>
-  );
+    return (
+        <iframe
+            width="100%"
+            height="100%"
+            src={windyUrl}
+            frameBorder="0"
+            title="Windy Map"
+        ></iframe>
+    );
 };
 
 const AlertSchema = z.object({
@@ -46,16 +46,16 @@ const AlertSchema = z.object({
 type Alert = z.infer<typeof AlertSchema>;
 
 const WeatherAlertsSchema = z.object({
-  latitude: z.coerce.number(),
-  longitude: z.coerce.number(),
+    latitude: z.coerce.number(),
+    longitude: z.coerce.number(),
 });
 
-const AIAlertsPanel = ({ 
-    mapCenter, 
-    onCoordsChange 
-}: { 
-    mapCenter: { lat: number, lng: number }, 
-    onCoordsChange: (coords: { lat: number, lng: number }) => void 
+const AIAlertsPanel = ({
+    mapCenter,
+    onCoordsChange
+}: {
+    mapCenter: { lat: number, lng: number },
+    onCoordsChange: (coords: { lat: number, lng: number }) => void
 }) => {
     const { phenologyLogs, agronomistLogs, addAgronomistLog } = useContext(AppDataContext);
     const [isGenerating, startGeneratingTransition] = useTransition();
@@ -95,7 +95,7 @@ const AIAlertsPanel = ({
         setAlerts(null);
         setAlertsSaved(false);
         startGeneratingTransition(async () => {
-             try {
+            try {
                 const result = await generateWeatherAlerts({
                     latitude: values.latitude,
                     longitude: values.longitude,
@@ -104,22 +104,22 @@ const AIAlertsPanel = ({
                 });
                 if (result.alerts) {
                     setAlerts(result.alerts);
-                    toast({ 
-                        title: "Análisis Completo", 
+                    toast({
+                        title: "Análisis Completo",
                         description: `Se generaron ${result.alerts.length} alerta(s) climática(s).`
                     });
                 } else {
                     setAlerts([]);
                     toast({ title: "Análisis Completo", description: "La IA no identificó riesgos mayores con el pronóstico provisto." });
                 }
-             } catch (error) {
-                 console.error("Error generating alerts:", error);
-                 toast({
+            } catch (error) {
+                console.error("Error generating alerts:", error);
+                toast({
                     title: "Error de IA",
                     description: "No se pudieron generar las alertas. Intente de nuevo.",
                     variant: "destructive",
-                 });
-             }
+                });
+            }
         });
     };
 
@@ -170,7 +170,7 @@ const AIAlertsPanel = ({
                     Ingrese coordenadas para que la IA busque el clima y genere recomendaciones.
                 </CardDescription>
             </CardHeader>
-             <Form {...form}>
+            <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
@@ -178,24 +178,24 @@ const AIAlertsPanel = ({
                             name="latitude"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Latitud</FormLabel>
-                                <FormControl>
-                                    <Input type="number" step="any" {...field} placeholder="Ej. -31.953" disabled={isGenerating} />
-                                </FormControl>
-                                <FormMessage />
+                                    <FormLabel>Latitud</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" step="any" {...field} placeholder="Ej. -31.953" disabled={isGenerating} />
+                                    </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
-                         <FormField
+                        <FormField
                             control={form.control}
                             name="longitude"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Longitud</FormLabel>
-                                <FormControl>
-                                    <Input type="number" step="any" {...field} placeholder="Ej. -60.934" disabled={isGenerating} />
-                                </FormControl>
-                                <FormMessage />
+                                    <FormLabel>Longitud</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" step="any" {...field} placeholder="Ej. -60.934" disabled={isGenerating} />
+                                    </FormControl>
+                                    <FormMessage />
                                 </FormItem>
                             )}
                         />
@@ -210,10 +210,10 @@ const AIAlertsPanel = ({
                             ) : "Generar Alertas"}
                         </Button>
 
-                         {isGenerating && (
+                        {isGenerating && (
                             <div className="w-full space-y-4">
-                               <Skeleton className="h-10 w-full" />
-                               <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
                             </div>
                         )}
 
@@ -243,7 +243,7 @@ const AIAlertsPanel = ({
                                     ))
                                 )}
                                 {alerts.length > 0 && (
-                                     <Button onClick={handleSaveChanges} disabled={isSaving || alertsSaved}>
+                                    <Button onClick={handleSaveChanges} disabled={isSaving || alertsSaved}>
                                         <Save className="mr-2 h-4 w-4" />
                                         {isSaving ? "Guardando..." : alertsSaved ? "Guardado" : "Guardar Alertas en Bitácora"}
                                     </Button>
@@ -259,125 +259,125 @@ const AIAlertsPanel = ({
 
 
 export default function MapPage() {
-  const { establishmentData } = useContext(AppDataContext);
-  
-  const parsedGeoJson = useMemo(() => {
-      try {
-          return establishmentData?.geoJsonData ? JSON.parse(establishmentData.geoJsonData) : null;
-      } catch {
-          return null;
-      }
-  }, [establishmentData?.geoJsonData]);
+    const { establishmentData } = useContext(AppDataContext);
 
-  const mapCenter = useMemo(() => {
-    if (parsedGeoJson && parsedGeoJson.features && parsedGeoJson.features.length > 0) {
-      const firstFeature = parsedGeoJson.features[0];
-      if (firstFeature.geometry) {
-        if (firstFeature.geometry.type === 'Point') {
-          const [lng, lat] = firstFeature.geometry.coordinates;
-          return { lat, lng };
+    const parsedGeoJson = useMemo(() => {
+        try {
+            return establishmentData?.geoJsonData ? JSON.parse(establishmentData.geoJsonData) : null;
+        } catch {
+            return null;
         }
-        if (firstFeature.geometry.type === 'Polygon') {
-          const coords = firstFeature.geometry.coordinates[0];
-          if (!coords || coords.length === 0) return { lat: -31.953363, lng: -60.9346299 }; // Fallback
-          
-          let lat = 0, lng = 0;
-          coords.forEach(([coordLng, coordLat]: [number, number]) => {
-            lat += coordLat;
-            lng += coordLng;
-          });
-          return { lat: lat / coords.length, lng: lng / coords.length };
+    }, [establishmentData?.geoJsonData]);
+
+    const mapCenter = useMemo(() => {
+        if (parsedGeoJson && parsedGeoJson.features && parsedGeoJson.features.length > 0) {
+            const firstFeature = parsedGeoJson.features[0];
+            if (firstFeature.geometry) {
+                if (firstFeature.geometry.type === 'Point') {
+                    const [lng, lat] = firstFeature.geometry.coordinates;
+                    return { lat, lng };
+                }
+                if (firstFeature.geometry.type === 'Polygon') {
+                    const coords = firstFeature.geometry.coordinates[0];
+                    if (!coords || coords.length === 0) return { lat: -31.953363, lng: -60.9346299 }; // Fallback
+
+                    let lat = 0, lng = 0;
+                    coords.forEach(([coordLng, coordLat]: [number, number]) => {
+                        lat += coordLat;
+                        lng += coordLng;
+                    });
+                    return { lat: lat / coords.length, lng: lng / coords.length };
+                }
+            }
         }
-      }
-    }
-    // Fallback to location coordinates or default
-    if (establishmentData?.location.coordinates) {
-      const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
-      if (!isNaN(lat) && !isNaN(lng)) {
-        return { lat, lng };
-      }
-    }
-    return { lat: -31.953363, lng: -60.9346299 }; // Default center Coronda
-  }, [parsedGeoJson, establishmentData]);
-
-  const establishmentCoords = useMemo(() => {
-    if (establishmentData?.location.coordinates) {
-        const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
-        if (!isNaN(lat) && !isNaN(lng)) {
-            return { lat, lng };
+        // Fallback to location coordinates or default
+        if (establishmentData?.location.coordinates) {
+            const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+            if (!isNaN(lat) && !isNaN(lng)) {
+                return { lat, lng };
+            }
         }
-    }
-    return mapCenter;
-  }, [establishmentData, mapCenter]);
-  
-  const [windyCoords, setWindyCoords] = useState({ lat: establishmentCoords.lat, lng: establishmentCoords.lng });
-  
-  useEffect(() => {
-    setWindyCoords({ lat: establishmentCoords.lat, lng: establishmentCoords.lng });
-  }, [establishmentCoords]);
+        return { lat: -31.953363, lng: -60.9346299 }; // Default center Coronda
+    }, [parsedGeoJson, establishmentData]);
 
-  const resetWindyMap = () => {
-    setWindyCoords({ lat: -31.953363, lng: -60.9346299 });
-  };
+    const establishmentCoords = useMemo(() => {
+        if (establishmentData?.location.coordinates) {
+            const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+            if (!isNaN(lat) && !isNaN(lng)) {
+                return { lat, lng };
+            }
+        }
+        return mapCenter;
+    }, [establishmentData, mapCenter]);
+
+    const [windyCoords, setWindyCoords] = useState({ lat: establishmentCoords.lat, lng: establishmentCoords.lng });
+
+    useEffect(() => {
+        setWindyCoords({ lat: establishmentCoords.lat, lng: establishmentCoords.lng });
+    }, [establishmentCoords]);
+
+    const resetWindyMap = () => {
+        setWindyCoords({ lat: -31.953363, lng: -60.9346299 });
+    };
 
 
-  return (
-    <>
-      <PageHeader
-        title="Mapa del Establecimiento"
-        description="Visualice la finca, sus lotes y genere alertas climáticas con IA."
-      />
-      <div className="flex flex-col w-full gap-6 mt-6 items-stretch">
-        <Card className="w-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <MapIcon className="h-6 w-6 text-primary" />
-                    Mapa Interactivo de Lotes
-                </CardTitle>
-                 <CardDescription>
-                    Haga clic en un lote para ver un resumen de sus datos.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="h-[600px] w-full rounded-md overflow-hidden z-0 bg-muted">
-                   <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
-                </div>
-            </CardContent>
-        </Card>
-         <Card className="w-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    Mapa del Clima
-                </CardTitle>
-                <CardDescription>
-                    Mapa meteorológico proporcionado por Windy.com.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="h-[600px] w-full rounded-md overflow-hidden z-0 bg-muted relative">
-                   <WindyMapEmbed lat={windyCoords.lat} lng={windyCoords.lng} />
-                   <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                             <Button 
-                                variant="outline" 
-                                size="icon" 
-                                className="absolute top-2 right-2 z-10 bg-background/70 backdrop-blur-sm"
-                                onClick={resetWindyMap}
-                              >
-                                <Milestone className="h-4 w-4" />
-                              </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Volver a la ubicación de Coronda</p>
-                        </TooltipContent>
-                    </Tooltip>
-                   </TooltipProvider>
-                </div>
-            </CardContent>
-        </Card>
-        <AIAlertsPanel mapCenter={establishmentCoords} onCoordsChange={setWindyCoords} />
-      </div>
-    </>
-  );
+    return (
+        <>
+            <PageHeader
+                title="Mapa del Establecimiento"
+                description="Visualice la finca, sus lotes y genere alertas climáticas con IA."
+            />
+            <div className="flex flex-col w-full gap-6 mt-6 items-stretch">
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <MapIcon className="h-6 w-6 text-primary" />
+                            Mapa Interactivo de Lotes
+                        </CardTitle>
+                        <CardDescription>
+                            Haga clic en un lote para ver un resumen de sus datos.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[600px] w-full rounded-md overflow-hidden z-0 bg-muted">
+                            <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            Mapa del Clima
+                        </CardTitle>
+                        <CardDescription>
+                            Mapa meteorológico proporcionado por Windy.com.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-[600px] w-full rounded-md overflow-hidden z-0 bg-muted relative">
+                            <WindyMapEmbed lat={windyCoords.lat} lng={windyCoords.lng} />
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="absolute top-2 right-2 z-10 bg-background/70 backdrop-blur-sm"
+                                            onClick={resetWindyMap}
+                                        >
+                                            <Milestone className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Volver a la ubicación de Coronda</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    </CardContent>
+                </Card>
+                <AIAlertsPanel mapCenter={establishmentCoords} onCoordsChange={setWindyCoords} />
+            </div>
+        </>
+    );
 }

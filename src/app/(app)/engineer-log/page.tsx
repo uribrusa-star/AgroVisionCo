@@ -30,9 +30,9 @@ export default function EngineerLogPage() {
 
   const totalProduction = harvests.reduce((acc, h) => acc + h.kilograms, 0);
   
-  const harvestedBatchIds = [...new Set(harvests.map(h => h.batchNumber))];
+  const harvestedBatchIds = [...new Set(harvests.flatMap(h => h.batchNumber.split(',').map(s => s.trim())))];
   const totalKgInHarvestedBatches = harvestedBatchIds.reduce((total, batchId) => {
-    const batchKilos = harvests.filter(h => h.batchNumber === batchId).reduce((sum, h) => sum + h.kilograms, 0);
+    const batchKilos = harvests.filter(h => h.batchNumber === batchId || h.batchNumber.split(',').map(s => s.trim()).includes(batchId)).reduce((sum, h) => sum + h.kilograms, 0);
     return total + batchKilos;
   }, 0);
   

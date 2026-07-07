@@ -315,7 +315,9 @@ export type AppData = {
   knowledgeBase: KnowledgeItem[];
   expertChatHistory: { role: 'user' | 'model'; content: string }[];
   setExpertChatHistory: (history: { role: 'user' | 'model'; content: string }[]) => void;
-  addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number) => Promise<string | undefined>;
+  addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number) => Promise<string | undefined>;
+  addMultipleHarvests: (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number }[]) => Promise<void>;
+  editHarvest: (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string }) => Promise<void>;
   editCollector: (collector: Collector) => Promise<void>;
   deleteCollector: (collectorId: string) => void;
   addAgronomistLog: (log: Omit<AgronomistLog, 'id'>) => void;
@@ -344,7 +346,7 @@ export type AppData = {
   addBatch: (batch: Omit<Batch, 'status' | 'preloadedDate'> & { preloadedDate?: string, status?: 'pending' | 'completed' }) => void;
   editBatch: (batch: Batch) => Promise<void>;
   deleteBatch: (batchId: string) => void;
-  addCollectorPaymentLog: (log: Omit<CollectorPaymentLog, 'id' | 'traceabilityId'>) => void;
+  addCollectorPaymentLog: (log: Omit<CollectorPaymentLog, 'id'>) => void;
   deleteCollectorPaymentLog: (logId: string) => Promise<void>;
   updateEstablishmentData: (data: Partial<EstablishmentData>) => Promise<void>;
   addProducerLog: (log: Omit<ProducerLog, 'id'>) => void;
