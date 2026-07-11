@@ -101,7 +101,7 @@ export function RecommendedActionsPanel() {
                                     <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                                         <Clock className="h-3 w-3" /> Frecuencia / Carencia:
                                     </p>
-                                    <p className="text-xs font-semibold">{item.protocol.frequency} <Badge variant="secondary" className="ml-1 text-[9px] h-4">PC: {item.protocol.safetyPeriod}</Badge></p>
+                                    <div className="text-xs font-semibold flex items-center flex-wrap gap-1">{item.protocol.frequency} <Badge variant="secondary" className="text-[9px] h-4">PC: {item.protocol.safetyPeriod}</Badge></div>
                                 </div>
                                  <div className="space-y-1">
                                     <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
