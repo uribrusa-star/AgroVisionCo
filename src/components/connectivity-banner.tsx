@@ -24,7 +24,7 @@ export function ConnectivityBanner() {
                         <span>Modo Offline: Base de datos local activa. Tus cargas están seguras en cola.</span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-amber-600/20 px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider">
-                         <RefreshCw className="h-3 w-3 animate-spin duration-[3000ms]" />
+                         <RefreshCw className="h-3 w-3 animate-spin [animation-duration:3s]" />
                          Sincronización Automática
                     </div>
                 </motion.div>
