@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeFirestore, persistentLocalCache, getFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth'; 
 import { getMessaging, isSupported } from 'firebase/messaging';
 const firebaseConfig = {
@@ -18,20 +18,26 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // Inicializar el servicio de Autenticación
 const auth = getAuth(app); 
 
-// Inicializar Firestore con persistencia de datos local optimizada para iOS/Safari
-let db;
-try {
-    // Definimos un tamaño de caché razonable para dispositivos móviles (50 MB)
-    const CACHE_SIZE = 50 * 1024 * 1024;
-    
-    db = initializeFirestore(app, {
-        localCache: persistentLocalCache({ 
-          cacheSizeBytes: CACHE_SIZE 
-        }),
-    });
-} catch (e: any) {
-    console.warn("No se pudo inicializar Firestore con persistencia local, fallando a memoria:", e);
-    // Fallback a memoria si la persistencia falla (común en modo privado de Safari o SSR)
+// Inicializar Firestore con persistencia multi-pestaña optimizada para iOS/Safari/Android/PWA
+let db: ReturnType<typeof getFirestore>;
+if (typeof window !== 'undefined') {
+    try {
+        // Definimos un tamaño de caché razonable para dispositivos móviles (50 MB)
+        const CACHE_SIZE = 50 * 1024 * 1024;
+        
+        db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ 
+              cacheSizeBytes: CACHE_SIZE,
+              tabManager: persistentMultipleTabManager()
+            }),
+        });
+    } catch (e: any) {
+        console.warn("No se pudo inicializar Firestore con persistencia multi-pestaña, fallando a memoria:", e);
+        // Fallback a memoria si la persistencia falla (modo incógnito estricto)
+        db = getFirestore(app);
+    }
+} else {
+    // En el servidor Node.js / Hostinger SSR, no intentamos usar IndexedDB para evitar advertencias
     db = getFirestore(app);
 }
 
