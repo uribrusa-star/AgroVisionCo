@@ -19,10 +19,10 @@ export const generateTraceabilityPDF = (
   const pageHeight = doc.internal.pageSize.height;
   
   // Colors
-  const darkGreen = [20, 83, 45];   // #14532D
-  const mediumGreen = [34, 197, 94]; // #22C55E
-  const lightGreen = [240, 253, 244]; // #F0FDF4
-  const techGrey = [75, 85, 99];     // #4B5563
+  const darkGreen: [number, number, number] = [20, 83, 45];   // #14532D
+  const mediumGreen: [number, number, number] = [34, 197, 94]; // #22C55E
+  const lightGreen: [number, number, number] = [240, 253, 244]; // #F0FDF4
+  const techGrey: [number, number, number] = [75, 85, 99];     // #4B5563
 
   const addHeader = (isCover = false) => {
     if (!isCover) {
@@ -103,15 +103,19 @@ export const generateTraceabilityPDF = (
     head: [['Dato', 'Detalle']],
     body: [
       ['Estado Actual', batch.status === 'completed' ? 'Finalizado' : 'En curso'],
-      ['Certificación BPA / G.A.P.', '🟢 CUMPLIDO - Carencia PHI 0 y Buenas Prácticas Verificadas'],
-      ['Variedades y Cantidad', batch.varieties?.map(v => `${v.name} (${v.plantCount})`).join(', ') || 'N/A'],
+      ['Certificación BPA / G.A.P.', '[CUMPLIDO] Carencia PHI = 0 días y Buenas Prácticas Agrícolas verificadas'],
+      ['Variedades y Cantidad', batch.varieties?.map(v => v.name).join(', ') || 'N/A'],
       ['Fecha de Siembra/Inicio', format(new Date(batch.preloadedDate), 'dd/MM/yyyy')],
       ['Productor', establishment?.producer || 'N/A'],
       ['Ubicación', `${establishment?.location.locality || 'N/A'}, ${establishment?.location.province || 'N/A'}`],
     ],
     headStyles: { fillColor: darkGreen, textColor: 255 },
     alternateRowStyles: { fillColor: lightGreen },
-    styles: { cellPadding: 4 }
+    styles: { cellPadding: 4, overflow: 'linebreak' },
+    columnStyles: {
+      0: { cellWidth: 55, fontStyle: 'bold' },
+      1: { cellWidth: 'auto' }
+    }
   });
 
   yPos = (doc as any).lastAutoTable.finalY + 20;
@@ -148,10 +152,10 @@ export const generateTraceabilityPDF = (
     alternateRowStyles: { fillColor: lightGreen },
     styles: { fontSize: 9, cellPadding: 4 },
     columnStyles: {
-      0: { width: 25 },
-      1: { width: 40 },
-      2: { width: 40 },
-      3: { width: 70 }
+      0: { cellWidth: 25 },
+      1: { cellWidth: 40 },
+      2: { cellWidth: 40 },
+      3: { cellWidth: 70 }
     }
   });
 
@@ -171,9 +175,9 @@ export const generateMonthlyProductionPDF = (
   const monthName = format(month, 'MMMM yyyy', { locale: es });
   
   // Colors
-  const darkBlue = [30, 58, 138];   // #1E3A8A
-  const mediumBlue = [59, 130, 246]; // #3B82F6
-  const lightBlue = [239, 246, 255]; // #EFF6FF
+  const darkBlue: [number, number, number] = [30, 58, 138];   // #1E3A8A
+  const mediumBlue: [number, number, number] = [59, 130, 246]; // #3B82F6
+  const lightBlue: [number, number, number] = [239, 246, 255]; // #EFF6FF
 
   const addHeader = (isCover = false) => {
     if (!isCover) {
@@ -303,11 +307,11 @@ export const generateAgronomistReportPDF = (
   const pageHeight = doc.internal.pageSize.height;
   
   // Colors
-  const darkGreen = [20, 83, 45];   // #14532D
-  const mediumGreen = [34, 197, 94]; // #22C55E
-  const lightGreen = [240, 253, 244]; // #F0FDF4
-  const techGrey = [75, 85, 99];     // #4B5563
-  const alertRed = [220, 38, 38];    // #DC2626
+  const darkGreen: [number, number, number] = [20, 83, 45];   // #14532D
+  const mediumGreen: [number, number, number] = [34, 197, 94]; // #22C55E
+  const lightGreen: [number, number, number] = [240, 253, 244]; // #F0FDF4
+  const techGrey: [number, number, number] = [75, 85, 99];     // #4B5563
+  const alertRed: [number, number, number] = [220, 38, 38];    // #DC2626
 
   const addHeader = (isCover = false) => {
     if (!isCover) {
@@ -557,10 +561,10 @@ export const generateAgronomistReportPDF = (
     alternateRowStyles: { fillColor: lightGreen },
     styles: { fontSize: 9, cellPadding: 4 },
     columnStyles: {
-      0: { width: 25 },
-      1: { width: 45 },
-      2: { width: 25, fontStyle: 'bold' },
-      3: { width: 80 }
+      0: { cellWidth: 25 },
+      1: { cellWidth: 45 },
+      2: { cellWidth: 25, fontStyle: 'bold' },
+      3: { cellWidth: 80 }
     }
   });
 
@@ -660,10 +664,10 @@ export const generateProducerHarvestReportPDF = (
   const pageHeight = doc.internal.pageSize.height;
   
   // Colors
-  const darkBlue = [30, 58, 138];   // #1E3A8A (Brand Primary)
-  const mediumBlue = [59, 130, 246]; // #3B82F6
-  const lightBlue = [239, 246, 255]; // #EFF6FF
-  const techGrey = [75, 85, 99];     // #4B5563
+  const darkBlue: [number, number, number] = [30, 58, 138];   // #1E3A8A (Brand Primary)
+  const mediumBlue: [number, number, number] = [59, 130, 246]; // #3B82F6
+  const lightBlue: [number, number, number] = [239, 246, 255]; // #EFF6FF
+  const techGrey: [number, number, number] = [75, 85, 99];     // #4B5563
 
   const addHeader = (isCover = false) => {
     if (!isCover) {
