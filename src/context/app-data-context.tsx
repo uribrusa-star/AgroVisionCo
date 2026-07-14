@@ -191,6 +191,28 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               setUsers(availableUsers);
             } else {
               const fetchedUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
+              // Sincronizar contraseñas y correos de usuarios por defecto de data.ts con Firestore
+              const syncBatch = writeBatch(db);
+              let needsSync = false;
+              availableUsers.forEach(defaultUser => {
+                  const existingUser = fetchedUsers.find(u => u.id === defaultUser.id || u.email.toLowerCase() === defaultUser.email.toLowerCase());
+                  if (!existingUser || existingUser.password !== defaultUser.password || !existingUser.notificationEmail) {
+                      const userRef = doc(db, 'users', defaultUser.id);
+                      const updatedUser = existingUser ? { ...existingUser, password: defaultUser.password, notificationEmail: existingUser.notificationEmail || defaultUser.notificationEmail } : defaultUser;
+                      syncBatch.set(userRef, updatedUser, { merge: true });
+                      needsSync = true;
+                      if (existingUser) {
+                          existingUser.password = defaultUser.password;
+                          existingUser.notificationEmail = existingUser.notificationEmail || defaultUser.notificationEmail;
+                      } else {
+                          fetchedUsers.push(defaultUser);
+                      }
+                  }
+              });
+              if (needsSync) {
+                  await syncBatch.commit();
+              }
+
               // Deduplicate by ID to be absolutely sure
               const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
               setUsers(uniqueUsers);

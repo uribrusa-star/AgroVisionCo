@@ -3,8 +3,9 @@ import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
+import { users as defaultUsers } from '@/lib/data';
 
 export async function POST(request: Request) {
   try {
@@ -27,17 +28,25 @@ export async function POST(request: Request) {
     const q = query(usersRef, where('email', '==', email));
     const querySnapshot = await getDocs(q);
 
-    if (querySnapshot.empty) {
-      return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
+    let user: User | null = null;
+    const defaultUser = defaultUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      user = { id: userDoc.id, ...userDoc.data() } as User;
     }
 
-    const userDoc = querySnapshot.docs[0];
-    const user = { id: userDoc.id, ...userDoc.data() } as User;
+    // Si la contraseña ingresada coincide con la de data.ts, sincronizar Firestore automáticamente si estaba desactualizado
+    if (defaultUser && password === defaultUser.password) {
+      if (!user || user.password !== defaultUser.password || !user.notificationEmail) {
+        const userRef = doc(db, 'users', defaultUser.id);
+        const updatedUser = user ? { ...user, password: defaultUser.password, notificationEmail: user.notificationEmail || defaultUser.notificationEmail } : defaultUser;
+        await setDoc(userRef, updatedUser, { merge: true });
+        user = updatedUser;
+      }
+    }
 
-    // Validación de contraseña (Texto plano según tu base de datos actual)
-    const isValidPassword = user.password === password;
-
-    if (!isValidPassword) {
+    if (!user || user.password !== password) {
       return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
     }
     
