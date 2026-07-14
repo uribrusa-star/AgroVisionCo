@@ -40,7 +40,10 @@ const withPWA = withPWAInit({
   ],
   fallbacks: {
     document: '/offline',
-  }
+  },
+  workboxOptions: {
+    importScripts: ['/sw-helpers.js'],
+  },
 });
 
 const nextConfig: NextConfig = {
