@@ -53,6 +53,7 @@ export function PhenologyHistory() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<PhenologyLog | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [displayLimit, setDisplayLimit] = useState(5);
 
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo' || currentUser.role === 'Encargado';
@@ -141,6 +142,9 @@ export function PhenologyHistory() {
     }
   }
 
+  const sortedLogs = [...phenologyLogs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const displayedLogs = sortedLogs.slice(0, displayLimit);
+
   return (
     <>
       <Card>
@@ -173,7 +177,7 @@ export function PhenologyHistory() {
                     <TableCell colSpan={canManage ? 6: 5} className="text-center">No hay registros de fenología.</TableCell>
                   </TableRow>
                 )}
-                {!loading && [...phenologyLogs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((log) => {
+                {!loading && displayedLogs.map((log) => {
                     const stateInfo = getStateInfo(log.developmentState);
                     return (
                         <TableRow key={log.id}>
@@ -242,6 +246,35 @@ export function PhenologyHistory() {
                 })}
                 </TableBody>
             </Table>
+            {!loading && sortedLogs.length > 5 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
+                    <span className="text-xs text-muted-foreground font-medium">
+                        Mostrando {displayedLogs.length} de {sortedLogs.length} registros
+                    </span>
+                    <div className="flex items-center gap-2">
+                        {displayLimit < sortedLogs.length && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDisplayLimit(prev => prev + 5)}
+                                className="text-xs font-semibold h-8 px-3"
+                            >
+                                Mostrar más ({Math.min(5, sortedLogs.length - displayLimit)} restantes)
+                            </Button>
+                        )}
+                        {displayLimit > 5 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDisplayLimit(5)}
+                                className="text-xs text-muted-foreground h-8 px-3 hover:text-foreground"
+                            >
+                                Mostrar menos
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
         </CardContent>
     </Card>
       
