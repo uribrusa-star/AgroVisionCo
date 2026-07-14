@@ -336,8 +336,8 @@ export function IrrigationLogForm() {
                 </div>
             )}
 
-            {applicationType !== 'Riego' && (
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              {applicationType !== 'Riego' && (
                 <FormField
                   control={form.control}
                   name="dissolution"
@@ -351,23 +351,23 @@ export function IrrigationLogForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="phiDays"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
-                        <span>Período de Carencia (PHI en días)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="number" min="0" placeholder="Ej. 5 (bloqueo de cosecha)" {...field} disabled={!canManage || isPending} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+              )}
+              <FormField
+                control={form.control}
+                name="phiDays"
+                render={({ field }) => (
+                  <FormItem className={applicationType === 'Riego' ? 'md:col-span-2' : ''}>
+                    <FormLabel className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
+                      <span>Período de Carencia (PHI en días)</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" placeholder="Ej. 5 (bloqueo automático de cosecha en el lote)" {...field} disabled={!canManage || isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
