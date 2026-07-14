@@ -3,46 +3,91 @@ import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { User } from '@/lib/types';
-import { users as defaultUsers } from '@/lib/data';
+
+function parseFirestoreDoc(doc: any): User | null {
+  if (!doc || !doc.document || !doc.document.fields) return null;
+  const fields = doc.document.fields;
+  const id = doc.document.name.split('/').pop() || '';
+  const parseVal = (v: any) => {
+    if (!v) return undefined;
+    if (v.stringValue !== undefined) return v.stringValue;
+    if (v.booleanValue !== undefined) return v.booleanValue;
+    if (v.integerValue !== undefined) return Number(v.integerValue);
+    if (v.doubleValue !== undefined) return Number(v.doubleValue);
+    return undefined;
+  };
+  return {
+    id,
+    name: parseVal(fields.name) || '',
+    email: parseVal(fields.email) || '',
+    role: (parseVal(fields.role) || 'Productor') as any,
+    password: parseVal(fields.password) || '',
+    avatar: parseVal(fields.avatar),
+    phone: parseVal(fields.phone),
+    specialty: parseVal(fields.specialty),
+    producerId: parseVal(fields.producerId)
+  } as User;
+}
 
 export async function POST(request: Request) {
   try {
-    /**
-     * CORRECCIÓN FUNDAMENTAL PARA NEXT.JS 15:
-     * La función cookies() ahora devuelve una Promesa. 
-     * Debe ser esperada (await) antes de pasarla a getIronSession.
-     */
     const cookieStore = await cookies();
     const session = await getIronSession(cookieStore, sessionOptions);
 
-    const { email, password } = await request.json();
+    const { email, password, clientUser } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Faltan credenciales.' }, { status: 400 });
     }
 
-    // Consulta a Firestore
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
-
     let user: User | null = null;
-    const defaultUser = defaultUsers.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
 
-    if (!querySnapshot.empty) {
-      const userDoc = querySnapshot.docs[0];
-      user = { id: userDoc.id, ...userDoc.data() } as User;
-    }
+    // 1. Verificación instantánea si el cliente ya sincronizó el usuario en vivo (evita sockets gRPC/HTTP2 en Vercel que causan 502 Bad Gateway)
+    if (clientUser && clientUser.email?.toLowerCase() === email.toLowerCase() && clientUser.password === password) {
+      user = clientUser as User;
+    } else {
+      // 2. Consulta REST HTTP simple a Firestore (100% compatible con Serverless/Vercel sin timeouts ni sockets colgados)
+      try {
+        const restUrl = `https://firestore.googleapis.com/v1/projects/studio-1014760813-be189/databases/(default)/documents:runQuery`;
+        const restRes = await fetch(restUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            structuredQuery: {
+              from: [{ collectionId: 'users' }],
+              where: {
+                fieldFilter: {
+                  field: { fieldPath: 'email' },
+                  op: 'EQUAL',
+                  value: { stringValue: email }
+                }
+              }
+            }
+          })
+        });
 
-    // Si la contraseña ingresada coincide con la de data.ts, sincronizar Firestore automáticamente si estaba desactualizado
-    if (defaultUser && password === defaultUser.password) {
-      if (!user || user.password !== defaultUser.password || !user.notificationEmail) {
-        const userRef = doc(db, 'users', defaultUser.id);
-        const updatedUser = user ? { ...user, password: defaultUser.password, notificationEmail: user.notificationEmail || defaultUser.notificationEmail } : defaultUser;
-        await setDoc(userRef, updatedUser, { merge: true });
-        user = updatedUser;
+        if (restRes.ok) {
+          const data = await restRes.json();
+          if (Array.isArray(data) && data.length > 0 && data[0].document) {
+            user = parseFirestoreDoc(data[0]);
+          }
+        }
+      } catch (restError) {
+        console.warn('Error en consulta REST a Firestore, intentando con SDK:', restError);
+      }
+
+      // 3. Fallback con SDK cliente si todo lo anterior no arrojó resultado
+      if (!user) {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('email', '==', email));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          user = { id: userDoc.id, ...userDoc.data() } as User;
+        }
       }
     }
 

@@ -27,7 +27,7 @@ const LoginSchema = z.object({
 type LoginFormValues = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
-  const { isClient, currentUser, loading, setCurrentUser } = useContext(AppDataContext);
+  const { isClient, currentUser, loading, setCurrentUser, users } = useContext(AppDataContext);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -45,10 +45,11 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     startTransition(async () => {
+      const clientUser = users?.find(u => u.email?.toLowerCase() === values.email?.toLowerCase());
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify({ ...values, clientUser }),
       });
 
       if (response.ok) {

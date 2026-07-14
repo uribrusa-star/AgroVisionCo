@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
 
 export async function GET() {
-  const session = await getIronSession(cookies(), sessionOptions);
+  const cookieStore = await cookies();
+  const session = await getIronSession(cookieStore, sessionOptions);
 
   if (!session.user) {
     return NextResponse.json({ user: null });

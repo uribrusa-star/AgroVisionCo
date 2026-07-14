@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
 
 export async function POST() {
-  const session = await getIronSession(cookies(), sessionOptions);
+  const cookieStore = await cookies();
+  const session = await getIronSession(cookieStore, sessionOptions);
   session.destroy();
   return NextResponse.json({ ok: true });
 }
