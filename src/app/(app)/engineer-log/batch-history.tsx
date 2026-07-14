@@ -133,13 +133,9 @@ export function BatchHistory() {
                             </TableCell>
                             <TableCell>
                               {batch.varieties && batch.varieties.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {batch.varieties.map((v, i) => (
-                                    <Badge key={i} variant="outline" className="text-[10px]">
-                                      {v.name} {v.plantCount ? `(${v.plantCount})` : ''} {v.area ? `[${v.area} ha]` : ''}
-                                    </Badge>
-                                  ))}
-                                </div>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                  {batch.varieties.map(v => v.name).join(', ')}
+                                </span>
                               ) : (
                                 <span className="text-muted-foreground text-xs italic">Sin variedades</span>
                               )}
