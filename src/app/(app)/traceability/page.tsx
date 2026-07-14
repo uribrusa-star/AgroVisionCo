@@ -13,7 +13,9 @@ import {
   Activity, 
   Calendar,
   Filter,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  Award
 } from 'lucide-react';
 
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -26,6 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateTraceabilityPDF, generateMonthlyProductionPDF } from '@/lib/pdf-generator';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { getBatchPhiStatus } from '@/lib/phi-utils';
 
 export default function TraceabilityPage() {
   const { 
@@ -259,6 +262,35 @@ export default function TraceabilityPage() {
                       <p>{format(new Date(selectedBatch.preloadedDate), 'dd MMM yyyy', { locale: es })}</p>
                     </div>
                   </div>
+
+                  {(() => {
+                    const phiStatus = getBatchPhiStatus(selectedBatch.id, agronomistLogs);
+                    const isBpaCertified = !phiStatus.isBlocked;
+                    return (
+                      <div className={cn(
+                        "p-3 rounded-lg border flex items-center justify-between gap-2 transition-colors",
+                        isBpaCertified 
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
+                          : "bg-amber-50 border-amber-200 text-amber-800"
+                      )}>
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className={cn("h-5 w-5 flex-shrink-0", isBpaCertified ? "text-emerald-600" : "text-amber-600")} />
+                          <div>
+                            <p className="font-bold text-xs">
+                              {isBpaCertified ? "🟢 Sello BPA Cumplido / Certificado" : "🟡 BPA En Revisión (Carencia Activa)"}
+                            </p>
+                            <p className="text-[11px] opacity-80">
+                              {isBpaCertified 
+                                ? "Libre de residuos químicos y apto para cosecha." 
+                                : `En carencia hasta ${phiStatus.releaseDateFormatted || ''}.`}
+                            </p>
+                          </div>
+                        </div>
+                        <Award className={cn("h-6 w-6 flex-shrink-0", isBpaCertified ? "text-amber-500" : "text-gray-300")} />
+                      </div>
+                    );
+                  })()}
+
                   <Button className="w-full" onClick={handleExportTraceability}>
                     <FileText className="mr-2 h-4 w-4" /> Generar PDF Lote {selectedBatch.id}
                   </Button>
@@ -267,14 +299,15 @@ export default function TraceabilityPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardHeader>
-              <CardTitle className="text-sm">Consejo de Trazabilidad</CardTitle>
+          <Card className="bg-gradient-to-br from-emerald-50 to-green-100/60 border-emerald-300/50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-1.5 text-emerald-900 font-bold">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" /> Sello Oficial Buenas Prácticas (BPA)
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                La trazabilidad completa permite identificar el origen de cada gramo cosechado. 
-                Asegúrate de registrar los estados fenológicos regularmente para un historial perfecto.
+              <p className="text-xs text-emerald-800 leading-relaxed">
+                El sistema valida matemáticamente el cumplimiento del período de carencia (PHI) y monitorea el manejo sanitario y fenológico de cada lote para emitir el Sello de Calidad al comprador.
               </p>
             </CardContent>
           </Card>

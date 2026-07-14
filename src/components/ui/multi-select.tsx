@@ -12,8 +12,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 
+interface MultiSelectOption {
+  label: string;
+  value: string;
+  disabled?: boolean;
+  tag?: string;
+}
+
 interface MultiSelectProps {
-  options: { label: string; value: string }[];
+  options: MultiSelectOption[];
   selected: string[];
   onChange: (selected: string[]) => void;
   placeholder?: string;
@@ -32,6 +39,8 @@ export function MultiSelect({
   const [open, setOpen] = React.useState(false);
 
   const handleSelect = (value: string) => {
+    const option = options.find(o => o.value === value);
+    if (option?.disabled) return;
     const newSelected = selected.includes(value)
       ? selected.filter((s) => s !== value)
       : [...selected, value];
@@ -84,28 +93,49 @@ export function MultiSelect({
               No hay opciones disponibles.
             </div>
           )}
-          {options.map((option) => (
-            <div
-              key={option.value}
-              className="flex items-center space-x-2 p-2 hover:bg-muted rounded-md cursor-pointer"
-              onClick={() => handleSelect(option.value)}
-            >
-              <Checkbox
-                id={`option-${option.value}`}
-                checked={selected.includes(option.value)}
-                onCheckedChange={() => handleSelect(option.value)}
-              />
-              <label
-                htmlFor={`option-${option.value}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-grow"
+          {options.map((option) => {
+            const isDisabled = option.disabled;
+            return (
+              <div
+                key={option.value}
+                className={cn(
+                  "flex items-center space-x-2 p-2 rounded-md my-0.5 transition-colors",
+                  isDisabled 
+                    ? "opacity-80 cursor-not-allowed bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 font-medium"
+                    : "hover:bg-muted cursor-pointer"
+                )}
+                onClick={() => {
+                  if (!isDisabled) handleSelect(option.value);
+                }}
               >
-                {option.label}
-              </label>
-              {selected.includes(option.value) && (
-                <Check className="h-4 w-4 ml-auto" />
-              )}
-            </div>
-          ))}
+                <Checkbox
+                  id={`option-${option.value}`}
+                  checked={selected.includes(option.value)}
+                  disabled={isDisabled}
+                  onCheckedChange={() => {
+                    if (!isDisabled) handleSelect(option.value);
+                  }}
+                />
+                <label
+                  htmlFor={`option-${option.value}`}
+                  className={cn(
+                    "text-sm font-medium leading-none flex items-center flex-wrap gap-1.5 flex-grow",
+                    isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                  )}
+                >
+                  <span>{option.label}</span>
+                  {option.tag && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white shadow-sm">
+                      {option.tag}
+                    </span>
+                  )}
+                </label>
+                {selected.includes(option.value) && !isDisabled && (
+                  <Check className="h-4 w-4 ml-auto" />
+                )}
+              </div>
+            );
+          })}
         </div>
       </PopoverContent>
     </Popover>

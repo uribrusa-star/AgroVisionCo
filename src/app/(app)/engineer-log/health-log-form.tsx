@@ -35,6 +35,7 @@ const LogSchema = z.object({
   batchIds: z.array(z.string()).optional(),
   product: z.string().min(1, "El agente o nutriente observado es requerido."),
   severity: z.string().min(3, "La incidencia o severidad es requerida."),
+  phiDays: z.coerce.number().optional().or(z.literal('')),
   notes: z.string().min(5, "Las notas deben tener al menos 5 caracteres."),
   latitude: z.coerce.number().optional().or(z.literal('')),
   longitude: z.coerce.number().optional().or(z.literal('')),
@@ -63,6 +64,7 @@ export function HealthLogForm() {
       batchIds: [],
       product: '',
       severity: '',
+      phiDays: '',
       notes: '',
       latitude: '',
       longitude: '',
@@ -124,6 +126,7 @@ export function HealthLogForm() {
         images: imagesWithHints,
         latitude: data.latitude ? Number(data.latitude) : undefined,
         longitude: data.longitude ? Number(data.longitude) : undefined,
+        phiDays: data.phiDays !== '' && data.phiDays !== undefined ? Number(data.phiDays) : undefined,
       });
 
       toast({
@@ -137,6 +140,7 @@ export function HealthLogForm() {
         batchIds: [],
         product: '',
         severity: '',
+        phiDays: '',
         notes: '',
         latitude: '',
         longitude: '',
@@ -271,6 +275,21 @@ export function HealthLogForm() {
                     <FormLabel>Incidencia / Severidad</FormLabel>
                     <FormControl>
                     <Input placeholder="Ej. 10% de plantas afectadas" {...field} disabled={!canManage || isPending} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phiDays"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
+                      <span>Período de Carencia (PHI en días)</span>
+                    </FormLabel>
+                    <FormControl>
+                    <Input type="number" min="0" placeholder="Ej. 5 (bloqueo de cosecha)" {...field} disabled={!canManage || isPending} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>

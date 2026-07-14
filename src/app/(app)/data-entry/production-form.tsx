@@ -21,8 +21,8 @@ import { validateProductionData } from '@/ai/flows/validate-production-data';
 import { ProductionPaymentHistory } from '../production-payment-history';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { Calendar } from '@/components/ui/calendar';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { getBatchPhiStatus } from '@/lib/phi-utils';
 
 const CollectorEntrySchema = z.object({
   collectorId: z.string().min(1, "El recolector es requerido."),
@@ -43,7 +43,7 @@ type ProductionFormValues = z.infer<typeof ProductionSchema>;
 
 export function ProductionForm() {
   const { toast } = useToast();
-  const { collectors, batches, addMultipleHarvests, harvests, currentUser } = useContext(AppDataContext);
+  const { collectors, batches, addMultipleHarvests, harvests, currentUser, agronomistLogs } = useContext(AppDataContext);
   const [isPending, startTransition] = useTransition();
   const [validationAlert, setValidationAlert] = useState<{ open: boolean; reason: string; data: ProductionFormValues | null }>({ open: false, reason: '', data: null });
   
@@ -71,6 +71,18 @@ export function ProductionForm() {
   const availableBatches = useMemo(() => {
     return batches;
   }, [batches]);
+
+  const batchOptions = useMemo(() => {
+    return availableBatches.map(b => {
+      const phiStatus = getBatchPhiStatus(b.id, agronomistLogs);
+      return {
+        label: b.id,
+        value: b.id,
+        disabled: phiStatus.isBlocked,
+        tag: phiStatus.isBlocked ? `🔒 BLOQUEADO PHI (${phiStatus.remainingDays || 0}d rest.)` : undefined,
+      };
+    });
+  }, [availableBatches, agronomistLogs]);
 
   const saveHarvestData = (values: ProductionFormValues) => {
     startTransition(async () => {
@@ -187,7 +199,7 @@ export function ProductionForm() {
                         <FormLabel>Lotes</FormLabel>
                         <FormControl>
                           <MultiSelect
-                            options={availableBatches.map(b => ({ label: b.id, value: b.id }))}
+                            options={batchOptions}
                             selected={field.value}
                             onChange={field.onChange}
                             placeholder="Seleccione lotes"

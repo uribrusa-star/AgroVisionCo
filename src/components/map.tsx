@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { WifiOff } from 'lucide-react';
+import { getBatchPhiStatus } from '@/lib/phi-utils';
 
 type MapProps = {
     center: {
@@ -48,18 +49,18 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 
                 const properties = feature.properties || {};
                 const polygonId = Object.keys(properties).find(k => k.startsWith('L')) || `polygon-${index}`;
-
+                const phiStatus = getBatchPhiStatus(polygonId, agronomistLogs);
 
                 return (
                     <Polygon
                         key={polygonId}
                         paths={paths}
                         options={{
-                            fillColor: "#4A90E2",
-                            fillOpacity: 0.15,
-                            strokeColor: "#4A90E2",
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
+                            fillColor: phiStatus.isBlocked ? "#EF4444" : "#4A90E2",
+                            fillOpacity: phiStatus.isBlocked ? 0.35 : 0.15,
+                            strokeColor: phiStatus.isBlocked ? "#EF4444" : "#4A90E2",
+                            strokeOpacity: 0.9,
+                            strokeWeight: phiStatus.isBlocked ? 3 : 2,
                         }}
                         onClick={() => setActiveInfoWindow(polygonId)}
                     />
@@ -175,6 +176,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
           (p.batchIds && p.batchIds.includes(activeInfoWindow)) || (p.batchId === activeInfoWindow)
         );
         const totalKilos = lotHarvests.reduce((sum, h) => sum + h.kilograms, 0);
+        const phiStatus = getBatchPhiStatus(activeInfoWindow!, agronomistLogs);
 
         return (
              <InfoWindow
@@ -183,6 +185,18 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
             >
                 <div className="p-1 max-w-xs text-foreground">
                     <h4 className="font-bold text-base mb-2">Lote: {activeInfoWindow}</h4>
+                    {phiStatus.isBlocked && (
+                      <div className="bg-red-500/10 border border-red-500/40 text-red-600 dark:text-red-400 p-2.5 rounded-lg mb-3 shadow-sm">
+                        <div className="flex items-center gap-1.5 font-bold text-xs uppercase mb-1">
+                          <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
+                          <span>BLOQUEADO POR CARENCIA (PHI)</span>
+                        </div>
+                        <p className="text-xs font-semibold">{phiStatus.productName}</p>
+                        <p className="text-[11px] mt-1 opacity-90">
+                          Liberación: <span className="font-bold">{phiStatus.unlockDate?.toLocaleDateString('es-ES')}</span> ({phiStatus.remainingDays || 0}d / {phiStatus.remainingHours || 0}hs)
+                        </p>
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 bg-primary/10 text-primary p-2 rounded-full">

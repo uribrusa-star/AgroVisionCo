@@ -39,6 +39,7 @@ const LogSchema = z.object({
     name: z.string(),
     quantity: z.coerce.number().min(0.01, "La cantidad debe ser mayor a 0"),
   })).optional(),
+  phiDays: z.coerce.number().optional().or(z.literal('')),
 });
 
 type LogFormValues = z.infer<typeof LogSchema>;
@@ -60,6 +61,7 @@ export function IrrigationLogForm() {
       notes: '',
       dissolution: '',
       supplies: [],
+      phiDays: '',
     },
   });
 
@@ -101,6 +103,7 @@ export function IrrigationLogForm() {
         supplies: data.supplies,
         dissolution: data.dissolution,
         notes: data.notes,
+        phiDays: data.phiDays !== '' && data.phiDays !== undefined ? Number(data.phiDays) : undefined,
       });
       
       toast({
@@ -115,6 +118,7 @@ export function IrrigationLogForm() {
         notes: '',
         dissolution: '',
         supplies: [],
+        phiDays: '',
       });
     });
   };
@@ -333,19 +337,36 @@ export function IrrigationLogForm() {
             )}
 
             {applicationType !== 'Riego' && (
-              <FormField
-                control={form.control}
-                name="dissolution"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preparación / Disolución (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Mochila 20L, Tanque 1000L" {...field} disabled={!canManage || isPending} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="dissolution"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preparación / Disolución (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Mochila 20L, Tanque 1000L" {...field} disabled={!canManage || isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phiDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
+                        <span>Período de Carencia (PHI en días)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" placeholder="Ej. 5 (bloqueo de cosecha)" {...field} disabled={!canManage || isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
 
             <FormField

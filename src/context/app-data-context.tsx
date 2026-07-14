@@ -3,11 +3,12 @@
 'use client';
 
 import React, { ReactNode, useState, useCallback, useEffect } from 'react';
-import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus } from '@/lib/types';
+import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem } from '@/lib/types';
 import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy } from 'firebase/firestore';
+import { getBatchPhiStatus } from '@/lib/phi-utils';
 
 export const AppDataContext = React.createContext<AppData>({
   loading: true,
@@ -253,31 +254,31 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               setEstablishmentData({ id: 'main', ...initialEstablishmentData });
             }
 
-            setCollectors(collectorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Collector[]);
-            setPackers(packersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Packer[]);
-            setHarvests(harvestsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Harvest[]);
-            setAgronomistLogs(agronomistLogsSnapshot.docs.map(doc => {
+            setCollectors(collectorsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Collector[]);
+            setPackers(packersSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Packer[]);
+            setHarvests(harvestsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Harvest[]);
+            setAgronomistLogs(agronomistLogsSnapshot.docs.map((doc: any) => {
               const data = doc.data();
               return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
             }) as AgronomistLog[]);
-            setPhenologyLogs(phenologyLogsSnapshot.docs.map(doc => {
+            setPhenologyLogs(phenologyLogsSnapshot.docs.map((doc: any) => {
               const data = doc.data();
               return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
             }) as PhenologyLog[]);
-            setPredictionLogs(predictionLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PredictionLog[]);
-            setDiagnosisLogs(diagnosisLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as DiagnosisLog[]);
-            setSupplies(suppliesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Supply[]);
-            setTasks(tasksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Task[]);
-            setBatches(batchesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Batch[]);
-            setCollectorPaymentLogs(collectorPaymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as CollectorPaymentLog[]);
-            setPackagingLogs(packagingLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
-            setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map(doc => {
+            setPredictionLogs(predictionLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as PredictionLog[]);
+            setDiagnosisLogs(diagnosisLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as DiagnosisLog[]);
+            setSupplies(suppliesSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Supply[]);
+            setTasks(tasksSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Task[]);
+            setBatches(batchesSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Batch[]);
+            setCollectorPaymentLogs(collectorPaymentsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as CollectorPaymentLog[]);
+            setPackagingLogs(packagingLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
+            setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map((doc: any) => {
               const data = doc.data();
               return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
             }) as CulturalPracticeLog[]);
-            setProducerLogs(producerLogsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
-            setTransactions(transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[]);
-            setKnowledgeBase(knowledgeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
+            setProducerLogs(producerLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
+            setTransactions(transactionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
+            setKnowledgeBase(knowledgeSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
         
       } catch (error) {
         console.error("Error fetching data from Firestore:", error);
@@ -309,6 +310,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const collector = collectors.find(c => c.id === harvestData.collector.id);
         if (!collector) {
             toast({ title: "Error", description: "Recolector no encontrado.", variant: "destructive"});
+            return undefined;
+        }
+
+        const phiStatus = getBatchPhiStatus(harvestData.batchNumber, agronomistLogs, new Date(harvestData.date));
+        if (phiStatus.isBlocked) {
+            const unlockStr = phiStatus.unlockDate ? phiStatus.unlockDate.toLocaleDateString('es-ES') : '';
+            toast({
+                title: "⛔ BLOQUEO DE SEGURIDAD PHI",
+                description: `El lote está en período de carencia por ${phiStatus.productName} hasta el ${unlockStr}. Estrictamente prohibido registrar cosecha.`,
+                variant: "destructive"
+            });
             return undefined;
         }
 
@@ -383,6 +395,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addMultipleHarvests = async (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number }[]): Promise<void> => {
+        for (const { harvest: hData } of harvestsData) {
+            const phiStatus = getBatchPhiStatus(hData.batchNumber, agronomistLogs, new Date(hData.date));
+            if (phiStatus.isBlocked) {
+                const unlockStr = phiStatus.unlockDate ? phiStatus.unlockDate.toLocaleDateString('es-ES') : '';
+                toast({
+                    title: "⛔ BLOQUEO DE SEGURIDAD PHI",
+                    description: `El lote ${hData.batchNumber} está en período de carencia por ${phiStatus.productName} hasta el ${unlockStr}. Operación abortada por seguridad fitosanitaria.`,
+                    variant: "destructive"
+                });
+                return;
+            }
+        }
+
         try {
             const batch = writeBatch(db);
             let harvestsAdded = 0;
@@ -811,6 +836,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const deleteAgronomistLog = (logId: string) => {
         const originalState = { logs: [...agronomistLogs], supplies: [...supplies], tasks: [...tasks] };
         const logToDelete = agronomistLogs.find(l => l.id === logId);
+        if (!logToDelete) return;
 
         setAgronomistLogs(prev => prev.filter(l => l.id !== logId));
 
@@ -1240,7 +1266,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword } : u));
         if (currentUser?.id === userId) {
-            setCurrentUser(prev => prev ? { ...prev, password: newPassword } : null);
+            setCurrentUser({ ...currentUser, password: newPassword }, true);
         }
     };
 

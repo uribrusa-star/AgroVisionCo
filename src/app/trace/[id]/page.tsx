@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Calendar, Sprout, User, CheckCircle, Info, Truck, Package, Leaf, TestTube2, Droplet, AlertCircle, Home, Flower, Grape, Sun } from 'lucide-react';
+import { Calendar, Sprout, User, CheckCircle, Info, Truck, Package, Leaf, TestTube2, Droplet, AlertCircle, Home, Flower, Grape, Sun, ShieldCheck, Award, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -24,6 +24,15 @@ type TraceabilityData = {
         notes: string;
         images?: { url: string; hint?: string }[];
     }[];
+    bpaCertified?: boolean;
+    bpaDetails?: {
+        phiCompliant?: boolean;
+        zeroResiduesGuaranteed?: boolean;
+        waterQualityInspected?: boolean;
+        mipPracticesCount?: number;
+        sanitaryControlsCount?: number;
+        harvestHygieneVerified?: boolean;
+    };
 }
 
 const phenologyIcons: { [key: string]: React.ElementType } = {
@@ -43,6 +52,7 @@ export default function TracePage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [selectedLogInfo, setSelectedLogInfo] = useState<{ state: string; date: string } | null>(null);
+    const [showBpaModal, setShowBpaModal] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -136,28 +146,50 @@ export default function TracePage() {
                             <Sprout /> Resumen del Cultivo
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
-                            <Calendar className="h-8 w-8 text-green-600" />
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
+                            <Calendar className="h-8 w-8 text-green-600 flex-shrink-0" />
                             <div>
-                                <p className="text-sm text-gray-500">Fecha de Cosecha</p>
-                                <p className="font-bold text-lg">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                <p className="text-xs text-gray-500 font-medium">Fecha de Cosecha</p>
+                                <p className="font-bold text-base md:text-lg text-gray-800">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                             </div>
                         </div>
-                         <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-                            <Home className="h-8 w-8 text-blue-600" />
+                         <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                            <Home className="h-8 w-8 text-blue-600 flex-shrink-0" />
                             <div>
-                                <p className="text-sm text-gray-500">Lote de Origen</p>
-                                <p className="font-bold text-lg">{data.batchId}</p>
+                                <p className="text-xs text-gray-500 font-medium">Lote de Origen</p>
+                                <p className="font-bold text-base md:text-lg text-gray-800">{data.batchId}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-lg">
-                            <User className="h-8 w-8 text-yellow-600" />
+                        <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+                            <User className="h-8 w-8 text-yellow-600 flex-shrink-0" />
                             <div>
-                                <p className="text-sm text-gray-500">Recolector</p>
-                                <p className="font-bold text-lg">{data.collectorName}</p>
+                                <p className="text-xs text-gray-500 font-medium">Recolector</p>
+                                <p className="font-bold text-base md:text-lg text-gray-800 truncate max-w-[120px] sm:max-w-full" title={data.collectorName}>{data.collectorName}</p>
                             </div>
                         </div>
+                        <motion.div 
+                            whileHover={{ scale: 1.03 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setShowBpaModal(true)}
+                            className="flex items-center gap-3.5 p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden"
+                        >
+                            <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-400/10 rounded-full blur-md pointer-events-none" />
+                            <div className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                <ShieldCheck className="h-7 w-7 text-emerald-400 animate-pulse" />
+                            </div>
+                            <div className="flex-grow min-w-0">
+                                <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                    <Award className="h-3 w-3 text-amber-400" /> Sello Oficial BPA
+                                </div>
+                                <p className="font-extrabold text-sm sm:text-base mt-0.5 group-hover:text-emerald-200 transition-colors flex items-center justify-between">
+                                    <span>Verificado G.A.P.</span>
+                                </p>
+                                <p className="text-[10px] text-emerald-100/90 underline decoration-dotted underline-offset-2 mt-0.5">
+                                    Presiona para ver garantía
+                                </p>
+                            </div>
+                        </motion.div>
                     </CardContent>
                 </Card>
 
@@ -285,17 +317,6 @@ export default function TracePage() {
                         </CardContent>
                     </Card>
                 )}
-
-                 <Card className="shadow-lg bg-green-100 border-green-200">
-                    <CardHeader className="text-center">
-                         <CardTitle className="flex items-center justify-center gap-2 text-green-800">
-                             <CheckCircle className="h-6 w-6" /> ¡Calidad Garantizada!
-                        </CardTitle>
-                        <CardDescription className="text-green-700">
-                            Este producto fue cultivado siguiendo buenas prácticas agrícolas para asegurar su calidad y frescura.
-                        </CardDescription>
-                    </CardHeader>
-                </Card>
             </main>
             <footer className="text-center mt-12">
                 <p className="text-sm text-gray-500">ID de Trazabilidad: <span className="font-mono">{id}</span></p>
@@ -303,8 +324,8 @@ export default function TracePage() {
             </footer>
 
             <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/95 border-none shadow-2xl">
-                    <DialogHeader className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent text-white opacity-0 hover:opacity-100 transition-opacity duration-300">
+                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/95 border-none shadow-2xl [&>button]:z-[100] [&>button]:text-white [&>button]:bg-white/20 [&>button]:hover:bg-white/40 [&>button]:border [&>button]:border-white/30">
+                    <DialogHeader className="absolute top-0 left-0 right-14 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent text-white opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                         <DialogTitle className="text-xl font-bold flex items-center gap-2">
                             {selectedLogInfo?.state}
                             <span className="text-sm font-normal opacity-80">— {selectedLogInfo?.date}</span>
@@ -331,6 +352,99 @@ export default function TracePage() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showBpaModal} onOpenChange={setShowBpaModal}>
+                <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-green-950 via-emerald-950 to-green-900 text-white border-2 border-emerald-500/50 shadow-2xl flex flex-col [&>button]:z-[100] [&>button]:text-white [&>button]:bg-emerald-500/30 [&>button]:hover:bg-emerald-500/60 [&>button]:border [&>button]:border-emerald-400/40">
+                    <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+                    <DialogHeader className="p-4 sm:p-6 pb-2 text-center relative z-10 flex-shrink-0 pr-14">
+                         <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3 mx-auto">
+                             <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 animate-pulse flex-shrink-0" /> Certificación Oficial AgroVision G.A.P.
+                         </div>
+                         <DialogTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl md:text-3xl font-extrabold text-white">
+                             <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-400 flex-shrink-0" /> Buenas Prácticas Agrícolas
+                        </DialogTitle>
+                        <p className="text-emerald-100/90 text-xs sm:text-sm md:text-base max-w-lg mx-auto pt-1.5 leading-relaxed">
+                            Garantía oficial de inocuidad, respeto por el medio ambiente, seguridad alimentaria y trazabilidad total de tu lote de frutilla.
+                        </p>
+                    </DialogHeader>
+
+                    <div className="p-4 sm:p-6 pt-2 relative z-10 space-y-3 sm:space-y-4 overflow-y-auto flex-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
+                                <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 mt-0.5">
+                                    <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                        Libre de Residuos (PHI 0)
+                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                    </h4>
+                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                        Período de carencia fitosanitaria (PHI) 100% verificado y cumplido antes del corte de la fruta. Cero residuos químicos.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
+                                <div className="p-2 sm:p-2.5 rounded-lg bg-blue-500/20 text-blue-300 flex-shrink-0 mt-0.5">
+                                    <Droplet className="h-5 w-5 sm:h-6 sm:w-6" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                        Riego y Agua Seguro
+                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                    </h4>
+                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                        Riego localizado por goteo con fuentes de agua analizadas e inspeccionadas periódicamente.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
+                                <div className="p-2 sm:p-2.5 rounded-lg bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
+                                    <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                        Manejo Integrado (MIP)
+                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                    </h4>
+                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                        Prioridad al control biológico y monitoreo fenológico constante por ingenieros agrónomos matriculados.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
+                                <div className="p-2 sm:p-2.5 rounded-lg bg-purple-500/20 text-purple-300 flex-shrink-0 mt-0.5">
+                                    <Package className="h-5 w-5 sm:h-6 sm:w-6" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                        Cosecha e Higiene Total
+                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                    </h4>
+                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                        Recolección manual cuidadosa con trazabilidad por cuadrillero, empaque higiénico y cadena de frío ininterrumpida.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                            <p className="text-[10px] sm:text-xs text-emerald-200/90 flex items-center justify-center gap-1.5 font-mono">
+                                <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 flex-shrink-0" /> CERTIFICADO DIGITAL AGROVISION — VERIFICADO
+                            </p>
+                            <Button 
+                                onClick={() => setShowBpaModal(false)}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl w-full sm:w-auto shadow-md transition-all text-xs sm:text-sm"
+                            >
+                                Entendido
+                            </Button>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>

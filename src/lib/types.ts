@@ -97,9 +97,9 @@ export type AgronomistLog = {
     notes: string;
     images?: ImageWithHint[];
     diagnosis?: string;
-    probability?: number;
     latitude?: number;
     longitude?: number;
+    phiDays?: number; // Período de carencia en días (PHI)
 }
 
 export type PhenologyLog = {
@@ -361,3 +361,15 @@ export type AppData = {
   saveFcmToken: (token: string) => Promise<void>;
   isClient: boolean;
 };
+
+export type BatchPhiStatus = {
+  isBlocked: boolean;
+  phiDays?: number;
+  applicationDate?: string;
+  unlockDate?: Date;
+  productName?: string;
+  logId?: string;
+  remainingDays?: number;
+  remainingHours?: number;
+};
+
