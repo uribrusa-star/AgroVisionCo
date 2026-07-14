@@ -170,7 +170,7 @@ export default function PackersPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={`https://picsum.photos/seed/${packer.avatar}/40/40`} alt={packer.name} />
+                          <AvatarImage src={packer.avatar?.startsWith('http') ? packer.avatar : `https://picsum.photos/seed/${packer.avatar}/40/40`} alt={packer.name} />
                           <AvatarFallback>{packer.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span className="font-medium">{packer.name}</span>

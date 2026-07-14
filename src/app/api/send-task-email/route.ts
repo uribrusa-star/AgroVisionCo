@@ -8,11 +8,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { task, user } = body as { task: Task, user: User };
 
-    if (!task || !user || !user.email) {
-      return NextResponse.json({ error: 'Faltan datos de la tarea o del usuario.' }, { status: 400 });
+    if (!task || !user || (!user.email && !user.notificationEmail)) {
+      return NextResponse.json({ error: 'Faltan datos de la tarea o del usuario (correo de notificación o email no configurado).' }, { status: 400 });
     }
     
     const notificationEmail = user.notificationEmail || user.email;
+    if (!notificationEmail) {
+      return NextResponse.json({ error: 'No se encontró una dirección de correo para notificar al usuario.' }, { status: 400 });
+    }
 
     const subject = `Nueva Tarea Asignada en AgroVision: ${task.title}`;
     const text = `Hola ${user.name},\n\nSe te ha asignado una nueva tarea en AgroVision:\n\n- Título: ${task.title}\n- Descripción: ${task.description}\n- Prioridad: ${task.priority}\n- Creada por: ${task.createdBy.name}\n\nPuedes ver más detalles en la aplicación.\n\nSaludos,\nEl equipo de AgroVision`;

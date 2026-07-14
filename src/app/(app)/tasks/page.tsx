@@ -203,7 +203,7 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                          {assignedUser && (
                             <div className="flex items-center gap-1.5">
                                 <Avatar className="h-5 w-5">
-                                    <AvatarImage src={`https://picsum.photos/seed/${assignedUser.avatar}/20/20`} />
+                                    <AvatarImage src={assignedUser.avatar?.startsWith('http') ? assignedUser.avatar : `https://picsum.photos/seed/${assignedUser.avatar}/20/20`} />
                                     <AvatarFallback className="text-[10px]">{assignedUser.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium text-muted-foreground">{assignedUser.name}</span>
