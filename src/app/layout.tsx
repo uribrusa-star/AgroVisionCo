@@ -4,8 +4,26 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
 
 export const metadata: Metadata = {
-  title: 'AgroVision',
-  description: 'Gestión de datos en la producción de fresas.',
+  title: 'AgroVisionCo',
+  description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola y de fresas. Accede a tu panel para controlar lotes y tareas.',
+  applicationName: 'AgroVision',
+  authors: [{ name: 'AgroVision Team' }],
+  keywords: ['agricultura', 'fresas', 'trazabilidad', 'gestión agrícola', 'software agrícola'],
+  openGraph: {
+    title: 'AgroVisionCo - Gestión Agrícola',
+    description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
+    url: 'https://agrovision.co',
+    siteName: 'AgroVision',
+    images: [
+      {
+        url: '/logo.png',
+        width: 512,
+        height: 512,
+      }
+    ],
+    locale: 'es_AR',
+    type: 'website',
+  },
   manifest: '/manifest.json',
 };
 
