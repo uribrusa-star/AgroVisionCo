@@ -191,37 +191,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               setUsers(availableUsers);
             } else {
               const fetchedUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
-              // Sincronizar contraseñas y correos de usuarios por defecto de data.ts con Firestore
-              const syncBatch = writeBatch(db);
-              let needsSync = false;
-              availableUsers.forEach(defaultUser => {
-                  const existingUser = fetchedUsers.find(u => u.id === defaultUser.id || u.email.toLowerCase() === defaultUser.email.toLowerCase());
-                  if (!existingUser || existingUser.password !== defaultUser.password || !existingUser.notificationEmail) {
-                      const userRef = doc(db, 'users', defaultUser.id);
-                      const updatedUser = existingUser ? { ...existingUser, password: defaultUser.password, notificationEmail: existingUser.notificationEmail || defaultUser.notificationEmail } : defaultUser;
-                      syncBatch.set(userRef, updatedUser, { merge: true });
-                      needsSync = true;
-                      if (existingUser) {
-                          existingUser.password = defaultUser.password;
-                          existingUser.notificationEmail = existingUser.notificationEmail || defaultUser.notificationEmail;
-                      } else {
-                          fetchedUsers.push(defaultUser);
-                      }
-                  }
-              });
-              if (needsSync) {
-                  await syncBatch.commit();
-              }
-
               // Deduplicate by ID to be absolutely sure
               const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
               setUsers(uniqueUsers);
-              if (currentUser) {
-                  const freshCurrentUser = uniqueUsers.find(u => u.id === currentUser.id);
-                  if (freshCurrentUser) {
-                      setCurrentUser(freshCurrentUser, true);
-                  }
-              }
             }
 
             // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores)
@@ -272,14 +244,15 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               safeFetch(getDocs(collection(db, 'knowledge')), { docs: [] } as any),
             ]);
             
-            if (establishmentDocSnap?.exists()) {
+            if (establishmentDocSnap && establishmentDocSnap.exists()) {
               setEstablishmentData({ id: establishmentDocSnap.id, ...establishmentDocSnap.data() } as EstablishmentData);
-            } else if (establishmentDocSnap === null) {
-              // Si falló totalmente la carga de establecimiento, usamos el valor inicial para no romper la app
-              setEstablishmentData({ id: 'main', ...initialEstablishmentData });
-            } else {
+            } else if (establishmentDocSnap && !establishmentDocSnap.exists()) {
               await setDoc(doc(db, 'establishment', 'main'), initialEstablishmentData);
               setEstablishmentData({ id: 'main', ...initialEstablishmentData });
+            } else {
+              // Si establishmentDocSnap === null (fallo de red/permisos), NO seteamos iniciales
+              // para evitar que el usuario los guarde accidentalmente y sobrescriba la BD.
+              console.warn("Fallo al cargar establecimiento, no se sobrescribirán los datos.");
             }
 
             setCollectors(collectorsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Collector[]);
@@ -806,33 +779,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
 
-            const notifyTaskCreated = (task: Task) => {
-                const isLowStock = task.title.toLowerCase().includes('stock bajo') || task.title.toLowerCase().includes('alerta de stock');
-                if (isLowStock) {
-                    const responsibleUsers = users.filter(u => 
-                        u.role === 'Encargado' || u.role === 'Ingeniero Agronomo' || u.role === 'Productor'
-                    );
-                    responsibleUsers.forEach(targetUser => {
-                        if (targetUser.email || targetUser.notificationEmail) {
-                            fetch('/api/send-task-email', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ task, user: targetUser }),
-                            }).catch(err => console.error(`Error enviando correo de tarea/stock a ${targetUser.role}:`, err));
-                        }
-                    });
-                } else {
-                    const assignedUser = users.find(u => u.id === task.assignedTo.id);
-                    if (assignedUser && (assignedUser.email || assignedUser.notificationEmail)) {
-                        fetch('/api/send-task-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task, user: assignedUser }),
-                        }).catch(err => console.error("Failed to send task email:", err));
-                    }
-                }
-            };
-
             for (const supplyEntry of allSuppliesToUpdate) {
                 const supplyToUpdate = supplies.find(s => s.id === supplyEntry.supplyId);
                 if (supplyToUpdate && supplyToUpdate.stock !== undefined) {
@@ -843,13 +789,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
                     if (supplyToUpdate.lowStockThreshold !== undefined && newStock < supplyToUpdate.lowStockThreshold && oldStock >= supplyToUpdate.lowStockThreshold) {
                         lowStockAlertTriggered = true;
-                        const responsibleUsers = users.filter(u => u.role === 'Encargado' || u.role === 'Ingeniero Agronomo' || u.role === 'Productor');
-                        const primaryAssignee = responsibleUsers.find(u => u.role === 'Encargado') || responsibleUsers.find(u => u.role === 'Productor') || responsibleUsers[0];
-                        if (primaryAssignee && currentUser) {
+                        const producerUser = users.find(u => u.role === 'Productor');
+                        if (producerUser && currentUser) {
                             const newTask: Omit<Task, 'id'> = {
                                 title: `Stock bajo: ${supplyToUpdate.name}`,
-                                description: `El stock de '${supplyToUpdate.name}' ha caído a ${newStock.toFixed(1)} ${supplyToUpdate.unit || 'kg/L'}, por debajo del umbral de ${supplyToUpdate.lowStockThreshold} ${supplyToUpdate.unit || 'kg/L'}. Se recomienda reponer.`,
-                                assignedTo: { id: primaryAssignee.id, name: primaryAssignee.name },
+                                description: `El stock de '${supplyToUpdate.name}' ha caído a ${newStock.toFixed(1)} kg/L, por debajo del umbral de ${supplyToUpdate.lowStockThreshold} kg/L. Se recomienda reponer.`,
+                                assignedTo: { id: producerUser.id, name: producerUser.name },
                                 createdBy: { id: currentUser.id, name: currentUser.name },
                                 status: 'pending',
                                 priority: 'media',
@@ -857,7 +802,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                             };
                             const newTaskRef = doc(collection(db, 'tasks'));
                             batch.set(newTaskRef, newTask);
-                            notifyTaskCreated({ ...newTask, id: newTaskRef.id });
                         }
                     }
                 }
@@ -1043,31 +987,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const editSupply = (updatedSupply: Supply) => {
-        const originalSupply = supplies.find(s => s.id === updatedSupply.id);
         const originalSupplies = supplies;
         setSupplies(prev => prev.map(s => s.id === updatedSupply.id ? updatedSupply : s));
 
         const supplyRef = doc(db, 'supplies', updatedSupply.id);
         const { id, ...data } = updatedSupply;
-        setDoc(supplyRef, data, { merge: true }).then(() => {
-            if (originalSupply && updatedSupply.lowStockThreshold !== undefined && updatedSupply.stock !== undefined && originalSupply.stock !== undefined) {
-                if (updatedSupply.stock < updatedSupply.lowStockThreshold && originalSupply.stock >= updatedSupply.lowStockThreshold) {
-                    const responsibleUsers = users.filter(u => u.role === 'Encargado' || u.role === 'Ingeniero Agronomo' || u.role === 'Productor');
-                    const primaryAssignee = responsibleUsers.find(u => u.role === 'Encargado') || responsibleUsers.find(u => u.role === 'Productor') || responsibleUsers[0];
-                    if (primaryAssignee && currentUser) {
-                        addTask({
-                            title: `Stock bajo: ${updatedSupply.name}`,
-                            description: `El stock de '${updatedSupply.name}' ha caído a ${updatedSupply.stock.toFixed(1)} ${updatedSupply.unit || 'kg/L'}, por debajo del umbral de ${updatedSupply.lowStockThreshold} ${updatedSupply.unit || 'kg/L'}. Se recomienda reponer.`,
-                            assignedTo: { id: primaryAssignee.id, name: primaryAssignee.name },
-                            createdBy: { id: currentUser.id, name: currentUser.name },
-                            status: 'pending',
-                            priority: 'alta',
-                            createdAt: new Date().toISOString(),
-                        });
-                    }
-                }
-            }
-        }).catch(error => {
+        setDoc(supplyRef, data, { merge: true }).catch(error => {
             console.error("Failed to edit supply:", error);
             setSupplies(originalSupplies);
             toast({ title: "Error", description: "No se pudo editar el insumo.", variant: "destructive"});
@@ -1092,31 +1017,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         addDoc(collection(db, 'tasks'), task)
         .then(ref => {
-            const fullTask = { ...task, id: ref.id };
-            setTasks(prev => prev.map(t => (t.id === tempId ? fullTask : t)));
-            const isLowStock = fullTask.title.toLowerCase().includes('stock bajo') || fullTask.title.toLowerCase().includes('alerta de stock');
-            if (isLowStock) {
-                const responsibleUsers = users.filter(u => 
-                    u.role === 'Encargado' || u.role === 'Ingeniero Agronomo' || u.role === 'Productor'
-                );
-                responsibleUsers.forEach(targetUser => {
-                    if (targetUser.email || targetUser.notificationEmail) {
-                        fetch('/api/send-task-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ task: fullTask, user: targetUser }),
-                        }).catch(err => console.error(`Error enviando correo de tarea/stock a ${targetUser.role}:`, err));
-                    }
-                });
-            } else {
-                const assignedUser = users.find(u => u.id === task.assignedTo.id);
-                if (assignedUser && (assignedUser.email || assignedUser.notificationEmail)) {
-                    fetch('/api/send-task-email', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ task: fullTask, user: assignedUser }),
-                    }).catch(err => console.error("Failed to send task email:", err));
-                }
+            setTasks(prev => prev.map(t => (t.id === tempId ? { ...t, id: ref.id } : t)));
+            const assignedUser = users.find(u => u.id === task.assignedTo.id);
+            if (assignedUser) {
+                fetch('/api/send-task-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task: { ...task, id: ref.id }, user: assignedUser }),
+                }).catch(err => console.error("Failed to send task email:", err));
             }
         })
         .catch(error => {
@@ -1367,10 +1275,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, profileData, { merge: true });
         
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...profileData } : u));
-        if (currentUser?.id === userId) {
-            const updatedCurrentUser = { ...currentUser, ...profileData };
-            setCurrentUser(updatedCurrentUser, true); // Assume rememberMe
+        const updatedUser = users.find(u => u.id === userId);
+        if(updatedUser) {
+            const newUsers = users.map(u => u.id === userId ? { ...u, ...profileData } : u);
+            setUsers(newUsers);
+            if (currentUser?.id === userId) {
+                const updatedCurrentUser = { ...currentUser, ...profileData };
+                setCurrentUser(updatedCurrentUser, true); // Assume rememberMe
+            }
         }
     };
 

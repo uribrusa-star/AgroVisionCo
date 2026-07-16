@@ -24,6 +24,7 @@ function parseFirestoreDoc(doc: any): User | null {
     email: parseVal(fields.email) || '',
     role: (parseVal(fields.role) || 'Productor') as any,
     password: parseVal(fields.password) || '',
+    notificationEmail: parseVal(fields.notificationEmail) || '',
     avatar: parseVal(fields.avatar),
     phone: parseVal(fields.phone),
     specialty: parseVal(fields.specialty),
