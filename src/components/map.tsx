@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow, Circle, OverlayView } from '@react-google-maps/api';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Leaf, Notebook, Weight, AlertTriangle, Activity, Thermometer, FlaskConical, X } from 'lucide-react';
@@ -27,6 +27,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
     
     const { harvests, agronomistLogs, phenologyLogs } = useContext(AppDataContext);
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
 
     const getHotspotColor = (type: string) => {
         if (type.includes('Plaga')) return "#EF4444"; // Red
@@ -62,7 +63,20 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                             strokeOpacity: 0.9,
                             strokeWeight: phiStatus.isBlocked ? 3 : 2,
                         }}
-                        onClick={() => setActiveInfoWindow(polygonId)}
+                        onClick={() => {
+                            setActiveInfoWindow(polygonId);
+                            if (mapRef.current) {
+                                const center = paths.reduce(
+                                    (acc: { lat: number, lng: number }, curr: { lat: number, lng: number }) => {
+                                        return { lat: acc.lat + curr.lat, lng: acc.lng + curr.lng };
+                                    }, { lat: 0, lng: 0 }
+                                );
+                                center.lat /= paths.length;
+                                center.lng /= paths.length;
+                                mapRef.current.panTo(center);
+                                mapRef.current.setZoom(17);
+                            }
+                        }}
                     />
                 );
             });
@@ -114,7 +128,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                     >
                         <div 
-                            className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-md text-[8px] sm:text-[10px] font-extrabold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center"
+                            className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-md text-[8px] sm:text-[10px] font-extrabold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center min-w-[40px] w-max"
                         >
                             {polygonId}
                         </div>
@@ -323,6 +337,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 }}
                 center={center}
                 zoom={18}
+                onLoad={(map) => { mapRef.current = map; }}
                 options={{
                     streetViewControl: false,
                     mapTypeControl: false,
