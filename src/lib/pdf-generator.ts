@@ -300,6 +300,11 @@ export const generateAgronomistReportPDF = (
   establishment: EstablishmentData,
   agronomistName: string,
   reportData: SummarizeAgronomistReportOutput,
+  chartImages?: {
+    phenology: string;
+    monthlyHarvest: string;
+    batchYield: string;
+  },
   logoDataUri?: string
 ) => {
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
@@ -637,6 +642,51 @@ export const generateAgronomistReportPDF = (
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 30, 30);
   doc.text(insightLines, 20, yPos + 18);
+
+  // --- ANÁLISIS GRÁFICO ---
+  if (chartImages && (chartImages.phenology || chartImages.monthlyHarvest || chartImages.batchYield)) {
+    doc.addPage();
+    addHeader();
+    yPos = 35;
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+    doc.text('ANÁLISIS GRÁFICO (REPORTE DE TEMPORADA)', 15, yPos);
+    yPos += 15;
+
+    // We have 3 charts. We will try to fit them beautifully.
+    // Chart width: 170mm max (full width).
+    // Height: around 60-70mm per chart.
+    
+    if (chartImages.phenology) {
+      doc.setFontSize(14);
+      doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+      doc.text('Evolución Fenológica', 20, yPos);
+      doc.addImage(chartImages.phenology, 'PNG', 20, yPos + 5, 170, 50);
+      yPos += 65;
+    }
+
+    if (chartImages.monthlyHarvest) {
+      doc.setFontSize(14);
+      doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+      doc.text('Cosecha Mensual', 20, yPos);
+      doc.addImage(chartImages.monthlyHarvest, 'PNG', 20, yPos + 5, 170, 50);
+      yPos += 65;
+    }
+
+    if (chartImages.batchYield) {
+      if (yPos > pageHeight - 70) {
+        doc.addPage();
+        addHeader();
+        yPos = 35;
+      }
+      doc.setFontSize(14);
+      doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+      doc.text('Evolución de Cosechas por Lote', 20, yPos);
+      doc.addImage(chartImages.batchYield, 'PNG', 20, yPos + 5, 170, 50);
+    }
+  }
 
   addFooter();
   doc.save(`Reporte_AgroVision_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);

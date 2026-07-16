@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useContext, useTransition, useMemo } from 'react';
+import React, { useContext, useTransition, useRef } from 'react';
 import Image from 'next/image';
+import html2canvas from 'html2canvas';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,22 @@ import { useToast } from '@/hooks/use-toast';
 import { summarizeAgronomistReport } from '@/ai/flows/summarize-agronomist-report';
 import { FileDown, Sparkles } from 'lucide-react';
 
+import { PhenologyEvolutionChart } from './phenology-evolution-chart';
+import { MonthlyHarvestChart } from '@/app/(app)/monthly-harvest-chart';
+import { BatchYieldChart } from '@/app/(app)/engineer-log/batch-yield-chart';
+
 
 
 
 
 export function AgronomistReportGenerator() {
   const [isPending, startTransition] = useTransition();
-  const { agronomistLogs, phenologyLogs, currentUser, establishmentData } = useContext(AppDataContext);
+  const { agronomistLogs, phenologyLogs, currentUser, establishmentData, harvests } = useContext(AppDataContext);
   const { toast } = useToast();
+
+  const phenologyRef = useRef<HTMLDivElement>(null);
+  const monthlyRef = useRef<HTMLDivElement>(null);
+  const batchRef = useRef<HTMLDivElement>(null);
 
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo';
@@ -67,12 +76,29 @@ export function AgronomistReportGenerator() {
         };
         const aiResult = await summarizeAgronomistReport(aiInput);
 
+        const captureChart = async (ref: React.RefObject<HTMLDivElement>) => {
+            if (!ref.current) return '';
+            const canvas = await html2canvas(ref.current, { scale: 3, backgroundColor: '#ffffff' });
+            return canvas.toDataURL('image/png');
+        };
+
+        const [phenologyImg, monthlyHarvestImg, batchYieldImg] = await Promise.all([
+            captureChart(phenologyRef),
+            captureChart(monthlyRef),
+            captureChart(batchRef)
+        ]);
+
         const { generateAgronomistReportPDF } = await import('@/lib/pdf-generator');
         
         generateAgronomistReportPDF(
             establishmentData,
             currentUser.name,
             aiResult,
+            {
+                phenology: phenologyImg,
+                monthlyHarvest: monthlyHarvestImg,
+                batchYield: batchYieldImg
+            },
             logoPngDataUri
         );
         
@@ -104,8 +130,20 @@ export function AgronomistReportGenerator() {
         </CardHeader>
         <CardContent>
             <p className="text-sm text-muted-foreground">
-                El informe compilará y analizará las últimas entradas de las bitácoras para ofrecer conclusiones y recomendaciones.
+                El informe compilará y analizará las últimas entradas de las bitácoras para ofrecer conclusiones y recomendaciones, junto con un análisis gráfico.
             </p>
+            {/* Elementos ocultos para la captura PDF con html2canvas */}
+            <div style={{ position: 'fixed', opacity: 0, zIndex: -100, left: 0, top: 0, width: 'auto', height: 'auto' }} aria-hidden="true">
+              <div ref={phenologyRef} className="p-4 bg-card w-[600px]">
+                  <PhenologyEvolutionChart />
+              </div>
+              <div ref={monthlyRef} className="p-4 bg-card w-[600px]">
+                  <MonthlyHarvestChart harvests={harvests} />
+              </div>
+              <div ref={batchRef} className="p-4 bg-card w-[600px]">
+                  <BatchYieldChart />
+              </div>
+            </div>
         </CardContent>
         <CardFooter>
           <Button onClick={handleGeneratePdf} disabled={isPending || !canManage}>
