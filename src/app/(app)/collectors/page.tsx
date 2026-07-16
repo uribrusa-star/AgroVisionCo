@@ -197,7 +197,7 @@ export default function CollectorsPage() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={collector.avatar?.startsWith('http') ? collector.avatar : `https://picsum.photos/seed/${collector.avatar}/40/40`} alt={collector.name} />
+                          <AvatarImage src={`https://picsum.photos/seed/${collector.avatar}/40/40`} alt={collector.name} />
                           <AvatarFallback>{collector.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <span className="font-medium">{collector.name}</span>
