@@ -336,7 +336,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                     height: '100%',
                 }}
                 center={center}
-                zoom={18}
+                zoom={19}
                 onLoad={(map) => { mapRef.current = map; }}
                 options={{
                     streetViewControl: false,
