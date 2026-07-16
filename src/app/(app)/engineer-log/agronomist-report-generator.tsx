@@ -72,6 +72,7 @@ export function AgronomistReportGenerator() {
         const aiInput = {
             agronomistLogs: JSON.stringify(agronomistLogs.slice(0, 50)),
             phenologyLogs: JSON.stringify(phenologyLogs.slice(0, 20)),
+            harvestLogs: JSON.stringify(harvests.slice(0, 50).map(h => ({ date: h.date, kg: h.kilograms, batch: h.batchNumber }))),
             establishmentData: JSON.stringify(establishmentData),
         };
         const aiResult = await summarizeAgronomistReport(aiInput);

@@ -14,6 +14,7 @@ import {z} from 'genkit';
 const SummarizeAgronomistReportInputSchema = z.object({
   agronomistLogs: z.string(),
   phenologyLogs: z.string(),
+  harvestLogs: z.string().optional(),
   establishmentData: z.string().optional(),
 });
 export type SummarizeAgronomistReportInput = z.infer<typeof SummarizeAgronomistReportInputSchema>;
@@ -42,6 +43,11 @@ const SummarizeAgronomistReportOutputSchema = z.object({
     problem: z.string(),
     action: z.string(),
   })),
+  graphicalAnalysis: z.object({
+    phenology: z.string(),
+    monthlyHarvest: z.string(),
+    batchYield: z.string(),
+  }),
   aiInsight: z.string(),
 });
 export type SummarizeAgronomistReportOutput = z.infer<typeof SummarizeAgronomistReportOutputSchema>;
@@ -65,6 +71,7 @@ const prompt = ai.definePrompt({
     **Datos a analizar:**
     - Bitácora Agronómica (Fertilizaciones, Riegos, Sanidad): {{{agronomistLogs}}}
     - Bitácora de Fenología (Estados de crecimiento): {{{phenologyLogs}}}
+    - Historial de Cosechas (Rendimientos): {{{harvestLogs}}}
 
     **Instrucciones de Redacción:**
     1. **Lenguaje Profesional**: Usa terminología técnica precisa (ej. "estrés hídrico", "presión de inóculo", "balance nutricional").
@@ -75,6 +82,7 @@ const prompt = ai.definePrompt({
        - **Technical Analysis**: Desglosa la situación en 4 áreas (Clima, Fenología, Manejo, Sanidad).
        - **Alertas**: Identifica los eventos más críticos o riesgosos detectados en los últimos registros.
        - **Recommendations**: Proporciona acciones concretas para resolver problemas detectados.
+       - **Graphical Analysis**: Analiza brevemente lo que representarían los gráficos de Fenología, Cosecha Mensual y Cosecha por Lote, usando los datos.
        - **AI Insight**: Un párrafo integrador que analice la correlación entre el clima, la fenología y las prácticas realizadas.
 
     Genera el JSON estructurado solicitado.`,
