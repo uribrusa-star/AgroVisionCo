@@ -30,7 +30,6 @@ const ProfileSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
   email: z.string().email("Por favor, ingrese un correo válido.").optional(),
   notificationEmail: z.string().email("Por favor, ingrese un correo de notificación válido.").or(z.literal("")).optional(),
-  avatar: z.string().url("Por favor, ingrese una URL válida.").or(z.literal("")).optional(),
 });
 
 export default function ProfilePage() {
@@ -50,8 +49,7 @@ export default function ProfilePage() {
     defaultValues: { 
       name: currentUser?.name || '', 
       email: currentUser?.email || '', 
-      notificationEmail: currentUser?.notificationEmail || '',
-      avatar: currentUser?.avatar?.startsWith('http') ? currentUser.avatar : ''
+      notificationEmail: currentUser?.notificationEmail || ''
     },
   });
 
@@ -60,8 +58,7 @@ export default function ProfilePage() {
         profileForm.reset({ 
           name: currentUser.name, 
           email: currentUser.email, 
-          notificationEmail: currentUser.notificationEmail || '',
-          avatar: currentUser.avatar?.startsWith('http') ? currentUser.avatar : ''
+          notificationEmail: currentUser.notificationEmail || ''
         });
     }
   }, [currentUser, profileForm]);
@@ -101,11 +98,9 @@ export default function ProfilePage() {
     if(!currentUser) return;
     startTransition(async () => {
         try {
-            const avatarToSave = values.avatar || currentUser.avatar; // Keep seed if URL is empty
             await updateUserProfile(currentUser.id, { 
               name: values.name, 
-              notificationEmail: values.notificationEmail,
-              avatar: avatarToSave
+              notificationEmail: values.notificationEmail
             });
             toast({
                 title: "Perfil Actualizado",
@@ -122,9 +117,10 @@ export default function ProfilePage() {
   };
 
   const getAvatarPreview = () => {
-    const avatar = profileForm.watch('avatar') || currentUser.avatar;
-    if (avatar.startsWith('http')) return avatar;
-    return `https://picsum.photos/seed/${avatar}/150/150`;
+    if (currentUser.role === 'Productor') return 'https://i.imgur.com/IwHcGqs.png';
+    if (currentUser.role === 'Ingeniero Agronomo' || currentUser.role === 'Ingeniero') return 'https://i.imgur.com/bvntkqI.png';
+    if (currentUser.role === 'Encargado') return 'https://i.imgur.com/23yohTb.png';
+    return `https://picsum.photos/seed/${currentUser.name}/150/150`;
   }
 
   const handlePushLink = async () => {
@@ -212,16 +208,7 @@ export default function ProfilePage() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
-                                <FormField control={profileForm.control} name="avatar" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>URL de Imagen de Perfil</FormLabel>
-                                        <FormControl><Input {...field} placeholder="https://ejemplo.com/mi-foto.jpg" disabled={isPending} className="bg-muted/30" /></FormControl>
-                                        <FormDescription>
-                                            Pegue una URL directa a una imagen (JPG, PNG). Si la deja en blanco, se usará un avatar generado aleatoriamente.
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
+                                
                             <div className="flex justify-end pt-2">
                                 <Button type="submit" disabled={isPending} className="gap-2">
                                     <Save className="h-4 w-4" /> {isPending ? "Guardando..." : "Guardar Cambios"}

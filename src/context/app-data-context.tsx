@@ -8,6 +8,7 @@ import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy } from 'firebase/firestore';
+import { getRoleAvatar } from '@/lib/utils';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
 
 export const AppDataContext = React.createContext<AppData>({
@@ -190,7 +191,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               await batch.commit();
               setUsers(availableUsers);
             } else {
-              const fetchedUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as User[];
+              const fetchedUsers = usersSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return { id: doc.id, ...data, avatar: getRoleAvatar(data.role || 'Productor') };
+              }) as User[];
               // Deduplicate by ID to be absolutely sure
               const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
               setUsers(uniqueUsers);

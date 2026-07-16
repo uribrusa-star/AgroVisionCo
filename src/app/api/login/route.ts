@@ -6,6 +6,8 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { User } from '@/lib/types';
 
+import { getRoleAvatar } from '@/lib/utils';
+
 function parseFirestoreDoc(doc: any): User | null {
   if (!doc || !doc.document || !doc.document.fields) return null;
   const fields = doc.document.fields;
@@ -18,14 +20,15 @@ function parseFirestoreDoc(doc: any): User | null {
     if (v.doubleValue !== undefined) return Number(v.doubleValue);
     return undefined;
   };
+  const role = (parseVal(fields.role) || 'Productor') as any;
   return {
     id,
     name: parseVal(fields.name) || '',
     email: parseVal(fields.email) || '',
-    role: (parseVal(fields.role) || 'Productor') as any,
+    role,
     password: parseVal(fields.password) || '',
     notificationEmail: parseVal(fields.notificationEmail) || '',
-    avatar: parseVal(fields.avatar),
+    avatar: getRoleAvatar(role),
     phone: parseVal(fields.phone),
     specialty: parseVal(fields.specialty),
     producerId: parseVal(fields.producerId)
