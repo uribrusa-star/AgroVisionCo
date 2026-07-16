@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovision.co'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovision.site'),
   title: 'AgroVisionCo',
   description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola y de fresas. Accede a tu panel para controlar lotes y tareas.',
   applicationName: 'AgroVision',
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AgroVisionCo - Gestión Agrícola',
     description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
-    url: 'https://agrovision.co',
+    url: 'https://agrovision.site',
     siteName: 'AgroVision',
     images: [
       {
