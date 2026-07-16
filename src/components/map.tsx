@@ -114,7 +114,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                     >
                         <div 
-                            className="bg-white/70 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                            className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center"
                         >
                             {polygonId}
                         </div>
@@ -186,6 +186,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         const lotAgronomistLogs = agronomistLogs.filter(l => 
           (l.batchIds && l.batchIds.includes(activeInfoWindow)) || (l.batchId === activeInfoWindow)
         );
+        const lotSanityLogs = lotAgronomistLogs.filter(l => l.type === 'Sanidad');
         const lotPhenologyLogs = phenologyLogs.filter(p => 
           (p.batchIds && p.batchIds.includes(activeInfoWindow)) || (p.batchId === activeInfoWindow)
         );
@@ -236,6 +237,25 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                             <p className="text-[10px] mt-1 opacity-80">
                                 Restan: {phiStatus.remainingDays || 0}d / {phiStatus.remainingHours || 0}hs
                             </p>
+                        </div>
+                    )}
+
+                    {lotSanityLogs.length > 0 && (
+                        <div className="bg-white/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right overflow-y-auto max-h-48">
+                            <h4 className="text-xs uppercase text-red-600 font-bold mb-3 flex items-center gap-1">
+                                <AlertTriangle className="h-4 w-4" /> Alertas Sanitarias
+                            </h4>
+                            <div className="space-y-3">
+                                {lotSanityLogs.map((log, idx) => (
+                                    <div key={idx} className="bg-red-50/50 border border-red-100 p-2 rounded-lg">
+                                        <p className="text-xs font-semibold text-red-800">{log.product}</p>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <p className="text-[10px] text-gray-600 line-clamp-1 flex-1" title={log.notes}>{log.notes}</p>
+                                            <p className="text-[10px] text-red-600/80 font-medium ml-2">{format(new Date(log.date), "dd/MM")}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
