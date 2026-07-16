@@ -36,6 +36,7 @@ export function BatchHistory() {
   const { loading, batches, deleteBatch, editBatch, currentUser, harvests } = useContext(AppDataContext);
   const { toast } = useToast();
   const [editingBatch, setEditingBatch] = React.useState<Batch | null>(null);
+  const [viewingBatch, setViewingBatch] = React.useState<Batch | null>(null);
   
   const editForm = useForm<EditBatchValues>({
     resolver: zodResolver(EditBatchSchema),
@@ -124,7 +125,11 @@ export function BatchHistory() {
                   {!loading && sortedBatches.map((batch) => {
                       const status = getBatchStatus(batch.id);
                       return (
-                        <TableRow key={batch.id}>
+                        <TableRow 
+                            key={batch.id}
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => setViewingBatch(batch)}
+                        >
                             <TableCell className="font-medium">{batch.id}</TableCell>
                             <TableCell>
                               <Badge variant={status === 'completed' ? 'default' : 'secondary'}>
@@ -142,7 +147,7 @@ export function BatchHistory() {
                             </TableCell>
                             <TableCell>{new Date(batch.preloadedDate).toLocaleDateString('es-ES')}</TableCell>
                             {canManage && (
-                              <TableCell className="text-right">
+                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                   <div className="flex justify-end gap-2">
                                     <Dialog open={editingBatch?.id === batch.id} onOpenChange={(open) => !open && setEditingBatch(null)}>
                                       <DialogTrigger asChild>
@@ -307,6 +312,57 @@ export function BatchHistory() {
                 </TableBody>
             </Table>
         </CardContent>
+
+        <Dialog open={!!viewingBatch} onOpenChange={(open) => !open && setViewingBatch(null)}>
+            <DialogContent className="max-w-md sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl text-primary">Detalles del Lote {viewingBatch?.id}</DialogTitle>
+                    <DialogDescription>
+                        Información completa de las variedades plantadas y el estado actual.
+                    </DialogDescription>
+                </DialogHeader>
+                {viewingBatch && (
+                    <div className="space-y-6 mt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-muted/30 rounded-xl border">
+                                <p className="text-sm text-muted-foreground mb-1">Estado</p>
+                                <Badge variant={getBatchStatus(viewingBatch.id) === 'completed' ? 'default' : 'secondary'} className="text-sm px-3 py-1">
+                                    {getBatchStatus(viewingBatch.id) === 'completed' ? 'Cosechado' : 'Pendiente'}
+                                </Badge>
+                            </div>
+                            <div className="p-4 bg-muted/30 rounded-xl border">
+                                <p className="text-sm text-muted-foreground mb-1">Fecha de Precarga</p>
+                                <p className="font-medium text-lg">{new Date(viewingBatch.preloadedDate).toLocaleDateString('es-ES')}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+                                Variedades Plantadas
+                            </h4>
+                            {viewingBatch.varieties && viewingBatch.varieties.length > 0 ? (
+                                <div className="space-y-3">
+                                    {viewingBatch.varieties.map((v, i) => (
+                                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:shadow-sm transition-shadow bg-card">
+                                            <div className="font-medium text-primary mb-2 sm:mb-0">{v.name}</div>
+                                            <div className="flex gap-4 text-sm text-muted-foreground">
+                                                {v.plantCount && <span><strong className="text-foreground">{v.plantCount.toLocaleString()}</strong> plantas</span>}
+                                                {v.area && <span><strong className="text-foreground">{v.area}</strong> ha</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center p-6 border rounded-lg border-dashed text-muted-foreground">
+                                    No hay variedades registradas en este lote.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
     </Card>
   )
 }
