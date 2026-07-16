@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useContext, useState } from 'react';
-import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow, Circle } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow, Circle, OverlayView } from '@react-google-maps/api';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import { Leaf, Notebook, Weight, AlertTriangle, Activity, Thermometer, FlaskConical } from 'lucide-react';
+import { Leaf, Notebook, Weight, AlertTriangle, Activity, Thermometer, FlaskConical, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useOnlineStatus } from '@/hooks/use-online-status';
@@ -90,6 +90,39 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 );
             });
     };
+
+    const renderBatchLabels = () => {
+        if (!geoJsonData || !geoJsonData.features) return null;
+        return geoJsonData.features
+            .filter((feature: any) => feature.geometry && feature.geometry.type === 'Polygon')
+            .map((feature: any, index: number) => {
+                const properties = feature.properties || {};
+                const polygonId = Object.keys(properties).find(k => k.startsWith('L')) || `Lote ${index + 1}`;
+                
+                const paths = feature.geometry.coordinates[0];
+                const center = paths.reduce(
+                    (acc: any, curr: any) => ({ lat: acc.lat + curr[1], lng: acc.lng + curr[0] }), 
+                    { lat: 0, lng: 0 }
+                );
+                center.lat /= paths.length;
+                center.lng /= paths.length;
+
+                return (
+                    <OverlayView
+                        key={`label-${polygonId}`}
+                        position={center}
+                        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                    >
+                        <div 
+                            className="bg-white/70 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                        >
+                            {polygonId}
+                        </div>
+                    </OverlayView>
+                );
+            });
+    };
+    
     
     const renderInfoWindows = () => {
         if (!activeInfoWindow) return null;
@@ -143,30 +176,11 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 </InfoWindow>
             );
         }
+        return null;
+    }
 
-        // Case 2: Lot (Polygon) InfoWindow
-        if (!geoJsonData || !geoJsonData.features) return null;
-
-        const activeFeature = geoJsonData.features.find((feature: any) => {
-             const properties = feature.properties || {};
-             const polygonId = Object.keys(properties).find(k => k.startsWith('L'));
-             return polygonId === activeInfoWindow;
-        });
-
-        if (!activeFeature || activeFeature.geometry.type !== 'Polygon') return null;
-
-        const paths = activeFeature.geometry.coordinates[0].map((coord: [number, number]) => ({
-            lat: coord[1],
-            lng: coord[0],
-        }));
-
-        const centerOfPolygon = paths.reduce(
-            (acc: { lat: number, lng: number }, curr: { lat: number, lng: number }) => {
-                return { lat: acc.lat + curr.lat, lng: acc.lng + curr.lng };
-            }, { lat: 0, lng: 0 }
-        );
-        centerOfPolygon.lat /= paths.length;
-        centerOfPolygon.lng /= paths.length;
+    const renderHUD = () => {
+        if (!activeInfoWindow || activeInfoWindow.startsWith('hotspot-')) return null;
 
         const lotHarvests = harvests.filter(h => h.batchNumber === activeInfoWindow || h.batchNumber.split(',').map(s => s.trim()).includes(activeInfoWindow!));
         const lotAgronomistLogs = agronomistLogs.filter(l => 
@@ -179,56 +193,78 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         const phiStatus = getBatchPhiStatus(activeInfoWindow!, agronomistLogs);
 
         return (
-             <InfoWindow
-                position={centerOfPolygon}
-                onCloseClick={() => setActiveInfoWindow(null)}
-            >
-                <div className="p-1 max-w-xs text-foreground">
-                    <h4 className="font-bold text-base mb-2">Lote: {activeInfoWindow}</h4>
-                    {phiStatus.isBlocked && (
-                      <div className="bg-red-500/10 border border-red-500/40 text-red-600 dark:text-red-400 p-2.5 rounded-lg mb-3 shadow-sm">
-                        <div className="flex items-center gap-1.5 font-bold text-xs uppercase mb-1">
-                          <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 animate-pulse" />
-                          <span>BLOQUEADO POR CARENCIA (PHI)</span>
+            <div className="absolute inset-0 pointer-events-none flex flex-col sm:flex-row justify-between p-4 z-10">
+                {/* Left Panel */}
+                <div className="w-full sm:w-64 flex flex-col gap-4 pointer-events-auto mb-4 sm:mb-0">
+                    <div className="bg-white/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-left">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-lg text-foreground">Lote: {activeInfoWindow}</h3>
+                            <button onClick={() => setActiveInfoWindow(null)} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
-                        <p className="text-xs font-semibold">{phiStatus.productName}</p>
-                        <p className="text-[11px] mt-1 opacity-90">
-                          Liberación: <span className="font-bold">{phiStatus.unlockDate?.toLocaleDateString('es-ES')}</span> ({phiStatus.remainingDays || 0}d / {phiStatus.remainingHours || 0}hs)
-                        </p>
-                      </div>
-                    )}
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 bg-primary/10 text-primary p-2 rounded-full">
-                          <Weight className="h-4 w-4" />
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-xs uppercase text-muted-foreground font-bold mb-2">Rendimiento</h4>
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-primary/10 text-primary p-2.5 rounded-lg">
+                                        <Weight className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-lg">{totalKilos.toLocaleString('es-ES')} kg</p>
+                                        <p className="text-xs text-muted-foreground">{lotHarvests.length} cosechas</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p className="font-bold text-sm">{totalKilos.toLocaleString('es-ES')} kg</p>
-                            <p className="text-xs text-muted-foreground">{lotHarvests.length} cosechas</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 bg-primary/10 text-primary p-2 rounded-full">
-                          <Leaf className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-sm">{lotAgronomistLogs.length}</p>
-                            <p className="text-xs text-muted-foreground">Actividades Agronómicas</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 bg-primary/10 text-primary p-2 rounded-full">
-                            <Notebook className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-sm">{lotPhenologyLogs.length}</p>
-                            <p className="text-xs text-muted-foreground">Registros Fenológicos</p>
-                        </div>
-                      </div>
                     </div>
                 </div>
-            </InfoWindow>
-        )
+
+                {/* Right Panel */}
+                <div className="w-full sm:w-72 flex flex-col gap-4 pointer-events-auto">
+                    {phiStatus.isBlocked && (
+                        <div className="bg-red-500/90 backdrop-blur-md text-white border border-red-600 shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right">
+                            <div className="flex items-center gap-2 font-bold text-sm uppercase mb-2">
+                                <AlertTriangle className="h-5 w-5 animate-pulse" />
+                                BLOQUEADO (PHI)
+                            </div>
+                            <p className="text-sm font-medium">{phiStatus.productName}</p>
+                            <p className="text-xs mt-2 opacity-90">
+                                Liberación: <span className="font-bold">{phiStatus.unlockDate?.toLocaleDateString('es-ES')}</span> 
+                            </p>
+                            <p className="text-[10px] mt-1 opacity-80">
+                                Restan: {phiStatus.remainingDays || 0}d / {phiStatus.remainingHours || 0}hs
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="bg-white/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right">
+                        <h4 className="text-xs uppercase text-muted-foreground font-bold mb-3">Historial</h4>
+                        <div className="space-y-4">
+                            <div className="flex items-start gap-3">
+                                <div className="bg-blue-500/10 text-blue-600 p-2 rounded-lg mt-0.5">
+                                    <Leaf className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">{lotAgronomistLogs.length} Registros</p>
+                                    <p className="text-xs text-muted-foreground">Actividades Sanitarias y Nutricionales</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="bg-green-500/10 text-green-600 p-2 rounded-lg mt-0.5">
+                                    <Notebook className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="font-bold text-sm">{lotPhenologyLogs.length} Fases</p>
+                                    <p className="text-xs text-muted-foreground">Estados Fenológicos Registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const renderMarkers = () => {
@@ -259,40 +295,44 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
     }
 
     return (
-        <GoogleMap
-            mapContainerStyle={{
-                width: '100%',
-                height: '100%',
-            }}
-            center={center}
-            zoom={17}
-            options={{
-                streetViewControl: false,
-                mapTypeControl: false,
-                fullscreenControl: false,
-                mapTypeId: 'satellite',
-                geolocation: false,
-            }}
-        >
-            {renderPolygons()}
-            {renderInfoWindows()}
-            {renderMarkers()}
-            {renderHealthHotspots()}
+        <div className="relative w-full h-full">
+            <GoogleMap
+                mapContainerStyle={{
+                    width: '100%',
+                    height: '100%',
+                }}
+                center={center}
+                zoom={17}
+                options={{
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                    mapTypeId: 'satellite',
+                    geolocation: false,
+                }}
+            >
+                {renderPolygons()}
+                {renderBatchLabels()}
+                {renderInfoWindows()}
+                {renderMarkers()}
+                {renderHealthHotspots()}
 
-            {!isOnline && (
-                <div className="absolute inset-x-0 bottom-12 flex justify-center z-[100] pointer-events-none">
-                    <div className="bg-background/95 backdrop-blur-md border border-border shadow-2xl px-6 py-4 rounded-2xl flex flex-col items-center gap-2 max-w-[280px] pointer-events-auto">
-                        <div className="bg-destructive/10 p-2 rounded-full text-destructive">
-                            <WifiOff className="h-6 w-6" />
-                        </div>
-                        <div className="text-center">
-                            <h3 className="font-bold text-sm">Modo Offline</h3>
-                            <p className="text-[10px] text-muted-foreground">La capa satelital puede no cargar. Los datos de lotes y hotspots guardados localmente siguen visibles.</p>
+                {!isOnline && (
+                    <div className="absolute inset-x-0 bottom-12 flex justify-center z-[100] pointer-events-none">
+                        <div className="bg-background/95 backdrop-blur-md border border-border shadow-2xl px-6 py-4 rounded-2xl flex flex-col items-center gap-2 max-w-[280px] pointer-events-auto">
+                            <div className="bg-destructive/10 p-2 rounded-full text-destructive">
+                                <WifiOff className="h-6 w-6" />
+                            </div>
+                            <div className="text-center">
+                                <h3 className="font-bold text-sm">Modo Offline</h3>
+                                <p className="text-[10px] text-muted-foreground">La capa satelital puede no cargar. Los datos de lotes y hotspots guardados localmente siguen visibles.</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </GoogleMap>
+                )}
+            </GoogleMap>
+            {renderHUD()}
+        </div>
     );
 };
 

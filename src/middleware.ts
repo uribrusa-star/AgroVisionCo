@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
 
 const protectedRoutes = ['/dashboard', '/establishment', '/map', '/producer-log', '/data-entry', '/engineer-log', '/collectors', '/packers', '/users', '/predictions'];
-const publicRoutes = ['/'];
+const publicRoutes = ['/', '/login'];
 
 export async function middleware(request: NextRequest) {
   const session = await getIronSession(request.cookies, sessionOptions);
@@ -17,11 +17,11 @@ export async function middleware(request: NextRequest) {
 
   if (!user && isProtectedRoute) {
     // Redirect to login page if not authenticated and trying to access a protected route
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
   
-  if (user && publicRoutes.includes(pathname)) {
-    // Redirect to dashboard if authenticated and trying to access a public-only page like login
+  if (user && pathname === '/login') {
+    // Redirect to dashboard if authenticated and trying to access the login page
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
@@ -35,10 +35,9 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - logo.png, manifest.json, etc. (public assets)
+     * - Any file with an extension (e.g. .png, .jpg, .json)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|logo.png|manifest.json|icons/).*)',
+    '/((?!api|_next/static|_next/image|.*\\.[\\w]+$).*)',
   ],
 };
 

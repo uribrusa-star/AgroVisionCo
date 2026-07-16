@@ -67,11 +67,18 @@ export default function ProfilePage() {
     return null;
   }
 
-  const handleLogout = () => {
-    setCurrentUser(null, false);
-    fetch('/api/logout', { method: 'POST' }).then(() => {
-        router.push('/');
-    });
+  const handleLogout = async () => {
+    const response = await fetch('/api/logout', { method: 'POST' });
+    if (response.ok) {
+        setCurrentUser(null, false);
+        router.push('/login');
+    } else {
+        toast({
+            title: "Error",
+            description: "No se pudo cerrar la sesión.",
+            variant: "destructive",
+        });
+    }
   }
 
   const onPasswordSubmit = (values: z.infer<typeof PasswordSchema>) => {
