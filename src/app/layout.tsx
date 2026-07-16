@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovision.co'),
   title: 'AgroVisionCo',
   description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola y de fresas. Accede a tu panel para controlar lotes y tareas.',
   applicationName: 'AgroVision',
