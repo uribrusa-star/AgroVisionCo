@@ -114,7 +114,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                     >
                         <div 
-                            className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] sm:text-xs font-bold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center"
+                            className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-md text-[8px] sm:text-[10px] font-extrabold text-gray-800 shadow-sm border border-gray-200/50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-center"
                         >
                             {polygonId}
                         </div>
@@ -322,7 +322,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                     height: '100%',
                 }}
                 center={center}
-                zoom={17}
+                zoom={18}
                 options={{
                     streetViewControl: false,
                     mapTypeControl: false,
