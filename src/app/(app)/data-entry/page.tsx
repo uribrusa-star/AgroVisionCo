@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PackagingForm } from "./packaging-form";
 import { CulturalPracticesLogForm } from "./cultural-practices-log-form";
 import { CulturalPracticesHistory } from "./cultural-practices-history";
+import { WeatherCard } from "@/components/weather-card";
 
 export default function DataEntryPage() {
   const { currentUser } = React.useContext(AppDataContext);
@@ -22,7 +23,9 @@ export default function DataEntryPage() {
       <PageHeader
         title="Entrada de Datos"
         description="Registre datos de producción, embalaje, pagos y gestione los lotes."
-      />
+      >
+        <WeatherCard />
+      </PageHeader>
       <div className="w-full max-w-7xl mx-auto space-y-8">
         <div>
            <ProductionForm />

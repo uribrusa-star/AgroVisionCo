@@ -21,7 +21,7 @@ import { ApplicationRecommendation } from './application-recommendation';
 import { AgronomistReportGenerator } from './agronomist-report-generator';
 import { RecommendedActionsPanel } from './recommended-actions-panel';
 import { PhenologyEvolutionChart } from './phenology-evolution-chart';
-
+import { WeatherCard } from '@/components/weather-card';
 
 export default function EngineerLogPage() {
   const { loading, collectors, harvests, currentUser } = useContext(AppDataContext);
@@ -46,7 +46,9 @@ export default function EngineerLogPage() {
       <PageHeader
         title="Bitácora del Agrónomo"
         description="Gestión de aplicaciones, fenología y visión general de la producción."
-      />
+      >
+        <WeatherCard />
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
         <Card>

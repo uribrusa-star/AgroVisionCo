@@ -18,6 +18,7 @@ import { MonthlyHarvestChart } from '../monthly-harvest-chart';
 import { ProfitabilityTrendChart } from './profitability-trend-chart';
 import { SmartHarvestAlerts } from './smart-harvest-alerts';
 import { ExportButton } from './export-button';
+import { WeatherCard } from '@/components/weather-card';
 
 
 export default function ProducerLogPage() {
@@ -45,7 +46,9 @@ export default function ProducerLogPage() {
             title="Bitácora del Productor"
             description="Registre las finanzas y las observaciones diarias del establecimiento."
             className="mb-0"
-        />
+        >
+          <WeatherCard />
+        </PageHeader>
         <ExportButton />
       </div>
 
