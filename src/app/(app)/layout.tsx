@@ -100,11 +100,16 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+      } catch (error) {
+        console.error('Error logging out:', error);
+      }
       window.localStorage.clear();
       window.sessionStorage.clear();
-      window.location.reload();
+      window.location.href = '/';
     }
   };
 
