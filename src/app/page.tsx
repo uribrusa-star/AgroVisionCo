@@ -148,20 +148,84 @@ export default function LandingPage() {
                     <p className="flex-auto">Visualiza el rendimiento de tus lotes en un mapa satelital. Descubre zonas de alta producción o posibles áreas de riesgo al instante.</p>
                   </dd>
                 </div>
+
+                <div className="flex flex-col items-start">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/predicciones_mockup.png" alt="Predicciones y Clima" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Predicciones y Clima</DialogTitle>
+                      <Image src="/predicciones_mockup.png" alt="Predicciones y Clima" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Predicciones Climáticas
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">Anticípate al clima. Accede a predicciones de lluvias, ráfagas y temperatura para proteger tus cultivos y optimizar las fumigaciones.</p>
+                  </dd>
+                </div>
+
+                <div className="flex flex-col items-start">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/entrada_datos_mockup.png" alt="Entrada de Datos Móvil" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Entrada de Datos Móvil</DialogTitle>
+                      <Image src="/entrada_datos_mockup.png" alt="Entrada de Datos Móvil" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Ingreso Rápido a Campo
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">Registra kilos recolectados, labores culturales y asistencia de empleados desde tu celular en segundos, incluso sin conexión a internet.</p>
+                  </dd>
+                </div>
+
+                <div className="flex flex-col items-start">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/bitacora_productor_mockup.png" alt="Panel del Productor" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Panel del Productor</DialogTitle>
+                      <Image src="/bitacora_productor_mockup.png" alt="Panel del Productor" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Panel Financiero y de Pagos
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">Visualiza todos tus ingresos y pagos a cosecheros. Mantén la rentabilidad de tu negocio a raya con resúmenes claros y precisos.</p>
+                  </dd>
+                </div>
               </dl>
             </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section className="py-24 bg-white dark:bg-green-950 px-6 lg:px-8 max-w-4xl mx-auto">
-          <div className="text-center mb-12">
+        <section className="py-24 bg-white dark:bg-green-950 px-6 lg:px-8 max-w-3xl mx-auto">
+          <div className="text-center mb-10">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl">Preguntas Frecuentes</h2>
             <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-green-200/80">
               Resolvemos tus dudas principales para que puedas empezar a transformar tu campo hoy mismo.
             </p>
           </div>
-          <Accordion type="single" collapsible className="w-full">
+          <div className="bg-gray-50 dark:bg-green-900/20 rounded-3xl p-6 md:p-10 border border-gray-100 dark:border-green-800/50 shadow-sm">
+            <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Es difícil de usar AgroVision?</AccordionTrigger>
               <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
@@ -187,6 +251,7 @@ export default function LandingPage() {
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+          </div>
         </section>
       </main>
 
