@@ -94,9 +94,17 @@ export default function LandingPage() {
                 </div>
                 
                 <div className="flex flex-col items-start">
-                  <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full bg-green-50 flex items-center justify-center">
-                     <Image src="/logo.png" alt="Informes PDF" width={120} height={120} className="opacity-80 object-contain h-56 py-4 hover:scale-110 transition-transform duration-500" />
-                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/informes-ia.png" alt="Informes con IA" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Informes con IA</DialogTitle>
+                      <Image src="/informes-ia.png" alt="Informes con IA" width={1920} height={1080} unoptimized={true} className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
                     <BarChart3 className="h-6 w-6 text-green-600 flex-none" />
                     Informes con IA
