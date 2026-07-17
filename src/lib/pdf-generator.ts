@@ -828,6 +828,17 @@ export const generateProducerHarvestReportPDF = (
 
   yPos = (doc as any).lastAutoTable.finalY + 15;
 
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const executiveLines = doc.splitTextToSize(reportData.executiveSummary, pageWidth - 30);
+  const executiveHeight = (executiveLines.length * 5) + 10;
+
+  if (yPos + 8 + executiveHeight > pageHeight - 20) {
+    doc.addPage();
+    addHeader();
+    yPos = 35;
+  }
+
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
@@ -872,8 +883,13 @@ export const generateProducerHarvestReportPDF = (
 
   yPos += 45;
 
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const analysisLines = doc.splitTextToSize(reportData.analysisAndInterpretation, pageWidth - 30);
+  const analysisHeight = (analysisLines.length * 5) + 10;
+
   // --- ANÁLISIS E INTERPRETACIÓN ---
-  if (yPos > pageHeight - 60) {
+  if (yPos + 8 + analysisHeight > pageHeight - 20) {
     doc.addPage();
     addHeader();
     yPos = 35;
@@ -921,9 +937,24 @@ export const generateProducerHarvestReportPDF = (
   doc.addImage(charts.monthlyHarvest, 'PNG', 15, yPos, chartImgWidth, chartImgHeight);
   doc.addImage(charts.batchYield, 'PNG', pageWidth / 2 + 5, yPos, chartImgWidth, chartImgHeight);
   
-  yPos += chartImgHeight + 10;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  
+  const harvestDesc = doc.splitTextToSize(`La evolución de cosecha refleja los picos de producción mensuales. Se registraron ${stats.totalProduction.toLocaleString('es-AR')} kg totales en la campaña.`, chartImgWidth);
+  const yieldDesc = doc.splitTextToSize(`Rendimiento por lote comparativo. El rendimiento promedio general es de ${(stats.totalProduction / stats.farmArea).toLocaleString('es-AR', {maximumFractionDigits: 0})} kg/ha.`, chartImgWidth);
+  
+  doc.text(harvestDesc, 15, yPos + chartImgHeight + 5);
+  doc.text(yieldDesc, pageWidth / 2 + 5, yPos + chartImgHeight + 5);
+
+  yPos += chartImgHeight + 15;
   
   doc.addImage(charts.costDistribution, 'PNG', pageWidth / 2 - chartImgWidth / 2, yPos, chartImgWidth, chartImgHeight);
+
+  const highestCostCategory = Object.entries(stats.costByCategory).sort((a,b) => b[1] - a[1])[0];
+  const costDesc = doc.splitTextToSize(`Distribución de los $${stats.totalCost.toLocaleString('es-AR')} ARS en gastos operativos. La categoría principal es ${highestCostCategory ? highestCostCategory[0] : 'Insumos'} con un ${highestCostCategory && stats.totalCost > 0 ? ((highestCostCategory[1]/stats.totalCost)*100).toFixed(1) : 0}%.`, chartImgWidth);
+  
+  doc.text(costDesc, pageWidth / 2 - chartImgWidth / 2, yPos + chartImgHeight + 5);
 
   yPos += chartImgHeight + 20;
 
@@ -953,6 +984,17 @@ export const generateProducerHarvestReportPDF = (
   doc.addPage();
   addHeader();
   yPos = 35;
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const recLines = doc.splitTextToSize(reportData.conclusionsAndRecommendations, pageWidth - 30);
+  const recHeight = (recLines.length * 5) + 10;
+
+  if (yPos + 10 + recHeight > pageHeight - 20) {
+    doc.addPage();
+    addHeader();
+    yPos = 35;
+  }
 
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
