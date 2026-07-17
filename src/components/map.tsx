@@ -207,6 +207,25 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         const totalKilos = lotHarvests.reduce((sum, h) => sum + h.kilograms, 0);
         const phiStatus = getBatchPhiStatus(activeInfoWindow!, agronomistLogs);
 
+        let lotProperties: any = {};
+        if (geoJsonData && geoJsonData.features) {
+            const feature = geoJsonData.features.find((f: any, i: number) => {
+                const props = f.properties || {};
+                const polygonId = Object.keys(props).find(k => k.startsWith('L')) || `polygon-${i}`;
+                return polygonId === activeInfoWindow;
+            });
+            if (feature) lotProperties = feature.properties || {};
+        }
+
+        const getProp = (keys: string[]) => {
+            const foundKey = Object.keys(lotProperties).find(k => keys.some(key => k.toLowerCase().includes(key)));
+            return foundKey ? lotProperties[foundKey] : 'N/A';
+        };
+
+        const variedad = getProp(['variedad']);
+        const densidad = getProp(['densidad', 'planta']);
+        const hectareas = getProp(['ha', 'hectarea', 'hectárea', 'superficie']);
+
         return (
             <div className="absolute inset-0 pointer-events-none flex flex-col sm:flex-row justify-between p-4 z-10">
                 {/* Left Panel */}
@@ -236,6 +255,21 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                                         <p className="font-bold text-lg">{totalKilos.toLocaleString('es-ES')} kg</p>
                                         <p className="text-xs text-muted-foreground">{lotHarvests.length} cosechas</p>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/60">
+                                <div>
+                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Variedad</p>
+                                    <p className="text-sm font-semibold">{variedad}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Densidad</p>
+                                    <p className="text-sm font-semibold">{densidad}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Superficie</p>
+                                    <p className="text-sm font-semibold">{hectareas} ha.</p>
                                 </div>
                             </div>
                         </div>
