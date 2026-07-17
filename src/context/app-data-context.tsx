@@ -162,9 +162,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
       setIsClient(true);
-      // Removed user fetching logic from here, as it's now handled by the persistent state hook
-      // and the initial session check in the layout.
       setLoading(false); // Since we initialize synchronously from localStorage, we can immediately stop loading
+      
+      // If client says we are logged out, ensure the server cookie is also cleared.
+      // This prevents redirect loops if the user logged out while offline.
+      if (!currentUser) {
+          fetch('/api/logout', { method: 'POST' }).catch(() => {});
+      }
     }, [currentUser]);
 
     const fetchAllData = useCallback(async () => {

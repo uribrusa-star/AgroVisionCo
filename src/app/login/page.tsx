@@ -46,22 +46,37 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     startTransition(async () => {
       const clientUser = users?.find(u => u.email?.toLowerCase() === values.email?.toLowerCase());
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, clientUser }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setCurrentUser(result.user, values.rememberMe);
-        toast({
-            title: `¡Bienvenido de nuevo, ${result.user.name}!`,
-            description: "Ha iniciado sesión correctamente.",
+      
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...values, clientUser }),
         });
-        router.push('/dashboard');
-      } else {
-        form.setError("root", { message: "Correo electrónico o contraseña incorrectos."});
+
+        if (response.ok) {
+          const result = await response.json();
+          setCurrentUser(result.user, values.rememberMe);
+          toast({
+              title: `¡Bienvenido de nuevo, ${result.user.name}!`,
+              description: "Ha iniciado sesión correctamente.",
+          });
+          router.push('/dashboard');
+        } else {
+          form.setError("root", { message: "Correo electrónico o contraseña incorrectos."});
+        }
+      } catch (error) {
+        // Handle offline login fallback
+        if (clientUser && clientUser.password === values.password) {
+            setCurrentUser(clientUser, values.rememberMe);
+            toast({
+                title: "Modo sin conexión",
+                description: "Sesión iniciada localmente. Los datos se sincronizarán al conectarse.",
+            });
+            router.push('/dashboard');
+        } else {
+            form.setError("root", { message: "Error de red: Revise su conexión o asegúrese de que el usuario exista en el sistema offline."});
+        }
       }
     });
   };
