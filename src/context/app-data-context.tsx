@@ -83,7 +83,19 @@ export const AppDataContext = React.createContext<AppData>({
 });
 
 const usePersistentState = <T,>(key: string): [T, (value: T | null, rememberMe?: boolean) => void] => {
-  const [state, setState] = useState<T>(() => null as T); // Start with null state on server
+  const [state, setState] = useState<T>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const localItem = window.localStorage.getItem(key);
+        if (localItem) return JSON.parse(localItem);
+        const sessionItem = window.sessionStorage.getItem(key);
+        if (sessionItem) return JSON.parse(sessionItem);
+      } catch (error) {
+        console.warn(`Error reading storage key “${key}”:`, error);
+      }
+    }
+    return null as T;
+  });
 
   // Load state from storage only on the client side
   useEffect(() => {
@@ -152,9 +164,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       setIsClient(true);
       // Removed user fetching logic from here, as it's now handled by the persistent state hook
       // and the initial session check in the layout.
-      if (!currentUser) {
-          setLoading(false);
-      }
+      setLoading(false); // Since we initialize synchronously from localStorage, we can immediately stop loading
     }, [currentUser]);
 
     const fetchAllData = useCallback(async () => {
