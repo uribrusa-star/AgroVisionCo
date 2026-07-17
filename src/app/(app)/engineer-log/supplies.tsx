@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { FlaskConical, MoreVertical, PlusCircle, Trash2 } from 'lucide-react';
+import { FlaskConical, MoreVertical, PlusCircle, Trash2, Sprout, Bug, ShieldAlert, BugOff } from 'lucide-react';
 
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { Supply, SupplyType } from '@/lib/types';
@@ -286,31 +286,29 @@ export function Supplies() {
   };
   
   const SupplyTable = ({ data }: { data: Supply[] }) => (
-    <Table>
-        <TableHeader>
-            <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead className="hidden md:table-cell">Composición</TableHead>
-                <TableHead className="text-right">Stock (kg/L)</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            {loading && <tr><TableCell colSpan={3}><Skeleton className="h-10" /></TableCell></tr>}
-            {!loading && data.length === 0 && <tr><TableCell colSpan={3} className="text-center text-muted-foreground">No hay insumos en esta categoría.</TableCell></tr>}
-            {!loading && data.map(supply => {
-                const isLowStock = supply.stock !== undefined && supply.lowStockThreshold !== undefined && supply.stock < supply.lowStockThreshold;
-                return (
-                    <TableRow key={supply.id} className="cursor-pointer" onClick={() => handleViewDetails(supply)}>
-                        <TableCell className="font-medium">{supply.name}</TableCell>
-                        <TableCell className="hidden md:table-cell">{supply.info.activeIngredient}</TableCell>
-                        <TableCell className={cn("text-right font-semibold", isLowStock && "text-destructive")}>
-                            {supply.stock !== undefined ? supply.stock.toFixed(3) : 'N/A'}
-                        </TableCell>
-                    </TableRow>
-                );
-            })}
-        </TableBody>
-    </Table>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
+        {loading && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
+        {!loading && data.length === 0 && <p className="col-span-full text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay insumos en esta categoría.</p>}
+        {!loading && data.map(supply => {
+            const isLowStock = supply.stock !== undefined && supply.lowStockThreshold !== undefined && supply.stock < supply.lowStockThreshold;
+            return (
+                <div key={supply.id} onClick={() => handleViewDetails(supply)} className="p-4 rounded-xl border bg-card text-card-foreground shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md active:scale-[0.98] transition-all hover:border-primary/50 flex flex-col justify-between">
+                    <div>
+                        <div className="flex justify-between items-start mb-2 gap-3">
+                            <span className="font-bold text-lg leading-tight break-words">{supply.name}</span>
+                            <span className={cn("font-bold text-sm px-2 py-1 rounded-md shrink-0 whitespace-nowrap", isLowStock ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+                                {supply.stock !== undefined ? `${supply.stock.toFixed(2)} kg/L` : 'N/A'}
+                            </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-3">
+                            <span className="font-semibold text-foreground/80 block mb-1">Composición:</span>
+                            <span className="break-words">{supply.info.activeIngredient}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        })}
+    </div>
   );
 
   return (
@@ -324,11 +322,11 @@ export function Supplies() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="Fertilizante">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="Fertilizante">Fertilizantes</TabsTrigger>
-            <TabsTrigger value="Fungicida">Fungicidas</TabsTrigger>
-            <TabsTrigger value="Insecticida">Insecticidas</TabsTrigger>
-            <TabsTrigger value="Acaricida">Acaricidas</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto p-1 bg-muted/30">
+            <TabsTrigger value="Fertilizante" className="flex items-center gap-2 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200 border border-transparent transition-all"><Sprout className="w-4 h-4" /> Fertilizantes</TabsTrigger>
+            <TabsTrigger value="Fungicida" className="flex items-center gap-2 py-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-purple-200 border border-transparent transition-all"><ShieldAlert className="w-4 h-4" /> Fungicidas</TabsTrigger>
+            <TabsTrigger value="Insecticida" className="flex items-center gap-2 py-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200 border border-transparent transition-all"><Bug className="w-4 h-4" /> Insecticidas</TabsTrigger>
+            <TabsTrigger value="Acaricida" className="flex items-center gap-2 py-2 data-[state=active]:bg-rose-50 data-[state=active]:text-rose-700 data-[state=active]:border-rose-200 border border-transparent transition-all"><BugOff className="w-4 h-4" /> Acaricidas</TabsTrigger>
           </TabsList>
           <TabsContent value="Fertilizante"><SupplyTable data={categorizedSupplies.Fertilizante} /></TabsContent>
           <TabsContent value="Fungicida"><SupplyTable data={categorizedSupplies.Fungicida} /></TabsContent>
