@@ -1,11 +1,24 @@
-import React from 'react';
+"use client";
+
+import React, { useContext, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Leaf, BarChart3, MapPin } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
+import { AppDataContext } from '@/context/app-data-context.tsx';
 
 export default function LandingPage() {
+  const { currentUser } = useContext(AppDataContext);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (currentUser) {
+      router.push('/dashboard');
+    }
+  }, [currentUser, router]);
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Navbar */}
