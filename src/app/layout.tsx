@@ -18,13 +18,20 @@ export const metadata: Metadata = {
     siteName: 'AgroVision',
     images: [
       {
-        url: '/logo.png',
-        width: 512,
-        height: 512,
+        url: '/og-banner.png',
+        width: 1200,
+        height: 630,
+        alt: 'AgroVision - Gestión Agrícola'
       }
     ],
     locale: 'es_AR',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AgroVisionCo - Gestión Agrícola',
+    description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
+    images: ['/og-banner.png'],
   },
   manifest: '/manifest.json',
 };
