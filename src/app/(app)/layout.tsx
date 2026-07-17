@@ -19,6 +19,7 @@ import {
   SidebarTrigger,
   SidebarFooter,
   SidebarMenuBadge,
+  SidebarInset,
 } from '@/components/ui/sidebar';
 import { StrawberryIcon, NotebookPen } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -56,8 +57,12 @@ function UserMenu() {
   if(!currentUser) return null;
   
   return (
-      <Button variant="ghost" className="justify-start gap-2 w-full p-2 h-12" asChild>
+      <Button variant="ghost" className="flex items-center gap-2 p-1 md:gap-3 md:pl-5 md:pr-2 md:py-2 h-10 md:h-12 rounded-full md:border md:border-primary/40 hover:bg-muted" asChild>
           <Link href="/profile">
+            <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-foreground">{currentUser?.name || 'Usuario'}</p>
+                <p className="text-xs text-muted-foreground">{currentUser?.role || ''}</p>
+            </div>
             <Avatar className="h-8 w-8">
                 <AvatarImage 
                     src={currentUser?.avatar?.startsWith('http') 
@@ -67,10 +72,6 @@ function UserMenu() {
                 />
                 <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
-            <div className="text-left overflow-hidden flex-1">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{currentUser?.name || 'Usuario'}</p>
-                <p className="text-xs text-muted-foreground truncate">{currentUser?.email || ''}</p>
-            </div>
           </Link>
       </Button>
   )
@@ -146,31 +147,37 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const navItems = allNavItems.filter(item => item.roles.includes(currentUser.role));
 
   return (
-      <SidebarProvider>
-        <div className="flex min-h-screen">
-          <Sidebar collapsible='offcanvas'>
-            <SidebarHeader className="p-4">
-              <div className="flex items-center gap-2">
+      <SidebarProvider defaultOpen={false} className="flex-col">
+          <ConnectivityBanner />
+          {/* Top Header spans full width */}
+          <header className="flex h-16 shrink-0 items-center justify-between border-b bg-sidebar px-4 md:px-6 sticky top-0 z-40">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="shrink-0" />
                 <Link href="/dashboard" className="flex items-center gap-2">
-                  <Image src="/logo.png" alt="AgroVision Logo" width={32} height={32} />
-                  <span className="text-xl font-bold text-sidebar-foreground">AgroVision</span>
+                  <Image src="/logo.png" alt="AgroVision Logo" width={32} height={32} className="shrink-0" />
+                  <span className="text-xl font-bold hidden sm:inline-block">AgroVision</span>
                 </Link>
               </div>
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={pathname === item.href}
-                      tooltip={item.label}
-                    >
-                      <Link href={item.href}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
+              <UserMenu />
+          </header>
+
+          <div className="flex flex-1 w-full">
+            <Sidebar collapsible='icon' className="bg-background border-r !top-16 !h-[calc(100svh-4rem)]">
+              <SidebarContent className="pt-4">
+                <SidebarMenu>
+                  {navItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}
+                        tooltip={item.label}
+                        className="group-data-[collapsible=icon]:mx-auto"
+                      >
+                        <Link href={item.href} className="flex items-center gap-2 w-full group-data-[collapsible=icon]:!justify-center">
+                          <item.icon className="w-5 h-5 shrink-0" />
+                          <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
                     {item.href === '/tasks' && pendingTasksCount > 0 && (
                         <SidebarMenuBadge>{pendingTasksCount}</SidebarMenuBadge>
                     )}
@@ -178,27 +185,25 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 ))}
               </SidebarMenu>
             </SidebarContent>
-            <SidebarFooter className="p-4">
-                <UserMenu />
+            <SidebarFooter className="p-2">
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip="Cerrar Sesión" onClick={handleReset} className="group-data-[collapsible=icon]:mx-auto">
+                      <button className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 flex items-center gap-2">
+                        <LogOut className="w-5 h-5 shrink-0" />
+                        <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
+                      </button>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarFooter>
           </Sidebar>
-          <div className="flex-1 flex flex-col">
-            <ConnectivityBanner />
-            <header className="flex h-14 items-center gap-4 border-b bg-card/80 backdrop-blur-sm px-6 sticky top-0 z-30 md:hidden">
-                <SidebarTrigger>
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle Menu</span>
-                </SidebarTrigger>
-                <div className="flex items-center gap-2">
-                  <Image src="/logo.png" alt="AgroVision Logo" width={24} height={24} />
-                  <span className="text-lg font-bold">AgroVision</span>
-                </div>
-            </header>
-            <main className="flex-1 p-4 md:p-6 lg:p-8 bg-background">
+          <SidebarInset className="bg-muted/10">
+            <main className="flex-1 p-4 md:p-6 lg:p-8">
                 {children}
             </main>
+          </SidebarInset>
           </div>
-        </div>
       </SidebarProvider>
   );
 }
