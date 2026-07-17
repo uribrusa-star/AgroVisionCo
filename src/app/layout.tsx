@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovision.site'),
@@ -42,10 +43,17 @@ export default function RootLayout({
         <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='hsl(120 25% 35%)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z' /%3e%3cpath d='M12.5 15a6.2 6.2 0 0 0 4-10' /%3e%3cpath d='M11.5 9a6.2 6.2 0 0 1-4 10' /%3e%3c/svg%3e" />
       </head>
       <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
           <AppContextProvider>
             {children}
             <Toaster />
           </AppContextProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

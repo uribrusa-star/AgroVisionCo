@@ -21,16 +21,16 @@ export default function LandingPage() {
   }, [currentUser, router]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-background dark:bg-green-950">
       {/* Navbar */}
-      <header className="px-6 py-4 flex items-center justify-between border-b bg-white sticky top-0 z-50">
+      <header className="px-6 py-4 flex items-center justify-between border-b dark:border-green-800 bg-background/95 dark:bg-green-950/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="AgroVision Logo" width={32} height={32} />
-          <span className="text-xl font-bold text-green-800 font-headline">AgroVision</span>
+          <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVision</span>
         </div>
         <nav>
           <Link href="/login">
-            <Button variant="outline" className="text-green-700 border-green-600 hover:bg-green-50">
+            <Button variant="outline" className="text-green-700 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/50">
               Iniciar Sesión
             </Button>
           </Link>
@@ -73,13 +73,13 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24 bg-white sm:py-32">
+        <section className="py-24 bg-white dark:bg-green-950 sm:py-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl font-headline">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl font-headline">
                 Todo lo que necesitas para tu campo
               </h2>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
+              <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-green-200/80">
                 Lleva el control exacto de tus cosechas, monitorea la fenología de las plantas y toma decisiones informadas basadas en datos reales.
               </p>
             </div>
@@ -98,11 +98,11 @@ export default function LandingPage() {
                       <Image src="/bitacora-agronomo.png" alt="Bitácora" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
-                    <Leaf className="h-6 w-6 text-green-600 flex-none" />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <Leaf className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Bitácora Agronómica
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
                     <p className="flex-auto">Registra riegos, fertilizaciones, aplicaciones sanitarias y estados fenológicos en una interfaz fácil e intuitiva.</p>
                   </dd>
                 </div>
@@ -119,11 +119,11 @@ export default function LandingPage() {
                       <Image src="/informes-ia.png" alt="Informes con IA" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
-                    <BarChart3 className="h-6 w-6 text-green-600 flex-none" />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Informes con IA
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
                     <p className="flex-auto">Genera reportes técnicos PDF en segundos. Nuestro consultor impulsado por Google Gemini analiza tus datos y te da recomendaciones clave.</p>
                   </dd>
                 </div>
@@ -140,11 +140,11 @@ export default function LandingPage() {
                       <Image src="/map_mockup.png" alt="Mapas" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
-                    <MapPin className="h-6 w-6 text-green-600 flex-none" />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <MapPin className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Mapas Interactivos
                   </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
                     <p className="flex-auto">Visualiza el rendimiento de tus lotes en un mapa satelital. Descubre zonas de alta producción o posibles áreas de riesgo al instante.</p>
                   </dd>
                 </div>
@@ -154,35 +154,35 @@ export default function LandingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-24 bg-white px-6 lg:px-8 max-w-4xl mx-auto">
+        <section className="py-24 bg-white dark:bg-green-950 px-6 lg:px-8 max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Preguntas Frecuentes</h2>
-            <p className="mt-4 text-lg leading-8 text-gray-600">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl">Preguntas Frecuentes</h2>
+            <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-green-200/80">
               Resolvemos tus dudas principales para que puedas empezar a transformar tu campo hoy mismo.
             </p>
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Es difícil de usar AgroVision?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Es difícil de usar AgroVision?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
                 Para nada. Diseñamos AgroVision para que sea tan fácil e intuitivo como usar tus redes sociales o WhatsApp. Los botones son grandes, claros y todo está en español. No necesitas conocimientos avanzados de tecnología para sacarle todo el provecho.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Necesito internet en el campo para que funcione?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Necesito internet en el campo para que funcione?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
                 La aplicación está optimizada para cargar súper rápido incluso con muy mala señal (2G/3G). Si te quedas totalmente sin cobertura en medio de un lote, siempre puedes guardar tus registros en la libreta de tu celular y subirlos a AgroVision fácilmente ni bien regreses a un lugar con WiFi o mejor señal.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Mis datos de producción y mapas son privados?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Mis datos de producción y mapas son privados?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
                 Totalmente. La privacidad de tu establecimiento es nuestra prioridad absoluta. Toda tu información agrícola, mapas de rendimiento y datos financieros están encriptados y solo tú (y a quienes decidas invitar a tu espacio de trabajo) tienen acceso a ellos.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-4">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Puedo crear cuentas para mis empleados o mi ingeniero?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Puedo crear cuentas para mis empleados o mi ingeniero?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
                 ¡Sí! AgroVision es multi-usuario. Puedes invitar a tu ingeniero agrónomo con permisos especiales para que pueda ver la fenología y emitir diagnósticos, o crear cuentas limitadas para que tus encargados solo registren las cosechas diarias sin ver tus reportes financieros.
               </AccordionContent>
             </AccordionItem>
@@ -191,10 +191,10 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 mt-auto">
+      <footer className="bg-gray-50 dark:bg-green-950 border-t dark:border-green-900 mt-auto">
         <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
           <div className="mt-8 md:order-1 md:mt-0">
-            <p className="text-center text-xs leading-5 text-gray-500">
+            <p className="text-center text-xs leading-5 text-gray-500 dark:text-green-200/60">
               &copy; {new Date().getFullYear()} AgroVision. Todos los derechos reservados.
             </p>
           </div>

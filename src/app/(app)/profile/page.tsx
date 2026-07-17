@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -38,6 +39,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
+  const { theme, setTheme } = useTheme();
 
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
@@ -223,6 +225,36 @@ export default function ProfilePage() {
                             </div>
                         </form>
                     </Form>
+                </CardContent>
+            </Card>
+
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center gap-2">
+                    <div className="p-2 bg-indigo-500/10 rounded-full shrink-0"><Moon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /></div>
+                    <div>
+                        <CardTitle>Apariencia</CardTitle>
+                        <CardDescription>Personaliza cómo se ve AgroVision en este dispositivo.</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                        <Button 
+                            variant={theme === 'light' ? 'default' : 'outline'} 
+                            onClick={() => setTheme('light')}
+                            className="flex flex-col items-center gap-2 h-auto py-4"
+                        >
+                            <Sun className="h-6 w-6" />
+                            <span>Claro</span>
+                        </Button>
+                        <Button 
+                            variant={theme === 'dark' ? 'default' : 'outline'} 
+                            onClick={() => setTheme('dark')}
+                            className="flex flex-col items-center gap-2 h-auto py-4"
+                        >
+                            <Moon className="h-6 w-6" />
+                            <span>Oscuro</span>
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
 
