@@ -10,7 +10,8 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Calendar, FileDown, Info, Trash2 } from 'lucide-react';
+import { Calendar, FileDown, Info, Trash2, Package } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import type { PackagingLog } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -127,31 +128,44 @@ function PackagingHistoryComponent() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Historial de Embalaje</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-primary" />
+            Historial de Embalaje
+          </CardTitle>
           <CardDescription>Registro de trabajos realizados. Haz clic para ver detalles.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="max-h-[400px] overflow-auto border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Embalador</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={3}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
-                ) : sortedLogs.map(log => (
-                  <TableRow key={log.id} onClick={() => setSelectedLog(log)} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                    <TableCell>{new Date(log.date).toLocaleDateString('es-ES')}</TableCell>
-                    <TableCell className="font-medium">{log.packerName}</TableCell>
-                    <TableCell className="text-right font-bold">${log.payment.toLocaleString('es-AR')}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="flex flex-col gap-2 max-h-[400px] overflow-auto pr-2">
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
+            ) : sortedLogs.length === 0 ? (
+              <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay registros de embalaje.</div>
+            ) : (
+              sortedLogs.map(log => (
+                <div 
+                  key={log.id} 
+                  className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
+                  onClick={() => setSelectedLog(log)}
+                >
+                  <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                      <div className="shrink-0 flex items-center justify-center">
+                          <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                              <Package className="h-5 w-5" />
+                          </Badge>
+                      </div>
+                      <div className="min-w-0 flex flex-col justify-center flex-1">
+                          <div className="flex items-center gap-2 mb-0.5">
+                              <span className="font-semibold text-sm truncate leading-none">{log.packerName}</span>
+                              <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(log.date).toLocaleDateString('es-AR')}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
+                              Pago total: <span className="font-bold text-foreground">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                          </p>
+                      </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

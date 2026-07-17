@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/page-header";
-import { BarChart as BarChartIcon, CalendarDays, DollarSign, Trophy, Weight } from "lucide-react";
+import { BarChart as BarChartIcon, CalendarDays, DollarSign, Trophy, Weight, Tractor } from "lucide-react";
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { Harvest, CollectorPaymentLog, PackagingLog, CulturalPracticeLog } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -166,43 +166,42 @@ export default function DashboardPage() {
         <div className="md:col-span-2 xl:col-span-2">
             <Card>
             <CardHeader>
-                <CardTitle>Cosechas Recientes</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Tractor className="w-5 h-5 text-primary" />
+                  Cosechas Recientes
+                </CardTitle>
                 <CardDescription>Una lista de las entradas de cosecha más recientes.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="max-h-[300px] overflow-auto">
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead>Lote</TableHead>
-                    <TableHead>Recolector</TableHead>
-                    <TableHead className="text-right">Kilogramos</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
+                <div className="flex flex-col gap-2 max-h-[300px] overflow-auto pr-2">
                     {loading && Array.from({ length: 3 }).map((_,i) => (
-                      <TableRow key={i}>
-                          <TableCell colSpan={4}><Skeleton className="h-10 w-full" /></TableCell>
-                      </TableRow>
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
                     ))}
                     {!loading && sortedHarvests.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={4} className="text-center">No hay cosechas recientes.</TableCell>
-                        </TableRow>
+                        <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay cosechas recientes.</div>
                     )}
                     {!loading && sortedHarvests.slice(0, 5).map((harvest) => (
-                    <TableRow key={harvest.id}>
-                        <TableCell>
-                        <Badge variant="outline">{harvest.batchNumber}</Badge>
-                        </TableCell>
-                        <TableCell>{harvest.collector.name}</TableCell>
-                        <TableCell className="text-right font-medium">{harvest.kilograms.toLocaleString('es-ES')} kg</TableCell>
-                        <TableCell className="text-right text-muted-foreground">{new Date(harvest.date).toLocaleDateString('es-ES')}</TableCell>
-                    </TableRow>
+                      <div key={harvest.id} className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                              <div className="shrink-0 flex items-center justify-center">
+                                  <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                      <Tractor className="h-5 w-5" />
+                                  </Badge>
+                              </div>
+                              <div className="min-w-0 flex flex-col justify-center flex-1">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                      <span className="font-semibold text-sm truncate leading-none">{harvest.collector.name}</span>
+                                      <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(harvest.date).toLocaleDateString('es-AR')}</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
+                                      Lote: <Badge variant="outline" className="text-[10px] px-1 py-0">{harvest.batchNumber}</Badge>
+                                      <span className="mx-1.5 opacity-50">•</span>
+                                      Kilos: <span className="font-bold text-foreground">{harvest.kilograms.toLocaleString('es-ES')} kg</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
                     ))}
-                </TableBody>
-                </Table>
                 </div>
             </CardContent>
             </Card>
