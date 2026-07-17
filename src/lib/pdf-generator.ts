@@ -845,10 +845,7 @@ export const generateProducerHarvestReportPDF = (
   doc.text('RESUMEN EJECUTIVO (IA)', 15, yPos);
   yPos += 8;
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const executiveLines = doc.splitTextToSize(reportData.executiveSummary, pageWidth - 30);
-  const executiveHeight = (executiveLines.length * 5) + 10;
+
 
   doc.setFillColor(lightBlue[0], lightBlue[1], lightBlue[2]);
   doc.roundedRect(15, yPos, pageWidth - 30, executiveHeight, 2, 2, 'F');
@@ -901,10 +898,7 @@ export const generateProducerHarvestReportPDF = (
   doc.text('ANÁLISIS E INTERPRETACIÓN (IA)', 15, yPos);
   yPos += 8;
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const analysisLines = doc.splitTextToSize(reportData.analysisAndInterpretation, pageWidth - 30);
-  const analysisHeight = (analysisLines.length * 5) + 10;
+
 
   doc.setFillColor(249, 250, 251);
   doc.roundedRect(15, yPos, pageWidth - 30, analysisHeight, 2, 2, 'F');
@@ -1002,10 +996,7 @@ export const generateProducerHarvestReportPDF = (
   doc.text('CONCLUSIONES Y RECOMENDACIONES (IA)', 15, yPos);
   yPos += 10;
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const recLines = doc.splitTextToSize(reportData.conclusionsAndRecommendations, pageWidth - 30);
-  const recHeight = (recLines.length * 5) + 10;
+
 
   doc.setFillColor(lightBlue[0], lightBlue[1], lightBlue[2]);
   doc.setDrawColor(mediumBlue[0], mediumBlue[1], mediumBlue[2]);
