@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Leaf, BarChart3, MapPin } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 
 export default function LandingPage() {
   return (
@@ -72,9 +73,17 @@ export default function LandingPage() {
             <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
               <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
                 <div className="flex flex-col items-start">
-                  <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full">
-                     <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full hover:scale-105 transition-transform duration-500" />
-                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Bitácora Agronómica</DialogTitle>
+                      <Image src="/bitacora-agronomo.png" alt="Bitácora" width={1920} height={1080} unoptimized={true} className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
                     <Leaf className="h-6 w-6 text-green-600 flex-none" />
                     Bitácora Agronómica
@@ -98,9 +107,17 @@ export default function LandingPage() {
                 </div>
 
                 <div className="flex flex-col items-start">
-                  <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full">
-                     <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full hover:scale-105 transition-transform duration-500" />
-                  </div>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Mapas Interactivos</DialogTitle>
+                      <Image src="/map_mockup.png" alt="Mapas" width={1920} height={1080} unoptimized={true} className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
                     <MapPin className="h-6 w-6 text-green-600 flex-none" />
                     Mapas Interactivos
