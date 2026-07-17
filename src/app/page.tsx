@@ -76,7 +76,7 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover aspect-video w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -97,7 +97,7 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/informes-ia.png" alt="Informes con IA" width={800} height={500} unoptimized={true} className="object-cover aspect-video w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/informes-ia.png" alt="Informes con IA" width={800} height={500} unoptimized={true} className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -118,7 +118,7 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} unoptimized={true} className="object-cover aspect-video w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} unoptimized={true} className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
