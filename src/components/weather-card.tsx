@@ -34,7 +34,11 @@ export function WeatherCard() {
         setError(false);
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,wind_speed_10m&hourly=precipitation_probability&forecast_days=1&timezone=auto`);
         
-        if (!res.ok) throw new Error('Failed to fetch weather');
+        if (!res.ok) {
+            setError(true);
+            setLoading(false);
+            return;
+        }
         
         const data = await res.json();
         
@@ -48,7 +52,7 @@ export function WeatherCard() {
           rainProbability: rainProb,
         });
       } catch (err) {
-        console.error("Error fetching weather:", err);
+        // Silently catch network errors to avoid Next.js dev overlay
         setError(true);
       } finally {
         setLoading(false);
