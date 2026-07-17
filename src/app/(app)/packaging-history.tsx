@@ -153,7 +153,7 @@ function PackagingHistoryComponent() {
             {!loading && sortedLogs.map(log => (
               <div 
                 key={log.id} 
-                className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
+                className="shrink-0 group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
                 onClick={() => setSelectedLog(log)}
               >
                 <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">

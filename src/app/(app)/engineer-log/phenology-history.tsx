@@ -172,7 +172,7 @@ export function PhenologyHistory() {
                 {!loading && displayedLogs.map((log) => {
                     const stateInfo = getStateInfo(log.developmentState);
                     return (
-                        <div key={log.id} className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden" onClick={() => handleDetails(log)}>
+                        <div key={log.id} className="shrink-0 group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden" onClick={() => handleDetails(log)}>
                             <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
                                 <div className="shrink-0 flex items-center justify-center">
                                     <Badge variant={stateInfo.variant as any} className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">

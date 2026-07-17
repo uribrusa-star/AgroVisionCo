@@ -181,7 +181,7 @@ export default function DashboardPage() {
                         <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay cosechas recientes.</div>
                     )}
                     {!loading && sortedHarvests.slice(0, 5).map((harvest) => (
-                      <div key={harvest.id} className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden">
+                      <div key={harvest.id} className="shrink-0 group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden">
                           <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
                               <div className="shrink-0 flex items-center justify-center">
                                   <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
