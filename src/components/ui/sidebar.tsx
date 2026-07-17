@@ -207,7 +207,7 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <SheetHeader className="p-2">
+            <SheetHeader className="sr-only">
                 <SheetTitle className="sr-only">Navegación Principal</SheetTitle>
             </SheetHeader>
             <div className="flex h-full w-full flex-col">{children}</div>

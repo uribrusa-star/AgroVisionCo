@@ -173,8 +173,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                         tooltip={item.label}
                         className="group-data-[collapsible=icon]:mx-auto"
                       >
-                        <Link href={item.href} className="flex items-center gap-2 w-full group-data-[collapsible=icon]:!justify-center">
-                          <item.icon className="w-5 h-5 shrink-0" />
+                        <Link href={item.href} className="flex items-center gap-2 w-full font-medium group-data-[collapsible=icon]:!justify-center">
+                          <item.icon className="w-5 h-5 shrink-0 text-primary" strokeWidth={2.5} />
                           <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
