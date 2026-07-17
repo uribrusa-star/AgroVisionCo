@@ -73,7 +73,7 @@ export default function LandingPage() {
               <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
                 <div className="flex flex-col items-start">
                   <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full">
-                     <Image src="/dashboard_mockup.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full hover:scale-105 transition-transform duration-500" />
+                     <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover h-56 w-full hover:scale-105 transition-transform duration-500" />
                   </div>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
                     <Leaf className="h-6 w-6 text-green-600 flex-none" />
