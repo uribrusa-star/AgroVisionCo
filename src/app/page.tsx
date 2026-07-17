@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Leaf, BarChart3, MapPin } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 
 export default function LandingPage() {
@@ -150,6 +151,42 @@ export default function LandingPage() {
               </dl>
             </div>
           </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="py-24 bg-white px-6 lg:px-8 max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Preguntas Frecuentes</h2>
+            <p className="mt-4 text-lg leading-8 text-gray-600">
+              Resolvemos tus dudas principales para que puedas empezar a transformar tu campo hoy mismo.
+            </p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Es difícil de usar AgroVision?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600">
+                Para nada. Diseñamos AgroVision para que sea tan fácil e intuitivo como usar tus redes sociales o WhatsApp. Los botones son grandes, claros y todo está en español. No necesitas conocimientos avanzados de tecnología para sacarle todo el provecho.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-2">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Necesito internet en el campo para que funcione?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600">
+                La aplicación está optimizada para cargar súper rápido incluso con muy mala señal (2G/3G). Si te quedas totalmente sin cobertura en medio de un lote, siempre puedes guardar tus registros en la libreta de tu celular y subirlos a AgroVision fácilmente ni bien regreses a un lugar con WiFi o mejor señal.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-3">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Mis datos de producción y mapas son privados?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600">
+                Totalmente. La privacidad de tu establecimiento es nuestra prioridad absoluta. Toda tu información agrícola, mapas de rendimiento y datos financieros están encriptados y solo tú (y a quienes decidas invitar a tu espacio de trabajo) tienen acceso a ellos.
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="item-4">
+              <AccordionTrigger className="text-lg font-semibold text-gray-800">¿Puedo crear cuentas para mis empleados o mi ingeniero?</AccordionTrigger>
+              <AccordionContent className="text-base text-gray-600">
+                ¡Sí! AgroVision es multi-usuario. Puedes invitar a tu ingeniero agrónomo con permisos especiales para que pueda ver la fenología y emitir diagnósticos, o crear cuentas limitadas para que tus encargados solo registren las cosechas diarias sin ver tus reportes financieros.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </section>
       </main>
 
