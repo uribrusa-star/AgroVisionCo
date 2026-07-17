@@ -100,6 +100,8 @@ export type AgronomistLog = {
     latitude?: number;
     longitude?: number;
     phiDays?: number; // Período de carencia en días (PHI)
+    resolved?: boolean;
+    resolvedAt?: string;
 }
 
 export type PhenologyLog = {

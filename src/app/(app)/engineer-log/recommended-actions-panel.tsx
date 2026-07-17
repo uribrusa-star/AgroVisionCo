@@ -6,21 +6,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { getProtocolForSanitaryLog, TreatmentProtocol } from '@/lib/treatment-protocols';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Beaker, ClipboardCheck, Clock, FlaskConical, Info, Stethoscope } from 'lucide-react';
+import { AlertCircle, Beaker, ClipboardCheck, Clock, FlaskConical, Info, Stethoscope, CheckCircle2 } from 'lucide-react';
 import { format, isAfter, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export function RecommendedActionsPanel() {
-    const { agronomistLogs, loading } = useContext(AppDataContext);
+    const { agronomistLogs, editAgronomistLog, loading } = useContext(AppDataContext);
+    const { toast } = useToast();
 
     const recommendations = useMemo(() => {
         if (loading || !agronomistLogs) return [];
 
         const thirtyDaysAgo = subDays(new Date(), 30);
         
-        // Filter recent sanitary logs
+        // Filter recent sanitary logs that are not resolved
         const recentSanitaryLogs = agronomistLogs.filter(log => 
             log.type === 'Sanidad' && 
+            !log.resolved &&
             isAfter(new Date(log.date), thirtyDaysAgo)
         );
 
@@ -46,6 +50,30 @@ export function RecommendedActionsPanel() {
 
         return actions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [agronomistLogs, loading]);
+
+    const handleResolve = async (logId: string) => {
+        const log = agronomistLogs.find(l => l.id === logId);
+        if (log && editAgronomistLog) {
+            try {
+                await editAgronomistLog({
+                    ...log,
+                    resolved: true,
+                    resolvedAt: new Date().toISOString()
+                });
+                toast({
+                    title: "Protocolo Aplicado",
+                    description: "El registro sanitario ha sido marcado como solucionado.",
+                });
+            } catch (error) {
+                console.error("Error resolving log:", error);
+                toast({
+                    title: "Error",
+                    description: "No se pudo marcar como aplicado.",
+                    variant: "destructive"
+                });
+            }
+        }
+    };
 
     if (loading) return null;
 
@@ -113,6 +141,17 @@ export function RecommendedActionsPanel() {
                             <div className="mt-3 bg-muted/50 p-2 rounded text-[11px] border border-border/50">
                                 <p className="font-bold mb-1 underline underline-offset-2">Recomendación del Experto:</p>
                                 <p className="italic text-muted-foreground">"{item.protocol.notes}"</p>
+                            </div>
+                            <div className="mt-4 flex justify-end">
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="gap-2 text-green-700 hover:text-green-800 hover:bg-green-50 border-green-200 dark:text-green-400 dark:hover:bg-green-950 dark:border-green-800"
+                                    onClick={() => handleResolve(item.logId)}
+                                >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Marcar como Solucionado
+                                </Button>
                             </div>
                         </div>
                     </div>
