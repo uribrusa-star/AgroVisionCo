@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Bug, Hand, Leaf, SprayCan, Wind, Thermometer, Trash2, PlusCircle, Image as ImageIcon, MapPin, Navigation, Edit } from 'lucide-react';
+import { MoreHorizontal, Bug, Hand, Leaf, SprayCan, Wind, Thermometer, Trash2, PlusCircle, Image as ImageIcon, MapPin, Navigation, Edit, ClipboardList } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { AgronomistLog, AgronomistLogType, ImageWithHint } from '@/lib/types';
@@ -207,102 +207,86 @@ export function ApplicationHistory() {
     <>
       <Card>
         <CardHeader>
-            <CardTitle>Historial de Actividades</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-primary" />
+                Historial de Actividades
+            </CardTitle>
             <CardDescription>Registro de todas las aplicaciones, labores, controles y observaciones realizadas en el campo.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Lote</TableHead>
-                    <TableHead>Detalle</TableHead>
-                    <TableHead>Imágenes</TableHead>
-                    {canManage && <TableHead><span className="sr-only">Acciones</span></TableHead>}
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {loading && (
-                  <TableRow>
-                    <TableCell colSpan={canManage ? 5: 4}>
-                      <Skeleton className="h-12 w-full" />
-                    </TableCell>
-                  </TableRow>
-                )}
+            <div className="flex flex-col gap-2">
+                {loading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
                 {!loading && agronomistLogs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={canManage ? 5: 4} className="text-center">No hay registros de actividades.</TableCell>
-                  </TableRow>
+                    <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">
+                        No hay registros de actividades.
+                    </div>
                 )}
                 {!loading && displayedLogs.map((log) => {
                     const typeInfo = getTypeInfo(log.type);
                     return (
-                    <TableRow key={log.id}>
-                        <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                          <Badge variant={typeInfo.variant as any} className="gap-1">
-                            <typeInfo.icon className="h-3 w-3" />
-                            {typeInfo.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                          {log.batchIds && log.batchIds.length > 0 
-                            ? <div className="flex flex-wrap gap-1">{log.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)}</div>
-                            : <span className="text-xs text-muted-foreground">General</span>}
-                        </TableCell>
-                        <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                          <p className="font-medium">
-                            {log.supplies && log.supplies.length > 0 
-                              ? log.supplies.map(s => s.name).join(', ') 
-                              : (log.product || '-')}
-                          </p>
-                          <p className="text-sm text-muted-foreground max-w-xs truncate">{log.notes}</p>
-                        </TableCell>
-                        <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                          {log.images && log.images.length > 0 ? (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                                <ImageIcon className="h-4 w-4" />
-                                <span>{log.images.length}</span>
+                        <div key={log.id} className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden" onClick={() => handleDetails(log)}>
+                            <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                                <div className="shrink-0 flex items-center justify-center">
+                                    <Badge variant={typeInfo.variant as any} className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                        <typeInfo.icon className="h-5 w-5" />
+                                    </Badge>
+                                </div>
+                                <div className="min-w-0 flex flex-col justify-center flex-1 pr-4">
+                                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="font-semibold text-sm truncate leading-none">{typeInfo.label}</span>
+                                            <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(log.date).toLocaleDateString('es-AR')}</span>
+                                            {log.images && log.images.length > 0 && (
+                                                <ImageIcon className="h-3 w-3 text-blue-500 shrink-0 ml-1" />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
+                                        Lotes: {log.batchIds && log.batchIds.length > 0 ? log.batchIds.join(', ') : 'General'} 
+                                        <span className="mx-1.5 opacity-50">•</span>
+                                        {log.supplies && log.supplies.length > 0 ? log.supplies.map(s => s.name).join(', ') : (log.product || '-')}
+                                    </p>
+                                </div>
                             </div>
-                          ) : null}
-                        </TableCell>
-                        {canManage && (
-                            <TableCell>
-                            <AlertDialog>
-                                <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending}>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                    <DropdownMenuItem onSelect={() => handleDetails(log)}>Ver Detalles</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleEdit(log)}>Editar</DropdownMenuItem>
-                                    <AlertDialogTrigger asChild>
-                                      <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                </DropdownMenuContent>
-                                </DropdownMenu>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Esta acción no se puede deshacer. Esto eliminará permanentemente el registro de la aplicación.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(log.id)}>Continuar</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                            </TableCell>
-                        )}
-                    </TableRow>
-                )})}
-                </TableBody>
-            </Table>
+                            
+                            {canManage && (
+                                <div className="shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+                                    <AlertDialog>
+                                        <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button aria-haspopup="true" size="icon" variant="ghost" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" disabled={isPending}>
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                            <DropdownMenuItem onSelect={() => handleDetails(log)}>Ver Detalles</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleEdit(log)}>Editar</DropdownMenuItem>
+                                            <AlertDialogTrigger asChild>
+                                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                        </DropdownMenuContent>
+                                        </DropdownMenu>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el registro de la aplicación.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(log.id)}>Continuar</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
             {!loading && sortedLogs.length > 5 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
                     <span className="text-xs text-muted-foreground font-medium">

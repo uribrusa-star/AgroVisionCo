@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Flower, Grape, Sun, Trash2, PlusCircle, Image as ImageIcon, Edit } from 'lucide-react';
+import { MoreHorizontal, Flower, Grape, Sun, Trash2, PlusCircle, Image as ImageIcon, Edit, Sprout, Leaf, Wind, Apple, Palette, Store } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { PhenologyLog, ImageWithHint } from '@/lib/types';
@@ -135,9 +135,15 @@ export function PhenologyHistory() {
 
   const getStateInfo = (state: PhenologyLog['developmentState']) => {
     switch (state) {
-      case 'Floración': return { variant: 'default', icon: Flower, label: 'Floración' };
-      case 'Fructificación': return { variant: 'secondary', icon: Grape, label: 'Fructificación' };
-      case 'Maduración': return { variant: 'destructive', icon: Sun, label: 'Maduración' };
+      case 'Plantación': return { variant: 'secondary', icon: Sprout, label: state };
+      case 'Desarrollo foliar': return { variant: 'secondary', icon: Leaf, label: state };
+      case 'Floración': return { variant: 'default', icon: Flower, label: state };
+      case 'Caida de petalos': return { variant: 'outline', icon: Wind, label: state };
+      case 'Fase de fruto verde': return { variant: 'secondary', icon: Apple, label: state };
+      case 'Fructificación': return { variant: 'secondary', icon: Grape, label: state };
+      case 'Cambio de color (Vire)': return { variant: 'default', icon: Palette, label: state };
+      case 'Maduracion comercial': return { variant: 'default', icon: Store, label: state };
+      case 'Maduración': return { variant: 'destructive', icon: Sun, label: state };
       default: return { variant: 'outline', icon: MoreHorizontal, label: state };
     }
   }
@@ -149,103 +155,86 @@ export function PhenologyHistory() {
     <>
       <Card>
         <CardHeader>
-            <CardTitle>Historial de Fenología</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+                <Leaf className="w-5 h-5 text-primary" />
+                Historial de Fenología
+            </CardTitle>
             <CardDescription>Registro de todas las observaciones fenológicas del cultivo.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Lote</TableHead>
-                    <TableHead>Conteos</TableHead>
-                    <TableHead>Notas</TableHead>
-                    <TableHead>Imágenes</TableHead>
-                    {canManage && <TableHead><span className="sr-only">Acciones</span></TableHead>}
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {loading && (
-                  <TableRow>
-                    <TableCell colSpan={canManage ? 6: 5}>
-                      <Skeleton className="h-12 w-full" />
-                    </TableCell>
-                  </TableRow>
-                )}
+            <div className="flex flex-col gap-2">
+                {loading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
                 {!loading && phenologyLogs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={canManage ? 6: 5} className="text-center">No hay registros de fenología.</TableCell>
-                  </TableRow>
+                    <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">
+                        No hay registros de fenología.
+                    </div>
                 )}
                 {!loading && displayedLogs.map((log) => {
                     const stateInfo = getStateInfo(log.developmentState);
                     return (
-                        <TableRow key={log.id}>
-                            <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                                <Badge variant={stateInfo.variant as any} className="gap-1">
-                                    <stateInfo.icon className="h-3 w-3" />
-                                    {stateInfo.label}
-                                </Badge>
-                            </TableCell>
-                             <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                                {log.batchIds && log.batchIds.length > 0 
-                                  ? <div className="flex flex-wrap gap-1">{log.batchIds.map(id => <Badge key={id} variant="outline">{id}</Badge>)}</div>
-                                  : <span className="text-xs text-muted-foreground">General</span>}
-                            </TableCell>
-                            <TableCell onClick={() => handleDetails(log)} className="text-xs cursor-pointer">
-                                <p>Flores: {log.flowerCount ?? '-'}</p>
-                                <p>Frutos: {log.fruitCount ?? '-'}</p>
-                            </TableCell>
-                            <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                              <p className="text-sm text-muted-foreground max-w-xs truncate">{log.notes}</p>
-                            </TableCell>
-                            <TableCell onClick={() => handleDetails(log)} className="cursor-pointer">
-                            {log.images && log.images.length > 0 ? (
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                    <ImageIcon className="h-4 w-4" />
-                                    <span>{log.images.length}</span>
+                        <div key={log.id} className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden" onClick={() => handleDetails(log)}>
+                            <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                                <div className="shrink-0 flex items-center justify-center">
+                                    <Badge variant={stateInfo.variant as any} className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                        <stateInfo.icon className="h-5 w-5" />
+                                    </Badge>
                                 </div>
-                            ) : null}
-                            </TableCell>
+                                <div className="min-w-0 flex flex-col justify-center flex-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="font-semibold text-sm truncate leading-none">{stateInfo.label}</span>
+                                        <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(log.date).toLocaleDateString('es-AR')}</span>
+                                        {log.images && log.images.length > 0 && (
+                                            <ImageIcon className="h-3 w-3 text-blue-500 shrink-0 ml-1" />
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
+                                        Lotes: {log.batchIds && log.batchIds.length > 0 ? log.batchIds.join(', ') : 'General'} 
+                                        <span className="mx-1.5 opacity-50">•</span>
+                                        Flores: {log.flowerCount ?? '-'} 
+                                        <span className="mx-1.5 opacity-50">•</span>
+                                        Frutos: {log.fruitCount ?? '-'}
+                                    </p>
+                                </div>
+                            </div>
+                            
                             {canManage && (
-                                <TableCell>
-                                <AlertDialog>
-                                    <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending}>
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => handleDetails(log)}>Ver Detalles</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => handleEdit(log)}>Editar</DropdownMenuItem>
-                                        <AlertDialogTrigger asChild>
-                                          <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
-                                        </AlertDialogTrigger>
-                                    </DropdownMenuContent>
-                                    </DropdownMenu>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Esta acción no se puede deshacer. Esto eliminará permanentemente el registro de fenología.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleDelete(log.id)}>Continuar</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                                </TableCell>
+                                <div className="shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+                                    <AlertDialog>
+                                        <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button aria-haspopup="true" size="icon" variant="ghost" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" disabled={isPending}>
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Toggle menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                            <DropdownMenuItem onSelect={() => handleDetails(log)}>Ver Detalles</DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleEdit(log)}>Editar</DropdownMenuItem>
+                                            <AlertDialogTrigger asChild>
+                                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                        </DropdownMenuContent>
+                                        </DropdownMenu>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el registro de fenología.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(log.id)}>Continuar</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
                             )}
-                        </TableRow>
+                        </div>
                     )
                 })}
-                </TableBody>
-            </Table>
+            </div>
             {!loading && sortedLogs.length > 5 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t mt-4">
                     <span className="text-xs text-muted-foreground font-medium">

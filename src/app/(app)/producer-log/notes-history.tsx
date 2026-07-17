@@ -14,7 +14,7 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import type { ProducerLog } from '@/lib/types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Calendar, AlertCircle, NotebookText, Trash2 } from 'lucide-react';
+import { Calendar, AlertCircle, NotebookText, Trash2, Image as ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -107,7 +107,10 @@ export function NotesHistory() {
     <>
       <Card>
         <CardHeader>
-            <CardTitle>Historial de Observaciones</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+                <NotebookText className="w-5 h-5 text-primary" />
+                Historial de Observaciones
+            </CardTitle>
             <CardDescription>Sus últimas notas y registros de actividad omitida.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -119,27 +122,34 @@ export function NotesHistory() {
                 </div>
               )}
               {!loading && (
-                <div className="space-y-4">
+                <div className="flex flex-col gap-2 pr-4">
                   {sortedLogs.map(log => {
-                    const { icon: Icon, color } = getLogTypeInfo(log);
+                    const { icon: Icon, color, title } = getLogTypeInfo(log);
                     return (
                         <div 
-                        key={log.id} 
-                        className="p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => setSelectedLog(log)}
+                          key={log.id} 
+                          className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
+                          onClick={() => setSelectedLog(log)}
                         >
-                        <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm text-muted-foreground">
-                                {new Date(log.date).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
-                            </p>
-                            {log.type === 'Actividad Omitida' && (
-                                <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
-                                    <AlertCircle className="h-3 w-3 mr-1"/>
-                                    Actividad Omitida
-                                </Badge>
-                            )}
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap truncate">{log.omittedActivity ? `Actividad Omitida: ${log.omittedActivity}. ` : ''}{log.notes}</p>
+                          <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                              <div className="shrink-0 flex items-center justify-center">
+                                  <Badge variant={log.type === 'Actividad Omitida' ? 'destructive' : 'secondary'} className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                      <Icon className="h-5 w-5" />
+                                  </Badge>
+                              </div>
+                              <div className="min-w-0 flex flex-col justify-center flex-1">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                      <span className="font-semibold text-sm truncate leading-none">{title}</span>
+                                      <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(log.date).toLocaleDateString('es-AR')}</span>
+                                      {log.images && log.images.length > 0 && (
+                                          <ImageIcon className="h-3 w-3 text-blue-500 shrink-0 ml-1" />
+                                      )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
+                                      {log.omittedActivity ? `${log.omittedActivity} - ` : ''}{log.notes}
+                                  </p>
+                              </div>
+                          </div>
                         </div>
                     )
                   })}
