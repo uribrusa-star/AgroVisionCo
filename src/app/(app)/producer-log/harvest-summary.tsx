@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { MonthlyHarvestChart } from '@/app/(app)/monthly-harvest-chart';
 import { BatchYieldChart } from '@/app/(app)/engineer-log/batch-yield-chart';
 import { CostDistributionChart } from '../dashboard/cost-distribution-chart';
+import { ProfitabilityTrendChart } from './profitability-trend-chart';
+import { IncomeChart } from './income-chart';
 
 
 export function HarvestSummary() {
@@ -26,6 +28,8 @@ export function HarvestSummary() {
   const monthlyChartRef = useRef<HTMLDivElement>(null);
   const costChartRef = useRef<HTMLDivElement>(null);
   const batchYieldChartRef = useRef<HTMLDivElement>(null);
+  const profitabilityChartRef = useRef<HTMLDivElement>(null);
+  const incomeChartRef = useRef<HTMLDivElement>(null);
 
   const totalProduction = useMemo(() => harvests.reduce((acc, h) => acc + h.kilograms, 0), [harvests]);
   
@@ -104,10 +108,12 @@ export function HarvestSummary() {
             return canvas.toDataURL('image/png');
         };
 
-        const [monthlyHarvestImg, costDistributionImg, batchYieldImg] = await Promise.all([
+        const [monthlyHarvestImg, costDistributionImg, batchYieldImg, profitabilityImg, incomeImg] = await Promise.all([
             captureChart(monthlyChartRef),
             captureChart(costChartRef),
-            captureChart(batchYieldChartRef)
+            captureChart(batchYieldChartRef),
+            captureChart(profitabilityChartRef),
+            captureChart(incomeChartRef)
         ]);
 
         const formattedCostByCategory = Object.fromEntries(
@@ -144,7 +150,9 @@ export function HarvestSummary() {
             {
                 monthlyHarvest: monthlyHarvestImg,
                 costDistribution: costDistributionImg,
-                batchYield: batchYieldImg
+                batchYield: batchYieldImg,
+                profitabilityTrend: profitabilityImg,
+                monthlyIncome: incomeImg
             },
             logoPngDataUri
         );
@@ -186,6 +194,12 @@ export function HarvestSummary() {
                </div>
                <div ref={batchYieldChartRef} className="p-4 bg-card w-[450px]">
                     <BatchYieldChart />
+               </div>
+               <div ref={profitabilityChartRef} className="p-4 bg-card w-[450px]">
+                    <ProfitabilityTrendChart />
+               </div>
+               <div ref={incomeChartRef} className="p-4 bg-card w-[450px]">
+                    <IncomeChart transactions={transactions} />
                </div>
             </div>
         </CardContent>

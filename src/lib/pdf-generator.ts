@@ -723,6 +723,8 @@ export const generateProducerHarvestReportPDF = (
     monthlyHarvest: string;
     costDistribution: string;
     batchYield: string;
+    profitabilityTrend: string;
+    monthlyIncome: string;
   },
   logoDataUri?: string
 ) => {
@@ -830,8 +832,8 @@ export const generateProducerHarvestReportPDF = (
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  const executiveLines = doc.splitTextToSize(reportData.executiveSummary, pageWidth - 30);
-  const executiveHeight = (executiveLines.length * 5) + 10;
+  const executiveLines = doc.splitTextToSize(reportData.executiveSummary, pageWidth - 40);
+  const executiveHeight = (executiveLines.length * 4.2) + 8;
 
   if (yPos + 8 + executiveHeight > pageHeight - 20) {
     doc.addPage();
@@ -884,8 +886,8 @@ export const generateProducerHarvestReportPDF = (
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  const analysisLines = doc.splitTextToSize(reportData.analysisAndInterpretation, pageWidth - 30);
-  const analysisHeight = (analysisLines.length * 5) + 10;
+  const analysisLines = doc.splitTextToSize(reportData.analysisAndInterpretation, pageWidth - 40);
+  const analysisHeight = (analysisLines.length * 4.2) + 8;
 
   // --- ANÁLISIS E INTERPRETACIÓN ---
   if (yPos + 8 + analysisHeight > pageHeight - 20) {
@@ -925,38 +927,71 @@ export const generateProducerHarvestReportPDF = (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(100, 100, 100);
-  const noteLines = doc.splitTextToSize('Nota: Los siguientes gráficos ilustran la evolución mensual de la cosecha, el rendimiento comparativo por lote y la distribución de los costos operativos.', pageWidth - 30);
+  const noteLines = doc.splitTextToSize('Nota: Los siguientes gráficos ilustran la evolución de la cosecha, el rendimiento por lote, la tendencia de rentabilidad, los ingresos mensuales y la distribución de costos.', pageWidth - 30);
   doc.text(noteLines, 15, yPos);
   yPos += (noteLines.length * 5) + 5;
 
-  const chartImgWidth = pageWidth - 60;
-  const chartImgHeight = 80;
+  const renderChart = (title: string, imgData: string, description: string) => {
+    const props = doc.getImageProperties(imgData);
+    const scaledHeight = (props.height * 170) / props.width;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const descLines = doc.splitTextToSize(description, 170);
+    const textHeight = descLines.length * 5 + 5;
+    
+    if (yPos + scaledHeight + textHeight + 20 > pageHeight - 20) {
+      doc.addPage();
+      addHeader();
+      yPos = 35;
+    }
 
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 100);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
+    doc.text(title, 20, yPos);
+    yPos += 5;
+    
+    doc.addImage(imgData, 'PNG', 20, yPos, 170, scaledHeight);
+    yPos += scaledHeight + 10;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+    doc.text(descLines, 20, yPos);
+    yPos += textHeight + 10;
+  };
 
-  // Chart 1
-  if (yPos + chartImgHeight + 15 > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 35; }
-  doc.addImage(charts.monthlyHarvest, 'PNG', 30, yPos, chartImgWidth, chartImgHeight);
-  const harvestDesc = doc.splitTextToSize(`La evolución de cosecha refleja los picos de producción mensuales. Se registraron ${stats.totalProduction.toLocaleString('es-AR')} kg totales en la campaña.`, chartImgWidth);
-  doc.text(harvestDesc, 30, yPos + chartImgHeight + 5);
-  yPos += chartImgHeight + (harvestDesc.length * 5) + 5;
+  renderChart(
+    'Evolución de Cosecha Mensual',
+    charts.monthlyHarvest,
+    `La evolución de cosecha refleja los picos de producción mensuales. Se registraron ${stats.totalProduction.toLocaleString('es-AR')} kg totales en la campaña.`
+  );
 
-  // Chart 2
-  if (yPos + chartImgHeight + 15 > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 35; }
-  doc.addImage(charts.batchYield, 'PNG', 30, yPos, chartImgWidth, chartImgHeight);
-  const yieldDesc = doc.splitTextToSize(`Rendimiento por lote comparativo. El rendimiento promedio general es de ${(stats.totalProduction / stats.farmArea).toLocaleString('es-AR', {maximumFractionDigits: 0})} kg/ha.`, chartImgWidth);
-  doc.text(yieldDesc, 30, yPos + chartImgHeight + 5);
-  yPos += chartImgHeight + (yieldDesc.length * 5) + 5;
+  renderChart(
+    'Rendimiento por Lote',
+    charts.batchYield,
+    `Rendimiento por lote comparativo. El rendimiento promedio general es de ${(stats.totalProduction / stats.farmArea).toLocaleString('es-AR', {maximumFractionDigits: 0})} kg/ha.`
+  );
   
-  // Chart 3
-  if (yPos + chartImgHeight + 15 > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 35; }
-  doc.addImage(charts.costDistribution, 'PNG', 30, yPos, chartImgWidth, chartImgHeight);
+  renderChart(
+    'Tendencia de Rentabilidad',
+    charts.profitabilityTrend,
+    `Evolución histórica de la rentabilidad del cultivo, comparando ingresos versus costos a lo largo de los meses productivos.`
+  );
+
+  renderChart(
+    'Ingresos Mensuales',
+    charts.monthlyIncome,
+    `Ingresos brutos generados por la venta de la producción en cada mes de la campaña.`
+  );
+
   const highestCostCategory = Object.entries(stats.costByCategory).sort((a,b) => b[1] - a[1])[0];
-  const costDesc = doc.splitTextToSize(`Distribución de los $${stats.totalCost.toLocaleString('es-AR')} ARS en gastos operativos. La categoría principal es ${highestCostCategory ? highestCostCategory[0] : 'Insumos'} con un ${highestCostCategory && stats.totalCost > 0 ? ((highestCostCategory[1]/stats.totalCost)*100).toFixed(1) : 0}%.`, chartImgWidth);
-  doc.text(costDesc, 30, yPos + chartImgHeight + 5);
-  yPos += chartImgHeight + (costDesc.length * 5) + 10;
+  renderChart(
+    'Distribución de Costos Operativos',
+    charts.costDistribution,
+    `Distribución de los $${stats.totalCost.toLocaleString('es-AR')} ARS en gastos operativos. La categoría principal es ${highestCostCategory ? highestCostCategory[0] : 'Insumos'} con un ${highestCostCategory && stats.totalCost > 0 ? ((highestCostCategory[1]/stats.totalCost)*100).toFixed(1) : 0}%.`
+  );
 
   // --- DESGLOSE DE COSTOS ---
   doc.setFontSize(18);
@@ -987,8 +1022,8 @@ export const generateProducerHarvestReportPDF = (
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  const recLines = doc.splitTextToSize(reportData.conclusionsAndRecommendations, pageWidth - 30);
-  const recHeight = (recLines.length * 5) + 10;
+  const recLines = doc.splitTextToSize(reportData.conclusionsAndRecommendations, pageWidth - 40);
+  const recHeight = (recLines.length * 4.2) + 8;
 
   if (yPos + 10 + recHeight > pageHeight - 20) {
     doc.addPage();
