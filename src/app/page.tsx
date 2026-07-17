@@ -40,15 +40,17 @@ export default function LandingPage() {
       {/* Hero Section */}
       <main className="flex-1">
         <section className="relative px-6 lg:px-8 py-32 md:py-48 overflow-hidden bg-green-950">
-          {/* Background Image with opacity */}
+          {/* Background Video with opacity */}
           <div className="absolute inset-0 z-0">
-            <Image
-              src="/dashboard_mockup.png"
-              alt="AgroVision Background"
-              fill
-              sizes="100vw"
-              className="object-cover opacity-20"
-            />
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="object-cover w-full h-full opacity-30"
+            >
+              <source src="/hero_background.mp4" type="video/mp4" />
+            </video>
             {/* Gradient overlay for better text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-green-950 via-transparent to-green-900/50"></div>
           </div>
