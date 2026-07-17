@@ -46,6 +46,7 @@ function ProductionPaymentHistoryComponent() {
   const [selectedLog, setSelectedLog] = useState<CollectorPaymentLog | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ kilograms: 0, hours: 0, ratePerKg: 0, batchNumber: '' });
+  const [visibleCount, setVisibleCount] = useState(5);
   const [isLabelOpen, setIsLabelOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -211,32 +212,43 @@ function ProductionPaymentHistoryComponent() {
             ) : sortedLogs.length === 0 ? (
               <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay registros.</div>
             ) : (
-              sortedLogs.map(log => (
-                <div 
-                  key={log.id} 
-                  className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
-                  onClick={() => setSelectedLog(log)}
-                >
-                  <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
-                      <div className="shrink-0 flex items-center justify-center">
-                          <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
-                              <Banknote className="h-5 w-5" />
-                          </Badge>
-                      </div>
-                      <div className="min-w-0 flex flex-col justify-center flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                              <span className="font-semibold text-sm truncate leading-none">{log.collectorName}</span>
-                              <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(log.date).toLocaleDateString('es-AR')}</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
-                              Lote: <Badge variant="outline" className="text-[10px] px-1 py-0">{getHarvestForLog(log)?.batchNumber || "L???"}</Badge>
-                              <span className="mx-1.5 opacity-50">•</span>
-                              Pago total: <span className="font-bold text-foreground">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
-                          </div>
-                      </div>
+              <>
+                {sortedLogs.slice(0, visibleCount).map(log => (
+                  <div 
+                    key={log.id} 
+                    className="group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
+                    onClick={() => setSelectedLog(log)}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                        <div className="shrink-0 flex items-center justify-center">
+                            <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                <Banknote className="h-5 w-5" />
+                            </Badge>
+                        </div>
+                        <div className="min-w-0 flex flex-col justify-center flex-1">
+                            <div className="flex items-center gap-2 mb-0.5">
+                                <span className="font-semibold text-sm truncate leading-none">{log.collectorName}</span>
+                                <span className="text-xs text-muted-foreground shrink-0 leading-none">{new Date(log.date).toLocaleDateString('es-AR')}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
+                                Lote: <Badge variant="outline" className="text-[10px] px-1 py-0">{getHarvestForLog(log)?.batchNumber || "L???"}</Badge>
+                                <span className="mx-1.5 opacity-50">•</span>
+                                Pago total: <span className="font-bold text-foreground">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                            </div>
+                        </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+                {sortedLogs.length > visibleCount && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-2" 
+                    onClick={() => setVisibleCount(prev => prev + 5)}
+                  >
+                    Mostrar más
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </CardContent>
