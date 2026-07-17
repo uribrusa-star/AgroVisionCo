@@ -46,8 +46,8 @@ export default function LandingPage() {
               src="/dashboard_mockup.png"
               alt="AgroVision Background"
               fill
+              sizes="100vw"
               className="object-cover opacity-20"
-              unoptimized={true}
             />
             {/* Gradient overlay for better text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-green-950 via-transparent to-green-900/50"></div>
@@ -90,12 +90,12 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} unoptimized={true} className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Bitácora Agronómica</DialogTitle>
-                      <Image src="/bitacora-agronomo.png" alt="Bitácora" width={1920} height={1080} unoptimized={true} className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <Image src="/bitacora-agronomo.png" alt="Bitácora" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
@@ -111,12 +111,12 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/informes-ia.png" alt="Informes con IA" width={800} height={500} unoptimized={true} className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/informes-ia.png" alt="Informes con IA" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Informes con IA</DialogTitle>
-                      <Image src="/informes-ia.png" alt="Informes con IA" width={1920} height={1080} unoptimized={true} className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <Image src="/informes-ia.png" alt="Informes con IA" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">
@@ -132,12 +132,12 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} unoptimized={true} className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Mapas Interactivos</DialogTitle>
-                      <Image src="/map_mockup.png" alt="Mapas" width={1920} height={1080} unoptimized={true} className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <Image src="/map_mockup.png" alt="Mapas" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900">

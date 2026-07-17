@@ -2,9 +2,7 @@
 
 import React, { useContext, useMemo, useTransition, useState, useRef } from 'react';
 import Image from 'next/image';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
+
 import QRCode from "react-qr-code";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,6 +98,8 @@ function ProductionPaymentHistoryComponent() {
     startPdfTransition(async () => {
       toast({ title: 'Generando Recibo', description: 'Por favor espere...' });
       try {
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
         const doc = new jsPDF() as jsPDFWithAutoTable;
         
         // MODIFICACIÓN: Carga del logo mediante Base64 para evitar errores en móviles
@@ -172,6 +172,7 @@ function ProductionPaymentHistoryComponent() {
   const handlePrintLabel = async () => {
     if (!labelRef.current) return;
     toast({ title: 'Generando Etiqueta', description: 'Por favor espere...' });
+    const html2canvas = (await import('html2canvas')).default;
     const canvas = await html2canvas(labelRef.current, { scale: 3 });
     const dataUrl = canvas.toDataURL('image/png');
 

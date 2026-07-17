@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useContext, useMemo, useState, useTransition } from 'react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable'; // Importación directa corregida
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -60,7 +59,9 @@ function PackagingHistoryComponent() {
     startPdfTransition(async () => {
       toast({ title: 'Generando Recibo', description: 'Por favor espere...' });
       try {
-        const doc = new jsPDF();
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
+        const doc = new jsPDF() as any;
         
         // Carga del Logo
         const logoBase64 = await getBase64ImageFromUrl('/logo.png');

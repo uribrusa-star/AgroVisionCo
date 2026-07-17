@@ -2,7 +2,7 @@
 
 import React, { useContext, useTransition, useRef } from 'react';
 import Image from 'next/image';
-import html2canvas from 'html2canvas';
+
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,7 @@ export function AgronomistReportGenerator() {
 
         const captureChart = async (ref: React.RefObject<HTMLDivElement>) => {
             if (!ref.current) return '';
+            const html2canvas = (await import('html2canvas')).default;
             const canvas = await html2canvas(ref.current, { scale: 3, backgroundColor: '#ffffff' });
             return canvas.toDataURL('image/png');
         };

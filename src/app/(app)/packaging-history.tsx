@@ -3,9 +3,7 @@
 
 import React, { useContext, useMemo, useState, useTransition, useRef } from 'react';
 import Image from 'next/image';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
+
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -58,6 +56,9 @@ function PackagingHistoryComponent() {
     startPdfTransition(async () => {
       toast({ title: 'Generando Recibo', description: 'Por favor espere...' });
       try {
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
+        const html2canvas = (await import('html2canvas')).default;
         const doc = new jsPDF() as jsPDFWithAutoTable;
         let logoPngDataUri = '';
 
