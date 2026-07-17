@@ -109,13 +109,20 @@ function ProductionPaymentHistoryComponent() {
           console.error("Error al cargar el logo para el PDF:", error);
         }
 
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text('Establecimiento:', 40, 17);
+        
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(16);
-        doc.text(establishmentData.producer, 40, 22);
+        doc.setTextColor(0);
+        doc.text(establishmentData.producer, 40, 24);
+        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(150);
-        doc.text(`${establishmentData.location.locality}, ${establishmentData.location.province}`, 40, 28);
+        doc.text(`${establishmentData.location.locality}, ${establishmentData.location.province}`, 40, 30);
 
         doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');

@@ -68,10 +68,14 @@ function PackagingHistoryComponent() {
         }
 
         // Cabecera
-        doc.setFont('helvetica', 'bold').setFontSize(16);
-        doc.text(establishmentData.producer, 40, 22);
+        doc.setFontSize(10).setFont('helvetica', 'normal').setTextColor(100);
+        doc.text('Establecimiento:', 40, 17);
+        
+        doc.setFont('helvetica', 'bold').setFontSize(16).setTextColor(0);
+        doc.text(establishmentData.producer, 40, 24);
+        
         doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(150);
-        doc.text(`${establishmentData.location.locality}, ${establishmentData.location.province}`, 40, 28);
+        doc.text(`${establishmentData.location.locality}, ${establishmentData.location.province}`, 40, 30);
         
         doc.setFontSize(22).setFont('helvetica', 'bold').setTextColor(0);
         doc.text('RECIBO DE PAGO POR EMBALAJE', 105, 50, { align: 'center' });
