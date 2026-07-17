@@ -221,9 +221,9 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         }
 
         return (
-            <div className="absolute inset-0 pointer-events-none flex flex-col sm:flex-row justify-between p-4 z-10">
+            <div className="absolute inset-0 pointer-events-none flex flex-col sm:flex-row justify-between p-4 z-10 overflow-hidden">
                 {/* Left Panel */}
-                <div className="w-full sm:w-64 flex flex-col gap-4 pointer-events-auto mb-4 sm:mb-0">
+                <div className="w-full sm:w-64 flex flex-col gap-4 pointer-events-auto mb-4 sm:mb-0 shrink-0">
                     <div className="bg-white/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-left">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-lg text-foreground">Lote: {activeInfoWindow}</h3>
@@ -271,7 +271,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 </div>
 
                 {/* Right Panel */}
-                <div className="w-full sm:w-72 flex flex-col gap-4 pointer-events-auto">
+                <div className="w-full sm:w-72 flex flex-col gap-4 pointer-events-auto max-h-[45vh] sm:max-h-[90%] overflow-y-auto pb-4 pr-1 scrollbar-hide">
                     {phiStatus.isBlocked && (
                         <div className="bg-red-500/90 backdrop-blur-md text-white border border-red-600 shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right">
                             <div className="flex items-center gap-2 font-bold text-sm uppercase mb-2">
