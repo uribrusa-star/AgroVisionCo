@@ -25,7 +25,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     });
     
-    const { harvests, agronomistLogs, phenologyLogs } = useContext(AppDataContext);
+    const { harvests, agronomistLogs, phenologyLogs, batches } = useContext(AppDataContext);
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
     const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -207,24 +207,18 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         const totalKilos = lotHarvests.reduce((sum, h) => sum + h.kilograms, 0);
         const phiStatus = getBatchPhiStatus(activeInfoWindow!, agronomistLogs);
 
-        let lotProperties: any = {};
-        if (geoJsonData && geoJsonData.features) {
-            const feature = geoJsonData.features.find((f: any, i: number) => {
-                const props = f.properties || {};
-                const polygonId = Object.keys(props).find(k => k.startsWith('L')) || `polygon-${i}`;
-                return polygonId === activeInfoWindow;
-            });
-            if (feature) lotProperties = feature.properties || {};
+        let variedad = 'N/A';
+        let densidad = 'N/A';
+        let hectareas = 'N/A';
+
+        const activeBatch = (batches || []).find(b => b.id === activeInfoWindow);
+        if (activeBatch && activeBatch.varieties && activeBatch.varieties.length > 0) {
+            variedad = activeBatch.varieties.map(v => v.name).join(', ');
+            const totalDensidad = activeBatch.varieties.reduce((sum, v) => sum + (v.plantCount || 0), 0);
+            densidad = totalDensidad > 0 ? totalDensidad.toLocaleString('es-ES') : 'N/A';
+            const totalHectareas = activeBatch.varieties.reduce((sum, v) => sum + (v.area || 0), 0);
+            hectareas = totalHectareas > 0 ? totalHectareas.toLocaleString('es-ES') : 'N/A';
         }
-
-        const getProp = (keys: string[]) => {
-            const foundKey = Object.keys(lotProperties).find(k => keys.some(key => k.toLowerCase().includes(key)));
-            return foundKey ? lotProperties[foundKey] : 'N/A';
-        };
-
-        const variedad = getProp(['variedad']);
-        const densidad = getProp(['densidad', 'planta']);
-        const hectareas = getProp(['ha', 'hectarea', 'hectárea', 'superficie']);
 
         return (
             <div className="absolute inset-0 pointer-events-none flex flex-col sm:flex-row justify-between p-4 z-10">
