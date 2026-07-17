@@ -270,6 +270,13 @@ export default function MapPage() {
     }, [establishmentData?.geoJsonData]);
 
     const mapCenter = useMemo(() => {
+        if (establishmentData?.location?.coordinates) {
+            const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+            if (!isNaN(lat) && !isNaN(lng)) {
+                return { lat, lng };
+            }
+        }
+
         if (parsedGeoJson && parsedGeoJson.features && parsedGeoJson.features.length > 0) {
             const firstFeature = parsedGeoJson.features[0];
             if (firstFeature.geometry) {
@@ -288,13 +295,6 @@ export default function MapPage() {
                     });
                     return { lat: lat / coords.length, lng: lng / coords.length };
                 }
-            }
-        }
-        // Fallback to location coordinates or default
-        if (establishmentData?.location.coordinates) {
-            const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
-            if (!isNaN(lat) && !isNaN(lng)) {
-                return { lat, lng };
             }
         }
         return { lat: -31.953363, lng: -60.9346299 }; // Default center Coronda

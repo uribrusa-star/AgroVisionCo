@@ -214,7 +214,13 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                     <div className="bg-white/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-left">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-lg text-foreground">Lote: {activeInfoWindow}</h3>
-                            <button onClick={() => setActiveInfoWindow(null)} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
+                            <button onClick={() => {
+                                setActiveInfoWindow(null);
+                                if (mapRef.current) {
+                                    mapRef.current.panTo(center);
+                                    mapRef.current.setZoom(19);
+                                }
+                            }} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
