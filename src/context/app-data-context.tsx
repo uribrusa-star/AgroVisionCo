@@ -788,6 +788,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             batch.set(newLogRef, sanitizeForFirestore(log));
             
             let lowStockAlertTriggered = false;
+            const newTasksToEmail: { task: any, user: any }[] = [];
 
             const allSuppliesToUpdate = [...(log.supplies || [])];
             if (log.product && log.quantityUsed) {
@@ -820,6 +821,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                             };
                             const newTaskRef = doc(collection(db, 'tasks'));
                             batch.set(newTaskRef, newTask);
+                            newTasksToEmail.push({ task: { ...newTask, id: newTaskRef.id }, user: producerUser });
                         }
                     }
                 }
@@ -827,8 +829,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
             await batch.commit();
             await fetchAllData();
+            
+            for (const item of newTasksToEmail) {
+                fetch('/api/send-task-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item),
+                }).catch(err => console.error("Failed to send low stock task email:", err));
+            }
+
             if (lowStockAlertTriggered) {
-                toast({ title: "Alerta de Stock Bajo", description: `Se ha creado una tarea para reponer insumos.` });
+                toast({ title: "Alerta de Stock Bajo", description: `Se ha creado una tarea para reponer insumos y se ha enviado un correo al productor.` });
             }
         }
     
