@@ -412,7 +412,9 @@ function ProductionPaymentHistoryComponent() {
             <div className="space-y-4">
               <div ref={labelRef} className="bg-white text-black p-4 rounded-lg border">
                 <div className="flex gap-3 items-center border-b pb-2 mb-2">
-                  <img src="/logo.png" alt="Logo" width="40" height="40" style={{ width: '40px', height: '40px', objectFit: 'contain', flexShrink: 0 }} />
+                  <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <img src="/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }} />
+                  </div>
                   <div className="text-left leading-tight">
                     <h3 className="font-bold text-sm">{establishmentData?.producer}</h3>
                     <p className="text-[10px] text-gray-500">{establishmentData?.location.locality}</p>
