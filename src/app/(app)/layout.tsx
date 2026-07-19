@@ -125,7 +125,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col items-center gap-4 text-center p-6 max-w-sm">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <div className="space-y-2">
-              <p className="font-semibold text-lg">Sincronizando con AgroVision...</p>
+              <p className="font-semibold text-lg">Sincronizando con AgroVista...</p>
               <p className="text-sm text-muted-foreground italic">Verificando sesión y descargando datos del campo.</p>
             </div>
             
@@ -159,8 +159,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="shrink-0" />
                 <Link href="/dashboard" className="flex items-center gap-2">
-                  <Image src="/logo.png" alt="AgroVision Logo" width={32} height={32} className="shrink-0" />
-                  <span className="text-xl font-bold hidden sm:inline-block">AgroVision</span>
+                  <Image src="/logo.png" alt="AgroVista Logo" width={32} height={32} className="shrink-0" />
+                  <span className="text-xl font-bold hidden sm:inline-block">AgroVista</span>
                 </Link>
               </div>
               <UserMenu />

@@ -36,7 +36,7 @@ export const generateTraceabilityPDF = (
       doc.setFont('helvetica', 'bold');
       doc.text('REPORTE DE TRAZABILIDAD INTEGRAL', 25, 12);
       doc.setFont('helvetica', 'normal');
-      doc.text(establishment?.producer || 'AgroVision', 25, 16);
+      doc.text(establishment?.producer || 'AgroVista', 25, 16);
       doc.text(format(new Date(), 'dd/MM/yyyy'), pageWidth - 10, 12, { align: 'right' });
     }
   };
@@ -50,7 +50,7 @@ export const generateTraceabilityPDF = (
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
       doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
-      doc.text('AgroVision AI - Gestión de Precisión', 10, pageHeight - 7);
+      doc.text('AgroVista AI - Gestión de Precisión', 10, pageHeight - 7);
       doc.text('Trazabilidad Oficial', pageWidth - 10, pageHeight - 7, { align: 'right' });
     }
   };
@@ -191,7 +191,7 @@ export const generateMonthlyProductionPDF = (
       doc.setFont('helvetica', 'bold');
       doc.text('REPORTE DE PRODUCCIÓN MENSUAL', 25, 12);
       doc.setFont('helvetica', 'normal');
-      doc.text(establishment?.producer || 'AgroVision', 25, 16);
+      doc.text(establishment?.producer || 'AgroVista', 25, 16);
       doc.text(format(new Date(), 'dd/MM/yyyy'), pageWidth - 10, 12, { align: 'right' });
     }
   };
@@ -205,7 +205,7 @@ export const generateMonthlyProductionPDF = (
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
       doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
-      doc.text('AgroVision AI - Gestión de Precisión', 10, pageHeight - 7);
+      doc.text('AgroVista AI - Gestión de Precisión', 10, pageHeight - 7);
       doc.text('Producción Certificada', pageWidth - 10, pageHeight - 7, { align: 'right' });
     }
   };
@@ -344,7 +344,7 @@ export const generateAgronomistReportPDF = (
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
       doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
-      doc.text('AgroVision AI - Gestión de Precisión', 10, pageHeight - 7);
+      doc.text('AgroVista AI - Gestión de Precisión', 10, pageHeight - 7);
       doc.text('Confidencial', pageWidth - 10, pageHeight - 7, { align: 'right' });
     }
   };
@@ -706,7 +706,7 @@ export const generateAgronomistReportPDF = (
   doc.text(insightLines, 20, yPos + 18);
 
   addFooter();
-  doc.save(`Reporte_AgroVision_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+  doc.save(`Reporte_AgroVista_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 };
 
 export const generateProducerHarvestReportPDF = (
@@ -764,7 +764,7 @@ export const generateProducerHarvestReportPDF = (
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
       doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
-      doc.text('AgroVision AI - Gestión de Precisión', 10, pageHeight - 7);
+      doc.text('AgroVista AI - Gestión de Precisión', 10, pageHeight - 7);
       doc.text('Confidencial', pageWidth - 10, pageHeight - 7, { align: 'right' });
     }
   };

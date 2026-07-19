@@ -4,8 +4,8 @@
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
-  "name": "AgroVision",
-  "short_name": "AgroVision",
+  "name": "AgroVista",
+  "short_name": "AgroVista",
   "description": "Gestión de datos en la producción de fresas.",
   "icons": [
       {

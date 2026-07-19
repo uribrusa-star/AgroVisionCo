@@ -38,7 +38,7 @@ export const sendEmail = async (mailOptions: MailOptions) => {
 
     try {
         await transporter.sendMail({
-            from: `"AgroVision" <${emailUser}>`,
+            from: `"AgroVista" <${emailUser}>`,
             ...mailOptions,
         });
     } catch (error) {

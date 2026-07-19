@@ -3,9 +3,9 @@
 import type { Collector, Harvest, MonthlyData, AgronomistLog, Batch, CollectorPaymentLog, User, EstablishmentData, PhenologyLog, ProducerLog, Transaction, Packer, PackagingLog } from './types';
 
 export const users: User[] = [
-  { id: 'user-productor', name: 'Productor', email: 'productor@agrovision.co', role: 'Productor', avatar: 'user-1', password: 'UriBrusa22', notificationEmail: 'productor@agrovision.co' },
-  { id: 'user-agronomo', name: 'Ingeniero', email: 'agronomo@agrovision.co', role: 'Ingeniero Agronomo', avatar: 'user-2', password: 'Ingeniero123', notificationEmail: 'agronomo@agrovision.co' },
-  { id: 'user-encargado', name: 'Encargado', email: 'encargado@agrovision.co', role: 'Encargado', avatar: 'user-3', password: 'Encargado123', notificationEmail: 'encargado@agrovision.co' },
+  { id: 'user-productor', name: 'Productor', email: 'productor@agrovista.co', role: 'Productor', avatar: 'user-1', password: 'UriBrusa22', notificationEmail: 'productor@agrovista.co' },
+  { id: 'user-agronomo', name: 'Ingeniero', email: 'agronomo@agrovista.co', role: 'Ingeniero Agronomo', avatar: 'user-2', password: 'Ingeniero123', notificationEmail: 'agronomo@agrovista.co' },
+  { id: 'user-encargado', name: 'Encargado', email: 'encargado@agrovista.co', role: 'Encargado', avatar: 'user-3', password: 'Encargado123', notificationEmail: 'encargado@agrovista.co' },
 ];
 
 export const initialEstablishmentData: Omit<EstablishmentData, 'id'> = {

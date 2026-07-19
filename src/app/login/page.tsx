@@ -97,9 +97,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
-            <Image src="/logo.png" alt="AgroVision Logo" width={64} height={64} />
+            <Image src="/logo.png" alt="AgroVista Logo" width={64} height={64} />
           </div>
-          <CardTitle className="text-2xl font-headline">Bienvenido a AgroVision</CardTitle>
+          <CardTitle className="text-2xl font-headline">Bienvenido a AgroVista</CardTitle>
           <CardDescription>Ingrese sus credenciales para acceder a su panel.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,7 +117,7 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Correo Electrónico</FormLabel>
-                    <FormControl><Input type="email" placeholder="ejemplo@agrovision.co" {...field} disabled={isPending} /></FormControl>
+                    <FormControl><Input type="email" placeholder="ejemplo@agrovista.co" {...field} disabled={isPending} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

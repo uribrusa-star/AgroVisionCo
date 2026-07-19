@@ -1,14 +1,14 @@
-.d /# AgroVision: Gestión Inteligente para su Cultivo de Frutilla
+.d /# AgroVista: Gestión Inteligente para su Cultivo de Frutilla
 
-**Su campo, en la palma de su mano. AgroVision es la herramienta definitiva que centraliza, simplifica y potencia la gestión de su producción de frutilla, desde la siembra hasta la venta.**
+**Su campo, en la palma de su mano. AgroVista es la herramienta definitiva que centraliza, simplifica y potencia la gestión de su producción de frutilla, desde la siembra hasta la venta.**
 
-Olvídese de las planillas complicadas y las anotaciones perdidas. Con AgroVision, cada dato que registra se convierte en información valiosa para tomar decisiones más inteligentes, optimizar sus costos y maximizar su rentabilidad.
+Olvídese de las planillas complicadas y las anotaciones perdidas. Con AgroVista, cada dato que registra se convierte en información valiosa para tomar decisiones más inteligentes, optimizar sus costos y maximizar su rentabilidad.
 
 ---
 
 ### Funcionalidades para el Productor
 
-Como "Productor", tiene acceso total a todas las funcionalidades de AgroVision. A continuación, se detalla todo lo que puede hacer:
+Como "Productor", tiene acceso total a todas las funcionalidades de AgroVista. A continuación, se detalla todo lo que puede hacer:
 
 #### **1. Panel de Control Centralizado (`/dashboard`)**
 Vea el pulso de su negocio en tiempo real. Al iniciar sesión, tendrá acceso instantáneo a los indicadores más importantes:
@@ -61,4 +61,4 @@ Administre su equipo de manera eficiente.
 
 ---
 
-Con AgroVision, su experiencia y conocimiento se unen a la potencia de la tecnología y la inteligencia artificial para llevar su producción al siguiente nivel.
+Con AgroVista, su experiencia y conocimiento se unen a la potencia de la tecnología y la inteligencia artificial para llevar su producción al siguiente nivel.

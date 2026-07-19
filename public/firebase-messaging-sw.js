@@ -15,7 +15,7 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification?.title || "AgroVision Alerta";
+  const notificationTitle = payload.notification?.title || "AgroVista Alerta";
   const notificationOptions = {
     body: payload.notification?.body || "Tienes un nuevo mensaje.",
     icon: '/icon-512x512.png',

@@ -1,14 +1,14 @@
-# AgroVision: Su Campo, Más Inteligente.
+# AgroVista: Su Campo, Más Inteligente.
 
 **Productor, ¿está cansado del papeleo, la incertidumbre y las decisiones a ciegas que le cuestan dinero?**
 
 Imagínese tener un asistente personal que trabaja 24/7 para usted. Uno que no solo guarda cada dato de su campo, sino que le dice exactamente qué significa y cómo usarlo para ganar más.
 
-Ese asistente es **AgroVision**.
+Ese asistente es **AgroVista**.
 
 ---
 
-### ¿Qué es AgroVision?
+### ¿Qué es AgroVista?
 
 Es la herramienta definitiva para el productor de frutilla moderno. Centralizamos toda su operación —desde el costo de cada recolector hasta el pronóstico del tiempo— en una aplicación simple y potente que puede usar en su teléfono, tableta o computadora, incluso sin internet en el campo.
 
@@ -16,7 +16,7 @@ Es la herramienta definitiva para el productor de frutilla moderno. Centralizamo
 
 ---
 
-### Lo que AgroVision Hace por Usted (y su Bolsillo)
+### Lo que AgroVista Hace por Usted (y su Bolsillo)
 
 #### 1. **Control Total en Tiempo Real (Su Panel de Mando)**
 Al instante, sabrá:
@@ -44,8 +44,8 @@ Nuestra IA le da superpoderes:
 
 ---
 
-### ¿Por Qué AgroVision?
+### ¿Por Qué AgroVista?
 
-Porque su experiencia vale oro. AgroVision no la reemplaza, la potencia. Combinamos su conocimiento del campo con el poder de los datos y la inteligencia artificial para que cada decisión que tome sea más informada, más rápida y más rentable.
+Porque su experiencia vale oro. AgroVista no la reemplaza, la potencia. Combinamos su conocimiento del campo con el poder de los datos y la inteligencia artificial para que cada decisión que tome sea más informada, más rápida y más rentable.
 
-**AgroVision es más que una aplicación; es su socio estratégico para llevar su producción al siguiente nivel.**
+**AgroVista es más que una aplicación; es su socio estratégico para llevar su producción al siguiente nivel.**

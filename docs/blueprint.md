@@ -1,4 +1,4 @@
-# **App Name**: AgroVision
+# **App Name**: AgroVista
 
 ## Core Features:
 

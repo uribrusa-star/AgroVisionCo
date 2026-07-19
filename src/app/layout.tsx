@@ -5,23 +5,23 @@ import { AppContextProvider } from '@/context/app-data-context.tsx';
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovision.site'),
-  title: 'AgroVisionCo',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.site'),
+  title: 'AgroVistaCo',
   description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola y de fresas. Accede a tu panel para controlar lotes y tareas.',
-  applicationName: 'AgroVision',
-  authors: [{ name: 'AgroVision Team' }],
+  applicationName: 'AgroVista',
+  authors: [{ name: 'AgroVista Team' }],
   keywords: ['agricultura', 'fresas', 'trazabilidad', 'gestión agrícola', 'software agrícola'],
   openGraph: {
-    title: 'AgroVisionCo - Gestión Agrícola',
+    title: 'AgroVistaCo - Gestión Agrícola',
     description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
-    url: 'https://agrovision.site',
-    siteName: 'AgroVision',
+    url: 'https://agrovista.site',
+    siteName: 'AgroVista',
     images: [
       {
         url: '/og-banner.png',
         width: 1200,
         height: 630,
-        alt: 'AgroVision - Gestión Agrícola'
+        alt: 'AgroVista - Gestión Agrícola'
       }
     ],
     locale: 'es_AR',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AgroVisionCo - Gestión Agrícola',
+    title: 'AgroVistaCo - Gestión Agrícola',
     description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
     images: ['/og-banner.png'],
   },

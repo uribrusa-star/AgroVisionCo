@@ -1,7 +1,7 @@
 
 import type { SVGProps } from 'react';
 
-export function AgroVisionLogo(props: SVGProps<SVGSVGElement>) {
+export function AgroVistaLogo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

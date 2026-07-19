@@ -133,10 +133,10 @@ export default function TracePage() {
         <div className="min-h-screen bg-gray-50/50 p-4 sm:p-6 md:p-8">
             <header className="text-center mb-8">
                 <div className="inline-block p-4 bg-white rounded-full shadow-md mb-4">
-                   <Image src="/logo.png" alt="AgroVision Logo" width={64} height={64} />
+                   <Image src="/logo.png" alt="AgroVista Logo" width={64} height={64} />
                 </div>
                 <h1 className="text-4xl font-bold text-gray-800 font-headline">Historia de tu Frutilla</h1>
-                <p className="text-lg text-gray-600 mt-2">Verificado por AgroVision</p>
+                <p className="text-lg text-gray-600 mt-2">Verificado por AgroVista</p>
             </header>
 
             <main className="max-w-4xl mx-auto space-y-8">
@@ -320,7 +320,7 @@ export default function TracePage() {
             </main>
             <footer className="text-center mt-12">
                 <p className="text-sm text-gray-500">ID de Trazabilidad: <span className="font-mono">{id}</span></p>
-                <p className="text-xs text-gray-400 mt-1">Impulsado por AgroVision</p>
+                <p className="text-xs text-gray-400 mt-1">Impulsado por AgroVista</p>
             </footer>
 
             <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
@@ -361,7 +361,7 @@ export default function TracePage() {
                     <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                     <DialogHeader className="p-4 sm:p-6 pb-2 text-center relative z-10 flex-shrink-0 pr-14">
                          <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3 mx-auto">
-                             <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 animate-pulse flex-shrink-0" /> Certificación Oficial AgroVision G.A.P.
+                             <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 animate-pulse flex-shrink-0" /> Certificación Oficial AgroVista G.A.P.
                          </div>
                          <DialogTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl md:text-3xl font-extrabold text-white">
                              <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-400 flex-shrink-0" /> Buenas Prácticas Agrícolas

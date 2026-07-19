@@ -25,8 +25,8 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="px-6 py-4 flex items-center justify-between border-b dark:border-green-800 bg-background/95 dark:bg-green-950/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="AgroVision Logo" width={32} height={32} />
-          <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVision</span>
+          <Image src="/logo.png" alt="AgroVista Logo" width={32} height={32} />
+          <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVista</span>
         </div>
         <nav>
           <Link href="/login">
@@ -60,7 +60,7 @@ export default function LandingPage() {
               Trazabilidad Agrícola Inteligente para la Producción de Frutillas
             </h1>
             <p className="mt-6 text-lg leading-8 text-green-50 max-w-3xl mx-auto drop-shadow-sm">
-              AgroVision es la plataforma integral diseñada específicamente para optimizar el rendimiento, 
+              AgroVista es la plataforma integral diseñada específicamente para optimizar el rendimiento, 
               controlar la sanidad y maximizar las ganancias de tus lotes de frutillas. Con inteligencia artificial, 
               reportes agronómicos y mapas interactivos en tiempo real.
             </p>
@@ -229,15 +229,15 @@ export default function LandingPage() {
           <div className="bg-gray-50 dark:bg-green-900/20 rounded-3xl p-6 md:p-10 border border-gray-100 dark:border-green-800/50 shadow-sm">
             <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Es difícil de usar AgroVision?</AccordionTrigger>
+              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Es difícil de usar AgroVista?</AccordionTrigger>
               <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                Para nada. Diseñamos AgroVision para que sea tan fácil e intuitivo como usar tus redes sociales o WhatsApp. Los botones son grandes, claros y todo está en español. No necesitas conocimientos avanzados de tecnología para sacarle todo el provecho.
+                Para nada. Diseñamos AgroVista para que sea tan fácil e intuitivo como usar tus redes sociales o WhatsApp. Los botones son grandes, claros y todo está en español. No necesitas conocimientos avanzados de tecnología para sacarle todo el provecho.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-2">
               <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Necesito internet en el campo para que funcione?</AccordionTrigger>
               <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                La aplicación está optimizada para cargar súper rápido incluso con muy mala señal (2G/3G). Si te quedas totalmente sin cobertura en medio de un lote, siempre puedes guardar tus registros en la libreta de tu celular y subirlos a AgroVision fácilmente ni bien regreses a un lugar con WiFi o mejor señal.
+                La aplicación está optimizada para cargar súper rápido incluso con muy mala señal (2G/3G). Si te quedas totalmente sin cobertura en medio de un lote, siempre puedes guardar tus registros en la libreta de tu celular y subirlos a AgroVista fácilmente ni bien regreses a un lugar con WiFi o mejor señal.
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="item-3">
@@ -249,7 +249,7 @@ export default function LandingPage() {
             <AccordionItem value="item-4">
               <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Puedo crear cuentas para mis empleados o mi ingeniero?</AccordionTrigger>
               <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                ¡Sí! AgroVision es multi-usuario. Puedes invitar a tu ingeniero agrónomo con permisos especiales para que pueda ver la fenología y emitir diagnósticos, o crear cuentas limitadas para que tus encargados solo registren las cosechas diarias sin ver tus reportes financieros.
+                ¡Sí! AgroVista es multi-usuario. Puedes invitar a tu ingeniero agrónomo con permisos especiales para que pueda ver la fenología y emitir diagnósticos, o crear cuentas limitadas para que tus encargados solo registren las cosechas diarias sin ver tus reportes financieros.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -262,7 +262,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
           <div className="mt-8 md:order-1 md:mt-0">
             <p className="text-center text-xs leading-5 text-gray-500 dark:text-green-200/60">
-              &copy; {new Date().getFullYear()} AgroVision. Todos los derechos reservados.
+              &copy; {new Date().getFullYear()} AgroVista. Todos los derechos reservados.
             </p>
           </div>
         </div>
@@ -270,7 +270,7 @@ export default function LandingPage() {
 
       {/* WhatsApp Floating Button */}
       <a
-        href="https://wa.me/5493424276932?text=Hola%20buenas%2C%20me%20comunico%20para%20consultar%20sobre%20el%20sistema%20AgroVision."
+        href="https://wa.me/5493424276932?text=Hola%20buenas%2C%20me%20comunico%20para%20consultar%20sobre%20el%20sistema%20AgroVista."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 bg-[#25D366] text-white p-4 rounded-full shadow-xl hover:bg-[#1ebe57] hover:scale-110 transition-all z-50 flex items-center justify-center group"

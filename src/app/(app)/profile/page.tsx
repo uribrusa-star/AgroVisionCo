@@ -233,7 +233,7 @@ export default function ProfilePage() {
                     <div className="p-2 bg-indigo-500/10 rounded-full shrink-0"><Moon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /></div>
                     <div>
                         <CardTitle>Apariencia</CardTitle>
-                        <CardDescription>Personaliza cómo se ve AgroVision en este dispositivo.</CardDescription>
+                        <CardDescription>Personaliza cómo se ve AgroVista en este dispositivo.</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>
