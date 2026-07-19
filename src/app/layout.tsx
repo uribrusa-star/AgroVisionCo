@@ -6,13 +6,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.site'),
-  title: 'AgroVistaCo',
+  title: 'AgroVista',
   description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola y de fresas. Accede a tu panel para controlar lotes y tareas.',
   applicationName: 'AgroVista',
   authors: [{ name: 'AgroVista Team' }],
   keywords: ['agricultura', 'fresas', 'trazabilidad', 'gestión agrícola', 'software agrícola'],
   openGraph: {
-    title: 'AgroVistaCo - Gestión Agrícola',
+    title: 'AgroVista - Gestión Agrícola',
     description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
     url: 'https://agrovista.site',
     siteName: 'AgroVista',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AgroVistaCo - Gestión Agrícola',
+    title: 'AgroVista - Gestión Agrícola',
     description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
     images: ['/og-banner.png'],
   },
