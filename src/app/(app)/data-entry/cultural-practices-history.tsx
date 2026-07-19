@@ -148,41 +148,41 @@ function CulturalPracticesHistoryComponent() {
           <CardDescription>Un registro de los últimos pagos por labores culturales. Haga clic para ver detalles.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="max-h-[400px] overflow-auto">
-            <div className="relative w-full overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Labor</TableHead>
-                    <TableHead>Personal</TableHead>
-                    <TableHead className="text-right">Costo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading && (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                          <Skeleton className="h-8 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && sortedLogs.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center">No hay registros de labores.</TableCell>
-                    </TableRow>
-                  )}
-                  {!loading && sortedLogs.map(log => (
-                    <TableRow key={log.id} onClick={() => setSelectedLog(log)} className="cursor-pointer">
-                      <TableCell>{new Date(log.date).toLocaleDateString('es-ES')}</TableCell>
-                      <TableCell><Badge variant="secondary">{log.practiceType}</Badge></TableCell>
-                      <TableCell className="font-medium">{log.personnelName}</TableCell>
-                      <TableCell className="text-right font-bold">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+          <div className="flex flex-col gap-2 max-h-[400px] overflow-auto pr-2">
+            {loading ? (
+                Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
+            ) : sortedLogs.length === 0 ? (
+                <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay registros de labores.</div>
+            ) : (
+                sortedLogs.map(log => (
+                    <div 
+                        key={log.id} 
+                        className="shrink-0 group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
+                        onClick={() => setSelectedLog(log)}
+                    >
+                        <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
+                            <div className="shrink-0 flex items-center justify-center">
+                                <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                    <HardHat className="h-5 w-5" />
+                                </Badge>
+                            </div>
+                            <div className="min-w-0 flex flex-col justify-center flex-1">
+                                <div className="flex items-center justify-between gap-2 mb-0.5">
+                                    <span className="font-semibold text-sm truncate leading-none">{log.personnelName}</span>
+                                    <span className="font-bold text-sm shrink-0">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground truncate leading-tight mt-1 flex items-center justify-between w-full block">
+                                    <span className="truncate flex-1">
+                                        {new Date(log.date).toLocaleDateString('es-ES')} 
+                                        <span className="mx-1.5 opacity-50">•</span> 
+                                        {log.practiceType}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))
+            )}
           </div>
         </CardContent>
       </Card>
