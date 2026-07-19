@@ -98,7 +98,7 @@ export function BatchHistory() {
             <CardTitle>Historial de Lotes</CardTitle>
             <CardDescription>Registro de todos los lotes pre-cargados para la cosecha.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 overflow-x-auto">
             <Table>
                 <TableHeader>
                 <TableRow>
