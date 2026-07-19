@@ -178,6 +178,23 @@ function ProductionPaymentHistoryComponent() {
         const canvas = await html2canvas(labelRef.current, { scale: 3 });
         const dataUrl = canvas.toDataURL('image/png');
         
+        try {
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+            const file = new File([blob], `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`, { type: 'image/png' });
+            
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Etiqueta de Trazabilidad',
+                });
+                toast({ title: 'Éxito', description: 'Etiqueta compartida correctamente.' });
+                return;
+            }
+        } catch (e) {
+            console.error("Share failed", e);
+        }
+
         const link = document.createElement('a');
         link.download = `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`;
         link.href = dataUrl;
