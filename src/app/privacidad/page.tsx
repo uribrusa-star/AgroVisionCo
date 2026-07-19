@@ -53,7 +53,10 @@ export default function PrivacidadPage() {
           <section>
             <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-green-100">4. Derechos del Usuario</h2>
             <p>
-              Como titular de los datos personales, usted tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses. Asimismo, tiene derecho a solicitar la rectificación, actualización o completa eliminación (derecho al olvido) de todos sus registros alojados en AgroVista enviándonos una solicitud a nuestro contacto oficial.
+              Como titular de los datos personales, usted tiene la facultad de ejercer el derecho de acceso a los mismos en forma gratuita a intervalos no inferiores a seis meses. Asimismo, tiene derecho a solicitar la rectificación, actualización o completa eliminación (derecho al olvido) de todos sus registros alojados en AgroVista enviándonos una solicitud a nuestro correo oficial de soporte: <strong>contactoagrovision@gmail.com</strong>.
+            </p>
+            <p className="mt-2 text-sm italic">
+              "La AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, tiene la atribución de atender las denuncias y reclamos que se interpongan con relación al incumplimiento de las normas sobre protección de datos personales."
             </p>
           </section>
 
