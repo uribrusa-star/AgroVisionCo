@@ -183,8 +183,8 @@ function PackagingHistoryComponent() {
       
       {/* Hidden Logo for PDF generation */}
        <div style={{ position: 'fixed', opacity: 0, zIndex: -100, left: 0, top: 0, width: 'auto', height: 'auto' }} aria-hidden="true">
-          <div ref={logoRef} style={{width: '96px', height: '96px'}}>
-              <Image src="/logo.png" alt="AgroVista Logo" width={96} height={96} />
+          <div ref={logoRef} style={{width: '96px', height: '96px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              <img src="/logo.png" alt="AgroVista Logo" style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }} />
           </div>
        </div>
 

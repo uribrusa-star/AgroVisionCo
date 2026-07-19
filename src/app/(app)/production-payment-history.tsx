@@ -212,8 +212,8 @@ function ProductionPaymentHistoryComponent() {
   return (
     <>
       <div style={{ position: 'fixed', opacity: 0, zIndex: -100 }} aria-hidden="true">
-        <div ref={logoRef} style={{ width: '96px', height: '96px' }}>
-          <Image src="/logo.png" alt="Logo" width={96} height={96} />
+        <div ref={logoRef} style={{ width: '96px', height: '96px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }} />
         </div>
       </div>
 
