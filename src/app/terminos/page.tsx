@@ -59,6 +59,26 @@ export default function TerminosPage() {
               Nos reservamos el derecho de modificar estos Términos y Condiciones en cualquier momento. El uso continuado de la plataforma después de publicar los cambios constituirá su aceptación de los mismos.
             </p>
           </section>
+          <section>
+            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-green-100">6. Suscripciones y Facturación</h2>
+            <p>
+              El acceso a determinadas funcionalidades de la Plataforma requiere el pago de una suscripción periódica. Los precios y condiciones de los planes están sujetos a modificaciones, las cuales serán notificadas con anticipación. La falta de pago en la fecha de vencimiento facultará a la Plataforma a suspender temporalmente el acceso al panel y a las herramientas de registro hasta que se regularice la situación.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-green-100">7. Propiedad Intelectual</h2>
+            <p>
+              Todo el contenido, código fuente, logotipos, diseños, estructura de base de datos y elementos visuales de AgroVista son propiedad exclusiva del desarrollador y están protegidos por las leyes de propiedad intelectual de la República Argentina. Queda estrictamente prohibida su reproducción, copia, distribución o ingeniería inversa sin autorización expresa por escrito.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-green-100">8. Ley Aplicable y Jurisdicción</h2>
+            <p>
+              Estos Términos y Condiciones se rigen por las leyes de la República Argentina. Para cualquier divergencia, reclamo o conflicto derivado del uso de la Plataforma, las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad de Santa Fe, Provincia de Santa Fe, renunciando a cualquier otro fuero o jurisdicción.
+            </p>
+          </section>
         </div>
       </div>
     </div>
