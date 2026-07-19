@@ -96,7 +96,7 @@ export default function UsersPage() {
           <CardTitle>Todos los Usuarios</CardTitle>
           <CardDescription>Una lista de todas las cuentas de usuario en su organización.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

@@ -172,21 +172,23 @@ function ProductionPaymentHistoryComponent() {
   const handlePrintLabel = async () => {
     if (!labelRef.current) return;
     toast({ title: 'Generando Etiqueta', description: 'Por favor espere...' });
-    const html2canvas = (await import('html2canvas')).default;
-    const canvas = await html2canvas(labelRef.current, { scale: 3 });
-    const dataUrl = canvas.toDataURL('image/png');
-
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <body style="margin:0; display:flex; justify-content:center; align-items:center; height:100vh;">
-            <img src="${dataUrl}" style="max-width:100%;" />
-            <script>window.onload = () => { window.print(); window.close(); };</script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
+    
+    try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(labelRef.current, { scale: 3 });
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        const link = document.createElement('a');
+        link.download = `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({ title: 'Éxito', description: 'Etiqueta descargada correctamente.' });
+    } catch (error) {
+        console.error("Error generating label:", error);
+        toast({ title: 'Error', description: 'No se pudo generar la etiqueta.', variant: 'destructive' });
     }
   }
 
@@ -410,7 +412,7 @@ function ProductionPaymentHistoryComponent() {
                   </div>
                 </div>
               </div>
-              <Button onClick={handlePrintLabel} className="w-full">Imprimir Etiqueta</Button>
+              <Button onClick={handlePrintLabel} className="w-full">Descargar Etiqueta (PNG)</Button>
             </div>
           )}
         </DialogContent>
