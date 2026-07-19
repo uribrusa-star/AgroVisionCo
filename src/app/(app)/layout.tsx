@@ -201,6 +201,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
+                <div className="mt-4 pt-2 border-t flex flex-col items-center gap-1 text-center text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
+                  <Link href="/terminos" className="hover:underline hover:text-foreground">Términos y Condiciones</Link>
+                  <Link href="/privacidad" className="hover:underline hover:text-foreground">Privacidad (Ley 25.326)</Link>
+                </div>
             </SidebarFooter>
           </Sidebar>
           <SidebarInset className="bg-muted/10">
