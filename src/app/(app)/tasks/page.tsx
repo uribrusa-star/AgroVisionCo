@@ -5,7 +5,7 @@ import React, { useContext, useMemo, useState, useTransition } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { PageHeader } from "@/components/page-header";
@@ -21,8 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box, LayoutGrid, List, Search, ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +42,7 @@ import {
   DragOverEvent,
   DragEndEvent,
   defaultDropAnimationSideEffects,
+  TouchSensor,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -58,7 +59,7 @@ const TaskSchema = z.object({
     assignedToId: z.string().min(1, "Debe asignar la tarea a un usuario."),
     dueDate: z.date().optional(),
     priority: z.enum(['baja', 'media', 'alta']).default('media'),
-    batchId: z.string().optional(),
+    batchIds: z.array(z.string()).optional(),
     materials: z.array(z.object({ 
         supplyId: z.string().min(1, "Debe seleccionar un material."),
         quantity: z.coerce.number().min(0.1, "La cantidad debe ser mayor a 0."),
@@ -119,22 +120,19 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
     const canDeleteTask = currentUser?.role === 'Productor' || currentUser?.id === task.createdBy.id;
     
     const priorityInfo = {
-        alta: { label: 'Alta', color: 'bg-red-500', iconColor: 'text-red-500' },
-        media: { label: 'Media', color: 'bg-yellow-500', iconColor: 'text-yellow-500' },
-        baja: { label: 'Baja', color: 'bg-blue-500', iconColor: 'text-blue-500' },
+        alta: { label: 'Alta', color: 'bg-red-500', iconColor: 'text-red-500', borderColor: 'border-l-red-500' },
+        media: { label: 'Media', color: 'bg-yellow-500', iconColor: 'text-yellow-500', borderColor: 'border-l-yellow-500' },
+        baja: { label: 'Baja', color: 'bg-blue-500', iconColor: 'text-blue-500', borderColor: 'border-l-blue-500' },
     }[task.priority || 'media'];
 
     return (
         <div ref={setNodeRef} style={style} className={cn(isOverlay && "z-50 shadow-2xl scale-105")}>
-            <Card className="hover:shadow-md transition-shadow relative overflow-hidden group">
-                <div 
-                    {...attributes} 
-                    {...listeners}
-                    className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing hover:bg-muted/50 transition-colors"
-                >
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <CardHeader className="pl-10 pb-2">
+            <Card 
+                {...attributes} 
+                {...listeners}
+                className={cn("hover:shadow-md transition-shadow relative overflow-hidden group border-l-4 cursor-grab active:cursor-grabbing", priorityInfo.borderColor)}
+            >
+                <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                         <CardTitle className="text-sm font-bold flex items-center gap-2">
                            <Flag className={cn("h-3.5 w-3.5", priorityInfo.iconColor)} />
@@ -179,16 +177,18 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                             </AlertDialogContent>
                         </AlertDialog>
                     </div>
-                    {task.batchId && (
-                        <div className="flex items-center gap-1 mt-1">
-                            <Badge variant="outline" className="text-[10px] py-0 px-1 bg-primary/5 text-primary border-primary/20">
-                                <Box className="h-2.5 w-2.5 mr-1" />
-                                Lote: {task.batchId}
-                            </Badge>
+                    {((task.batchIds && task.batchIds.length > 0) || task.batchId) && (
+                        <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            {(task.batchIds && task.batchIds.length > 0 ? task.batchIds : [task.batchId]).map(id => id && (
+                                <Badge key={id} variant="outline" className="text-[10px] py-0 px-1 bg-primary/5 text-primary border-primary/20">
+                                    <Box className="h-2.5 w-2.5 mr-1 flex-shrink-0" />
+                                    Lote: {id}
+                                </Badge>
+                            ))}
                         </div>
                     )}
                 </CardHeader>
-                <CardContent className="pl-10 text-xs text-muted-foreground pb-4 space-y-3">
+                <CardContent className="text-xs text-muted-foreground pb-4 space-y-3">
                     <p className="line-clamp-2">{task.description}</p>
                      {task.materials && task.materials.length > 0 && (
                         <div className="flex items-start gap-2">
@@ -199,7 +199,7 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                         </div>
                     )}
                 </CardContent>
-                 <CardFooter className="pl-10 flex justify-between items-center text-[10px] pb-3">
+                 <CardFooter className="flex justify-between items-center text-[10px] pb-3">
                          {assignedUser && (
                             <div className="flex items-center gap-1.5">
                                 <Avatar className="h-5 w-5">
@@ -210,9 +210,9 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                             </div>
                         )}
                         {task.dueDate && (
-                            <div className="flex items-center gap-1 text-muted-foreground">
+                            <div className={cn("flex items-center gap-1", isPast(new Date(task.dueDate)) ? "text-red-500 font-semibold" : "text-muted-foreground")}>
                                 <CalendarIcon className="h-3 w-3" />
-                                <span>{new Date(task.dueDate).toLocaleDateString('es-ES')}</span>
+                                <span>{isPast(new Date(task.dueDate)) ? 'Vencida hace ' + formatDistanceToNow(new Date(task.dueDate), { locale: es }) : 'Vence en ' + formatDistanceToNow(new Date(task.dueDate), { locale: es })}</span>
                             </div>
                         )}
                     </CardFooter>
@@ -243,8 +243,8 @@ const KanbanColumn = ({ id, title, tasks }: { id: TaskStatus, title: string, tas
                     {tasks.length > 0 ? (
                         tasks.map(task => <SortableTaskCard key={task.id} task={task} />)
                     ) : (
-                        <div className="border-2 border-dashed border-muted rounded-lg h-32 flex items-center justify-center">
-                            <p className="text-xs text-muted-foreground font-medium">Vacío</p>
+                        <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl h-32 flex flex-col items-center justify-center bg-muted/10">
+                            <p className="text-sm text-muted-foreground font-medium">Arrastra una tarea aquí</p>
                         </div>
                     )}
                 </SortableContext>
@@ -259,11 +259,20 @@ export default function TasksPage() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const [filterType, setFilterType] = useState('all');
+    const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
                 distance: 8,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -273,7 +282,7 @@ export default function TasksPage() {
 
     const form = useForm<TaskFormValues>({
         resolver: zodResolver(TaskSchema),
-        defaultValues: { title: '', description: '', assignedToId: '', dueDate: undefined, priority: 'media', batchId: undefined, materials: [{supplyId: '', quantity: 0}] },
+        defaultValues: { title: '', description: '', assignedToId: '', dueDate: undefined, priority: 'media', batchIds: [], materials: [{supplyId: '', quantity: 0}] },
     });
 
     const { fields, append, remove } = useFieldArray({
@@ -286,19 +295,29 @@ export default function TasksPage() {
 
     const assignableUsers = users;
 
+    const filteredTasks = useMemo(() => {
+        return tasks.filter(task => {
+            if (filterType === 'my-tasks' && task.assignedTo.id !== currentUser.id) return false;
+            if (filterType === 'high-priority' && task.priority !== 'alta') return false;
+            if (filterType === 'overdue' && (!task.dueDate || !isPast(new Date(task.dueDate)))) return false;
+            if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase()) && !task.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+            return true;
+        });
+    }, [tasks, filterType, currentUser, searchQuery]);
+
     const categorizedTasks = useMemo(() => {
         const pending: Task[] = [];
         const inProgress: Task[] = [];
         const completed: Task[] = [];
 
-        tasks.forEach(task => {
+        filteredTasks.forEach(task => {
             if (task.status === 'in-progress') inProgress.push(task);
             else if (task.status === 'completed') completed.push(task);
             else pending.push(task);
         });
 
         return { pending, inProgress, completed };
-    }, [tasks]);
+    }, [filteredTasks]);
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
@@ -360,14 +379,14 @@ export default function TasksPage() {
                 createdBy: { id: currentUser.id, name: currentUser.name },
                 status: 'pending',
                 priority: values.priority,
-                batchId: values.batchId === 'none' ? undefined : values.batchId,
+                batchIds: values.batchIds && values.batchIds.length > 0 ? values.batchIds : undefined,
                 materials: validMaterials,
                 createdAt: new Date().toISOString(),
                 dueDate: values.dueDate?.toISOString(),
             });
             toast({ title: "Tarea Creada", description: `La tarea "${values.title}" ha sido asignada a ${assignedToUser.name}.` });
             setIsAddDialogOpen(false);
-            form.reset({ title: '', description: '', assignedToId: '', dueDate: undefined, priority: 'media', batchId: undefined, materials: [{supplyId: '', quantity: 0}] });
+            form.reset({ title: '', description: '', assignedToId: '', dueDate: undefined, priority: 'media', batchIds: [], materials: [{supplyId: '', quantity: 0}] });
         });
     }
 
@@ -405,16 +424,35 @@ export default function TasksPage() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
-                                <FormField control={form.control} name="batchId" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Vincular a Lote (Opcional)</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || 'none'} disabled={isPending}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Sin lote vinculado" /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="none">Sin lote vinculado</SelectItem>
-                                                {batches.map(batch => <SelectItem key={batch.id} value={batch.id}>Lote {batch.id}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
+                                <FormField control={form.control} name="batchIds" render={({ field }) => (
+                                    <FormItem className="flex flex-col justify-end">
+                                        <FormLabel className="mb-2">Vincular a Lotes (Opcional)</FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button variant="outline" role="combobox" className={cn("justify-between w-full font-normal", !(field.value && field.value.length > 0) && "text-muted-foreground")} disabled={isPending}>
+                                                        {field.value && field.value.length > 0 ? `${field.value.length} lote(s) seleccionado(s)` : "Seleccionar lotes"}
+                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[200px] p-2">
+                                                <div className="space-y-1 max-h-60 overflow-y-auto">
+                                                    {batches.map(batch => (
+                                                        <div key={batch.id} className="flex items-center space-x-2 p-1 hover:bg-muted rounded cursor-pointer" onClick={() => {
+                                                            const current = field.value || [];
+                                                            const isSelected = current.includes(batch.id);
+                                                            field.onChange(isSelected ? current.filter(id => id !== batch.id) : [...current, batch.id]);
+                                                        }}>
+                                                            <div className={cn("flex h-4 w-4 items-center justify-center rounded-sm border border-primary", (field.value || []).includes(batch.id) ? "bg-primary text-primary-foreground" : "opacity-50")}>
+                                                                {(field.value || []).includes(batch.id) && <Check className="h-3 w-3" />}
+                                                            </div>
+                                                            <span className="text-sm">Lote {batch.id}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -503,7 +541,27 @@ export default function TasksPage() {
         )}
       </PageHeader>
 
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-4">
+          <div className="flex flex-wrap gap-2">
+              <Badge variant={filterType === 'all' ? 'default' : 'secondary'} className="cursor-pointer text-xs py-1" onClick={() => setFilterType('all')}>Todas</Badge>
+              <Badge variant={filterType === 'my-tasks' ? 'default' : 'secondary'} className="cursor-pointer text-xs py-1" onClick={() => setFilterType('my-tasks')}>Mis Tareas</Badge>
+              <Badge variant={filterType === 'high-priority' ? 'default' : 'secondary'} className="cursor-pointer text-xs py-1" onClick={() => setFilterType('high-priority')}>Alta Prioridad</Badge>
+              <Badge variant={filterType === 'overdue' ? 'default' : 'outline'} className="cursor-pointer text-xs py-1 text-red-600 border-red-200" onClick={() => setFilterType('overdue')}>Atrasadas</Badge>
+          </div>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input type="text" placeholder="Buscar tareas..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+              </div>
+              <div className="flex bg-background rounded-md p-1 border shadow-sm">
+                  <Button variant={viewMode === 'board' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7 rounded-sm" onClick={() => setViewMode('board')}><LayoutGrid className="h-4 w-4" /></Button>
+                  <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" className="h-7 w-7 rounded-sm" onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
+              </div>
+          </div>
+      </div>
+
       <div className="flex-grow">
+        {viewMode === 'board' ? (
         <DndContext 
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -530,6 +588,48 @@ export default function TasksPage() {
                 ) : null}
             </DragOverlay>
         </DndContext>
+        ) : (
+            <Card>
+                <CardContent className="p-0 overflow-x-auto">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                        <thead className="bg-muted/50 border-b">
+                            <tr>
+                                <th className="p-4 font-medium text-muted-foreground">Tarea</th>
+                                <th className="p-4 font-medium text-muted-foreground">Estado</th>
+                                <th className="p-4 font-medium text-muted-foreground">Prioridad</th>
+                                <th className="p-4 font-medium text-muted-foreground">Responsable</th>
+                                <th className="p-4 font-medium text-muted-foreground">Vencimiento</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                            {filteredTasks.length > 0 ? filteredTasks.map(task => (
+                                <tr key={task.id} className="hover:bg-muted/10 transition-colors">
+                                    <td className="p-4 font-medium flex items-center gap-2">
+                                        <Flag className={cn("h-4 w-4 flex-shrink-0", task.priority === 'alta' ? 'text-red-500' : task.priority === 'media' ? 'text-yellow-500' : 'text-blue-500')} />
+                                        <span className="truncate max-w-[200px] sm:max-w-xs">{task.title}</span>
+                                    </td>
+                                    <td className="p-4"><Badge variant="secondary">{task.status === 'in-progress' ? 'En Progreso' : task.status === 'completed' ? 'Completado' : 'Pendiente'}</Badge></td>
+                                    <td className="p-4"><Badge variant="outline" className={task.priority === 'alta' ? 'text-red-500 border-red-200' : ''}>{task.priority}</Badge></td>
+                                    <td className="p-4 flex items-center gap-2">
+                                        <Avatar className="h-6 w-6"><AvatarFallback className="text-[10px]">{users.find(u => u.id === task.assignedTo.id)?.name.charAt(0) || task.assignedTo.name.charAt(0)}</AvatarFallback></Avatar>
+                                        <span className="truncate max-w-[120px]">{users.find(u => u.id === task.assignedTo.id)?.name || task.assignedTo.name}</span>
+                                    </td>
+                                    <td className="p-4">
+                                        {task.dueDate ? (
+                                            <span className={isPast(new Date(task.dueDate)) ? 'text-red-500 font-medium' : ''}>
+                                                {new Date(task.dueDate).toLocaleDateString()}
+                                            </span>
+                                        ) : '-'}
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No se encontraron tareas.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </CardContent>
+            </Card>
+        )}
       </div>
     </>
   );
