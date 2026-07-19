@@ -60,8 +60,8 @@ function UserMenu() {
       <Button variant="ghost" className="flex items-center gap-2 p-1 md:gap-3 md:pl-5 md:pr-2 md:py-2 h-10 md:h-12 rounded-full md:border md:border-primary/40 hover:bg-muted" asChild>
           <Link href="/profile">
             <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-foreground">{currentUser?.name || 'Usuario'}</p>
-                <p className="text-xs text-muted-foreground">{currentUser?.role || ''}</p>
+                <p className="text-xs text-muted-foreground leading-tight mb-0.5">{currentUser?.role || ''}</p>
+                <p className="text-sm font-medium text-foreground leading-tight">{currentUser?.name || 'Usuario'}</p>
             </div>
             <Avatar className="h-8 w-8">
                 <AvatarImage 
