@@ -1065,10 +1065,25 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
     const updateTaskStatus = (taskId: string, status: TaskStatus) => {
         const originalTasks = tasks;
+        const taskToUpdate = tasks.find(t => t.id === taskId);
+        
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
         
         const taskRef = doc(db, 'tasks', taskId);
-        setDoc(taskRef, { status }, { merge: true }).catch(error => {
+        setDoc(taskRef, { status }, { merge: true })
+        .then(() => {
+            if (status === 'completed' && taskToUpdate) {
+                const creatorUser = users.find(u => u.id === taskToUpdate.createdBy.id);
+                if (creatorUser) {
+                    fetch('/api/send-task-completed-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ task: { ...taskToUpdate, status }, user: creatorUser }),
+                    }).catch(err => console.error("Failed to send completed task email:", err));
+                }
+            }
+        })
+        .catch(error => {
             console.error("Failed to update task status:", error);
             setTasks(originalTasks);
             toast({ title: "Error", description: "No se pudo actualizar el estado de la tarea.", variant: "destructive"});
