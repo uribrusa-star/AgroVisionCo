@@ -55,14 +55,14 @@ export default function ProducerLogPage() {
       <div className="space-y-8">
         
         {/* Fila 1: Resumen Financiero Ampliado */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Total Ingresos</CardTitle>
                     <TrendingUp className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-xl font-bold truncate">{loading ? <Skeleton className="h-7 w-20" /> : `$${totalIncome.toLocaleString('es-AR')}`}</div>
+                    <div className="text-lg xl:text-base 2xl:text-lg font-bold truncate">{loading ? <Skeleton className="h-7 w-20" /> : `$${totalIncome.toLocaleString('es-AR')}`}</div>
                     <p className="text-[10px] text-muted-foreground">Ventas registradas</p>
                 </CardContent>
             </Card>
@@ -72,7 +72,7 @@ export default function ProducerLogPage() {
                     <TrendingDown className="h-4 w-4 text-red-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-xl font-bold truncate">{loading ? <Skeleton className="h-7 w-20" /> : `$${totalCost.toLocaleString('es-AR')}`}</div>
+                    <div className="text-lg xl:text-base 2xl:text-lg font-bold truncate">{loading ? <Skeleton className="h-7 w-20" /> : `$${totalCost.toLocaleString('es-AR')}`}</div>
                     <p className="text-[10px] text-muted-foreground">Operativos y Laborales</p>
                 </CardContent>
             </Card>
@@ -82,7 +82,7 @@ export default function ProducerLogPage() {
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className={`text-xl font-bold truncate ${grossMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>{loading ? <Skeleton className="h-7 w-20" /> : `$${grossMargin.toLocaleString('es-AR')}`}</div>
+                    <div className={`text-lg xl:text-base 2xl:text-lg font-bold truncate ${grossMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>{loading ? <Skeleton className="h-7 w-20" /> : `$${grossMargin.toLocaleString('es-AR')}`}</div>
                     <p className="text-[10px] text-muted-foreground">Rentabilidad actual</p>
                 </CardContent>
             </Card>
@@ -92,7 +92,7 @@ export default function ProducerLogPage() {
                     <Percent className="h-4 w-4 text-primary" />
                 </CardHeader>
                 <CardContent>
-                    <div className={`text-xl font-bold truncate ${roi >= 0 ? 'text-primary' : 'text-red-600'}`}>{loading ? <Skeleton className="h-7 w-12" /> : `${roi.toFixed(1)}%`}</div>
+                    <div className={`text-lg xl:text-base 2xl:text-lg font-bold truncate ${roi >= 0 ? 'text-primary' : 'text-red-600'}`}>{loading ? <Skeleton className="h-7 w-12" /> : `${roi.toFixed(1)}%`}</div>
                     <p className="text-[10px] text-muted-foreground">Retorno s/ Inversión</p>
                 </CardContent>
             </Card>
@@ -102,7 +102,7 @@ export default function ProducerLogPage() {
                     <Scale className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-xl font-bold truncate">{loading ? <Skeleton className="h-7 w-16" /> : `$${costPerKg.toFixed(2)}`}</div>
+                    <div className="text-lg xl:text-base 2xl:text-lg font-bold truncate">{loading ? <Skeleton className="h-7 w-16" /> : `$${costPerKg.toFixed(2)}`}</div>
                     <p className="text-[10px] text-muted-foreground">Costo prom. producción</p>
                 </CardContent>
             </Card>
@@ -112,7 +112,7 @@ export default function ProducerLogPage() {
                     <Hand className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-xl font-bold truncate">{loading ? <Skeleton className="h-7 w-20" /> : `$${totalLaborCost.toLocaleString('es-AR')}`}</div>
+                    <div className="text-lg xl:text-base 2xl:text-lg font-bold truncate">{loading ? <Skeleton className="h-7 w-20" /> : `$${totalLaborCost.toLocaleString('es-AR')}`}</div>
                     <p className="text-[10px] text-muted-foreground">Carga laboral total</p>
                 </CardContent>
             </Card>
