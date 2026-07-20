@@ -1,93 +1,96 @@
 
 import { Transaction, CollectorPaymentLog, PackagingLog, CulturalPracticeLog } from './types';
+import * as XLSX from 'xlsx';
 
-export const exportTransactionsToCSV = (
+export const exportTransactionsToExcel = (
     transactions: Transaction[],
     collectorPayments: CollectorPaymentLog[],
     packagingLogs: PackagingLog[],
     culturalPracticeLogs: CulturalPracticeLog[]
 ) => {
-    const headers = ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Cantidad', 'Unidad', 'Precio Unitario', 'Total (ARS)'];
-    
-    const rows: string[][] = [];
+    const rows: any[] = [];
 
     // Add Transactions
     transactions.forEach(t => {
-        rows.push([
-            new Date(t.date).toLocaleDateString('es-AR'),
-            t.type,
-            t.category,
-            t.description,
-            t.quantity?.toString() || '',
-            t.unit || '',
-            t.pricePerUnit?.toString() || '',
-            t.amount.toFixed(2)
-        ]);
+        rows.push({
+            Fecha: new Date(t.date).toLocaleDateString('es-AR'),
+            Tipo: t.type,
+            Categoría: t.category,
+            Descripción: t.description,
+            Cantidad: t.quantity || null,
+            Unidad: t.unit || '',
+            'Precio Unitario': t.pricePerUnit || null,
+            'Total (ARS)': t.amount
+        });
     });
 
     // Add Collector Payments
     collectorPayments.forEach(p => {
-        rows.push([
-            new Date(p.date).toLocaleDateString('es-AR'),
-            'Gasto',
-            'Cosecha',
-            `Pago a recolector: ${p.collectorName} (${p.traceabilityId})`,
-            p.kilograms.toString(),
-            'kg',
-            p.ratePerKg.toString(),
-            p.payment.toFixed(2)
-        ]);
+        rows.push({
+            Fecha: new Date(p.date).toLocaleDateString('es-AR'),
+            Tipo: 'Gasto',
+            Categoría: 'Cosecha',
+            Descripción: `Pago a recolector: ${p.collectorName} (${p.traceabilityId})`,
+            Cantidad: p.kilograms,
+            Unidad: 'kg',
+            'Precio Unitario': p.ratePerKg,
+            'Total (ARS)': p.payment
+        });
     });
 
     // Add Packaging Logs
     packagingLogs.forEach(p => {
-        rows.push([
-            new Date(p.date).toLocaleDateString('es-AR'),
-            'Gasto',
-            'Embalaje',
-            `Pago a embalador: ${p.packerName}`,
-            p.kilogramsPackaged.toString(),
-            'kg',
-            (p.payment / p.kilogramsPackaged).toFixed(2),
-            p.payment.toFixed(2)
-        ]);
+        rows.push({
+            Fecha: new Date(p.date).toLocaleDateString('es-AR'),
+            Tipo: 'Gasto',
+            Categoría: 'Embalaje',
+            Descripción: `Pago a embalador: ${p.packerName}`,
+            Cantidad: p.kilogramsPackaged,
+            Unidad: 'kg',
+            'Precio Unitario': Number((p.payment / p.kilogramsPackaged).toFixed(2)),
+            'Total (ARS)': p.payment
+        });
     });
 
     // Add Cultural Practice Logs
     culturalPracticeLogs.forEach(p => {
-        rows.push([
-            new Date(p.date).toLocaleDateString('es-AR'),
-            'Gasto',
-            'Mano de Obra',
-            `${p.practiceType}: ${p.personnelName}`,
-            p.hoursWorked.toString(),
-            'hs',
-            p.costPerHour.toString(),
-            p.payment.toFixed(2)
-        ]);
+        rows.push({
+            Fecha: new Date(p.date).toLocaleDateString('es-AR'),
+            Tipo: 'Gasto',
+            Categoría: 'Mano de Obra',
+            Descripción: `${p.practiceType}: ${p.personnelName}`,
+            Cantidad: p.hoursWorked,
+            Unidad: 'hs',
+            'Precio Unitario': p.costPerHour,
+            'Total (ARS)': p.payment
+        });
     });
 
     // Sort by date (descending)
     rows.sort((a,b) => {
-        const dateA = new Date(a[0].split('/').reverse().join('-')).getTime();
-        const dateB = new Date(b[0].split('/').reverse().join('-')).getTime();
+        const dateA = new Date(a.Fecha.split('/').reverse().join('-')).getTime();
+        const dateB = new Date(b.Fecha.split('/').reverse().join('-')).getTime();
         return dateB - dateA;
     });
 
-    const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.map(val => `"${val}"`).join(','))
-    ].join('\n');
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Contabilidad");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `AgroVista_Contable_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+    // Adjust column widths automatically
+    const wscols = [
+        { wch: 12 }, // Fecha
+        { wch: 10 }, // Tipo
+        { wch: 15 }, // Categoría
+        { wch: 45 }, // Descripción
+        { wch: 10 }, // Cantidad
+        { wch: 10 }, // Unidad
+        { wch: 15 }, // Precio Unitario
+        { wch: 15 }  // Total (ARS)
+    ];
+    worksheet['!cols'] = wscols;
+
+    // Generate Excel file
+    XLSX.writeFile(workbook, `AgroVista_Contable_${new Date().toISOString().split('T')[0]}.xlsx`);
 };

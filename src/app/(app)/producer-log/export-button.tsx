@@ -5,7 +5,7 @@ import React, { useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import { exportTransactionsToCSV } from '@/lib/export-utils';
+import { exportTransactionsToExcel } from '@/lib/export-utils';
 import { useToast } from '@/hooks/use-toast';
 
 export function ExportButton() {
@@ -23,11 +23,11 @@ export function ExportButton() {
                 return;
             }
 
-            exportTransactionsToCSV(transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs);
+            exportTransactionsToExcel(transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs);
             
             toast({
                 title: "Exportación exitosa",
-                description: "Se ha generado el archivo CSV con los datos contables.",
+                description: "Se ha generado el archivo Excel con los datos contables.",
             });
         } catch (error) {
             console.error("Export error:", error);
