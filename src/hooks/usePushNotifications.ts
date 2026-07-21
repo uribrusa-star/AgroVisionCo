@@ -25,8 +25,9 @@ export function usePushNotifications() {
       if (permission === 'granted') {
         const messaging = await setupMessaging();
         if (messaging) {
-          // Register the Service Worker explicitly so Next-PWA doesn't override it easily
-          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          // Usamos serviceWorker.ready porque next-pwa ya lo registró como /sw.js 
+          // (que ahora incluye a nuestro worker personalizado de Firebase)
+          const registration = await navigator.serviceWorker.ready;
           
           // We provide the VapidKey so Firebase knows it's us
           const token = await getToken(messaging, { 
