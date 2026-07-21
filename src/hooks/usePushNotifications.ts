@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getToken, onMessage, MessagePayload } from 'firebase/messaging';
+import { getToken, MessagePayload } from 'firebase/messaging';
 import { setupMessaging } from '@/lib/firebase';
-import { useToast } from '@/hooks/use-toast';
 
 export function usePushNotifications() {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [foregroundMessage, setForegroundMessage] = useState<MessagePayload | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -47,32 +45,8 @@ export function usePushNotifications() {
     }
   };
 
-  useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-
-    const setupListener = async () => {
-      const messaging = await setupMessaging();
-      if (messaging) {
-        unsubscribe = onMessage(messaging, (payload) => {
-          console.log('Mensaje recibido en primer plano:', payload);
-          setForegroundMessage(payload);
-          toast({
-            title: payload.notification?.title || "Nueva Alerta",
-            description: payload.notification?.body || "Tienes una nueva notificación",
-            variant: payload.data?.severity === 'critical' ? 'destructive' : 'default',
-          });
-        });
-      }
-    };
-
-    setupListener();
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []);
+  // Note: onMessage (foreground listener) is now handled globally 
+  // by ForegroundNotificationListener.tsx to prevent multiple listeners.
 
   return {
     fcmToken,
