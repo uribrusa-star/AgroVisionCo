@@ -1,11 +1,11 @@
 
-
 'use client';
 
 import React, { ReactNode, useState, useCallback, useEffect } from 'react';
 import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem } from '@/lib/types';
 import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
+import { sendPushNotification } from "@/lib/send-push";
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy } from 'firebase/firestore';
 import { getRoleAvatar } from '@/lib/utils';
@@ -960,6 +960,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         addDoc(collection(db, 'predictionLogs'), log).then(ref => {
             setPredictionLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
+            
+            // Trigger push notification if frost or risk is detected
+            if (log.riskAlert === 'helada' || log.aiRecommendation?.toLowerCase().includes('alerta') || log.aiRecommendation?.toLowerCase().includes('riesgo')) {
+                sendPushNotification({
+                    title: 'Alerta de Predicción',
+                    body: `Riesgo detectado: ${log.riskAlert || 'Posible anomalía climática/productiva'}. Revisa las predicciones.`,
+                    severity: 'warning',
+                    targetRoles: ['Productor', 'Ingeniero Agronomo'],
+                });
+            }
         }).catch(error => {
             console.error("Failed to add prediction log:", error);
             setPredictionLogs(prev => prev.filter(l => l.id !== tempId));
@@ -984,6 +994,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         addDoc(collection(db, 'diagnosisLogs'), log).then(ref => {
             setDiagnosisLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
+            
+            // Trigger push notification if disease or pest is detected
+            if (log.diagnosisResult && (log.diagnosisResult.toLowerCase().includes('enferm') || log.diagnosisResult.toLowerCase().includes('plaga'))) {
+                sendPushNotification({
+                    title: 'Nuevo Diagnóstico Crítico',
+                    body: `Se ha detectado un posible problema: ${log.diagnosisResult}. Revisa la Bitácora del Agrónomo.`,
+                    severity: 'critical',
+                    targetRoles: ['Productor', 'Ingeniero Agronomo'],
+                });
+            }
         }).catch(error => {
             console.error("Failed to add diagnosis log:", error);
             setDiagnosisLogs(prev => prev.filter(l => l.id !== tempId));
@@ -1054,6 +1074,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ task: { ...task, id: ref.id }, user: assignedUser }),
                 }).catch(err => console.error("Failed to send task email:", err));
+                
+                sendPushNotification({
+                    title: 'Nueva Tarea Asignada',
+                    body: `Se te ha asignado la tarea: ${task.title}.`,
+                    severity: 'info',
+                    targetUserId: assignedUser.id,
+                });
             }
         })
         .catch(error => {
@@ -1080,6 +1107,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ task: { ...taskToUpdate, status }, user: creatorUser }),
                     }).catch(err => console.error("Failed to send completed task email:", err));
+                    
+                    sendPushNotification({
+                        title: 'Tarea Completada',
+                        body: `La tarea "${taskToUpdate.title}" ha sido marcada como completada.`,
+                        severity: 'info',
+                        targetUserId: creatorUser.id,
+                    });
                 }
             }
         })
