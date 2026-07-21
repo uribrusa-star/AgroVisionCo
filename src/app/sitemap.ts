@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.site';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar';
 
   return [
     {

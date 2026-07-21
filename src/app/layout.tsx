@@ -5,7 +5,7 @@ import { AppContextProvider } from '@/context/app-data-context.tsx';
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.site'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'),
   title: 'AgroVista',
   description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola y de fresas. Accede a tu panel para controlar lotes y tareas.',
   applicationName: 'AgroVista',
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'AgroVista - Gestión Agrícola',
     description: 'Plataforma integral para la gestión, trazabilidad y análisis de datos en la producción agrícola.',
-    url: 'https://agrovista.site',
+    url: 'https://agrovista.com.ar',
     siteName: 'AgroVista',
     images: [
       {
