@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { getToken, onMessage, MessagePayload } from 'firebase/messaging';
 import { setupMessaging } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 export function usePushNotifications() {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [foregroundMessage, setForegroundMessage] = useState<MessagePayload | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -54,7 +56,11 @@ export function usePushNotifications() {
         unsubscribe = onMessage(messaging, (payload) => {
           console.log('Mensaje recibido en primer plano:', payload);
           setForegroundMessage(payload);
-          // Here you could also trigger a Toast explicitly
+          toast({
+            title: payload.notification?.title || "Nueva Alerta",
+            description: payload.notification?.body || "Tienes una nueva notificación",
+            variant: payload.data?.severity === 'critical' ? 'destructive' : 'default',
+          });
         });
       }
     };

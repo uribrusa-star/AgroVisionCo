@@ -6,6 +6,7 @@ import { HardHat, Leaf, LayoutDashboard, Check, Loader2, PackageSearch, Menu, Bu
 import React, { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 
 import {
@@ -81,6 +82,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { currentUser, isClient, loading, tasks } = React.useContext(AppDataContext);
   const router = useRouter();
+  
+  // Initialize push notification listener globally
+  usePushNotifications();
 
   const [showResetButton, setShowResetButton] = useState(false);
 
