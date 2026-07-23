@@ -7,6 +7,7 @@ import React, { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { ForegroundNotificationListener } from '@/components/ForegroundNotificationListener';
+import { NotificationBell } from '@/components/notification-bell';
 
 
 import {
@@ -164,7 +165,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   <span className="text-xl font-bold hidden sm:inline-block">AgroVista</span>
                 </Link>
               </div>
-              <UserMenu />
+              <div className="flex items-center gap-2 md:gap-4">
+                <NotificationBell />
+                <UserMenu />
+              </div>
           </header>
 
           <div className="flex flex-1 w-full">

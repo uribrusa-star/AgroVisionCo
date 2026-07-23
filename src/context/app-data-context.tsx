@@ -7,7 +7,7 @@ import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
 import { useToast } from "@/hooks/use-toast";
 import { sendPushNotification } from "@/lib/send-push";
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { getRoleAvatar } from '@/lib/utils';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
 
@@ -149,6 +149,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [predictionLogs, setPredictionLogs] = useState<PredictionLog[]>([]);
     const [diagnosisLogs, setDiagnosisLogs] = useState<DiagnosisLog[]>([]);
     const [supplies, setSupplies] = useState<Supply[]>([]);
+    const [notifications, setNotifications] = useState<PushNotification[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
     const [collectorPaymentLogs, setCollectorPaymentLogs] = useState<CollectorPaymentLog[]>([]);
@@ -312,6 +313,33 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }
     }, [toast, isClient]);
     
+    // Set up real-time listener for notifications once currentUser is established
+    useEffect(() => {
+        if (!currentUser) {
+            setNotifications([]);
+            return;
+        }
+
+        const notifsQuery = query(
+            collection(db, 'notifications'),
+            where('userId', '==', currentUser.id),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+        );
+
+        const unsubscribe = onSnapshot(notifsQuery, (snapshot) => {
+            const notifsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as PushNotification));
+            setNotifications(notifsData);
+        }, (error) => {
+            console.error("Error listening to notifications:", error);
+        });
+
+        return () => unsubscribe();
+    }, [currentUser]);
+
     useEffect(() => {
        if (currentUser) {
          fetchAllData();
@@ -1364,6 +1392,38 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const markNotificationAsRead = async (notificationId: string) => {
+        setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+        try {
+            const notifRef = doc(db, 'notifications', notificationId);
+            await setDoc(notifRef, { read: true }, { merge: true });
+        } catch (error) {
+            console.error("Failed to mark notification as read:", error);
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        if (notifications.length === 0) return;
+        
+        const batch = writeBatch(db);
+        const unreadNotifs = notifications.filter(n => !n.read);
+        
+        if (unreadNotifs.length === 0) return;
+
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+        unreadNotifs.forEach(notif => {
+            const notifRef = doc(db, 'notifications', notif.id);
+            batch.update(notifRef, { read: true });
+        });
+
+        try {
+            await batch.commit();
+        } catch (error) {
+            console.error("Failed to mark all notifications as read:", error);
+        }
+    };
+
     const saveFcmToken = async (token: string) => {
         if (!currentUser) return;
         const currentTokens = currentUser.fcmTokens || [];
@@ -1444,6 +1504,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         deleteKnowledgeItem,
         updateUserPassword,
         updateUserProfile,
+        notifications,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
         saveFcmToken,
         isClient
     };

@@ -1,6 +1,14 @@
-
-
 export type UserRole = 'Productor' | 'Ingeniero Agronomo' | 'Encargado';
+
+export type PushNotification = {
+  id: string;
+  userId: string;
+  title: string;
+  body: string;
+  severity: 'info' | 'warning' | 'critical';
+  createdAt: string;
+  read: boolean;
+};
 
 export type User = {
   id: string;
@@ -361,6 +369,9 @@ export type AppData = {
   deleteKnowledgeItem: (itemId: string) => Promise<void>;
   updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
   updateUserProfile: (userId: string, profileData: { name: string; notificationEmail?: string; avatar?: string }) => Promise<void>;
+  notifications: PushNotification[];
+  markNotificationAsRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
   saveFcmToken: (token: string) => Promise<void>;
   isClient: boolean;
 };

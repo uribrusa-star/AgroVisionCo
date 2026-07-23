@@ -43,6 +43,35 @@ export async function POST(req: Request) {
       });
     }
     
+    // Save notifications to database for the targeted users
+    let targetUserIdsList: string[] = [];
+    if (targetUserId) {
+        targetUserIdsList.push(targetUserId);
+    } else if (targetUserIds && Array.isArray(targetUserIds) && targetUserIds.length > 0) {
+        targetUserIdsList = targetUserIds;
+    } else {
+        const rolesToTarget = targetRoles || ['Productor', 'Ingeniero Agronomo', 'Encargado'];
+        const usersSnapshot = await adminDb.collection('users').where('role', 'in', rolesToTarget).get();
+        usersSnapshot.forEach((doc) => targetUserIdsList.push(doc.id));
+    }
+
+    const batch = adminDb.batch();
+    const createdAt = new Date().toISOString();
+    
+    targetUserIdsList.forEach(userId => {
+        const newNotifRef = adminDb.collection('notifications').doc();
+        batch.set(newNotifRef, {
+            userId,
+            title,
+            body: messageBody,
+            severity: severity || 'info',
+            createdAt,
+            read: false
+        });
+    });
+    
+    await batch.commit().catch(e => console.error("Error saving notifications to db:", e));
+    
     // allTokens populated above
 
     if (allTokens.length === 0) {
