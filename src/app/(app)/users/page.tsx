@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useContext, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus } from 'lucide-react';
 
 import { PageHeader } from "@/components/page-header";
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -19,6 +18,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/types';
 
@@ -30,17 +30,32 @@ const PasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
+const CreateUserSchema = z.object({
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
+  email: z.string().email("Correo electrónico inválido."),
+  role: z.enum(['Ingeniero Agronomo', 'Encargado']),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+});
 
 export default function UsersPage() {
   const { users, currentUser, loading, updateUserPassword } = useContext(AppDataContext);
   const { toast } = useToast();
+  
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof PasswordSchema>>({
+  const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
+  });
+
+  const createForm = useForm<z.infer<typeof CreateUserSchema>>({
+    resolver: zodResolver(CreateUserSchema),
+    defaultValues: { name: '', email: '', role: 'Encargado', password: '' },
   });
 
   if (currentUser?.role !== 'Productor') {
@@ -61,7 +76,7 @@ export default function UsersPage() {
 
   const handleOpenPasswordDialog = (user: User) => {
     setSelectedUser(user);
-    form.reset();
+    passwordForm.reset();
     setIsPasswordDialogOpen(true);
   }
   
@@ -87,10 +102,53 @@ export default function UsersPage() {
     });
   }
 
+  const onCreateSubmit = (values: z.infer<typeof CreateUserSchema>) => {
+    startTransition(async () => {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...values,
+            producerId: currentUser.id,
+            establishmentId: currentUser.establishmentId || 'main',
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'No se pudo crear el usuario');
+        }
+
+        toast({
+          title: "Usuario Creado",
+          description: `${values.name} ha sido agregado exitosamente al sistema. Recarga la página para verlo.`,
+        });
+        
+        setIsCreateDialogOpen(false);
+        createForm.reset();
+        
+      } catch (error: any) {
+        toast({
+          title: "Error al crear usuario",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    });
+  }
 
   return (
     <>
-      <PageHeader title="Usuarios" description="Vea y gestione los usuarios del sistema." />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <PageHeader title="Usuarios" description="Vea y gestione los usuarios del sistema." />
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Agregar Empleado
+          </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Todos los Usuarios</CardTitle>
@@ -170,6 +228,7 @@ export default function UsersPage() {
         </CardContent>
       </Card>
       
+      {/* Dialog for password change */}
        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
             <DialogHeader>
@@ -178,10 +237,10 @@ export default function UsersPage() {
                     Ingrese una nueva contraseña para la cuenta de este usuario.
                 </DialogDescription>
             </DialogHeader>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onPasswordSubmit)} className="space-y-4">
+            <Form {...passwordForm}>
+                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
                      <FormField
-                        control={form.control}
+                        control={passwordForm.control}
                         name="newPassword"
                         render={({ field }) => (
                             <FormItem>
@@ -194,7 +253,7 @@ export default function UsersPage() {
                         )}
                     />
                      <FormField
-                        control={form.control}
+                        control={passwordForm.control}
                         name="confirmPassword"
                         render={({ field }) => (
                             <FormItem>
@@ -218,8 +277,90 @@ export default function UsersPage() {
             </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog for creating staff */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Agregar Nuevo Empleado</DialogTitle>
+                <DialogDescription>
+                    Crea una cuenta para que un Ingeniero o Encargado acceda a tu establecimiento.
+                </DialogDescription>
+            </DialogHeader>
+            <Form {...createForm}>
+                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+                     <FormField
+                        control={createForm.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nombre Completo</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ej. Juan Pérez" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={createForm.control}
+                        name="email"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Correo Electrónico</FormLabel>
+                                <FormControl>
+                                    <Input type="email" placeholder="juan@ejemplo.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={createForm.control}
+                        name="role"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Rol en el Establecimiento</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona un rol" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Encargado">Encargado</SelectItem>
+                                        <SelectItem value="Ingeniero Agronomo">Ingeniero Agrónomo</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={createForm.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Contraseña (Mínimo 6 caracteres)</FormLabel>
+                                <FormControl>
+                                    <Input type="password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isPending}>
+                            {isPending ? "Creando..." : "Crear Cuenta"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </Form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
-
-    
