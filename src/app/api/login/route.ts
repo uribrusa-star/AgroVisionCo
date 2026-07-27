@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 import type { User } from '@/lib/types';
 
 import { getRoleAvatar } from '@/lib/utils';
@@ -52,46 +51,15 @@ export async function POST(request: Request) {
     if (clientUser && clientUser.email?.toLowerCase() === email.toLowerCase() && clientUser.password === password) {
       user = clientUser as User;
     } else {
-      // 2. Consulta REST HTTP simple a Firestore (100% compatible con Serverless/Vercel sin timeouts ni sockets colgados)
+      // 2. Usar Admin SDK para saltarse las reglas de seguridad de Firestore (ya que no hay usuario logueado aún)
       try {
-        const restUrl = `https://firestore.googleapis.com/v1/projects/studio-1014760813-be189/databases/(default)/documents:runQuery`;
-        const restRes = await fetch(restUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            structuredQuery: {
-              from: [{ collectionId: 'users' }],
-              where: {
-                fieldFilter: {
-                  field: { fieldPath: 'email' },
-                  op: 'EQUAL',
-                  value: { stringValue: email }
-                }
-              }
-            }
-          })
-        });
-
-        if (restRes.ok) {
-          const data = await restRes.json();
-          if (Array.isArray(data) && data.length > 0 && data[0].document) {
-            user = parseFirestoreDoc(data[0]);
-          }
-        }
-      } catch (restError) {
-        console.warn('Error en consulta REST a Firestore, intentando con SDK:', restError);
-      }
-
-      // 3. Fallback con SDK cliente si todo lo anterior no arrojó resultado
-      if (!user) {
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where('email', '==', email));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0];
+        const usersSnapshot = await adminDb.collection('users').where('email', '==', email).get();
+        if (!usersSnapshot.empty) {
+          const userDoc = usersSnapshot.docs[0];
           user = { id: userDoc.id, ...userDoc.data() } as User;
         }
+      } catch (error) {
+        console.error('Error fetching user with adminDb:', error);
       }
     }
 
