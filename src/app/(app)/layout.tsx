@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { ForegroundNotificationListener } from '@/components/ForegroundNotificationListener';
 import { NotificationBell } from '@/components/notification-bell';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 
 import {
@@ -106,6 +108,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       try {
         await fetch('/api/logout', { method: 'POST' });
+        await signOut(auth);
       } catch (error) {
         console.error('Error logging out:', error);
       }

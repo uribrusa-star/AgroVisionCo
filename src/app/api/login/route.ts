@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import type { User } from '@/lib/types';
 
 import { getRoleAvatar } from '@/lib/utils';
@@ -70,11 +70,14 @@ export async function POST(request: Request) {
     // Omitimos el password antes de guardar en la sesión por seguridad
     const { password: _, ...userToSave } = user;
 
+    // Generar un token personalizado para que el cliente (Navegador) pueda iniciar sesión en Firebase Auth
+    const customToken = await adminAuth.createCustomToken(user.id);
+
     // Guardar los datos del usuario en la sesión de Iron Session
     session.user = userToSave;
     await session.save();
 
-    return NextResponse.json({ user: userToSave });
+    return NextResponse.json({ user: userToSave, firebaseToken: customToken });
 
   } catch (error) {
     console.error('Login error:', error);

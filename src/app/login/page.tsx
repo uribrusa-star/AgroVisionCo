@@ -16,6 +16,8 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
+import { signInWithCustomToken } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 
 const LoginSchema = z.object({
@@ -56,6 +58,15 @@ export default function LoginPage() {
 
         if (response.ok) {
           const result = await response.json();
+          
+          if (result.firebaseToken) {
+            try {
+              await signInWithCustomToken(auth, result.firebaseToken);
+            } catch (firebaseAuthError) {
+              console.error("Error autenticando cliente Firebase:", firebaseAuthError);
+            }
+          }
+
           setCurrentUser(result.user, values.rememberMe);
           toast({
               title: `¡Bienvenido de nuevo, ${result.user.name}!`,
