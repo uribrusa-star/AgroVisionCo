@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const preference = new Preference(client);
 
-    const body = await preference.create({
+    const response = await preference.create({
       body: {
         items: [
           {
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({ init_point: preference.init_point, sandbox_init_point: preference.sandbox_init_point });
+    return NextResponse.json({ init_point: response.init_point, sandbox_init_point: response.sandbox_init_point });
   } catch (error) {
     console.error('Error creando preferencia MP:', error);
     return NextResponse.json({ error: 'Error al generar el link de pago' }, { status: 500 });
