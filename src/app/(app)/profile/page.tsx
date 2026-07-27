@@ -149,9 +149,10 @@ export default function ProfilePage() {
         const res = await fetch('/api/checkout', { method: 'POST' });
         if (res.ok) {
           const data = await res.json();
-          // Redirigir a MercadoPago Sandbox
-          if (data.sandbox_init_point) {
-            window.location.href = data.sandbox_init_point;
+          // Redirigir a MercadoPago (Producción o Sandbox dependiendo del token usado)
+          const checkoutUrl = data.init_point || data.sandbox_init_point;
+          if (checkoutUrl) {
+            window.location.href = checkoutUrl;
           }
         } else {
           toast({ title: "Error", description: "No se pudo generar el enlace de pago.", variant: "destructive" });
