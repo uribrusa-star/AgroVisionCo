@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -143,6 +143,25 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSubscribe = async () => {
+    try {
+      startTransition(async () => {
+        const res = await fetch('/api/checkout', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          // Redirigir a MercadoPago Sandbox
+          if (data.sandbox_init_point) {
+            window.location.href = data.sandbox_init_point;
+          }
+        } else {
+          toast({ title: "Error", description: "No se pudo generar el enlace de pago.", variant: "destructive" });
+        }
+      });
+    } catch (e) {
+      toast({ title: "Error", description: "Ocurrió un error de red.", variant: "destructive" });
+    }
+  };
+
   return (
     <>
       <PageHeader title="Mi Perfil" description="Administre sus ajustes de cuenta, seguridad y preferencias de notificaciones." />
@@ -179,6 +198,51 @@ export default function ProfilePage() {
         {/* Columna Derecha: Formularios */}
         <div className="xl:col-span-2 flex flex-col gap-6">
             
+            {currentUser.role === 'Productor' && (
+              <Card className="shadow-sm hover:shadow-md transition-shadow border-primary/20">
+                <CardHeader className="flex flex-row items-center gap-2 pb-2">
+                    <div className="p-2 bg-primary/10 rounded-full shrink-0"><CreditCard className="h-5 w-5 text-primary" /></div>
+                    <div>
+                        <CardTitle>Mi Suscripción</CardTitle>
+                        <CardDescription>Gestione su plan mensual de AgroVista.</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-muted/50 rounded-lg border">
+                    <div>
+                      <p className="font-semibold text-lg">
+                        Estado: {
+                          currentUser.subscriptionStatus === 'active' ? <span className="text-green-600">Activa</span> : 
+                          <span className="text-orange-500">Inactiva / Vencida</span>
+                        }
+                      </p>
+                      {currentUser.subscriptionExpiryDate && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Vence el: {new Date(currentUser.subscriptionExpiryDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {!currentUser.subscriptionStatus && (
+                         <p className="text-sm text-muted-foreground mt-1">
+                          Periodo de prueba de 14 días disponible.
+                        </p>
+                      )}
+                    </div>
+                    <div className="mt-4 sm:mt-0">
+                      {currentUser.subscriptionStatus !== 'active' ? (
+                        <Button onClick={handleSubscribe} disabled={isPending} className="w-full sm:w-auto">
+                          {isPending ? "Procesando..." : "Suscribirse por $100.000 / mes"}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" disabled className="w-full sm:w-auto text-green-600 border-green-200 bg-green-50/50">
+                          Suscripción al día
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="flex flex-row items-center gap-2">
                     <div className="p-2 bg-primary/10 rounded-full shrink-0"><UserIcon className="h-5 w-5 text-primary" /></div>

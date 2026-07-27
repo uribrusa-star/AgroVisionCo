@@ -156,6 +156,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   
   const navItems = allNavItems.filter(item => item.roles.includes(currentUser.role));
 
+  const isProductor = currentUser.role === 'Productor';
+  const isPaywalled = isProductor && (currentUser.subscriptionStatus === 'past_due' || currentUser.subscriptionStatus === 'canceled');
+  const allowedPaywallRoutes = ['/profile', '/establishment'];
+  const showPaywallBlocker = isPaywalled && !allowedPaywallRoutes.includes(pathname);
+
   return (
       <SidebarProvider defaultOpen={false} className="flex-col">
           <ConnectivityBanner />
@@ -215,11 +220,27 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </div>
             </SidebarFooter>
           </Sidebar>
-          <SidebarInset className="bg-muted/10">
-            <main className="flex-1 p-4 md:p-6 lg:p-8">
-                {children}
-            </main>
-          </SidebarInset>
+
+            <SidebarInset className="flex-1 w-full bg-muted/20">
+                <main className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full relative">
+                  {showPaywallBlocker ? (
+                    <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
+                      <div className="bg-background p-8 rounded-xl shadow-lg max-w-md border border-orange-200">
+                        <PackageSearch className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Suscripción Requerida</h2>
+                        <p className="text-muted-foreground mb-6">
+                          Su periodo de prueba ha finalizado o su suscripción está inactiva. Para continuar utilizando todas las herramientas de AgroVista, por favor active su suscripción.
+                        </p>
+                        <Button asChild className="w-full">
+                          <Link href="/profile">Ir a Mi Suscripción</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    children
+                  )}
+                </main>
+            </SidebarInset>
           </div>
       </SidebarProvider>
   );

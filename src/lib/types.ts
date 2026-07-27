@@ -19,6 +19,11 @@ export type User = {
   role: UserRole;
   password?: string; // Added for mock authentication
   fcmTokens?: string[];
+  
+  // Subscription fields
+  subscriptionStatus?: 'trial' | 'active' | 'past_due' | 'canceled';
+  subscriptionExpiryDate?: string;
+  mercadoPagoSubscriptionId?: string;
 };
 
 export type Collector = {
