@@ -11,6 +11,22 @@ const withPWA = withPWAInit({
   customWorkerDir: 'worker',
   fallbacks: {
     document: '/offline',
+  },
+  workboxOptions: {
+    disableDevLogs: true,
+    exclude: [
+      /firestore\.googleapis\.com/i,
+      /google\.firestore\.v1\.Firestore/i
+    ],
+    runtimeCaching: [
+      {
+        urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
+        handler: 'NetworkOnly',
+        options: {
+          cacheName: 'firestore-bypass',
+        },
+      },
+    ],
   }
 });
 
