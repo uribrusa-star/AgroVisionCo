@@ -41,6 +41,7 @@ export async function POST(request: Request) {
           pending: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'}/profile?payment=pending`,
         },
         auto_return: 'approved',
+        notification_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'}/api/webhooks/mercadopago`,
         external_reference: session.user.id, // Muy importante para vincular el pago con el usuario
         metadata: {
           userId: session.user.id
