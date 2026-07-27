@@ -195,7 +195,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
       try {
         const usersCollectionRef = collection(db, 'users');
-        const usersSnapshot = await getDocs(usersCollectionRef);
+        const usersQuery = query(usersCollectionRef, where('establishmentId', '==', currentUser?.establishmentId || 'main'));
+        const usersSnapshot = await getDocs(usersQuery);
 
             if (usersSnapshot.empty) {
               const batch = writeBatch(db);
