@@ -312,7 +312,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(timeoutId);
         setLoading(false);
       }
-    }, [toast, isClient]);
+    }, [toast, isClient, currentUser]);
     
     // Set up real-time listener for notifications once currentUser is established
     useEffect(() => {
