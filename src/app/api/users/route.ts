@@ -4,23 +4,29 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, password, role, producerId, establishmentId } = body;
+    const { name, password, role, producerId, establishmentId, email } = body;
 
     if (!name || !password || !role || !producerId || !establishmentId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (role !== 'Ingeniero Agronomo' && role !== 'Encargado') {
+    if (role !== 'Ingeniero Agronomo' && role !== 'Encargado' && role !== 'Productor') {
       return NextResponse.json({ error: 'Invalid role for self-service creation' }, { status: 400 });
     }
 
     // Verify the user making the request is a Productor
     const producerDoc = await adminDb.collection('users').doc(producerId).get();
     if (!producerDoc.exists || producerDoc.data()?.role !== 'Productor') {
-      return NextResponse.json({ error: 'Unauthorized. Only Producers can create staff.' }, { status: 403 });
+      return NextResponse.json({ error: 'Unauthorized. Only Producers can create users.' }, { status: 403 });
     }
 
-    if (producerDoc.data()?.establishmentId !== establishmentId) {
+    const isSuperAdmin = producerDoc.data()?.establishmentId === 'main';
+
+    if (role === 'Productor' && !isSuperAdmin) {
+      return NextResponse.json({ error: 'Unauthorized. Only the Super Admin can create Producers.' }, { status: 403 });
+    }
+
+    if (role !== 'Productor' && producerDoc.data()?.establishmentId !== establishmentId) {
       return NextResponse.json({ error: 'Establishment ID mismatch' }, { status: 403 });
     }
 
@@ -49,16 +55,21 @@ export async function POST(request: Request) {
 
     // Generate email
     const estSuffix = establishmentId.toLowerCase().replace(/[^a-z0-9]/g, '');
-    let generatedEmail = '';
+    let finalEmail = email; // Used if role === 'Productor'
+    
     if (role === 'Ingeniero Agronomo') {
-      generatedEmail = `ing-${estSuffix}@agrovista.co`;
+      finalEmail = `ing-${estSuffix}@agrovista.co`;
     } else if (role === 'Encargado') {
-      generatedEmail = `enc${managerCount + 1}-${estSuffix}@agrovista.co`;
+      finalEmail = `enc${managerCount + 1}-${estSuffix}@agrovista.co`;
+    }
+    
+    if (!finalEmail) {
+      return NextResponse.json({ error: 'Email is required for Productor creation' }, { status: 400 });
     }
 
     // Create Firebase Auth user
     const userRecord = await adminAuth.createUser({
-      email: generatedEmail,
+      email: finalEmail,
       password,
       displayName: name,
     });
@@ -66,7 +77,7 @@ export async function POST(request: Request) {
     // Create Firestore user document
     await adminDb.collection('users').doc(userRecord.uid).set({
       name,
-      email: generatedEmail,
+      email: finalEmail,
       role,
       avatar: '',
       establishmentId,
@@ -74,7 +85,7 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     });
 
-    return NextResponse.json({ success: true, uid: userRecord.uid, email: generatedEmail });
+    return NextResponse.json({ success: true, uid: userRecord.uid, email: finalEmail });
 
   } catch (error: any) {
     console.error('Error creating user:', error);

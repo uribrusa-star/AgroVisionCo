@@ -4,7 +4,7 @@ import React, { useState, useContext, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound, Plus } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus, ShieldAlert } from 'lucide-react';
 
 import { PageHeader } from "@/components/page-header";
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -32,8 +32,10 @@ const PasswordSchema = z.object({
 
 const CreateUserSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
-  role: z.enum(['Ingeniero Agronomo', 'Encargado']),
+  role: z.enum(['Ingeniero Agronomo', 'Encargado', 'Productor']),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+  email: z.string().optional(),
+  establishmentId: z.string().optional(),
 });
 
 export default function UsersPage() {
@@ -47,6 +49,8 @@ export default function UsersPage() {
   
   const [isPending, startTransition] = useTransition();
 
+  const isSuperAdmin = currentUser?.establishmentId === 'main' && currentUser?.role === 'Productor';
+
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
@@ -54,8 +58,10 @@ export default function UsersPage() {
 
   const createForm = useForm<z.infer<typeof CreateUserSchema>>({
     resolver: zodResolver(CreateUserSchema),
-    defaultValues: { name: '', role: 'Encargado', password: '' },
+    defaultValues: { name: '', role: 'Encargado', password: '', email: '', establishmentId: '' },
   });
+  
+  const selectedRole = createForm.watch('role');
 
   if (currentUser?.role !== 'Productor') {
     return (
@@ -104,13 +110,26 @@ export default function UsersPage() {
   const onCreateSubmit = (values: z.infer<typeof CreateUserSchema>) => {
     startTransition(async () => {
       try {
+        
+        let targetEstablishmentId = currentUser.establishmentId || 'main';
+        
+        if (values.role === 'Productor') {
+            if (!values.email || !values.establishmentId) {
+                throw new Error("El correo y el ID de establecimiento son obligatorios para crear un Productor.");
+            }
+            targetEstablishmentId = values.establishmentId;
+        }
+
         const response = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ...values,
+            name: values.name,
+            role: values.role,
+            password: values.password,
+            email: values.email,
             producerId: currentUser.id,
-            establishmentId: currentUser.establishmentId || 'main',
+            establishmentId: targetEstablishmentId,
           }),
         });
 
@@ -144,7 +163,7 @@ export default function UsersPage() {
           <PageHeader title="Usuarios" description="Vea y gestione los usuarios del sistema." />
           <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Agregar Empleado
+              {isSuperAdmin ? "Crear Cuenta (Usuario/Productor)" : "Agregar Empleado"}
           </Button>
       </div>
 
@@ -202,7 +221,8 @@ export default function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    {user.role !== 'Productor' && (
+                    {/* Allow super admin to change any password, or producers to change staff passwords */}
+                    {(isSuperAdmin || user.role !== 'Productor') && (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending}>
@@ -277,13 +297,15 @@ export default function UsersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for creating staff */}
+      {/* Dialog for creating staff / producer */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Agregar Nuevo Empleado</DialogTitle>
+                <DialogTitle>{isSuperAdmin ? 'Crear Nueva Cuenta' : 'Agregar Nuevo Empleado'}</DialogTitle>
                 <DialogDescription>
-                    Crea una cuenta para que un Ingeniero o Encargado acceda a tu establecimiento.
+                    {isSuperAdmin 
+                        ? 'Crea un nuevo Productor para la plataforma, o un empleado para tu propio establecimiento.'
+                        : 'Crea una cuenta para que un Ingeniero o Encargado acceda a tu establecimiento.'}
                 </DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
@@ -295,19 +317,18 @@ export default function UsersPage() {
                             <FormItem>
                                 <FormLabel>Nombre Completo</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Ej. Juan Pérez" {...field} />
+                                    <Input placeholder={selectedRole === 'Productor' ? "Ej. Juan - Productor 03" : "Ej. Juan Pérez"} {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-
                     <FormField
                         control={createForm.control}
                         name="role"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Rol en el Establecimiento</FormLabel>
+                                <FormLabel>Rol de Usuario</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -317,12 +338,53 @@ export default function UsersPage() {
                                     <SelectContent>
                                         <SelectItem value="Encargado">Encargado</SelectItem>
                                         <SelectItem value="Ingeniero Agronomo">Ingeniero Agrónomo</SelectItem>
+                                        {isSuperAdmin && (
+                                            <SelectItem value="Productor">Productor (Nuevo Cliente)</SelectItem>
+                                        )}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
+                    
+                    {selectedRole === 'Productor' && (
+                        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-primary/20">
+                            <div className="flex items-center gap-2 text-primary font-medium mb-2">
+                                <ShieldAlert className="h-4 w-4" />
+                                <p className="text-sm">Configuración de Nuevo Establecimiento</p>
+                            </div>
+                            <FormField
+                                control={createForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Correo del Productor</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="productor03@agrovista.co" {...field} />
+                                        </FormControl>
+                                        <FormDescription>El correo con el que iniciará sesión.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={createForm.control}
+                                name="establishmentId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>ID de Establecimiento</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="EST-003" {...field} className="uppercase" />
+                                        </FormControl>
+                                        <FormDescription>Un ID único para su granja (ej. EST-003).</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    )}
+
                     <FormField
                         control={createForm.control}
                         name="password"
