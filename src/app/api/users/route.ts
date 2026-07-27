@@ -4,9 +4,9 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, password, role, producerId, establishmentId } = body;
+    const { name, password, role, producerId, establishmentId } = body;
 
-    if (!name || !email || !password || !role || !producerId || !establishmentId) {
+    if (!name || !password || !role || !producerId || !establishmentId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -47,9 +47,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Limit reached: Solo puedes tener hasta 3 Encargados.' }, { status: 400 });
     }
 
+    // Generate email
+    const estSuffix = establishmentId.toLowerCase().replace(/[^a-z0-9]/g, '');
+    let generatedEmail = '';
+    if (role === 'Ingeniero Agronomo') {
+      generatedEmail = `ing-${estSuffix}@agrovista.co`;
+    } else if (role === 'Encargado') {
+      generatedEmail = `enc${managerCount + 1}-${estSuffix}@agrovista.co`;
+    }
+
     // Create Firebase Auth user
     const userRecord = await adminAuth.createUser({
-      email,
+      email: generatedEmail,
       password,
       displayName: name,
     });
@@ -57,14 +66,14 @@ export async function POST(request: Request) {
     // Create Firestore user document
     await adminDb.collection('users').doc(userRecord.uid).set({
       name,
-      email,
+      email: generatedEmail,
       role,
       avatar: '',
       establishmentId,
       createdAt: new Date().toISOString(),
     });
 
-    return NextResponse.json({ success: true, uid: userRecord.uid });
+    return NextResponse.json({ success: true, uid: userRecord.uid, email: generatedEmail });
 
   } catch (error: any) {
     console.error('Error creating user:', error);

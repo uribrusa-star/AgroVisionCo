@@ -32,7 +32,6 @@ const PasswordSchema = z.object({
 
 const CreateUserSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
-  email: z.string().email("Correo electrónico inválido."),
   role: z.enum(['Ingeniero Agronomo', 'Encargado']),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
 });
@@ -55,7 +54,7 @@ export default function UsersPage() {
 
   const createForm = useForm<z.infer<typeof CreateUserSchema>>({
     resolver: zodResolver(CreateUserSchema),
-    defaultValues: { name: '', email: '', role: 'Encargado', password: '' },
+    defaultValues: { name: '', role: 'Encargado', password: '' },
   });
 
   if (currentUser?.role !== 'Productor') {
@@ -123,7 +122,7 @@ export default function UsersPage() {
 
         toast({
           title: "Usuario Creado",
-          description: `${values.name} ha sido agregado exitosamente al sistema. Recarga la página para verlo.`,
+          description: `${values.name} ha sido agregado exitosamente. Su correo de acceso es: ${data.email}`,
         });
         
         setIsCreateDialogOpen(false);
@@ -302,19 +301,7 @@ export default function UsersPage() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={createForm.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Correo Electrónico</FormLabel>
-                                <FormControl>
-                                    <Input type="email" placeholder="juan@ejemplo.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+
                     <FormField
                         control={createForm.control}
                         name="role"
