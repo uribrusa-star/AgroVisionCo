@@ -231,7 +231,7 @@ export default function ProfilePage() {
                     <div className="mt-4 sm:mt-0">
                       {currentUser.subscriptionStatus !== 'active' ? (
                         <Button onClick={handleSubscribe} disabled={isPending} className="w-full sm:w-auto">
-                          {isPending ? "Procesando..." : "Suscribirse por $100.000 / mes"}
+                          {isPending ? "Procesando..." : "Suscribirse por $100 / mes"}
                         </Button>
                       ) : (
                         <Button variant="outline" disabled className="w-full sm:w-auto text-green-600 border-green-200 bg-green-50/50">

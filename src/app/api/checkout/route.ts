@@ -27,7 +27,7 @@ export async function POST(request: Request) {
             title: 'Suscripción Mensual AgroVista',
             description: 'Acceso completo a las herramientas de gestión agrícola',
             quantity: 1,
-            unit_price: 100000, // $100.000 ARS
+            unit_price: 100, // $100 ARS (Precio de prueba real)
             currency_id: 'ARS',
           }
         ],
