@@ -70,6 +70,7 @@ export async function POST(request: Request) {
       role,
       avatar: '',
       establishmentId,
+      password, // Save password for mock login to work
       createdAt: new Date().toISOString(),
     });
 
