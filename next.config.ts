@@ -1,34 +1,4 @@
 import type { NextConfig } from 'next';
-import withPWAInit from '@ducanh2912/next-pwa';
-
-const withPWA = withPWAInit({
-  dest: 'public',
-  register: false,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
-  cacheOnFrontEndNav: false,
-  aggressiveFrontEndNavCaching: false,
-  customWorkerDir: 'worker',
-  fallbacks: {
-    document: '/offline',
-  },
-  workboxOptions: {
-    disableDevLogs: true,
-    exclude: [
-      /firestore\.googleapis\.com/i,
-      /google\.firestore\.v1\.Firestore/i
-    ],
-    runtimeCaching: [
-      {
-        urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-        handler: 'NetworkOnly',
-        options: {
-          cacheName: 'firestore-bypass',
-        },
-      },
-    ],
-  }
-});
 
 const nextConfig: NextConfig = {
   typescript: {
@@ -51,10 +21,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'imgur.com' },
     ],
   },
-  // Forzamos Webpack para evitar conflictos con Turbopack y PWA
   webpack: (config) => {
     return config;
   },
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
