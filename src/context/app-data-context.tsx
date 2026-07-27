@@ -244,30 +244,30 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               transactionsSnapshot,
               knowledgeSnapshot,
             ] = await Promise.all([
-              safeFetch(getDoc(doc(db, 'establishment', 'main')), null),
-              safeFetch(getDocs(collection(db, 'collectors')), { docs: [] } as any),
-              safeFetch(getDocs(collection(db, 'packers')), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'harvests'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'agronomistLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'phenologyLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'predictionLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'diagnosisLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(collection(db, 'supplies')), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'tasks'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(collection(db, 'batches')), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'collectorPaymentLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'packagingLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'producerLogs'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'transactions'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(collection(db, 'knowledge')), { docs: [] } as any),
+              safeFetch(getDoc(doc(db, 'establishment', userData.establishmentId || 'main')), null),
+              safeFetch(getDocs(query(collection(db, 'collectors'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'packers'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'harvests'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'agronomistLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'phenologyLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'predictionLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'diagnosisLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'supplies'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'tasks'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'batches'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'collectorPaymentLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'packagingLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'producerLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'transactions'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'knowledge'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
               setEstablishmentData({ id: establishmentDocSnap.id, ...establishmentDocSnap.data() } as EstablishmentData);
             } else if (establishmentDocSnap && !establishmentDocSnap.exists()) {
-              await setDoc(doc(db, 'establishment', 'main'), initialEstablishmentData);
-              setEstablishmentData({ id: 'main', ...initialEstablishmentData });
+              await setDoc(doc(db, 'establishment', userData.establishmentId || 'main'), initialEstablishmentData);
+              setEstablishmentData({ id: userData.establishmentId || 'main', ...initialEstablishmentData });
             } else {
               // Si establishmentDocSnap === null (fallo de red/permisos), NO seteamos iniciales
               // para evitar que el usuario los guarde accidentalmente y sobrescriba la BD.
@@ -391,7 +391,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             }
 
             const newHarvestRef = doc(collection(db, 'harvests'));
-            batch.set(newHarvestRef, harvestWithTraceability);
+            batch.set(newHarvestRef, { ...harvestWithTraceability, establishmentId: currentUser?.establishmentId || 'main' });
 
             const collectorRef = doc(db, 'collectors', harvestData.collector.id);
             const newTotalHarvested = collector.totalHarvested + harvestData.kilograms;
@@ -417,7 +417,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               payment: calculatedPayment,
               traceabilityId: traceabilityId, // Ensure traceabilityId is included
             };
-            batch.set(newPaymentLogRef, paymentLog);
+            batch.set(newPaymentLogRef, { ...paymentLog, establishmentId: currentUser?.establishmentId || 'main' });
 
             await batch.commit();
             setCollectors(prev => prev.map(c => {
@@ -483,7 +483,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 const newHarvestRef = doc(collection(db, 'harvests'));
-                batch.set(newHarvestRef, harvestWithTraceability);
+                batch.set(newHarvestRef, { ...harvestWithTraceability, establishmentId: currentUser?.establishmentId || 'main' });
 
                 const collectorRef = doc(db, 'collectors', harvestData.collector.id);
                 const prevStats = updatedCollectors.get(harvestData.collector.id) || { totalHarvested: collector.totalHarvested, hoursWorked: collector.hoursWorked };
@@ -511,7 +511,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                   payment: calculatedPayment,
                   traceabilityId,
                 };
-                batch.set(newPaymentLogRef, paymentLog);
+                batch.set(newPaymentLogRef, { ...paymentLog, establishmentId: currentUser?.establishmentId || 'main' });
                 harvestsAdded++;
             }
 
@@ -659,7 +659,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `collector_${Date.now()}`;
         setCollectors(prev => [...prev, { id: tempId, ...collector }]);
         
-        addDoc(collection(db, 'collectors'), collector).then(ref => {
+        addDoc(collection(db, 'collectors'), { ...(collector), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setCollectors(prev => prev.map(c => c.id === tempId ? { ...c, id: ref.id } : c));
         }).catch(error => {
             console.error("Failed to add collector:", error);
@@ -673,7 +673,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       setPackers(prev => [...prev, { id: tempId, ...packer }]);
 
       try {
-          const ref = await addDoc(collection(db, 'packers'), packer);
+          const ref = await addDoc(collection(db, 'packers'), { ...(packer), establishmentId: currentUser?.establishmentId || 'main' });
           setPackers(prev => prev.map(p => p.id === tempId ? { ...p, id: ref.id } : p));
       } catch (error) {
           console.error("Failed to add packer:", error);
@@ -709,7 +709,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `packaginglog_${Date.now()}`;
         setPackagingLogs(prev => [{ id: tempId, ...log }, ...prev]);
         
-        addDoc(collection(db, 'packagingLogs'), log).then(async (ref) => {
+        addDoc(collection(db, 'packagingLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(async (ref) => {
             setPackagingLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
             
             const packer = packers.find(p => p.id === log.packerId);
@@ -783,7 +783,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `culturallog_${Date.now()}`;
         setCulturalPracticeLogs(prev => [{ id: tempId, ...log }, ...prev]);
         
-        addDoc(collection(db, 'culturalPracticeLogs'), log).then(ref => {
+        addDoc(collection(db, 'culturalPracticeLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setCulturalPracticeLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
         }).catch(error => {
             console.error("Failed to add cultural practice log:", error);
@@ -944,7 +944,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `phenologylog_${Date.now()}`;
         setPhenologyLogs(prev => [{ id: tempId, ...log }, ...prev]);
     
-        addDoc(collection(db, 'phenologyLogs'), sanitizeForFirestore(log)).then(ref => {
+        addDoc(collection(db, 'phenologyLogs'), { ...(sanitizeForFirestore(log), establishmentId: currentUser?.establishmentId || 'main' })).then(ref => {
             setPhenologyLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
         }).catch(error => {
             console.error("Failed to add phenology log:", error);
@@ -986,7 +986,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `predictionlog_${Date.now()}`;
         setPredictionLogs(prev => [{ id: tempId, ...log }, ...prev]);
 
-        addDoc(collection(db, 'predictionLogs'), log).then(ref => {
+        addDoc(collection(db, 'predictionLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setPredictionLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
             
             // Trigger push notification if frost or risk is detected
@@ -1020,7 +1020,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `diagnosislog_${Date.now()}`;
         setDiagnosisLogs(prev => [{ id: tempId, ...log }, ...prev]);
 
-        addDoc(collection(db, 'diagnosisLogs'), log).then(ref => {
+        addDoc(collection(db, 'diagnosisLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setDiagnosisLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
             
             // Trigger push notification if disease or pest is detected
@@ -1054,7 +1054,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `supply_${Date.now()}`;
         setSupplies(prev => [{ id: tempId, ...supply }, ...prev]);
 
-        addDoc(collection(db, 'supplies'), supply).then(ref => {
+        addDoc(collection(db, 'supplies'), { ...(supply), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setSupplies(prev => prev.map(s => s.id === tempId ? { ...s, id: ref.id } : s));
         }).catch(error => {
             console.error("Failed to add supply:", error);
@@ -1092,7 +1092,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const newTask = { id: tempId, ...task };
         setTasks(prev => [newTask, ...prev]);
 
-        addDoc(collection(db, 'tasks'), task)
+        addDoc(collection(db, 'tasks'), { ...(task), establishmentId: currentUser?.establishmentId || 'main' })
         .then(ref => {
             setTasks(prev => prev.map(t => (t.id === tempId ? { ...t, id: ref.id } : t)));
             const assignedUser = users.find(u => u.id === task.assignedTo.id);
@@ -1290,7 +1290,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `producerlog_${Date.now()}`;
         setProducerLogs(prev => [{ id: tempId, ...log }, ...prev]);
         
-        addDoc(collection(db, 'producerLogs'), log).then(ref => {
+        addDoc(collection(db, 'producerLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setProducerLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
         }).catch(error => {
             console.error("Failed to add producer log:", error);
@@ -1332,7 +1332,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         setTransactions(prev => [{ id: tempId, ...transaction }, ...prev]);
         
-        addDoc(collection(db, 'transactions'), transaction).then(ref => {
+        addDoc(collection(db, 'transactions'), { ...(transaction), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setTransactions(prev => prev.map(t => t.id === tempId ? { ...t, id: ref.id } : t));
         }).catch(error => {
             console.error("Failed to add transaction:", error);
@@ -1358,7 +1358,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addKnowledgeItem = async (item: Omit<KnowledgeItem, 'id'>) => {
-        await addDoc(collection(db, 'knowledge'), item);
+        await addDoc(collection(db, 'knowledge'), { ...(item), establishmentId: currentUser?.establishmentId || 'main' });
         await fetchAllData();
     };
 

@@ -24,6 +24,7 @@ export type User = {
   subscriptionStatus?: 'trial' | 'active' | 'past_due' | 'canceled';
   subscriptionExpiryDate?: string;
   mercadoPagoSubscriptionId?: string;
+  establishmentId?: string;
 };
 
 export type Collector = {
@@ -34,6 +35,7 @@ export type Collector = {
   hoursWorked: number;
   productivity: number; // kg per hour
   joinDate: string;
+  establishmentId?: string;
 };
 
 export type Packer = {
@@ -44,6 +46,7 @@ export type Packer = {
   hoursWorked: number;
   packagingRate: number; // kg per hour
   joinDate: string;
+  establishmentId?: string;
 };
 
 export type Harvest = {
@@ -54,7 +57,8 @@ export type Harvest = {
   collector: {
     id: string;
     name: string;
-  };
+    establishmentId?: string;
+};
   traceabilityId: string;
 };
 
@@ -75,6 +79,7 @@ export type Batch = {
 export type MonthlyData = {
   month: string;
   total: number;
+  establishmentId?: string;
 };
 
 export type EngineerLogStats = {
@@ -141,7 +146,10 @@ export type Supply = {
     activeIngredient: string;
     dose: string;
     notes?: string;
-  };
+    establishmentId?: string;
+  establishmentId?: string;
+  establishmentId?: string;
+};
 };
 
 export type PredictionLog = {
@@ -150,6 +158,7 @@ export type PredictionLog = {
   batchId: string;
   prediction: string;
   confidence: 'Alta' | 'Media' | 'Baja';
+  establishmentId?: string;
 };
 
 export type DiagnosisResult = {
@@ -169,6 +178,7 @@ export type DiagnosisLog = {
   batchId: string;
   result: DiagnosisResult;
   userCorrection?: string;
+  establishmentId?: string;
 };
 
 
@@ -194,6 +204,8 @@ export type PackagingLog = {
   hoursWorked: number;
   costPerHour: number;
   payment: number;
+  establishmentId?: string;
+  establishmentId?: string;
 };
 
 export type CulturalPracticeLog = {
@@ -208,6 +220,7 @@ export type CulturalPracticeLog = {
     payment: number;
     notes: string;
     batchIds?: string[];
+  establishmentId?: string;
 };
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed';
@@ -218,7 +231,8 @@ export type Task = {
     id: string;
     title: string;
     description: string;
-    assignedTo: { id: string, name: string };
+    assignedTo: { id: string, name: string   establishmentId?: string;
+};
     createdBy: { id: string, name: string };
     status: TaskStatus;
     priority: TaskPriority;
@@ -305,6 +319,9 @@ export type KnowledgeItem = {
     content: string;
     type: 'pdf' | 'text';
     date: string;
+  establishmentId?: string;
+  establishmentId?: string;
+  establishmentId?: string;
 };
 
 export type AppData = {
