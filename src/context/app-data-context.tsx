@@ -244,30 +244,30 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               transactionsSnapshot,
               knowledgeSnapshot,
             ] = await Promise.all([
-              safeFetch(getDoc(doc(db, 'establishment', userData.establishmentId || 'main')), null),
-              safeFetch(getDocs(query(collection(db, 'collectors'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'packers'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'harvests'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'agronomistLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'phenologyLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'predictionLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'diagnosisLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'supplies'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'tasks'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'batches'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'collectorPaymentLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'packagingLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'producerLogs'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'transactions'), where('establishmentId', '==', userData.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'knowledge'), where('establishmentId', '==', userData.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDoc(doc(db, 'establishment', currentUser?.establishmentId || 'main')), null),
+              safeFetch(getDocs(query(collection(db, 'collectors'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'packers'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'harvests'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'agronomistLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'phenologyLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'predictionLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'diagnosisLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'supplies'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'tasks'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'batches'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'collectorPaymentLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'packagingLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'producerLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'transactions'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'knowledge'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
               setEstablishmentData({ id: establishmentDocSnap.id, ...establishmentDocSnap.data() } as EstablishmentData);
             } else if (establishmentDocSnap && !establishmentDocSnap.exists()) {
-              await setDoc(doc(db, 'establishment', userData.establishmentId || 'main'), initialEstablishmentData);
-              setEstablishmentData({ id: userData.establishmentId || 'main', ...initialEstablishmentData });
+              await setDoc(doc(db, 'establishment', currentUser?.establishmentId || 'main'), initialEstablishmentData);
+              setEstablishmentData({ id: currentUser?.establishmentId || 'main', ...initialEstablishmentData });
             } else {
               // Si establishmentDocSnap === null (fallo de red/permisos), NO seteamos iniciales
               // para evitar que el usuario los guarde accidentalmente y sobrescriba la BD.
