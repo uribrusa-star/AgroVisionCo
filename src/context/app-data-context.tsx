@@ -944,7 +944,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `phenologylog_${Date.now()}`;
         setPhenologyLogs(prev => [{ id: tempId, ...log }, ...prev]);
     
-        addDoc(collection(db, 'phenologyLogs'), { ...(sanitizeForFirestore(log), establishmentId: currentUser?.establishmentId || 'main' })).then(ref => {
+        addDoc(collection(db, 'phenologyLogs'), { ...sanitizeForFirestore(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setPhenologyLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
         }).catch(error => {
             console.error("Failed to add phenology log:", error);
