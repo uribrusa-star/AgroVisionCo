@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import { ForegroundNotificationListener } from '@/components/ForegroundNotificationListener';
 import { NotificationBell } from '@/components/notification-bell';
 import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { clearIndexedDbPersistence, terminate } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 
 import {
@@ -109,8 +110,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       try {
         await fetch('/api/logout', { method: 'POST' });
         await signOut(auth);
+        
+        // Terminar Firestore y limpiar todo el caché de IndexedDB para asegurar 100% de aislamiento de datos
+        await terminate(db);
+        await clearIndexedDbPersistence(db);
       } catch (error) {
-        console.error('Error logging out:', error);
+        console.error('Error logging out and clearing cache:', error);
       }
       window.localStorage.clear();
       window.sessionStorage.clear();
