@@ -1169,6 +1169,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const newBatch: Batch = { 
             preloadedDate: new Date().toISOString(),
             status: 'pending',
+            establishmentId: currentUser?.establishmentId || 'main',
             ...batchData, 
         };
         setBatches(prev => [newBatch, ...prev]);
@@ -1273,7 +1274,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const originalData = establishmentData;
             setEstablishmentData(prev => prev ? { ...prev, ...data } : null);
             
-            const establishmentRef = doc(db, 'establishment', 'main');
+            const estId = currentUser?.establishmentId || 'main';
+            const establishmentRef = doc(db, 'establishment', estId);
             const updateData = Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
             
             setDoc(establishmentRef, updateData, { merge: true })
