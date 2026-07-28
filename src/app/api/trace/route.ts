@@ -25,17 +25,18 @@ export async function GET(request: Request) {
 
     const batchIdStr = harvest.batchNumber;
     const batchIdsToSearch = batchIdStr.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const estId = harvest.establishmentId || 'main';
 
     const phenologyLogsRef = collection(db, 'phenologyLogs');
     const logsPromises = batchIdsToSearch.flatMap((b: string) => [
-      getDocs(query(phenologyLogsRef, where('batchIds', 'array-contains', b))),
-      getDocs(query(phenologyLogsRef, where('batchId', '==', b)))
+      getDocs(query(phenologyLogsRef, where('batchIds', 'array-contains', b), where('establishmentId', '==', estId))),
+      getDocs(query(phenologyLogsRef, where('batchId', '==', b), where('establishmentId', '==', estId)))
     ]);
 
     const agronomistLogsRef = collection(db, 'agronomistLogs');
     const agLogsPromises = batchIdsToSearch.flatMap((b: string) => [
-      getDocs(query(agronomistLogsRef, where('batchIds', 'array-contains', b))),
-      getDocs(query(agronomistLogsRef, where('batchId', '==', b)))
+      getDocs(query(agronomistLogsRef, where('batchIds', 'array-contains', b), where('establishmentId', '==', estId))),
+      getDocs(query(agronomistLogsRef, where('batchId', '==', b), where('establishmentId', '==', estId)))
     ]);
 
     const [phenologySnapshots, agSnapshots] = await Promise.all([
