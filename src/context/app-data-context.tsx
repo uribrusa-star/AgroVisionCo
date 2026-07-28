@@ -1491,6 +1491,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         editCollector,
         deleteCollector,
         addAgronomistLog,
+        addMultipleAgronomistLogs,
         editAgronomistLog,
         deleteAgronomistLog,
         addPhenologyLog,
