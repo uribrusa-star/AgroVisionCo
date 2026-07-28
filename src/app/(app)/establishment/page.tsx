@@ -305,7 +305,7 @@ export default function EstablishmentPage() {
         {/* Columna 1 */}
         <div className="space-y-6">
             <InfoCard title="Datos Generales" icon={Briefcase} onEdit={() => handleEdit('general')} editableBy={producerAccess}>
-               <InfoItem label="Productor" value={establishmentData.producer} icon={User} />
+               <InfoItem label="Nombre del Establecimiento" value={establishmentData.producer} icon={User} />
                <InfoItem label="Responsable Técnico" value={establishmentData.technicalManager} icon={User} />
                <InfoItem label="Localidad" value={`${establishmentData.location.locality}, ${establishmentData.location.province}`} icon={MapPin}/>
                 <InfoItem
@@ -395,7 +395,7 @@ export default function EstablishmentPage() {
       >
           {(form: any) => (
               <>
-                  <FormField control={form.control} name="producer" render={({ field }) => ( <FormItem> <FormLabel>Nombre del Productor</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                  <FormField control={form.control} name="producer" render={({ field }) => ( <FormItem> <FormLabel>Nombre del Establecimiento</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
                   <FormField control={form.control} name="technicalManager" render={({ field }) => ( <FormItem> <FormLabel>Responsable Técnico</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
                   <FormField control={form.control} name="locality" render={({ field }) => ( <FormItem> <FormLabel>Localidad</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
                   <FormField control={form.control} name="province" render={({ field }) => ( <FormItem> <FormLabel>Provincia</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
