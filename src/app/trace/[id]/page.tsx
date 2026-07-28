@@ -159,7 +159,7 @@ export default function TracePage() {
                             <Home className="h-8 w-8 text-purple-600 flex-shrink-0" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Establecimiento</p>
-                                <p className="font-bold text-base md:text-lg text-gray-800 truncate max-w-[120px] sm:max-w-full" title={data.establishmentName || 'AgroVista'}>{data.establishmentName || 'AgroVista'}</p>
+                                <p className="font-bold text-base md:text-lg text-gray-800 break-words" title={data.establishmentName || 'AgroVista'}>{data.establishmentName || 'AgroVista'}</p>
                             </div>
                         </div>
                          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
