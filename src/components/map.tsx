@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useContext, useState, useRef } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow, Circle, OverlayView } from '@react-google-maps/api';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Leaf, Notebook, Weight, AlertTriangle, Activity, Thermometer, FlaskConical, X } from 'lucide-react';
@@ -27,7 +26,31 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
     
     const { harvests, agronomistLogs, phenologyLogs, batches } = useContext(AppDataContext);
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
-    const mapRef = useRef<google.maps.Map | null>(null);
+    const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+
+    useEffect(() => {
+        if (!mapInstance || !geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) return;
+
+        let hasBounds = false;
+        const bounds = new window.google.maps.LatLngBounds();
+
+        geoJsonData.features.forEach((feature: any) => {
+            if (feature.geometry && feature.geometry.type === 'Polygon') {
+                const paths = feature.geometry.coordinates[0];
+                paths.forEach((coord: [number, number]) => {
+                    bounds.extend({ lat: coord[1], lng: coord[0] });
+                    hasBounds = true;
+                });
+            } else if (feature.geometry && feature.geometry.type === 'Point') {
+                bounds.extend({ lat: feature.geometry.coordinates[1], lng: feature.geometry.coordinates[0] });
+                hasBounds = true;
+            }
+        });
+
+        if (hasBounds) {
+            mapInstance.fitBounds(bounds);
+        }
+    }, [geoJsonData, mapInstance]);
 
     const getHotspotColor = (type: string) => {
         if (type.includes('Plaga')) return "#EF4444"; // Red
@@ -65,16 +88,16 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                         }}
                         onClick={() => {
                             setActiveInfoWindow(polygonId);
-                            if (mapRef.current) {
-                                const center = paths.reduce(
+                            if (mapInstance) {
+                                const centerPoint = paths.reduce(
                                     (acc: { lat: number, lng: number }, curr: { lat: number, lng: number }) => {
                                         return { lat: acc.lat + curr.lat, lng: acc.lng + curr.lng };
                                     }, { lat: 0, lng: 0 }
                                 );
-                                center.lat /= paths.length;
-                                center.lng /= paths.length;
-                                mapRef.current.panTo(center);
-                                mapRef.current.setZoom(17);
+                                centerPoint.lat /= paths.length;
+                                centerPoint.lng /= paths.length;
+                                mapInstance.panTo(centerPoint);
+                                mapInstance.setZoom(17);
                             }
                         }}
                     />
@@ -114,17 +137,17 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 const polygonId = Object.keys(properties).find(k => k.startsWith('L')) || `Lote ${index + 1}`;
                 
                 const paths = feature.geometry.coordinates[0];
-                const center = paths.reduce(
+                const centerPoint = paths.reduce(
                     (acc: any, curr: any) => ({ lat: acc.lat + curr[1], lng: acc.lng + curr[0] }), 
                     { lat: 0, lng: 0 }
                 );
-                center.lat /= paths.length;
-                center.lng /= paths.length;
+                centerPoint.lat /= paths.length;
+                centerPoint.lng /= paths.length;
 
                 return (
                     <OverlayView
                         key={`label-${polygonId}`}
-                        position={center}
+                        position={centerPoint}
                         mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                     >
                         <div 
@@ -229,9 +252,9 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                             <h3 className="font-bold text-lg text-foreground">Lote: {activeInfoWindow}</h3>
                             <button onClick={() => {
                                 setActiveInfoWindow(null);
-                                if (mapRef.current) {
-                                    mapRef.current.panTo(center);
-                                    mapRef.current.setZoom(19);
+                                if (mapInstance && center) {
+                                    mapInstance.panTo(center);
+                                    mapInstance.setZoom(15);
                                 }
                             }} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
                                 <X className="h-5 w-5" />
@@ -370,8 +393,8 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                     height: '100%',
                 }}
                 center={center}
-                zoom={19}
-                onLoad={(map) => { mapRef.current = map; }}
+                zoom={15}
+                onLoad={(map) => setMapInstance(map)}
                 options={{
                     streetViewControl: false,
                     mapTypeControl: false,
