@@ -40,7 +40,8 @@ export const AppDataContext = React.createContext<AppData>({
   editHarvest: async () => { throw new Error('Not implemented') },
   editCollector: async () => { throw new Error('Not implemented') },
   deleteCollector: () => { throw new Error('Not implemented') },
-  addAgronomistLog: () => { throw new Error('Not implemented') },
+  addAgronomistLog: async () => { throw new Error('Not implemented') },
+  addMultipleAgronomistLogs: async () => { throw new Error('Not implemented') },
   editAgronomistLog: () => { throw new Error('Not implemented') },
   deleteAgronomistLog: () => { throw new Error('Not implemented') },
   addPhenologyLog: () => { throw new Error('Not implemented') },
@@ -172,9 +173,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }
     }, [currentUser]);
 
-    const fetchAllData = useCallback(async () => {
+    const fetchAllData = useCallback(async (silent = true) => {
       if (!isClient) return;
-      setLoading(true);
+      if (!silent) setLoading(true);
 
       // Timeout de seguridad: Si después de 12 segundos no han cargado los datos, forzamos el fin de 'loading'
       // para evitar que el usuario se quede atrapado en la pantalla de carga (común en iOS/Safari móvil).
@@ -807,14 +808,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
 
-    const addAgronomistLog = (log: Omit<AgronomistLog, 'id'>) => {
-        const tempId = `agrolog_${Date.now()}`;
+    const addAgronomistLog = async (log: Omit<AgronomistLog, 'id'>) => {
+        const newLogRef = doc(collection(db, 'agronomistLogs'));
+        const tempId = newLogRef.id;
         setAgronomistLogs(prev => [{ id: tempId, ...log }, ...prev]);
     
         const runAdd = async () => {
             const batch = writeBatch(db);
-            const newLogRef = doc(collection(db, 'agronomistLogs'));
-            batch.set(newLogRef, sanitizeForFirestore(log));
+            batch.set(newLogRef, { ...sanitizeForFirestore(log), establishmentId: currentUser?.establishmentId || 'main' });
             
             let lowStockAlertTriggered = false;
             const newTasksToEmail: { task: any, user: any }[] = [];
@@ -847,6 +848,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                                 status: 'pending',
                                 priority: 'media',
                                 createdAt: new Date().toISOString(),
+                                establishmentId: currentUser?.establishmentId || 'main',
                             };
                             const newTaskRef = doc(collection(db, 'tasks'));
                             batch.set(newTaskRef, newTask);
@@ -872,11 +874,32 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             }
         }
     
-        runAdd().catch(error => {
+        return runAdd().catch(error => {
             console.error("Failed to add agronomist log and update stock:", error);
             setAgronomistLogs(prev => prev.filter(l => l.id !== tempId));
             toast({ title: "Error", description: "No se pudo guardar el registro y actualizar el stock.", variant: "destructive"});
         });
+    };
+
+    const addMultipleAgronomistLogs = async (logs: Omit<AgronomistLog, 'id'>[]) => {
+        if (logs.length === 0) return;
+        const batch = writeBatch(db);
+        const tempLogs = logs.map(log => {
+            const newLogRef = doc(collection(db, 'agronomistLogs'));
+            batch.set(newLogRef, { ...sanitizeForFirestore(log), establishmentId: currentUser?.establishmentId || 'main' });
+            return { id: newLogRef.id, ...log };
+        });
+        
+        setAgronomistLogs(prev => [...tempLogs, ...prev]);
+
+        try {
+            await batch.commit();
+            await fetchAllData();
+        } catch (error) {
+            console.error("Failed to add multiple agronomist logs:", error);
+            setAgronomistLogs(prev => prev.filter(l => !tempLogs.some(tl => tl.id === l.id)));
+            toast({ title: "Error", description: "No se pudieron guardar las alertas en bloque.", variant: "destructive"});
+        }
     };
 
     const editAgronomistLog = (updatedLog: AgronomistLog) => {

@@ -57,7 +57,7 @@ const AIAlertsPanel = ({
     mapCenter: { lat: number, lng: number },
     onCoordsChange: (coords: { lat: number, lng: number }) => void
 }) => {
-    const { phenologyLogs, agronomistLogs, addAgronomistLog } = useContext(AppDataContext);
+    const { phenologyLogs, agronomistLogs, addAgronomistLog, addMultipleAgronomistLogs } = useContext(AppDataContext);
     const [isGenerating, startGeneratingTransition] = useTransition();
     const [isSaving, startSavingTransition] = useTransition();
     const [alerts, setAlerts] = useState<Alert[] | null>(null);
@@ -127,17 +127,14 @@ const AIAlertsPanel = ({
         if (!alerts || alerts.length === 0) return;
 
         startSavingTransition(() => {
-            const logPromises = alerts.map(alert => {
-                const newLog: Omit<AgronomistLog, 'id'> = {
-                    date: new Date().toISOString(),
-                    type: 'Condiciones Ambientales',
-                    product: `Alerta IA: ${alert.risk}`,
-                    notes: `Recomendación: ${alert.recommendation} (Urgencia: ${alert.urgency})`,
-                };
-                return addAgronomistLog(newLog);
-            });
+            const logsToSave: Omit<AgronomistLog, 'id'>[] = alerts.map(alert => ({
+                date: new Date().toISOString(),
+                type: 'Condiciones Ambientales',
+                product: `Alerta IA: ${alert.risk}`,
+                notes: `Recomendación: ${alert.recommendation} (Urgencia: ${alert.urgency})`,
+            }));
 
-            Promise.all(logPromises).then(() => {
+            addMultipleAgronomistLogs(logsToSave).then(() => {
                 toast({
                     title: "Alertas Guardadas",
                     description: "Las alertas climáticas han sido guardadas en la bitácora del agrónomo.",
