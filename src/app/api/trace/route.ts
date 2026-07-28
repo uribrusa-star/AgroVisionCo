@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, orderBy, doc, getDoc } from 'firebase/firestore';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -26,6 +26,10 @@ export async function GET(request: Request) {
     const batchIdStr = harvest.batchNumber;
     const batchIdsToSearch = batchIdStr.split(',').map((s: string) => s.trim()).filter(Boolean);
     const estId = harvest.establishmentId || 'main';
+    
+    const estRef = doc(db, 'establishment', estId);
+    const estSnap = await getDoc(estRef);
+    const establishmentName = estSnap.exists() ? estSnap.data().producer : 'AgroVista';
 
     const phenologyLogsRef = collection(db, 'phenologyLogs');
     const logsPromises = batchIdsToSearch.flatMap((b: string) => [
@@ -61,6 +65,7 @@ export async function GET(request: Request) {
 
     // For this prototype, we'll return a subset of data along with BPA certification metrics.
     const traceabilityData = {
+      establishmentName,
       harvestDate: harvest.date,
       batchId: harvest.batchNumber,
       collectorName: harvest.collector.name,
