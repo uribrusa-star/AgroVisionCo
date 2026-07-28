@@ -1313,12 +1313,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addProducerLog = (log: Omit<ProducerLog, 'id'>) => {
-        const tempId = `producerlog_${Date.now()}`;
+        const newRef = doc(collection(db, 'producerLogs'));
+        const tempId = newRef.id;
         setProducerLogs(prev => [{ id: tempId, ...log }, ...prev]);
         
-        addDoc(collection(db, 'producerLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
-            setProducerLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
-        }).catch(error => {
+        setDoc(newRef, { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).catch(error => {
             console.error("Failed to add producer log:", error);
             setProducerLogs(prev => prev.filter(l => l.id !== tempId));
             toast({ title: "Error", description: "No se pudo guardar la nota.", variant: "destructive"});
@@ -1350,7 +1349,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-        const tempId = `transaction_${Date.now()}`;
+        const newRef = doc(collection(db, 'transactions'));
+        const tempId = newRef.id;
         
         if (transaction.pricePerUnit === undefined) {
             delete (transaction as Partial<Transaction>).pricePerUnit;
@@ -1358,9 +1358,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         setTransactions(prev => [{ id: tempId, ...transaction }, ...prev]);
         
-        addDoc(collection(db, 'transactions'), { ...(transaction), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
-            setTransactions(prev => prev.map(t => t.id === tempId ? { ...t, id: ref.id } : t));
-        }).catch(error => {
+        setDoc(newRef, { ...(transaction), establishmentId: currentUser?.establishmentId || 'main' }).catch(error => {
             console.error("Failed to add transaction:", error);
             setTransactions(prev => prev.filter(t => t.id !== tempId));
             toast({ title: "Error", description: "No se pudo guardar la transacción.", variant: "destructive"});
