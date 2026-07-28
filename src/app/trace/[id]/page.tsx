@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { motion, AnimatePresence } from 'framer-motion';
 
 type TraceabilityData = {
+    establishmentName?: string;
     harvestDate: string;
     batchId: string;
     collectorName: string;
@@ -146,7 +147,7 @@ export default function TracePage() {
                             <Sprout /> Resumen del Cultivo
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
                             <Calendar className="h-8 w-8 text-green-600 flex-shrink-0" />
                             <div>
@@ -154,8 +155,15 @@ export default function TracePage() {
                                 <p className="font-bold text-base md:text-lg text-gray-800">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                             </div>
                         </div>
+                        <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                            <Home className="h-8 w-8 text-purple-600 flex-shrink-0" />
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Establecimiento</p>
+                                <p className="font-bold text-base md:text-lg text-gray-800 truncate max-w-[120px] sm:max-w-full" title={data.establishmentName || 'AgroVista'}>{data.establishmentName || 'AgroVista'}</p>
+                            </div>
+                        </div>
                          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                            <Home className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                            <Leaf className="h-8 w-8 text-blue-600 flex-shrink-0" />
                             <div>
                                 <p className="text-xs text-gray-500 font-medium">Lote de Origen</p>
                                 <p className="font-bold text-base md:text-lg text-gray-800">{data.batchId}</p>
