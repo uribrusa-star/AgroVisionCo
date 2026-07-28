@@ -28,7 +28,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
     const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
-    useEffect(() => {
+    const fitMapToBounds = React.useCallback(() => {
         if (!mapInstance || !geoJsonData || !geoJsonData.features || geoJsonData.features.length === 0) return;
 
         let hasBounds = false;
@@ -51,6 +51,10 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
             mapInstance.fitBounds(bounds);
         }
     }, [geoJsonData, mapInstance]);
+
+    useEffect(() => {
+        fitMapToBounds();
+    }, [fitMapToBounds]);
 
     const getHotspotColor = (type: string) => {
         if (type.includes('Plaga')) return "#EF4444"; // Red
@@ -252,10 +256,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                             <h3 className="font-bold text-lg text-foreground">Lote: {activeInfoWindow}</h3>
                             <button onClick={() => {
                                 setActiveInfoWindow(null);
-                                if (mapInstance && center) {
-                                    mapInstance.panTo(center);
-                                    mapInstance.setZoom(15);
-                                }
+                                fitMapToBounds();
                             }} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
                                 <X className="h-5 w-5" />
                             </button>
