@@ -45,6 +45,9 @@ export default function UsersPage() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [detailsUser, setDetailsUser] = useState<User | null>(null);
+  
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   const [isPending, startTransition] = useTransition();
@@ -84,6 +87,11 @@ export default function UsersPage() {
     passwordForm.reset();
     setIsPasswordDialogOpen(true);
   }
+
+  const handleOpenDetails = (user: User) => {
+    setDetailsUser(user);
+    setIsDetailsDialogOpen(true);
+  };
   
   const onPasswordSubmit = (values: z.infer<typeof PasswordSchema>) => {
     if(!selectedUser) return;
@@ -172,8 +180,54 @@ export default function UsersPage() {
           <CardTitle>Todos los Usuarios</CardTitle>
           <CardDescription>Una lista de todas las cuentas de usuario en su organización.</CardDescription>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6 overflow-x-auto">
-          <Table>
+        <CardContent className="p-0 sm:p-6">
+          
+          {/* Vista móvil en tarjetas */}
+          <div className="grid grid-cols-1 gap-3 p-4 md:hidden bg-muted/20">
+              {loading && Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={`mob-skel-${i}`} className="h-20 w-full rounded-xl" />
+              ))}
+              {!loading && users.map((user) => (
+                  <div 
+                      key={`mob-${user.id}`} 
+                      onClick={() => handleOpenDetails(user)} 
+                      className="bg-card border border-border/60 rounded-xl p-4 flex items-center justify-between cursor-pointer shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
+                  >
+                      <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
+                              <AvatarImage src={user.avatar?.startsWith('http') ? user.avatar : `https://picsum.photos/seed/${user.avatar}/40/40`} />
+                              <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                              <h3 className="font-bold text-foreground text-base leading-tight">{user.name}</h3>
+                              <Badge variant={user.role === 'Productor' ? 'default' : 'secondary'} className="mt-1.5 text-[10px]">
+                                  {user.role}
+                              </Badge>
+                          </div>
+                      </div>
+                      <div onClick={(e) => e.stopPropagation()}>
+                          {(isSuperAdmin || user.role !== 'Productor') && (
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onSelect={() => handleOpenPasswordDialog(user)}>
+                                          <KeyRound className="mr-2 h-4 w-4" />
+                                          Cambiar Contraseña
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          )}
+                      </div>
+                  </div>
+              ))}
+          </div>
+
+          {/* Vista de tabla para escritorio */}
+          <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
@@ -197,7 +251,7 @@ export default function UsersPage() {
                 </TableRow>
               ))}
               {!loading && users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} onClick={() => handleOpenDetails(user)} className="cursor-pointer hover:bg-muted/50 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-3 font-medium">
                       <Avatar>
@@ -224,12 +278,12 @@ export default function UsersPage() {
                     {/* Allow super admin to change any password, or producers to change staff passwords */}
                     {(isSuperAdmin || user.role !== 'Productor') && (
                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending}>
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
+                                <DropdownMenuTrigger asChild>
+                                    <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending} onClick={(e) => e.stopPropagation()}>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Toggle menu</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                                 <DropdownMenuItem onSelect={() => handleOpenPasswordDialog(user)}>
@@ -247,6 +301,42 @@ export default function UsersPage() {
         </CardContent>
       </Card>
       
+      {/* Dialog for user details */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+          <DialogContent className="sm:max-w-sm rounded-2xl">
+              <DialogHeader>
+                  <DialogTitle className="text-center">Perfil de Usuario</DialogTitle>
+              </DialogHeader>
+              {detailsUser && (
+                  <div className="flex flex-col items-center gap-4 py-6">
+                      <Avatar className="h-28 w-28 border-4 border-muted shadow-lg">
+                          <AvatarImage src={detailsUser.avatar?.startsWith('http') ? detailsUser.avatar : `https://picsum.photos/seed/${detailsUser.avatar}/120/120`} />
+                          <AvatarFallback className="bg-primary/10 text-primary font-bold text-4xl">{detailsUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="text-center space-y-1">
+                          <h3 className="font-bold text-2xl text-foreground">{detailsUser.name}</h3>
+                          <p className="text-muted-foreground text-sm">{detailsUser.email || 'Sin correo registrado'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                          <div className="bg-primary/5 p-4 rounded-xl text-center border border-primary/10">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Rol Asignado</p>
+                              <Badge variant={detailsUser.role === 'Productor' ? 'default' : 'secondary'} className="px-3 py-1">
+                                  {detailsUser.role}
+                              </Badge>
+                          </div>
+                          <div className="bg-green-500/5 p-4 rounded-xl text-center border border-green-500/10">
+                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Estado</p>
+                              <p className="font-bold text-green-600 flex items-center justify-center gap-1.5">
+                                  <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                                  Activo
+                              </p>
+                          </div>
+                      </div>
+                  </div>
+              )}
+          </DialogContent>
+      </Dialog>
+
       {/* Dialog for password change */}
        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
