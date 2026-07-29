@@ -30,7 +30,8 @@ function parseFirestoreDoc(doc: any): User | null {
     avatar: getRoleAvatar(role),
     phone: parseVal(fields.phone),
     specialty: parseVal(fields.specialty),
-    producerId: parseVal(fields.producerId)
+    producerId: parseVal(fields.producerId),
+    lastLoginAt: parseVal(fields.lastLoginAt)
   } as User;
 }
 
@@ -65,6 +66,17 @@ export async function POST(request: Request) {
 
     if (!user || user.password !== password) {
       return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
+    }
+    
+    // Update lastLoginAt
+    const lastLoginAt = new Date().toISOString();
+    try {
+      await adminDb.collection('users').doc(user.id).update({
+        lastLoginAt
+      });
+      user.lastLoginAt = lastLoginAt;
+    } catch (e) {
+      console.error('Error updating lastLoginAt:', e);
     }
     
     // Omitimos el password antes de guardar en la sesión por seguridad

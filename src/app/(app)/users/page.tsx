@@ -4,7 +4,9 @@ import React, { useState, useContext, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound, Plus, ShieldAlert } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 import { PageHeader } from "@/components/page-header";
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -332,6 +334,14 @@ export default function UsersPage() {
                               </p>
                           </div>
                       </div>
+                      {detailsUser.lastLoginAt && (
+                          <div className="bg-muted/30 border border-border/50 p-3 rounded-lg w-full flex items-center justify-center gap-2 mt-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                  Última conexión: <span className="font-semibold text-foreground">{formatDistanceToNow(new Date(detailsUser.lastLoginAt), { addSuffix: true, locale: es })}</span>
+                              </p>
+                          </div>
+                      )}
                   </div>
               )}
           </DialogContent>
