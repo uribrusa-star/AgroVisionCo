@@ -90,7 +90,7 @@ export function NotesHistory() {
           date: values.date,
           type: values.type as any,
           notes: values.notes,
-          omittedActivity: values.type === 'Actividad Omitida' ? values.omittedActivity : undefined,
+          omittedActivity: values.type === 'Actividad Omitida' ? values.omittedActivity : null,
         });
         toast({
           title: "Observación Actualizada",
@@ -209,6 +209,7 @@ export function NotesHistory() {
                                                       <DialogContent className="max-w-4xl h-[90vh] flex items-center justify-center p-2">
                                                         <DialogHeader>
                                                           <DialogTitle className="sr-only">Imagen: {`${selectedLog.notes} - ${index + 1}`}</DialogTitle>
+                                                          <DialogDescription className="sr-only">Vista ampliada de la imagen adjunta</DialogDescription>
                                                         </DialogHeader>
                                                         <Image
                                                           src={image.url}
