@@ -54,51 +54,38 @@ function TransactionHistoryComponent() {
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px]">
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Descripción</TableHead>
-                        <TableHead>Categoría</TableHead>
-                        <TableHead className="text-right">Monto</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <div className="flex flex-col gap-2 p-1">
                     {loading && (
-                        <TableRow>
-                        <TableCell colSpan={3}>
-                            <Skeleton className="h-8 w-full" />
-                        </TableCell>
-                        </TableRow>
+                        <Skeleton className="h-16 w-full rounded-xl" />
                     )}
                     {!loading && sortedTransactions.length === 0 && (
-                        <TableRow>
-                        <TableCell colSpan={3} className="text-center">No hay transacciones registradas.</TableCell>
-                        </TableRow>
+                        <div className="text-center text-muted-foreground p-4">No hay transacciones registradas.</div>
                     )}
                     {!loading && sortedTransactions.map((transaction) => (
-                        <TableRow key={transaction.id} onClick={() => handleRowClick(transaction)} className="cursor-pointer">
-                            <TableCell>
-                                <div className="flex items-center gap-2">
-                                    {transaction.type === 'Ingreso' 
-                                        ? <ArrowUpCircle className="h-4 w-4 text-green-500" /> 
-                                        : <ArrowDownCircle className="h-4 w-4 text-red-500" />
-                                    }
-                                    <div>
-                                        <p className="font-medium truncate max-w-[120px] sm:max-w-none">{transaction.description}</p>
-                                        <p className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString('es-ES')}</p>
+                        <div 
+                            key={transaction.id} 
+                            onClick={() => handleRowClick(transaction)} 
+                            className="bg-card border rounded-xl p-3 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+                        >
+                            <div className="flex items-center gap-3">
+                                {transaction.type === 'Ingreso' 
+                                    ? <ArrowUpCircle className="h-8 w-8 text-green-500 bg-green-500/10 rounded-full p-1.5" /> 
+                                    : <ArrowDownCircle className="h-8 w-8 text-red-500 bg-red-500/10 rounded-full p-1.5" />
+                                }
+                                <div>
+                                    <p className="font-medium text-sm leading-tight max-w-[150px] sm:max-w-[200px] truncate">{transaction.description}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <Badge variant="outline" className="text-[10px] px-1 py-0">{transaction.category}</Badge>
+                                        <span className="text-[10px] text-muted-foreground">{new Date(transaction.date).toLocaleDateString('es-ES')}</span>
                                     </div>
                                 </div>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant="outline">{transaction.category}</Badge>
-                            </TableCell>
-                            <TableCell className={`text-right font-bold ${transaction.type === 'Ingreso' ? 'text-green-600' : 'text-red-600'}`}>
+                            </div>
+                            <div className={`text-right font-bold text-sm ${transaction.type === 'Ingreso' ? 'text-green-600' : 'text-red-600'}`}>
                                 {transaction.type === 'Ingreso' ? '+' : '-'} ${transaction.amount.toLocaleString('es-AR', {minimumFractionDigits: 2})}
-                            </TableCell>
-                        </TableRow>
+                            </div>
+                        </div>
                     ))}
-                    </TableBody>
-                </Table>
+                </div>
               </ScrollArea>
             </CardContent>
         </Card>
