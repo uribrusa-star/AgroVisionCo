@@ -68,7 +68,7 @@ export function WeatherCard() {
   if (error) return null;
 
   return (
-    <Card className="flex items-center gap-4 bg-white/70 backdrop-blur-md border-border/50 shadow-sm px-4 py-2 hover:bg-white/90 transition-colors">
+    <Card className="flex items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-border/50 shadow-sm px-4 py-2 hover:bg-white/90 dark:hover:bg-slate-900/90 transition-colors">
       {loading ? (
         <div className="flex items-center gap-2 text-muted-foreground text-sm py-1 h-[24px]">
           <Loader2 className="h-4 w-4 animate-spin" />
