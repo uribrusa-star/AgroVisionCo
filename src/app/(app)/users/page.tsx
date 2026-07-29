@@ -184,8 +184,8 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
           
-          {/* Vista móvil en tarjetas */}
-          <div className="grid grid-cols-1 gap-3 p-4 md:hidden bg-muted/20">
+          {/* Vista en tarjetas (Móvil y Escritorio) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 bg-muted/20">
               {loading && Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={`mob-skel-${i}`} className="h-20 w-full rounded-xl" />
               ))}
@@ -228,78 +228,7 @@ export default function UsersPage() {
               ))}
           </div>
 
-          {/* Vista de tabla para escritorio */}
-          <Table className="hidden md:table">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading && Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={`skeleton-${i}`}>
-                    <TableCell>
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-10 w-10 rounded-full" />
-                            <Skeleton className="h-4 w-24" />
-                        </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                </TableRow>
-              ))}
-              {!loading && users.map((user) => (
-                <TableRow key={user.id} onClick={() => handleOpenDetails(user)} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                  <TableCell>
-                    <div className="flex items-center gap-3 font-medium">
-                      <Avatar>
-                        <AvatarImage 
-                          src={user.avatar?.startsWith('http') 
-                            ? user.avatar 
-                            : `https://picsum.photos/seed/${user.avatar}/40/40`} 
-                          alt="" 
-                        />
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                          {user.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {user.name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'Productor' ? 'default' : 'secondary'}>
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {/* Allow super admin to change any password, or producers to change staff passwords */}
-                    {(isSuperAdmin || user.role !== 'Productor') && (
-                        <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending} onClick={(e) => e.stopPropagation()}>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                <DropdownMenuItem onSelect={() => handleOpenPasswordDialog(user)}>
-                                    <KeyRound className="mr-2 h-4 w-4" />
-                                    Cambiar Contraseña
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+
         </CardContent>
       </Card>
       
