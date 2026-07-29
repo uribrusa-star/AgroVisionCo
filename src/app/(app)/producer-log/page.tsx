@@ -25,6 +25,19 @@ import { WeatherCard } from '@/components/weather-card';
 export default function ProducerLogPage() {
   const { loading, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, transactions, harvests } = React.useContext(AppDataContext);
   const [showFinancials, setShowFinancials] = React.useState(true);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('agrovision_showFinancials');
+    if (saved !== null) {
+      setShowFinancials(saved === 'true');
+    }
+  }, []);
+
+  const toggleFinancials = () => {
+    const newVal = !showFinancials;
+    setShowFinancials(newVal);
+    localStorage.setItem('agrovision_showFinancials', String(newVal));
+  };
   
   const totalHarvestLaborCost = (collectorPaymentLogs || []).reduce((acc, p) => acc + p.payment, 0);
   const totalPackagingLaborCost = (packagingLogs || []).reduce((acc, p) => acc + p.payment, 0);
@@ -52,7 +65,7 @@ export default function ProducerLogPage() {
           <WeatherCard />
         </PageHeader>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setShowFinancials(!showFinancials)} title={showFinancials ? "Ocultar finanzas" : "Mostrar finanzas"}>
+            <Button variant="outline" size="icon" onClick={toggleFinancials} title={showFinancials ? "Ocultar finanzas" : "Mostrar finanzas"}>
                 {showFinancials ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             <ExportButton />
