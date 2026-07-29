@@ -138,45 +138,12 @@ export default function CollectorsPage() {
             <CardTitle>Todos los Recolectores</CardTitle>
             <CardDescription>Una lista de todos los recolectores en su organización.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead className="hidden md:table-cell">Total Cosechado</TableHead>
-                  <TableHead className="hidden lg:table-cell">Productividad (kg/hr)</TableHead>
-                  <TableHead className="hidden sm:table-cell">Se unió</TableHead>
-                  {canManage && <TableHead><span className="sr-only">Acciones</span></TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={`skeleton-${i}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-[150px]" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Skeleton className="h-4 w-[60px]" />
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <Skeleton className="h-4 w-[40px]" />
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Skeleton className="h-4 w-[80px]" />
-                    </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        <Skeleton className="h-8 w-8" />
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-                {!loading && collectors.map((collector) => {
+          <CardContent className="p-0 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 bg-muted/20">
+              {loading && Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={`mob-skel-${i}`} className="h-24 w-full rounded-xl" />
+              ))}
+              {!loading && collectors.map((collector) => {
                   const collectorHarvests = harvests.filter(h => h.collector.id === collector.id);
                   const collectorLogs = (collectorPaymentLogs || []).filter(l => l.collectorId === collector.id);
                   
@@ -193,59 +160,63 @@ export default function CollectorsPage() {
                     : (collector.productivity || 0);
 
                   return (
-                  <TableRow key={collector.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={`https://picsum.photos/seed/${collector.avatar}/40/40`} alt={collector.name} />
-                          <AvatarFallback>{collector.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{collector.name}</span>
+                  <div key={collector.id} className="bg-card border border-border/60 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-all gap-4">
+                      <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                                  <AvatarImage src={`https://picsum.photos/seed/${collector.avatar}/40/40`} alt={collector.name} />
+                                  <AvatarFallback className="bg-primary/10 text-primary font-bold">{collector.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                  <h3 className="font-bold text-foreground text-sm leading-tight">{collector.name}</h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">Se unió: {new Date(collector.joinDate).toLocaleDateString('es-ES')}</p>
+                              </div>
+                          </div>
+                          {canManage && (
+                              <AlertDialog>
+                                  <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                          <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                                          <DropdownMenuItem onSelect={() => { setSelectedCollector(collector); setIsHistoryOpen(true); }}>Ver Historial</DropdownMenuItem>
+                                          <AlertDialogTrigger asChild>
+                                              <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
+                                          </AlertDialogTrigger>
+                                      </DropdownMenuContent>
+                                  </DropdownMenu>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                          <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                              Esta acción no se puede deshacer. Esto eliminará permanentemente al recolector y todos sus datos de cosecha asociados.
+                                          </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDelete(collector.id)}>Continuar</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                          )}
                       </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{calculatedTotalHarvested.toLocaleString('es-ES')} kg</TableCell>
-                    <TableCell className="hidden lg:table-cell">{calculatedProductivity.toFixed(2)}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{new Date(collector.joinDate).toLocaleDateString('es-ES')}</TableCell>
-                    {canManage && (
-                    <TableCell>
-                        <AlertDialog>
-                            <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost" disabled={isPending}>
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                                <DropdownMenuItem onSelect={() => { setSelectedCollector(collector); setIsHistoryOpen(true); }}>Ver Historial</DropdownMenuItem>
-                                <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
-                                </AlertDialogTrigger>
-                            </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Está absolutamente seguro?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Esta acción no se puede deshacer. Esto eliminará permanentemente al recolector y todos sus datos de cosecha asociados.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDelete(collector.id)}>Continuar</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-
-                        </AlertDialog>
-                    </TableCell>
-                    )}
-                  </TableRow>
-                );
+                      <div className="grid grid-cols-2 gap-2 mt-auto">
+                          <div className="bg-primary/5 rounded-lg p-2 flex flex-col justify-center items-center">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase text-center w-full">Total (kg)</span>
+                              <span className="font-bold text-sm text-foreground">{calculatedTotalHarvested.toLocaleString('es-ES')}</span>
+                          </div>
+                          <div className="bg-muted rounded-lg p-2 flex flex-col justify-center items-center">
+                              <span className="text-[10px] text-muted-foreground font-bold uppercase text-center w-full">kg / hr</span>
+                              <span className="font-bold text-sm text-foreground">{calculatedProductivity.toFixed(2)}</span>
+                          </div>
+                      </div>
+                  </div>
+                  );
               })}
-              </TableBody>
-            </Table>
+          </div>
           </CardContent>
         </Card>
       </div>
