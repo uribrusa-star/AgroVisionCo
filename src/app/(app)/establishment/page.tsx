@@ -333,23 +333,18 @@ export default function EstablishmentPage() {
             />
         </InfoCard>
 
-        <InfoCard title="Superficie y Sistema" icon={Ruler} onEdit={() => handleEdit('area')} editableBy={producerAccess}>
-            <InfoItem label="Superficie Total" value={`${establishmentData.area.total} ha`} />
-            <InfoItem label="Destinada a Frutilla" value={`${establishmentData.area.strawberry} ha`} />
-            <InfoItem label="Sistema Productivo" value={establishmentData.system} />
-        </InfoCard>
-
         <InfoCard title="Implantación del Cultivo" icon={Sprout} onEdit={() => handleEdit('planting')} editableBy={agronomistAccess}>
             <InfoItem label="Variedades" value={establishmentData.planting.variety} />
             <InfoItem label="Fecha de Plantación" value={new Date(establishmentData.planting.date).toLocaleDateString('es-ES', { timeZone: 'UTC' })} />
             <InfoItem label="Origen de Plantas" value={establishmentData.planting.origin} />
             <InfoItem label="Densidad" value={establishmentData.planting.density} />
         </InfoCard>
-        
-        <InfoCard title="Suelo y Cobertura" icon={Mountain} onEdit={() => handleEdit('soil')} editableBy={agronomistAccess}>
-            <InfoItem label="Tipo de Suelo" value={establishmentData.soil.type} />
-            <InfoItem label="Análisis Inicial" value={establishmentData.soil.analysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
-            <InfoItem label="Cobertura (Mulching)" value={establishmentData.planting.mulching} />
+
+        <InfoCard title="Manejo y Cosecha" icon={Wind} onEdit={() => handleEdit('management')} editableBy={agronomistAccess}>
+            <InfoItem label="Control de Malezas" value={establishmentData.management.weeds} />
+            <InfoItem label="Plan Sanitario" value={establishmentData.management.sanitaryPlan} />
+            <InfoItem label="Período de Cosecha" value={establishmentData.harvest.period} />
+            <InfoItem label="Frecuencia" value={establishmentData.harvest.frequency} />
         </InfoCard>
 
         <InfoCard title="Riego y Fertirrigación" icon={Droplet} onEdit={() => handleEdit('irrigation')} editableBy={agronomistAccess}>
@@ -359,11 +354,16 @@ export default function EstablishmentPage() {
             <InfoItem label="Análisis de Agua" value={establishmentData.irrigation.waterAnalysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
         </InfoCard>
 
-        <InfoCard title="Manejo y Cosecha" icon={Wind} onEdit={() => handleEdit('management')} editableBy={agronomistAccess}>
-            <InfoItem label="Control de Malezas" value={establishmentData.management.weeds} />
-            <InfoItem label="Plan Sanitario" value={establishmentData.management.sanitaryPlan} />
-            <InfoItem label="Período de Cosecha" value={establishmentData.harvest.period} />
-            <InfoItem label="Frecuencia" value={establishmentData.harvest.frequency} />
+        <InfoCard title="Superficie y Sistema" icon={Ruler} onEdit={() => handleEdit('area')} editableBy={producerAccess}>
+            <InfoItem label="Superficie Total" value={`${establishmentData.area.total} ha`} />
+            <InfoItem label="Destinada a Frutilla" value={`${establishmentData.area.strawberry} ha`} />
+            <InfoItem label="Sistema Productivo" value={establishmentData.system} />
+        </InfoCard>
+
+        <InfoCard title="Suelo y Cobertura" icon={Mountain} onEdit={() => handleEdit('soil')} editableBy={agronomistAccess}>
+            <InfoItem label="Tipo de Suelo" value={establishmentData.soil.type} />
+            <InfoItem label="Análisis Inicial" value={establishmentData.soil.analysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
+            <InfoItem label="Cobertura (Mulching)" value={establishmentData.planting.mulching} />
         </InfoCard>
 
         <InfoCard title="Comercialización" icon={TrendingUp} onEdit={() => handleEdit('commercialization')} editableBy={producerAccess}>
