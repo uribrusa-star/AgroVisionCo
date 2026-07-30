@@ -9,6 +9,7 @@ import { es } from 'date-fns/locale';
 import { useOnlineStatus } from '@/hooks/use-online-status';
 import { WifiOff } from 'lucide-react';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 
 type MapProps = {
     center: {
@@ -319,13 +320,47 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                             </h4>
                             <div className="space-y-3">
                                 {lotSanityLogs.map((log, idx) => (
-                                    <div key={idx} className="bg-red-50/50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 p-2 rounded-lg">
-                                        <p className="text-xs font-semibold text-red-800 dark:text-red-400">{log.product}</p>
-                                        <div className="flex justify-between items-center mt-1">
-                                            <p className="text-[10px] text-gray-600 dark:text-gray-400 line-clamp-1 flex-1" title={log.notes}>{log.notes}</p>
-                                            <p className="text-[10px] text-red-600/80 dark:text-red-400/80 font-medium ml-2">{format(new Date(log.date), "dd/MM")}</p>
-                                        </div>
-                                    </div>
+                                    <Dialog key={idx}>
+                                        <DialogTrigger asChild>
+                                            <div className="bg-red-50/50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 p-2 rounded-lg cursor-pointer hover:bg-red-100/50 dark:hover:bg-red-900/40 transition-colors pointer-events-auto">
+                                                <p className="text-xs font-semibold text-red-800 dark:text-red-400">{log.product}</p>
+                                                <div className="flex justify-between items-center mt-1">
+                                                    <p className="text-[10px] text-gray-600 dark:text-gray-400 line-clamp-1 flex-1" title={log.notes}>{log.notes}</p>
+                                                    <p className="text-[10px] text-red-600/80 dark:text-red-400/80 font-medium ml-2">{format(new Date(log.date), "dd/MM")}</p>
+                                                </div>
+                                            </div>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-md pointer-events-auto z-[1000]">
+                                            <DialogHeader>
+                                                <DialogTitle className="flex items-center gap-2 text-red-600">
+                                                    <AlertTriangle className="h-5 w-5" /> Alerta Sanitaria
+                                                </DialogTitle>
+                                                <DialogDescription>
+                                                    Detalles de la observación en el lote.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="space-y-4 pt-2">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-muted-foreground">Problema / Producto</p>
+                                                    <p className="text-lg font-bold">{log.product}</p>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-muted-foreground">Fecha</p>
+                                                        <p className="text-md">{format(new Date(log.date), "dd/MM/yyyy HH:mm")}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-muted-foreground">Ingeniero</p>
+                                                        <p className="text-md">{log.agronomistName}</p>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-muted-foreground">Notas</p>
+                                                    <p className="text-md bg-muted p-3 rounded-lg whitespace-pre-wrap">{log.notes}</p>
+                                                </div>
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
                                 ))}
                             </div>
                         </div>
