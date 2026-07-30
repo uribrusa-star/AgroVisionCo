@@ -116,12 +116,12 @@ const InfoCard = ({ title, icon: Icon, children, onEdit, editableBy }: { title: 
 };
 
 const InfoItem = ({ label, value, icon: Icon }: { label: string, value: React.ReactNode, icon?: React.ElementType }) => (
-    <div className="flex justify-between items-center py-3 border-b border-border/50 last:border-0">
+    <div className="flex flex-col xl:flex-row xl:items-center justify-between py-3 border-b border-border/50 last:border-0 gap-1 xl:gap-4">
         <div className="flex items-center gap-2">
             {Icon && <Icon className="h-4 w-4 text-muted-foreground shrink-0" />}
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
         </div>
-        <div className="text-sm text-right font-semibold text-foreground max-w-[60%] break-words">{value}</div>
+        <div className="text-sm xl:text-right font-semibold text-foreground xl:max-w-[60%] break-words">{value}</div>
     </div>
 );
 
