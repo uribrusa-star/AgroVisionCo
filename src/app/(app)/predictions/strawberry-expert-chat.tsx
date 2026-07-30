@@ -222,10 +222,10 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
                     <Sparkles className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                    <CardTitle className="text-xl">Chat Experto Corondino</CardTitle>
-                    <CardDescription className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-[10px] py-0 px-1 border-primary/30 text-primary">Agrónomo Senior</Badge>
-                        Especialista en Frutilla
+                    <CardTitle className="text-xl">Chat Experto</CardTitle>
+                    <CardDescription className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-primary/30 text-primary bg-primary/5">IA</Badge>
+                        <span className="text-xs">Especialista en Frutilla</span>
                     </CardDescription>
                 </div>
             </div>
