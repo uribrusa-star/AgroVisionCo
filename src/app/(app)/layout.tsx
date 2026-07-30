@@ -167,7 +167,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const showPaywallBlocker = isPaywalled && !allowedPaywallRoutes.includes(pathname);
 
   return (
-      <SidebarProvider defaultOpen={false} className="flex-col">
+      <SidebarProvider defaultOpen={true} className="flex-col">
           <ConnectivityBanner />
           {/* Top Header spans full width */}
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-sidebar px-4 md:px-6 sticky top-0 z-40">
