@@ -90,23 +90,25 @@ const geoJsonSchema = z.object({
 
 const InfoCard = ({ title, icon: Icon, children, onEdit, editableBy }: { title: string, icon: React.ElementType, children: React.ReactNode, onEdit?: () => void, editableBy?: UserRole[] }) => {
   const { currentUser } = useContext(AppDataContext);
-  if (!currentUser) return null; // Guard clause
+  if (!currentUser) return null;
   const canEdit = editableBy ? editableBy.includes(currentUser.role) : false;
 
   return (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-medium">{title}</CardTitle>
-            <div className="flex items-center gap-2">
-              {canEdit && onEdit && (
-                <Button variant="ghost" size="icon" onClick={onEdit} className="h-6 w-6">
+    <Card className="h-full flex flex-col shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                    <Icon className="h-5 w-5" />
+                </div>
+                <CardTitle className="text-base font-bold">{title}</CardTitle>
+            </div>
+            {canEdit && onEdit && (
+                <Button variant="ghost" size="icon" onClick={onEdit} className="h-8 w-8 text-muted-foreground hover:text-foreground shrink-0">
                   <Pencil className="h-4 w-4" />
                 </Button>
-              )}
-              <Icon className="h-6 w-6 text-primary" />
-            </div>
+            )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 pt-0">
             {children}
         </CardContent>
     </Card>
@@ -114,9 +116,9 @@ const InfoCard = ({ title, icon: Icon, children, onEdit, editableBy }: { title: 
 };
 
 const InfoItem = ({ label, value, icon: Icon }: { label: string, value: React.ReactNode, icon?: React.ElementType }) => (
-    <div className="flex justify-between items-start py-2 border-b border-dashed">
+    <div className="flex justify-between items-center py-3 border-b border-border/50 last:border-0">
         <div className="flex items-center gap-2">
-            {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+            {Icon && <Icon className="h-4 w-4 text-muted-foreground shrink-0" />}
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
         </div>
         <div className="text-sm text-right font-semibold text-foreground max-w-[60%] break-words">{value}</div>
@@ -300,81 +302,74 @@ export default function EstablishmentPage() {
         title="Perfil del Establecimiento"
         description="Información detallada sobre la finca, el cultivo y las prácticas de manejo."
       />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
         
-        {/* Columna 1 */}
-        <div className="space-y-6">
-            <InfoCard title="Datos Generales" icon={Briefcase} onEdit={() => handleEdit('general')} editableBy={producerAccess}>
-               <InfoItem label="Nombre del Establecimiento" value={establishmentData.producer} icon={User} />
-               <InfoItem label="Responsable Técnico" value={establishmentData.technicalManager} icon={User} />
-               <InfoItem label="Localidad" value={`${establishmentData.location.locality}, ${establishmentData.location.province}`} icon={MapPin}/>
-                <InfoItem
-                  label="Coordenadas"
-                  icon={MapPin}
-                  value={
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${establishmentData.location.coordinates}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {establishmentData.location.coordinates}
-                    </a>
-                  }
-                />
-            </InfoCard>
+        <InfoCard title="Datos Generales" icon={Briefcase} onEdit={() => handleEdit('general')} editableBy={producerAccess}>
+            <InfoItem label="Establecimiento" value={establishmentData.producer} icon={User} />
+            <InfoItem label="Responsable" value={establishmentData.technicalManager} icon={User} />
+            <InfoItem label="Localidad" value={`${establishmentData.location.locality}, ${establishmentData.location.province}`} icon={MapPin}/>
+            <InfoItem
+                label="Coordenadas"
+                icon={MapPin}
+                value={
+                <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${establishmentData.location.coordinates}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                >
+                    {establishmentData.location.coordinates}
+                </a>
+                }
+            />
+        </InfoCard>
 
+        <InfoCard title="Superficie y Sistema" icon={Ruler} onEdit={() => handleEdit('area')} editableBy={producerAccess}>
+            <InfoItem label="Superficie Total" value={`${establishmentData.area.total} ha`} />
+            <InfoItem label="Destinada a Frutilla" value={`${establishmentData.area.strawberry} ha`} />
+            <InfoItem label="Sistema Productivo" value={establishmentData.system} />
+        </InfoCard>
+
+        <InfoCard title="Implantación del Cultivo" icon={Sprout} onEdit={() => handleEdit('planting')} editableBy={agronomistAccess}>
+            <InfoItem label="Variedades" value={establishmentData.planting.variety} />
+            <InfoItem label="Fecha de Plantación" value={new Date(establishmentData.planting.date).toLocaleDateString('es-ES', { timeZone: 'UTC' })} />
+            <InfoItem label="Origen de Plantas" value={establishmentData.planting.origin} />
+            <InfoItem label="Densidad" value={establishmentData.planting.density} />
+        </InfoCard>
+        
+        <InfoCard title="Suelo y Cobertura" icon={Mountain} onEdit={() => handleEdit('soil')} editableBy={agronomistAccess}>
+            <InfoItem label="Tipo de Suelo" value={establishmentData.soil.type} />
+            <InfoItem label="Análisis Inicial" value={establishmentData.soil.analysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
+            <InfoItem label="Cobertura (Mulching)" value={establishmentData.planting.mulching} />
+        </InfoCard>
+
+        <InfoCard title="Riego y Fertirrigación" icon={Droplet} onEdit={() => handleEdit('irrigation')} editableBy={agronomistAccess}>
+            <InfoItem label="Sistema de Riego" value={establishmentData.irrigation.system} />
+            <InfoItem label="Caudal por Gotero" value={establishmentData.irrigation.flowRate} />
+            <InfoItem label="Frecuencia Base" value={establishmentData.irrigation.frequency} />
+            <InfoItem label="Análisis de Agua" value={establishmentData.irrigation.waterAnalysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
+        </InfoCard>
+
+        <InfoCard title="Manejo y Cosecha" icon={Wind} onEdit={() => handleEdit('management')} editableBy={agronomistAccess}>
+            <InfoItem label="Control de Malezas" value={establishmentData.management.weeds} />
+            <InfoItem label="Plan Sanitario" value={establishmentData.management.sanitaryPlan} />
+            <InfoItem label="Período de Cosecha" value={establishmentData.harvest.period} />
+            <InfoItem label="Frecuencia" value={establishmentData.harvest.frequency} />
+        </InfoCard>
+
+        <InfoCard title="Comercialización" icon={TrendingUp} onEdit={() => handleEdit('commercialization')} editableBy={producerAccess}>
+             <InfoItem label="Destino Principal" value={establishmentData.harvest.destination} />
+             <InfoItem label="Objetivo Económico" value={establishmentData.economics.objective} />
+        </InfoCard>
+
+        <div className="md:col-span-2 lg:col-span-2 h-full">
             <InfoCard title="Mapa del Establecimiento (GeoJSON)" icon={Map} onEdit={() => handleEdit('geoJson')} editableBy={agronomistAccess}>
-                <div className="h-64 w-full rounded-md overflow-hidden z-0 bg-muted">
+                <div className="h-[280px] w-full rounded-xl overflow-hidden z-0 bg-muted/30 border">
                    <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
                 </div>
             </InfoCard>
         </div>
 
-        {/* Columna 2 */}
-        <div className="space-y-6">
-            <InfoCard title="Superficie y Sistema" icon={Ruler} onEdit={() => handleEdit('area')} editableBy={producerAccess}>
-               <InfoItem label="Superficie Total" value={`${establishmentData.area.total} ha`} />
-               <InfoItem label="Destinada a Frutilla" value={`${establishmentData.area.strawberry} ha`} />
-               <InfoItem label="Sistema Productivo" value={establishmentData.system} />
-            </InfoCard>
-            
-            <InfoCard title="Suelo y Cobertura" icon={Mountain} onEdit={() => handleEdit('soil')} editableBy={agronomistAccess}>
-               <InfoItem label="Tipo de Suelo" value={establishmentData.soil.type} />
-               <InfoItem label="Análisis Inicial" value={establishmentData.soil.analysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
-               <InfoItem label="Cobertura (Mulching)" value={establishmentData.planting.mulching} />
-            </InfoCard>
-
-            <InfoCard title="Manejo y Cosecha" icon={Wind} onEdit={() => handleEdit('management')} editableBy={agronomistAccess}>
-                <InfoItem label="Control de Malezas" value={establishmentData.management.weeds} />
-                <InfoItem label="Plan Sanitario" value={establishmentData.management.sanitaryPlan} />
-                <InfoItem label="Período de Cosecha" value={establishmentData.harvest.period} />
-                <InfoItem label="Frecuencia" value={establishmentData.harvest.frequency} />
-            </InfoCard>
-
-        </div>
-
-        {/* Columna 3 */}
-        <div className="space-y-6">
-            <InfoCard title="Implantación del Cultivo" icon={Sprout} onEdit={() => handleEdit('planting')} editableBy={agronomistAccess}>
-                <InfoItem label="Variedades" value={establishmentData.planting.variety} />
-                <InfoItem label="Fecha de Plantación" value={new Date(establishmentData.planting.date).toLocaleDateString('es-ES', { timeZone: 'UTC' })} />
-                <InfoItem label="Origen de Plantas" value={establishmentData.planting.origin} />
-                <InfoItem label="Densidad" value={establishmentData.planting.density} />
-            </InfoCard>
-
-            <InfoCard title="Riego y Fertirrigación" icon={Droplet} onEdit={() => handleEdit('irrigation')} editableBy={agronomistAccess}>
-                <InfoItem label="Sistema de Riego" value={establishmentData.irrigation.system} />
-                <InfoItem label="Caudal por Gotero" value={establishmentData.irrigation.flowRate} />
-                <InfoItem label="Frecuencia Base" value={establishmentData.irrigation.frequency} />
-                <InfoItem label="Análisis de Agua" value={establishmentData.irrigation.waterAnalysis ? <CheckCircle className="h-5 w-5 text-green-500" /> : 'No'} />
-            </InfoCard>
-
-            <InfoCard title="Comercialización" icon={TrendingUp} onEdit={() => handleEdit('commercialization')} editableBy={producerAccess}>
-                 <InfoItem label="Destino Principal" value={establishmentData.harvest.destination} />
-                 <InfoItem label="Objetivo Económico" value={establishmentData.economics.objective} />
-            </InfoCard>
-        </div>
       </div>
 
        {/* Edit Modals */}
