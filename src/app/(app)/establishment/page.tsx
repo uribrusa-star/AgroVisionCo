@@ -302,8 +302,17 @@ export default function EstablishmentPage() {
         title="Perfil del Establecimiento"
         description="Información detallada sobre la finca, el cultivo y las prácticas de manejo."
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
         
+        {/* Mapa ocupando 2 columnas al principio */}
+        <div className="md:col-span-2 lg:col-span-2">
+            <InfoCard title="Mapa del Establecimiento (GeoJSON)" icon={Map} onEdit={() => handleEdit('geoJson')} editableBy={agronomistAccess}>
+                <div className="h-[280px] w-full rounded-xl overflow-hidden z-0 bg-muted/30 border">
+                   <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
+                </div>
+            </InfoCard>
+        </div>
+
         <InfoCard title="Datos Generales" icon={Briefcase} onEdit={() => handleEdit('general')} editableBy={producerAccess}>
             <InfoItem label="Establecimiento" value={establishmentData.producer} icon={User} />
             <InfoItem label="Responsable" value={establishmentData.technicalManager} icon={User} />
@@ -361,14 +370,6 @@ export default function EstablishmentPage() {
              <InfoItem label="Destino Principal" value={establishmentData.harvest.destination} />
              <InfoItem label="Objetivo Económico" value={establishmentData.economics.objective} />
         </InfoCard>
-
-        <div className="md:col-span-2 lg:col-span-2 h-full">
-            <InfoCard title="Mapa del Establecimiento (GeoJSON)" icon={Map} onEdit={() => handleEdit('geoJson')} editableBy={agronomistAccess}>
-                <div className="h-[280px] w-full rounded-xl overflow-hidden z-0 bg-muted/30 border">
-                   <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
-                </div>
-            </InfoCard>
-        </div>
 
       </div>
 
