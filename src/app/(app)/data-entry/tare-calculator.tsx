@@ -46,7 +46,7 @@ export function TareCalculator() {
       id: Math.random().toString(36).substring(7),
       gross,
       tare: activeTare,
-      net: parseFloat((gross - activeTare).toFixed(2))
+      net: parseFloat((gross - activeTare).toFixed(3))
     };
 
     setEntries([...entries, newEntry]);
@@ -95,11 +95,11 @@ export function TareCalculator() {
                 </TabsList>
              </Tabs>
              {tareMode === 'custom' && (
-                 <div className="pt-2 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="pt-2 animate-in fade-in zoom-in-95 duration-200">
                     <Input 
                       type="number" 
-                      step="0.01" 
-                      placeholder="Ej: 0.85 (Kg)" 
+                      step="0.001" 
+                      placeholder="Ej: 0.850 (Kg)" 
                       value={customTare}
                       onChange={(e) => setCustomTare(e.target.value)}
                     />
@@ -111,7 +111,7 @@ export function TareCalculator() {
             <Input 
                ref={inputRef}
                type="number" 
-               step="0.01" 
+               step="0.001" 
                placeholder="Peso bruto del cajón (Kg)" 
                value={currentGross}
                onChange={(e) => setCurrentGross(e.target.value)}
