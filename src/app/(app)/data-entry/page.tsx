@@ -11,6 +11,7 @@ import { PackagingForm } from "./packaging-form";
 import { CulturalPracticesLogForm } from "./cultural-practices-log-form";
 import { CulturalPracticesHistory } from "./cultural-practices-history";
 import { WeatherCard } from "@/components/weather-card";
+import { TareCalculator } from "./tare-calculator";
 
 export default function DataEntryPage() {
   const { currentUser } = React.useContext(AppDataContext);
@@ -27,8 +28,13 @@ export default function DataEntryPage() {
         <WeatherCard />
       </PageHeader>
       <div className="w-full max-w-7xl mx-auto space-y-8">
-        <div>
-           <ProductionForm />
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+            <div className="xl:col-span-2">
+               <ProductionForm />
+            </div>
+            <div className="xl:col-span-1 h-full">
+               <TareCalculator />
+            </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {canManageBatches ? <BatchLogForm /> : <Card><CardHeader><CardTitle>Acceso Denegado</CardTitle><CardContent><p>No tiene permisos para pre-cargar lotes.</p></CardContent></CardHeader></Card>}
