@@ -29,13 +29,13 @@ type Entry = {
 export function TareCalculator() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [currentGross, setCurrentGross] = useState('');
-  const [tareMode, setTareMode] = useState<'650' | '950' | 'custom'>('650');
+  const [tareMode, setTareMode] = useState<'564' | '954' | 'custom'>('564');
   const [customTare, setCustomTare] = useState('');
   
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const activeTare = tareMode === '650' ? 0.65 : tareMode === '950' ? 0.95 : (parseFloat(customTare) || 0);
+  const activeTare = tareMode === '564' ? 0.564 : tareMode === '954' ? 0.954 : (parseFloat(customTare) || 0);
 
   const handleAdd = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -89,8 +89,8 @@ export function TareCalculator() {
              <label className="text-xs font-semibold text-muted-foreground uppercase">Seleccionar Tara</label>
              <Tabs value={tareMode} onValueChange={(v: any) => setTareMode(v)} className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                   <TabsTrigger value="650">650 g</TabsTrigger>
-                   <TabsTrigger value="950">950 g</TabsTrigger>
+                   <TabsTrigger value="564">564 g</TabsTrigger>
+                   <TabsTrigger value="954">954 g</TabsTrigger>
                    <TabsTrigger value="custom">Otro</TabsTrigger>
                 </TabsList>
              </Tabs>
