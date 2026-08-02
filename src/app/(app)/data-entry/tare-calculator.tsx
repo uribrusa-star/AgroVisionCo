@@ -52,11 +52,10 @@ export function TareCalculator() {
     setEntries([...entries, newEntry]);
     setCurrentGross('');
     
-    // Focus back on input
+    // Focus back on input without scrolling the page
     setTimeout(() => {
-        inputRef.current?.focus();
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+        inputRef.current?.focus({ preventScroll: true });
+    }, 10);
   };
 
   const removeEntry = (id: string) => {
