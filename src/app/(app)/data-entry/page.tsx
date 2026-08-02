@@ -12,7 +12,7 @@ import { CulturalPracticesLogForm } from "./cultural-practices-log-form";
 import { CulturalPracticesHistory } from "./cultural-practices-history";
 import { WeatherCard } from "@/components/weather-card";
 import { TareCalculator } from "./tare-calculator";
-import { ProductionPaymentHistory } from "./production-payment-history";
+import { ProductionPaymentHistory } from "../production-payment-history";
 
 export default function DataEntryPage() {
   const { currentUser } = React.useContext(AppDataContext);
