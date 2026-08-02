@@ -140,7 +140,7 @@ export function ProductionForm() {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
+    <>
       <Card>
         <CardHeader>
           <CardTitle>Registrar Carga de Producción</CardTitle>
@@ -330,7 +330,6 @@ export function ProductionForm() {
           </form>
         </Form>
       </Card>
-      <ProductionPaymentHistory />
 
       <AlertDialog open={validationAlert.open} onOpenChange={(open) => setValidationAlert(prev => ({...prev, open}))}>
         <AlertDialogContent>
@@ -348,6 +347,6 @@ export function ProductionForm() {
             </AlertDialogFooter>
         </AlertDialogContent>
        </AlertDialog>
-    </div>
+    </>
   );
 }
