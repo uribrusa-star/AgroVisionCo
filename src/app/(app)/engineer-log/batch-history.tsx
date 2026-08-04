@@ -27,6 +27,7 @@ const EditBatchSchema = z.object({
     name: z.string().min(1, "El nombre de la variedad es obligatorio"),
     plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
     area: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
+    plantingDate: z.string().optional(),
   })).min(1, "Debe añadir al menos una variedad"),
 });
 
@@ -54,7 +55,7 @@ export function BatchHistory() {
         preloadedDate: editingBatch.preloadedDate.slice(0, 10),
         varieties: editingBatch.varieties && editingBatch.varieties.length > 0 
           ? editingBatch.varieties 
-          : [{ name: '', plantCount: undefined, area: undefined }],
+          : [{ name: '', plantCount: undefined, area: undefined, plantingDate: '' }],
       });
     }
   }, [editingBatch, editForm]);
@@ -133,6 +134,12 @@ export function BatchHistory() {
                                             Precarga: <span className="font-medium text-foreground">{new Date(batch.preloadedDate).toLocaleDateString('es-ES')}</span>
                                             <span className="mx-1.5 opacity-50">•</span>
                                             {batch.varieties && batch.varieties.length > 0 ? batch.varieties.map(v => v.name).join(', ') : 'Sin variedades'}
+                                            {batch.varieties && batch.varieties.some(v => v.plantingDate) && (
+                                                <>
+                                                  <span className="mx-1.5 opacity-50">•</span>
+                                                  Plantación: <span className="font-medium text-foreground">{new Date(batch.varieties.find(v => v.plantingDate)!.plantingDate!).toLocaleDateString('es-ES')}</span>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -176,9 +183,10 @@ export function BatchHistory() {
                                     {viewingBatch.varieties.map((v, i) => (
                                         <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:shadow-sm transition-shadow bg-card">
                                             <div className="font-medium text-primary mb-2 sm:mb-0">{v.name}</div>
-                                            <div className="flex gap-4 text-sm text-muted-foreground">
+                                            <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
                                                 {v.plantCount && <span><strong className="text-foreground">{v.plantCount.toLocaleString()}</strong> plantas</span>}
                                                 {v.area && <span><strong className="text-foreground">{v.area}</strong> ha</span>}
+                                                {v.plantingDate && <span><strong className="text-foreground">{new Date(v.plantingDate).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</strong> (Plantación)</span>}
                                             </div>
                                         </div>
                                     ))}
@@ -325,6 +333,27 @@ export function BatchHistory() {
                                                                 {...field} 
                                                                 value={field.value ?? ''}
                                                                 onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                                                                className="h-8"
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="md:col-span-3">
+                                            <FormField
+                                                control={editForm.control}
+                                                name={`varieties.${index}.plantingDate`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-xs">F. Plantación</FormLabel>
+                                                        <FormControl>
+                                                            <Input 
+                                                                type="date" 
+                                                                {...field} 
+                                                                value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                                                                onChange={e => field.onChange(e.target.value || undefined)}
                                                                 className="h-8"
                                                             />
                                                         </FormControl>

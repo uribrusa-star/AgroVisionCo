@@ -64,6 +64,7 @@ export type BatchVariety = {
   name: string;
   plantCount?: number;
   area?: number; // In hectares
+  plantingDate?: string;
 };
 
 export type Batch = {
