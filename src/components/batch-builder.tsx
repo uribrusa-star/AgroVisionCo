@@ -158,13 +158,13 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
             center={initialCenter}
             zoom={16}
             onLoad={(map) => { mapRef.current = map; }}
-            mapTypeId="satellite"
             onClick={handleMapClick}
             options={{
               disableDefaultUI: false,
               zoomControl: true,
               mapTypeControl: false,
               streetViewControl: false,
+              mapTypeId: 'satellite',
               draggableCursor: mode === 'draw' ? 'crosshair' : 'grab'
             }}
           >
