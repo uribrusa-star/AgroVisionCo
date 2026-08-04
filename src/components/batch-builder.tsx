@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, DrawingManager, Polygon, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Polygon, Circle, Polyline } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -31,7 +31,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
   const { toast } = useToast();
   
   const [mode, setMode] = useState<'idle' | 'draw' | 'gps'>('idle');
-  const [gpsPoints, setGpsPoints] = useState<LatLng[]>([]);
+  const [currentPoints, setCurrentPoints] = useState<LatLng[]>([]);
   const [drawnPolygon, setDrawnPolygon] = useState<LatLng[] | null>(null);
   
   const [batchName, setBatchName] = useState('');
@@ -68,31 +68,18 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
   useEffect(() => {
     if (open) {
       setMode('idle');
-      setGpsPoints([]);
+      setCurrentPoints([]);
       setDrawnPolygon(null);
       setIsSaving(false);
     }
   }, [open]);
 
-  const onPolygonComplete = useCallback((polygon: google.maps.Polygon) => {
-    const path = polygon.getPath();
-    const points: LatLng[] = [];
-    for (let i = 0; i < path.getLength(); i++) {
-      const p = path.getAt(i);
-      points.push({ lat: p.lat(), lng: p.lng() });
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (mode === 'draw' && e.latLng) {
+      const newPoint = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+      setCurrentPoints(prev => [...prev, newPoint]);
     }
-    
-    // Close the polygon logically (first = last)
-    if (points.length > 0) {
-      points.push({ ...points[0] }); 
-    }
-    
-    setDrawnPolygon(points);
-    setMode('idle');
-    
-    // Remove the drawn overlay so we can render it ourselves via state
-    polygon.setMap(null);
-  }, []);
+  }, [mode]);
 
   const handleCaptureGpsPoint = () => {
     if (!navigator.geolocation) {
@@ -105,7 +92,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const newPoint = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setGpsPoints(prev => [...prev, newPoint]);
+        setCurrentPoints(prev => [...prev, newPoint]);
         
         if (mapRef.current) {
           mapRef.current.panTo(newPoint);
@@ -121,13 +108,13 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
     );
   };
 
-  const handleFinishGps = () => {
-    if (gpsPoints.length < 3) {
+  const handleFinishPoints = () => {
+    if (currentPoints.length < 3) {
       toast({ title: 'Faltan puntos', description: 'Un lote debe tener al menos 3 puntos.', variant: 'destructive' });
       return;
     }
     // Close the polygon
-    const finalPoints = [...gpsPoints, { ...gpsPoints[0] }];
+    const finalPoints = [...currentPoints, { ...currentPoints[0] }];
     setDrawnPolygon(finalPoints);
     setMode('idle');
   };
@@ -145,7 +132,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
 
   const handleClear = () => {
     setDrawnPolygon(null);
-    setGpsPoints([]);
+    setCurrentPoints([]);
     setMode('idle');
   };
 
@@ -154,6 +141,9 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] lg:max-w-6xl h-[90vh] p-0 flex flex-col overflow-hidden border-none bg-background shadow-2xl">
+        <DialogTitle className="sr-only">Constructor de Lotes</DialogTitle>
+        <DialogDescription className="sr-only">Herramienta para dibujar o marcar lotes mediante GPS.</DialogDescription>
+        
         <div className="bg-primary/10 border-b p-4 flex justify-between items-center z-10 shrink-0">
           <div>
             <h2 className="text-xl font-bold text-foreground">Constructor de Lotes</h2>
@@ -169,11 +159,13 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
             zoom={16}
             onLoad={(map) => { mapRef.current = map; }}
             mapTypeId="satellite"
+            onClick={handleMapClick}
             options={{
               disableDefaultUI: false,
               zoomControl: true,
               mapTypeControl: false,
               streetViewControl: false,
+              draggableCursor: mode === 'draw' ? 'crosshair' : 'grab'
             }}
           >
             {/* Render existing lots as contextual background */}
@@ -192,35 +184,26 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
               return null;
             })}
 
-            {/* Render the drawing manager if in draw mode */}
-            {mode === 'draw' && (
-              <DrawingManager
-                onLoad={(manager) => { drawingManagerRef.current = manager; }}
-                onPolygonComplete={onPolygonComplete}
+            {/* Render in-progress Points and Lines for both modes */}
+            {(mode === 'draw' || mode === 'gps') && currentPoints.map((pt, i) => (
+              <Circle
+                key={`point-${i}`}
+                center={pt}
+                radius={2}
                 options={{
-                  drawingControl: false,
-                  drawingMode: google.maps.drawing.OverlayType.POLYGON,
-                  polygonOptions: {
-                    fillColor: '#4A90E2',
-                    fillOpacity: 0.3,
-                    strokeColor: '#4A90E2',
+                    fillColor: '#f59e0b',
+                    fillOpacity: 1,
+                    strokeColor: '#fff',
                     strokeWeight: 2,
-                    editable: true,
-                    zIndex: 1
-                  }
+                    zIndex: 20
                 }}
               />
-            )}
-
-            {/* Render GPS Points in progress */}
-            {mode === 'gps' && gpsPoints.map((pt, i) => (
-              <Marker key={`gps-${i}`} position={pt} label={`${i+1}`} />
             ))}
             
-            {mode === 'gps' && gpsPoints.length > 1 && (
-              <Polygon
-                paths={gpsPoints}
-                options={{ fillColor: 'transparent', strokeColor: '#f59e0b', strokeWeight: 3, strokeDashStyle: [10, 5] }}
+            {(mode === 'draw' || mode === 'gps') && currentPoints.length > 1 && (
+              <Polyline
+                path={currentPoints}
+                options={{ strokeColor: '#f59e0b', strokeWeight: 3, zIndex: 15 }}
               />
             )}
 
@@ -247,18 +230,28 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
                  </>
                )}
                {mode === 'draw' && (
-                 <Button variant="secondary" onClick={() => setMode('idle')} className="shadow-lg">
-                   Cancelar Dibujo
-                 </Button>
+                 <div className="flex flex-col gap-2">
+                   <div className="bg-background px-4 py-2 rounded-md shadow-lg border text-sm text-center mb-2 font-semibold">
+                      Haga clic en el mapa para añadir vértices ({currentPoints.length})
+                   </div>
+                   <div className="flex gap-2">
+                     {currentPoints.length >= 3 && (
+                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1">
+                         Terminar Lote
+                       </Button>
+                     )}
+                     <Button variant="destructive" onClick={handleClear} className="shadow-lg">Cancelar</Button>
+                   </div>
+                 </div>
                )}
                {mode === 'gps' && (
                  <div className="flex flex-col gap-2">
                    <Button onClick={handleCaptureGpsPoint} className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg h-12 px-6">
-                     <MapPin className="h-5 w-5 mr-2" /> Marcar Posición Actual ({gpsPoints.length})
+                     <MapPin className="h-5 w-5 mr-2" /> Marcar Posición Actual ({currentPoints.length})
                    </Button>
                    <div className="flex gap-2">
-                     {gpsPoints.length >= 3 && (
-                       <Button onClick={handleFinishGps} className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1">
+                     {currentPoints.length >= 3 && (
+                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1">
                          Terminar Lote
                        </Button>
                      )}
