@@ -31,22 +31,28 @@ export default function DataEntryPage() {
       </PageHeader>
       <div className="w-full max-w-7xl mx-auto space-y-8">
         
-        {/* Fila 1: Formulario de Producción y Calculadora (1 y 2) */}
-        <div className={`grid grid-cols-1 ${showCalculator ? 'lg:grid-cols-2' : ''} gap-8 items-start`}>
+        {/* Fila 1: Formulario de Producción y (Calculadora o Historial) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div>
                <ProductionForm onToggleCalculator={() => setShowCalculator(!showCalculator)} showCalculator={showCalculator} />
             </div>
-            {showCalculator && (
+            {showCalculator ? (
                 <div className="h-full">
                    <TareCalculator />
+                </div>
+            ) : (
+                <div>
+                   <ProductionPaymentHistory />
                 </div>
             )}
         </div>
 
-        {/* Fila 2: Historial (3) */}
-        <div>
-            <ProductionPaymentHistory />
-        </div>
+        {/* Fila 2: Historial (si la calculadora está ocupando el espacio) */}
+        {showCalculator && (
+            <div>
+                <ProductionPaymentHistory />
+            </div>
+        )}
 
         {/* Demás Secciones */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
