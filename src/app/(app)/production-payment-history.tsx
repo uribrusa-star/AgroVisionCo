@@ -105,7 +105,7 @@ function ProductionPaymentHistoryComponent() {
         // MODIFICACIÓN: Carga del logo mediante Base64 para evitar errores en móviles
         try {
           const logoBase64 = await getBase64ImageFromUrl('/logo.png');
-          doc.addImage(logoBase64, 'PNG', 15, 12, 15, 15);
+          doc.addImage(logoBase64, 'PNG', 15, 12, 18, 18);
         } catch (error) {
           console.error("Error al cargar el logo para el PDF:", error);
         }
@@ -127,7 +127,8 @@ function ProductionPaymentHistoryComponent() {
 
         doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(0);
+        // Usar un gris oscuro/medio para el título en lugar de negro puro
+        doc.setTextColor(100); 
         doc.text('RECIBO DE PAGO', 105, 50, { align: 'center' });
 
         doc.setFontSize(11);
@@ -158,6 +159,10 @@ function ProductionPaymentHistoryComponent() {
         const finalY = (doc as any).lastAutoTable.finalY || 150;
         doc.text('Firma del Recolector: _________________________', 15, finalY + 30);
         doc.text(`Aclaración: ${selectedLog.collectorName}`, 15, finalY + 40);
+
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text('Este es un comprobante no válido como factura.', 105, 280, { align: 'center' });
 
         doc.save(`Recibo_Pago_${selectedLog.collectorName.replace(/\s+/g, '_')}.pdf`);
         toast({ title: '¡Recibo Generado!', description: 'El archivo PDF se ha descargado.' });
