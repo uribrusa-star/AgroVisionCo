@@ -6,9 +6,8 @@ import { useContext, useMemo, useState, useTransition } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,7 @@ const ProductionSchema = z.object({
 
 type ProductionFormValues = z.infer<typeof ProductionSchema>;
 
-export function ProductionForm() {
+export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggleCalculator?: () => void, showCalculator?: boolean }) {
   const { toast } = useToast();
   const { collectors, batches, addMultipleHarvests, harvests, currentUser, agronomistLogs } = useContext(AppDataContext);
   const [isPending, startTransition] = useTransition();
@@ -141,12 +140,26 @@ export function ProductionForm() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="w-full relative">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
+        <div className="space-y-1.5">
           <CardTitle>Registrar Carga de Producción</CardTitle>
-          <CardDescription>Ingrese los detalles de la cosecha y calcule el pago del recolector.</CardDescription>
-        </CardHeader>
-        <Form {...form}>
+          <CardDescription>Cargue los kilos cosechados por cada empleado y asigne los lotes.</CardDescription>
+        </div>
+        {onToggleCalculator && (
+          <Button 
+            variant={showCalculator ? "default" : "outline"}
+            size="icon" 
+            onClick={onToggleCalculator}
+            className="shrink-0"
+            title="Mostrar/Ocultar Calculadora de Taras"
+          >
+            <Calculator className="h-4 w-4" />
+          </Button>
+        )}
+      </CardHeader>
+      
+      <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
