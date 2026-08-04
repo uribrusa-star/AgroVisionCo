@@ -161,7 +161,7 @@ const EditDialog = ({ open, onOpenChange, title, description, schema, defaultVal
 
 
 export default function EstablishmentPage() {
-  const { loading, establishmentData, updateEstablishmentData, currentUser } = useContext(AppDataContext);
+  const { loading, establishmentData, updateEstablishmentData, addBatch, currentUser } = useContext(AppDataContext);
   const { toast } = useToast();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isBatchBuilderOpen, setIsBatchBuilderOpen] = useState(false);
@@ -258,6 +258,10 @@ export default function EstablishmentPage() {
           };
           
           await updateEstablishmentData({ geoJsonData: JSON.stringify(updatedGeoJson) });
+          
+          // Add the batch to the data entry list as well
+          addBatch({ id: batchName, status: 'pending' });
+          
           toast({ title: "¡Lote Creado!", description: `El lote ${batchName} ha sido guardado exitosamente.`});
       } catch (error) {
           toast({ title: "Error", description: "No se pudo guardar el lote.", variant: "destructive"});
