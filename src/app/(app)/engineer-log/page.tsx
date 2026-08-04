@@ -104,7 +104,6 @@ export default function EngineerLogPage() {
               <PhenologyLogForm />
               <EnvironmentalLogForm />
               <ActivityOmissionLogForm />
-              <Supplies />
             </>
           )}
           {!canManageApplications && (
@@ -119,6 +118,12 @@ export default function EngineerLogPage() {
           )}
         </div>
       </div>
+
+      {canManageApplications && (
+        <div className="mt-8">
+          <Supplies />
+        </div>
+      )}
     </>
   );
 }
