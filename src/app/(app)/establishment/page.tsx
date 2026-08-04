@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Droplet, Map, MapPin, Sprout, User, Wind, Briefcase, ChevronRight, Plus, Mountain, TrendingUp, Sun, Ruler, CheckCircle, Pencil } from 'lucide-react';
+import { Droplet, Map, MapPin, Sprout, User, Wind, Briefcase, ChevronRight, Plus, Mountain, TrendingUp, Sun, Ruler, CheckCircle, Pencil, Trash2 } from 'lucide-react';
 import { BatchBuilder } from '@/components/batch-builder';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppDataContext } from "@/context/app-data-context.tsx";
@@ -161,7 +161,7 @@ const EditDialog = ({ open, onOpenChange, title, description, schema, defaultVal
 
 
 export default function EstablishmentPage() {
-  const { loading, establishmentData, updateEstablishmentData, addBatch, currentUser } = useContext(AppDataContext);
+  const { loading, establishmentData, updateEstablishmentData, addBatch, deleteBatch, currentUser } = useContext(AppDataContext);
   const { toast } = useToast();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isBatchBuilderOpen, setIsBatchBuilderOpen] = useState(false);
@@ -267,6 +267,33 @@ export default function EstablishmentPage() {
           toast({ title: "Error", description: "No se pudo guardar el lote.", variant: "destructive"});
       }
   };
+
+  const handleDeleteBatch = async (batchName: string) => {
+      if (!establishmentData || !parsedGeoJson) return;
+      
+      if (!confirm(`¿Está seguro que desea eliminar el lote ${batchName}?`)) return;
+
+      try {
+          const updatedFeatures = parsedGeoJson.features.filter((f: any) => {
+             const name = Object.keys(f.properties || {}).find(k => k.startsWith('L'));
+             return name !== batchName;
+          });
+          
+          const updatedGeoJson = {
+              ...parsedGeoJson,
+              features: updatedFeatures
+          };
+          
+          await updateEstablishmentData({ geoJsonData: JSON.stringify(updatedGeoJson) });
+          
+          // Remove from data entry
+          deleteBatch(batchName);
+          
+          toast({ title: "Lote Eliminado", description: `El lote ${batchName} ha sido eliminado.`});
+      } catch (error) {
+          toast({ title: "Error", description: "No se pudo eliminar el lote.", variant: "destructive"});
+      }
+  };
   
   const parsedGeoJson = useMemo(() => {
       try {
@@ -349,6 +376,29 @@ export default function EstablishmentPage() {
                      </Button>
                    )}
                 </div>
+                {parsedGeoJson?.features?.length > 0 && (
+                  <div className="mt-6 space-y-3">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lotes Registrados en el Mapa</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {parsedGeoJson.features.map((feature: any, idx: number) => {
+                        const name = Object.keys(feature.properties || {}).find(k => k.startsWith('L')) || `Lote ${idx}`;
+                        if (feature.geometry?.type !== 'Polygon') return null;
+                        
+                        return (
+                          <div key={name} className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-full text-sm border shadow-sm transition-all hover:shadow-md">
+                             <MapPin className="h-3 w-3 text-primary" />
+                             <span className="font-bold text-foreground">{name}</span>
+                             {agronomistAccess.includes(currentUser?.role as UserRole) && (
+                               <Button variant="ghost" size="icon" className="h-6 w-6 ml-1 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteBatch(name)}>
+                                 <Trash2 className="h-3.5 w-3.5" />
+                               </Button>
+                             )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
             </InfoCard>
         </div>
 
