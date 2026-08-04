@@ -143,7 +143,11 @@ export default function PackersPage() {
                   <Skeleton key={`mob-skel-${i}`} className="h-24 w-full rounded-xl" />
               ))}
               {!loading && packers.map((packer) => (
-                  <div key={packer.id} className="bg-card border border-border/60 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-all gap-4">
+                  <div 
+                    key={packer.id} 
+                    className="bg-card border border-border/60 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-all gap-4 cursor-pointer hover:border-primary/50"
+                    onClick={() => { setSelectedPacker(packer); setIsHistoryOpen(true); }}
+                  >
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
@@ -156,7 +160,8 @@ export default function PackersPage() {
                               </div>
                           </div>
                           {canManage && (
-                              <AlertDialog>
+                              <div onClick={(e) => e.stopPropagation()}>
+                                  <AlertDialog>
                                   <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                           <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -184,6 +189,7 @@ export default function PackersPage() {
                                       </AlertDialogFooter>
                                   </AlertDialogContent>
                               </AlertDialog>
+                              </div>
                           )}
                       </div>
                       <div className="grid grid-cols-2 gap-2 mt-auto">
@@ -208,11 +214,25 @@ export default function PackersPage() {
           {selectedPacker && (
             <>
               <DialogHeader>
-                <DialogTitle>Historial de Embalaje: {selectedPacker.name}</DialogTitle>
+                <DialogTitle>Perfil de Embalador: {selectedPacker.name}</DialogTitle>
                 <DialogDescription>
-                  Revise todos los trabajos de embalaje para este embalador.
+                  Estadísticas generales e historial de embalaje detallado.
                 </DialogDescription>
               </DialogHeader>
+              <div className="grid grid-cols-2 gap-4 my-2">
+                 <div className="bg-primary/10 rounded-lg p-3 text-center">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Kilos Totales</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {selectedPacker.totalPackaged.toLocaleString('es-ES')} kg
+                    </p>
+                 </div>
+                 <div className="bg-muted rounded-lg p-3 text-center">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Productividad</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {selectedPacker.packagingRate.toFixed(2)} <span className="text-sm font-normal">kg/hr</span>
+                    </p>
+                 </div>
+              </div>
               <div className="max-h-[60vh] overflow-auto">
                 <Table>
                   <TableHeader>

@@ -160,7 +160,11 @@ export default function CollectorsPage() {
                     : (collector.productivity || 0);
 
                   return (
-                  <div key={collector.id} className="bg-card border border-border/60 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-all gap-4">
+                  <div 
+                    key={collector.id} 
+                    className="bg-card border border-border/60 rounded-xl p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition-all gap-4 cursor-pointer hover:border-primary/50"
+                    onClick={() => { setSelectedCollector(collector); setIsHistoryOpen(true); }}
+                  >
                       <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
@@ -173,7 +177,8 @@ export default function CollectorsPage() {
                               </div>
                           </div>
                           {canManage && (
-                              <AlertDialog>
+                              <div onClick={(e) => e.stopPropagation()}>
+                                  <AlertDialog>
                                   <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                           <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -201,6 +206,7 @@ export default function CollectorsPage() {
                                       </AlertDialogFooter>
                                   </AlertDialogContent>
                               </AlertDialog>
+                              </div>
                           )}
                       </div>
                       <div className="grid grid-cols-2 gap-2 mt-auto">
@@ -226,11 +232,31 @@ export default function CollectorsPage() {
           {selectedCollector && (
             <>
               <DialogHeader>
-                <DialogTitle>Historial de Cosecha: {selectedCollector.name}</DialogTitle>
+                <DialogTitle>Perfil de Recolector: {selectedCollector.name}</DialogTitle>
                 <DialogDescription>
-                  Revise todas las entradas de cosecha para este recolector.
+                  Estadísticas generales e historial de cosecha detallado.
                 </DialogDescription>
               </DialogHeader>
+              <div className="grid grid-cols-2 gap-4 my-2">
+                 <div className="bg-primary/10 rounded-lg p-3 text-center">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Kilos Totales</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {harvests.filter(h => h.collector.id === selectedCollector.id).reduce((sum, h) => sum + h.kilograms, 0).toLocaleString('es-ES')} kg
+                    </p>
+                 </div>
+                 <div className="bg-muted rounded-lg p-3 text-center">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Productividad</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {(() => {
+                           const collHarvests = harvests.filter(h => h.collector.id === selectedCollector.id);
+                           const collLogs = (collectorPaymentLogs || []).filter(l => l.collectorId === selectedCollector.id);
+                           const totalKg = collHarvests.reduce((sum, h) => sum + h.kilograms, 0);
+                           const totalHrs = collLogs.reduce((sum, l) => sum + l.hours, 0);
+                           return totalHrs > 0 ? (totalKg / totalHrs).toFixed(2) : selectedCollector.productivity?.toFixed(2) || '0.00';
+                        })()} <span className="text-sm font-normal">kg/hr</span>
+                    </p>
+                 </div>
+              </div>
               <div className="max-h-[60vh] overflow-auto">
                 <Table>
                   <TableHeader>
