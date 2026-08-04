@@ -158,7 +158,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
             center={initialCenter}
             zoom={16}
             onLoad={(map) => { mapRef.current = map; }}
-            mapTypeId="terrain"
+            mapTypeId="satellite"
             onClick={handleMapClick}
             options={{
               disableDefaultUI: false,
