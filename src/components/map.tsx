@@ -19,10 +19,13 @@ type MapProps = {
     geoJsonData?: any;
 };
 
+const libraries: ("drawing" | "geometry")[] = ["drawing", "geometry"];
+
 const MapComponent = ({ center, geoJsonData }: MapProps) => {
     const isOnline = useOnlineStatus();
     const { isLoaded, loadError } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+        libraries,
     });
     
     const { harvests, agronomistLogs, phenologyLogs, batches } = useContext(AppDataContext);

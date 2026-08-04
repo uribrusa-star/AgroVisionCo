@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Droplet, MapPin, Milestone, Mountain, Sprout, Wind, TrendingUp, Sun, Ruler, CheckCircle, Pencil, User, Briefcase, Map } from 'lucide-react';
+import { Droplet, Map, MapPin, Sprout, User, Wind, Briefcase, ChevronRight, Plus, Mountain, TrendingUp, Sun, Ruler, CheckCircle, Pencil } from 'lucide-react';
+import { BatchBuilder } from '@/components/batch-builder';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppDataContext } from "@/context/app-data-context.tsx";
 import type { EstablishmentData, UserRole } from "@/lib/types";
@@ -163,6 +164,7 @@ export default function EstablishmentPage() {
   const { loading, establishmentData, updateEstablishmentData, currentUser } = useContext(AppDataContext);
   const { toast } = useToast();
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [isBatchBuilderOpen, setIsBatchBuilderOpen] = useState(false);
 
   const geoJsonForm = useForm<z.infer<typeof geoJsonSchema>>({
     resolver: zodResolver(geoJsonSchema),
@@ -237,6 +239,31 @@ export default function EstablishmentPage() {
       }
   };
   
+  const handleBatchBuilderSave = async (points: {lat: number, lng: number}[], batchName: string) => {
+      if (!establishmentData) return;
+      try {
+          const currentGeoJson = parsedGeoJson || { type: "FeatureCollection", features: [] };
+          const newFeature = {
+              type: "Feature",
+              properties: { [batchName]: `Lote ${batchName}` },
+              geometry: {
+                  type: "Polygon",
+                  coordinates: [ points.map(p => [p.lng, p.lat]) ]
+              }
+          };
+          
+          const updatedGeoJson = {
+              ...currentGeoJson,
+              features: [...(currentGeoJson.features || []), newFeature]
+          };
+          
+          await updateEstablishmentData({ geoJsonData: JSON.stringify(updatedGeoJson) });
+          toast({ title: "¡Lote Creado!", description: `El lote ${batchName} ha sido guardado exitosamente.`});
+      } catch (error) {
+          toast({ title: "Error", description: "No se pudo guardar el lote.", variant: "destructive"});
+      }
+  };
+  
   const parsedGeoJson = useMemo(() => {
       try {
           return establishmentData?.geoJsonData ? JSON.parse(establishmentData.geoJsonData) : null;
@@ -306,9 +333,17 @@ export default function EstablishmentPage() {
         
         {/* Mapa ocupando 2 columnas al principio */}
         <div className="md:col-span-2 lg:col-span-2">
-            <InfoCard title="Mapa del Establecimiento (GeoJSON)" icon={Map} onEdit={() => handleEdit('geoJson')} editableBy={agronomistAccess}>
-                <div className="h-[280px] w-full rounded-xl overflow-hidden z-0 bg-muted/30 border">
+            <InfoCard title="Mapa del Establecimiento" icon={Map} onEdit={() => handleEdit('geoJson')} editableBy={agronomistAccess}>
+                <div className="h-[280px] w-full rounded-xl overflow-hidden z-0 bg-muted/30 border relative">
                    <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
+                   {agronomistAccess.includes(currentUser?.role as UserRole) && (
+                     <Button 
+                        onClick={() => setIsBatchBuilderOpen(true)} 
+                        className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 shadow-lg"
+                     >
+                       <Plus className="h-4 w-4 mr-2" /> Añadir Nuevo Lote
+                     </Button>
+                   )}
                 </div>
             </InfoCard>
         </div>
@@ -517,9 +552,9 @@ export default function EstablishmentPage() {
       <Dialog open={editingSection === 'geoJson'} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Editar Datos GeoJSON</DialogTitle>
+            <DialogTitle>Editar Datos GeoJSON (Avanzado)</DialogTitle>
             <DialogDescription>
-              Pegue aquí el contenido de su archivo GeoJSON para definir los lotes y puntos de interés en el mapa. Asegúrese de que cada lote (polígono) tenga una propiedad "name" con su ID (ej. "L001").
+              Edición manual cruda del GeoJSON. Recomendamos usar el botón "Añadir Nuevo Lote" en el mapa para crearlos visualmente.
             </DialogDescription>
           </DialogHeader>
           <Form {...geoJsonForm}>
@@ -550,6 +585,13 @@ export default function EstablishmentPage() {
         </DialogContent>
       </Dialog>
 
+      <BatchBuilder 
+        open={isBatchBuilderOpen}
+        onOpenChange={setIsBatchBuilderOpen}
+        onSave={handleBatchBuilderSave}
+        initialCenter={mapCenter}
+        existingGeoJson={parsedGeoJson}
+      />
     </>
   );
 }
