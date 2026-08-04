@@ -112,14 +112,14 @@ export function BatchLogForm() {
                 </div>
                 
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-md bg-muted/30">
-                    <div className="md:col-span-3">
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border p-4 rounded-md bg-muted/30">
+                    <div className="md:col-span-4">
                       <FormField
                         control={form.control}
                         name={`varieties.${index}.name`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">Nombre de Variedad</FormLabel>
+                            <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Variedad</FormLabel>
                             <FormControl>
                               <Input placeholder="ej. San Andreas" {...field} disabled={!canManage || isPending} />
                             </FormControl>
@@ -134,7 +134,7 @@ export function BatchLogForm() {
                         name={`varieties.${index}.plantCount`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">Cant. Plantas (Opc.)</FormLabel>
+                            <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Plantas</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
@@ -157,7 +157,7 @@ export function BatchLogForm() {
                         name={`varieties.${index}.area`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">Superficie (ha)</FormLabel>
+                            <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sup. (ha)</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
@@ -175,13 +175,13 @@ export function BatchLogForm() {
                         )}
                       />
                     </div>
-                    <div className="md:col-span-4">
+                    <div className="md:col-span-3">
                       <FormField
                         control={form.control}
                         name={`varieties.${index}.plantingDate`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">Fecha Plantación</FormLabel>
+                            <FormLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Plantación</FormLabel>
                             <FormControl>
                               <Input 
                                 type="date"
