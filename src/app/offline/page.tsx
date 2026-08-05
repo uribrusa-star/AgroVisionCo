@@ -1,6 +1,9 @@
+'use client';
 
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Home, RefreshCw } from 'lucide-react';
 import { AgroVistaLogo } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function OfflinePage() {
   return (
@@ -16,9 +19,21 @@ export default function OfflinePage() {
             <p className="text-muted-foreground max-w-md">
                 Parece que no tienes conexión a internet. La aplicación funcionará en modo offline, pero algunas funcionalidades podrían estar limitadas.
             </p>
-             <p className="text-sm text-muted-foreground mt-4">
+             <p className="text-sm text-muted-foreground mt-4 mb-6">
                 Tus datos se sincronizarán automáticamente cuando vuelvas a estar en línea.
             </p>
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <Button asChild variant="default" className="w-full sm:w-auto">
+                    <Link href="/dashboard">
+                        <Home className="w-4 h-4 mr-2" />
+                        Ir al Panel de Control
+                    </Link>
+                </Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => window.location.reload()}>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reintentar
+                </Button>
+            </div>
         </div>
     </div>
   );

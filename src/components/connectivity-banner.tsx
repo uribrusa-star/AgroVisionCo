@@ -17,7 +17,7 @@ export function ConnectivityBanner() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-center gap-3 text-sm font-medium sticky top-0 z-[100] shadow-md border-b border-amber-600/20"
+                    className="bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-center gap-3 text-sm font-medium sticky top-0 z-[45] shadow-md border-b border-amber-600/20"
                 >
                     <div className="flex items-center gap-2">
                         <WifiOff className="h-4 w-4 animate-pulse" />
