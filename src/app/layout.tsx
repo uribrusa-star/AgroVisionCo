@@ -3,7 +3,6 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
 import { ThemeProvider } from "@/components/theme-provider";
-import { SWUnregister } from '@/components/sw-unregister';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'),
@@ -58,7 +57,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppContextProvider>
-            <SWUnregister />
             {children}
             <Toaster />
           </AppContextProvider>
