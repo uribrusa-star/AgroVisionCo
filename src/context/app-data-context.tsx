@@ -461,6 +461,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const batch = writeBatch(db);
             let harvestsAdded = 0;
             const updatedCollectors = new Map<string, { totalHarvested: number; hoursWorked: number }>();
+            const newHarvests: Harvest[] = [];
+            const newPayments: CollectorPaymentLog[] = [];
 
             for (const { harvest: harvestData, hoursWorked, ratePerKg } of harvestsData) {
                 const collector = collectors.find(c => c.id === harvestData.collector.id);
@@ -514,11 +516,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                   traceabilityId,
                 };
                 batch.set(newPaymentLogRef, { ...paymentLog, establishmentId: currentUser?.establishmentId || 'main' });
+                
+                newHarvests.push({ id: newHarvestRef.id, ...harvestWithTraceability } as Harvest);
+                newPayments.push({ id: newPaymentLogRef.id, ...paymentLog } as CollectorPaymentLog);
+                
                 harvestsAdded++;
             }
 
             if (harvestsAdded > 0) {
-                await batch.commit();
+                // Fire and forget to prevent blocking the UI when offline
+                batch.commit().catch(err => console.error("Offline batch commit pending/failed:", err));
+                
                 setCollectors(prev => prev.map(c => {
                     const updatedStats = updatedCollectors.get(c.id);
                     if (updatedStats) {
@@ -531,7 +539,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     }
                     return c;
                 }));
-                await fetchAllData();
+                
+                setHarvests(prev => [...newHarvests, ...prev]);
+                setCollectorPaymentLogs(prev => [...newPayments, ...prev]);
+                
+                // Fire and forget refresh so history updates eventually (from cache or net)
+                fetchAllData().catch(e => console.error(e));
             }
 
         } catch(error) {
