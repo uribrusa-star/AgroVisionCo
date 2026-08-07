@@ -69,10 +69,17 @@ export function BatchHistory() {
       ? `${data.preloadedDate}T12:00:00.000Z` 
       : data.preloadedDate;
     
+    const safeVarieties = data.varieties.map(v => ({
+      ...v,
+      plantingDate: v.plantingDate && v.plantingDate.length === 10
+        ? `${v.plantingDate}T12:00:00.000Z`
+        : v.plantingDate
+    }));
+    
     await editBatch({
       ...editingBatch,
       preloadedDate: safePreloadedDate,
-      varieties: data.varieties,
+      varieties: safeVarieties,
     });
 
     toast({

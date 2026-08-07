@@ -56,7 +56,12 @@ export function BatchLogForm() {
     startTransition(() => {
         addBatch({
             id: data.id,
-            varieties: data.varieties,
+            varieties: data.varieties.map(v => ({
+              ...v,
+              plantingDate: v.plantingDate && v.plantingDate.length === 10
+                ? `${v.plantingDate}T12:00:00.000Z`
+                : v.plantingDate
+            })),
         });
         toast({
             title: "¡Lote Pre-cargado!",
