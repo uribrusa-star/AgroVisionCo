@@ -1096,7 +1096,7 @@ export const generateSubscriptionReceiptPDF = (
   doc.setFont("helvetica", "bold");
   doc.text("Razón Social / Nombre:", 12, 30);
   doc.setFont("helvetica", "normal");
-  doc.text("AgroVista Software SRL", 50, 30);
+  doc.text("Uriel Agustín Brusa", 50, 30);
   
   doc.setFont("helvetica", "bold");
   doc.text("Domicilio Comercial:", 12, 35);
@@ -1140,17 +1140,17 @@ export const generateSubscriptionReceiptPDF = (
   doc.setFont("helvetica", "bold");
   doc.text("CUIT:", pageWidth / 2 + 10, 36);
   doc.setFont("helvetica", "normal");
-  doc.text("30-71234567-8", pageWidth / 2 + 20, 36);
+  doc.text("20-40123456-9", pageWidth / 2 + 20, 36);
   
   doc.setFont("helvetica", "bold");
   doc.text("Ingresos Brutos:", pageWidth / 2 + 45, 36);
   doc.setFont("helvetica", "normal");
-  doc.text("30-71234567-8", pageWidth / 2 + 72, 36);
+  doc.text("20-40123456-9", pageWidth / 2 + 72, 36);
   
   doc.setFont("helvetica", "bold");
   doc.text("Fecha de Inicio de Actividades:", pageWidth / 2 + 10, 41);
   doc.setFont("helvetica", "normal");
-  doc.text("01/01/2026", pageWidth / 2 + 60, 41);
+  doc.text("01/08/2026", pageWidth / 2 + 60, 41);
   
   // --- Billing Period (y=45 to y=57) ---
   doc.setFillColor(245, 245, 245);
@@ -1170,9 +1170,9 @@ export const generateSubscriptionReceiptPDF = (
   doc.text(endBillingStr, 92, 52);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Fecha de Vto. para el Pago:", 140, 52);
+  doc.text("Fecha de Vto. para el Pago:", 125, 52);
   doc.setFont("helvetica", "normal");
-  doc.text(expiryStr, 185, 52);
+  doc.text(expiryStr, 170, 52);
   
   // --- Client Info (y=57 to y=75) ---
   doc.line(10, 75, pageWidth - 10, 75);
@@ -1195,7 +1195,7 @@ export const generateSubscriptionReceiptPDF = (
   doc.setFont("helvetica", "bold");
   doc.text("Condición de Pago:", pageWidth / 2 + 10, 70);
   doc.setFont("helvetica", "normal");
-  doc.text("Mercado Pago (Transferencia / Tarjeta)", pageWidth / 2 + 42, 70);
+  doc.text("Mercado Pago", pageWidth / 2 + 42, 70);
   
   // --- Table Header (y=75 to y=85) ---
   doc.setFillColor(30, 41, 59); // Dark slate
