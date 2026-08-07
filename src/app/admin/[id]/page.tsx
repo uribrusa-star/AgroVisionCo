@@ -10,7 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Tractor, Sprout, Building, ShieldCheck, MapPin, Pickaxe, Package, Activity, Clock, CreditCard, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { EstablishmentData, User, Collector, Packer, Harvest } from '@/lib/types';
-import { AppDataContext } from '@/context/app-data-context.tsx';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { AppDataContext } from '@/context/app-data-context';
 
 export default function AdminEstablishmentDetail() {
   const router = useRouter();
@@ -24,6 +27,13 @@ export default function AdminEstablishmentDetail() {
   const [packers, setPackers] = useState<Packer[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const { toast } = useToast();
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'SuperAdmin' || !id) return;
@@ -67,6 +77,54 @@ export default function AdminEstablishmentDetail() {
 
     fetchData();
   }, [id, currentUser]);
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    
+    setIsEditingUser(true);
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedUser.id,
+          name: editName,
+          password: editPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al actualizar usuario');
+      }
+
+      toast({
+        title: "Usuario Actualizado",
+        description: `Los datos de ${editName} han sido actualizados.`,
+      });
+      
+      setUsers(users.map(u => u.id === selectedUser.id ? { ...u, name: editName } : u));
+      setIsUserDialogOpen(false);
+      
+    } catch (error: any) {
+      toast({
+        title: "Error al actualizar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsEditingUser(false);
+    }
+  };
+
+  const openEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditName(user.name);
+    setEditPassword(''); // No mostramos la vieja por seguridad
+    setIsUserDialogOpen(true);
+  };
 
   if (loading) {
     return <div className="p-8 text-center text-stone-500 animate-pulse">Cargando perfil del cliente...</div>;
@@ -227,9 +285,9 @@ export default function AdminEstablishmentDetail() {
             <CardContent className="p-0">
               <div className="divide-y divide-stone-100">
                 {users.map(u => (
-                  <div key={u.id} className="flex items-center justify-between p-4 hover:bg-stone-50/50 transition-colors">
+                  <div key={u.id} onClick={() => openEditUser(u)} className="flex items-center justify-between p-4 hover:bg-stone-50 transition-colors cursor-pointer group">
                     <div>
-                      <p className="font-semibold text-stone-800">{u.name}</p>
+                      <p className="font-semibold text-stone-800 group-hover:text-emerald-700 transition-colors">{u.name}</p>
                       <p className="text-sm text-stone-500">{u.email}</p>
                     </div>
                     <Badge variant="outline" className="bg-stone-100">{u.role}</Badge>
@@ -239,6 +297,46 @@ export default function AdminEstablishmentDetail() {
               </div>
             </CardContent>
           </Card>
+          
+          {/* User Edit Dialog */}
+          <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+            <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl">
+              <DialogHeader>
+                <DialogTitle>Editar Usuario</DialogTitle>
+              </DialogHeader>
+              {selectedUser && (
+                <form onSubmit={handleEditUser} className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Nombre de Usuario</Label>
+                    <Input 
+                      id="edit-name" 
+                      value={editName} 
+                      onChange={(e) => setEditName(e.target.value)} 
+                      required 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-password">Nueva Contraseña (Dejar en blanco para no cambiar)</Label>
+                    <Input 
+                      id="edit-password" 
+                      type="password" 
+                      value={editPassword} 
+                      onChange={(e) => setEditPassword(e.target.value)} 
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 mt-4">
+                    <Button type="button" variant="outline" onClick={() => setIsUserDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" className="bg-[#2d4a22] hover:bg-[#1a2d13]" disabled={isEditingUser}>
+                      {isEditingUser ? "Guardando..." : "Guardar Cambios"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </DialogContent>
+          </Dialog>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-stone-200 shadow-sm overflow-hidden">

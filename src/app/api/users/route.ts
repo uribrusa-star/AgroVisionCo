@@ -108,3 +108,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    
+    const body = await request.json();
+    const { id, name, password } = body;
+    const sessionUserId = session.user.id;
+
+    if (!id || !name) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Verify the user making the request is a SuperAdmin
+    const callerDoc = await adminDb.collection('users').doc(sessionUserId).get();
+    if (!callerDoc.exists || callerDoc.data()?.role !== 'SuperAdmin') {
+      return NextResponse.json({ error: 'Unauthorized. Only Admins can edit users.' }, { status: 403 });
+    }
+
+    const updateDataAuth: any = { displayName: name };
+    const updateDataFirestore: any = { name };
+
+    if (password && password.trim().length >= 6) {
+      updateDataAuth.password = password;
+      updateDataFirestore.password = password; // For the mock login compatibility
+    }
+
+    // Update Firebase Auth user
+    await adminAuth.updateUser(id, updateDataAuth);
+
+    // Update Firestore user document
+    await adminDb.collection('users').doc(id).update(updateDataFirestore);
+
+    return NextResponse.json({ success: true });
+
+  } catch (error: any) {
+    console.error('Error updating user:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
