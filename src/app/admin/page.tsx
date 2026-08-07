@@ -536,6 +536,26 @@ export default function AdminDashboardPage() {
                             <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
                           </SelectContent>
                         </Select>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="w-full text-stone-600 bg-white hover:bg-stone-50 border-stone-200 shadow-sm font-semibold h-9 mt-2"
+                          onClick={() => {
+                            const amount = subPrice;
+                            generateSubscriptionReceiptPDF(
+                              prod.name,
+                              prod.notificationEmail || prod.email,
+                              amount,
+                              status,
+                              prod.subscriptionExpiryDate || null,
+                              '/logo.png'
+                            );
+                            toast({ title: "PDF Generado", description: "La boleta de suscripción se ha descargado." });
+                          }}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Generar Boleta
+                        </Button>
                       </div>
                     </div>
                   </details>
@@ -601,7 +621,7 @@ export default function AdminDashboardPage() {
                             size="sm"
                             className="w-full mt-2 text-stone-600 bg-white hover:bg-stone-50 border-stone-200 shadow-sm"
                             onClick={() => {
-                              const amount = settings?.monthlySubscriptionPrice || 50000;
+                              const amount = subPrice;
                               generateSubscriptionReceiptPDF(
                                 prod.name,
                                 prod.notificationEmail || prod.email,
