@@ -6,6 +6,7 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import type { User } from '@/lib/types';
 
 import { getRoleAvatar } from '@/lib/utils';
+import { users as mockUsers } from '@/lib/data';
 
 function parseFirestoreDoc(doc: any): User | null {
   if (!doc || !doc.document || !doc.document.fields) return null;
@@ -48,11 +49,12 @@ export async function POST(request: Request) {
 
     let user: User | null = null;
 
-    // 1. Verificación instantánea si el cliente ya sincronizó el usuario en vivo (evita sockets gRPC/HTTP2 en Vercel que causan 502 Bad Gateway)
-    if (clientUser && clientUser.email?.toLowerCase() === email.toLowerCase() && clientUser.password === password) {
-      user = clientUser as User;
+    // 1. Verificar usuarios mock locales (ej. SuperAdmin o cuentas de demo)
+    const localMock = mockUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    if (localMock && localMock.password === password) {
+      user = localMock;
     } else {
-      // 2. Usar Admin SDK para saltarse las reglas de seguridad de Firestore (ya que no hay usuario logueado aún)
+      // 2. Usar Admin SDK para consultar Firestore de forma segura en el servidor
       try {
         const usersSnapshot = await adminDb.collection('users').where('email', '==', email).get();
         if (!usersSnapshot.empty) {

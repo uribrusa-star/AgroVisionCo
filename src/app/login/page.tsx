@@ -51,13 +51,12 @@ export default function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     startTransition(async () => {
-      const clientUser = users?.find(u => u.email?.toLowerCase() === values.email?.toLowerCase());
       
       try {
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...values, clientUser }),
+          body: JSON.stringify({ ...values }),
         });
 
         if (response.ok) {
@@ -85,9 +84,10 @@ export default function LoginPage() {
           form.setError("root", { message: "Correo electrónico o contraseña incorrectos."});
         }
       } catch (error) {
-        // Handle offline login fallback
-        if (clientUser && clientUser.password === values.password) {
-            setCurrentUser(clientUser, values.rememberMe);
+        // Handle offline login fallback (using local users state)
+        const offlineUser = users?.find(u => u.email?.toLowerCase() === values.email?.toLowerCase());
+        if (offlineUser && offlineUser.password === values.password) {
+            setCurrentUser(offlineUser, values.rememberMe);
             toast({
                 title: "Modo sin conexión",
                 description: "Sesión iniciada localmente. Los datos se sincronizarán al conectarse.",
