@@ -23,8 +23,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
+import { Plus, FileText } from 'lucide-react';
 import { AdminAnalytics } from './admin-analytics';
+import { generateSubscriptionReceiptPDF } from '@/lib/pdf-generator';
 
 const CreateProducerSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -595,6 +596,26 @@ export default function AdminDashboardPage() {
                               <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
                             </SelectContent>
                           </Select>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="w-full mt-2 text-stone-600 bg-white hover:bg-stone-50 border-stone-200 shadow-sm"
+                            onClick={() => {
+                              const amount = settings?.monthlySubscriptionPrice || 50000;
+                              generateSubscriptionReceiptPDF(
+                                prod.name,
+                                prod.notificationEmail || prod.email,
+                                amount,
+                                status,
+                                prod.subscriptionExpiryDate || null,
+                                '/logo.png'
+                              );
+                              toast({ title: "PDF Generado", description: "La boleta de suscripción se ha descargado." });
+                            }}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            Boleta
+                          </Button>
                         </TableCell>
                       </TableRow>
                     )

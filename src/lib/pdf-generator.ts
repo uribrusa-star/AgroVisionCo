@@ -1050,3 +1050,75 @@ export const generateProducerHarvestReportPDF = (
   addFooter();
   doc.save(`Informe_Produccion_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 };
+
+export const generateSubscriptionReceiptPDF = (
+  producerName: string,
+  email: string,
+  amount: number,
+  status: string,
+  expiryDate: string | null,
+  logoDataUri?: string
+) => {
+  const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a5" });
+  const pageWidth = doc.internal.pageSize.width;
+  
+  const darkGreen = [20, 83, 45];
+  
+  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.rect(0, 0, pageWidth, 20, "F");
+  
+  if (logoDataUri) {
+    doc.addImage(logoDataUri, "PNG", 10, 4, 12, 12);
+  }
+  
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("BOLETA DE SUSCRIPCION", 25, 13);
+  
+  doc.setTextColor(30, 30, 30);
+  doc.setFontSize(16);
+  doc.text("AgroVista - Gestion de Precision", 10, 35);
+  
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Fecha de Emision: ${format(new Date(), "dd/MM/yyyy")}`, 10, 45);
+  doc.text(`Productor Titular: ${producerName}`, 10, 52);
+  doc.text(`Email de Contacto: ${email}`, 10, 59);
+  
+  doc.setDrawColor(200, 200, 200);
+  doc.line(10, 65, pageWidth - 10, 65);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("DETALLE DEL SERVICIO", 10, 75);
+  
+  doc.setFont("helvetica", "normal");
+  doc.text("Plan Base - AgroVista Premium", 10, 85);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text(`$${amount.toLocaleString("es-AR")}`, pageWidth - 10, 85, { align: "right" });
+  
+  doc.setFont("helvetica", "normal");
+  doc.text(`Estado Actual: ${status === "active" ? "Premium (Al dia)" : status === "trial" ? "Prueba" : status === "past_due" ? "Atrasada" : "Cancelada"}`, 10, 95);
+  
+  if (expiryDate) {
+    doc.text(`Vencimiento: ${format(new Date(expiryDate), "dd/MM/yyyy")}`, 10, 102);
+  }
+  
+  doc.setDrawColor(200, 200, 200);
+  doc.line(10, 110, pageWidth - 10, 110);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("TOTAL A PAGAR", 10, 120);
+  doc.setFontSize(16);
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text(`$${amount.toLocaleString("es-AR")}`, pageWidth - 10, 120, { align: "right" });
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont("helvetica", "normal");
+  doc.text("Gracias por elegir AgroVista.", pageWidth / 2, 140, { align: "center" });
+  
+  doc.save(`boleta_suscripcion_${producerName.replace(/\s+/g, "_")}.pdf`);
+};
+
