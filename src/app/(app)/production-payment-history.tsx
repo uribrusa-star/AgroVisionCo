@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useMemo, useTransition, useState, useRef } from 'react';
+import React, { useContext, useMemo, useTransition, useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
 import QRCode from "react-qr-code";
@@ -48,7 +48,26 @@ function ProductionPaymentHistoryComponent() {
   const [isLabelOpen, setIsLabelOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
+  const labelContainerRef = useRef<HTMLDivElement>(null);
+  const [labelScale, setLabelScale] = useState(1);
   const { editHarvest } = useContext(AppDataContext);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (labelContainerRef.current) {
+        const containerWidth = labelContainerRef.current.offsetWidth;
+        setLabelScale(Math.min(1, containerWidth / 500));
+      }
+    };
+    
+    // Slight delay to ensure modal is fully rendered
+    const timeout = setTimeout(updateScale, 50);
+    window.addEventListener('resize', updateScale);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', updateScale);
+    };
+  }, [isLabelOpen]);
 
   if (!currentUser) return null;
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Encargado';
@@ -180,7 +199,15 @@ function ProductionPaymentHistoryComponent() {
     
     try {
         const html2canvas = (await import('html2canvas')).default;
-        const canvas = await html2canvas(labelRef.current, { scale: 3 });
+        const canvas = await html2canvas(labelRef.current, { 
+            scale: 3,
+            onclone: (doc) => {
+                const el = doc.getElementById('traceability-label');
+                if (el) {
+                    el.style.transform = 'none';
+                }
+            }
+        });
         const dataUrl = canvas.toDataURL('image/png');
         
         if (action === 'share') {
@@ -445,10 +472,11 @@ function ProductionPaymentHistoryComponent() {
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
-              <div className="w-full max-w-full overflow-x-auto pb-4 flex justify-start sm:justify-center rounded-md">
-                <div className="inline-flex">
+              <div ref={labelContainerRef} className="w-full flex justify-center overflow-hidden transition-all duration-200" style={{ height: `${340 * labelScale}px` }}>
+                <div style={{ transform: `scale(${labelScale})`, transformOrigin: 'top center', width: '500px', height: '340px' }}>
                   <div 
                     ref={labelRef} 
+                    id="traceability-label"
                     className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
                   style={{ 
                     width: '500px',
