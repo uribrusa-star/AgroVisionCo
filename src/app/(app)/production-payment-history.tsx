@@ -429,7 +429,7 @@ function ProductionPaymentHistoryComponent() {
                 >
                 {/* Botanical Background Watermark - standard img tag for html2canvas iOS compatibility */}
                 <img 
-                  src="/botanical-strawberry.jpg" 
+                  src="/botanical-strawberry.png" 
                   alt=""
                   className="absolute right-[-5%] top-0 h-full w-[70%] object-contain opacity-25 pointer-events-none z-0"
                   crossOrigin="anonymous"
