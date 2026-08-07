@@ -469,8 +469,8 @@ export default function AdminDashboardPage() {
               </CardTitle>
               <CardDescription>Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              <Table>
+            <CardContent className="p-0 overflow-x-auto">
+              <Table className="min-w-[600px]">
                 <TableHeader className="bg-white">
                   <TableRow className="hover:bg-transparent border-stone-100">
                     <TableHead className="py-4 pl-6 font-semibold text-stone-600">Productor Titular</TableHead>
