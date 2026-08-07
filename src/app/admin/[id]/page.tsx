@@ -7,7 +7,7 @@ import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebas
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Tractor, Sprout, Building, ShieldCheck, MapPin, Pickaxe, Package, Activity, Clock } from 'lucide-react';
+import { ArrowLeft, Users, Tractor, Sprout, Building, ShieldCheck, MapPin, Pickaxe, Package, Activity, Clock, CreditCard, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { EstablishmentData, User, Collector, Packer, Harvest } from '@/lib/types';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 
@@ -83,8 +83,17 @@ export default function AdminEstablishmentDetail() {
   const totalHarvestedKg = harvests.reduce((acc, curr) => acc + (curr.kilograms || 0), 0);
   const totalEmployees = collectors.length + packers.length;
   
-  // Agrupar cosechas recientes
   const recentHarvests = harvests.slice(0, 5);
+
+  const mainProducer = users.find(u => u.role === 'Productor') || users[0];
+  const subStatus = mainProducer?.subscriptionStatus || 'active';
+  const subLabels = {
+    'active': { text: 'Activa', color: 'text-green-600', bg: 'bg-green-100', icon: CheckCircle2 },
+    'trial': { text: 'Periodo de Prueba', color: 'text-blue-600', bg: 'bg-blue-100', icon: Clock },
+    'past_due': { text: 'Atrasada', color: 'text-red-600', bg: 'bg-red-100', icon: AlertTriangle },
+    'canceled': { text: 'Cancelada', color: 'text-stone-500', bg: 'bg-stone-200', icon: AlertTriangle },
+  };
+  const SubIcon = subLabels[subStatus as keyof typeof subLabels]?.icon || CheckCircle2;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto pb-10">
@@ -110,40 +119,52 @@ export default function AdminEstablishmentDetail() {
         </div>
       </div>
 
-      {/* Main KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <Card className="border-0 shadow-sm border-b-4 border-b-emerald-600">
+          <CardHeader className="pb-2">
+            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">Plan de Suscripción</CardDescription>
+            <CardTitle className="text-xl font-bold flex items-center gap-2 mt-1">
+              <CreditCard className="h-5 w-5 text-emerald-600" />
+              <Badge className={`${subLabels[subStatus as keyof typeof subLabels]?.bg} ${subLabels[subStatus as keyof typeof subLabels]?.color} shadow-none font-bold border-0`}>
+                <SubIcon className="h-3 w-3 mr-1" />
+                {subLabels[subStatus as keyof typeof subLabels]?.text}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
         <Card className="border-0 shadow-sm border-b-4 border-b-[#2d4a22]">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Producción Total</CardDescription>
-            <CardTitle className="text-3xl font-bold text-[#2d4a22] flex items-center gap-2">
-              <Sprout className="h-6 w-6 opacity-70" /> {totalHarvestedKg.toLocaleString()} kg
+            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">Producción Total</CardDescription>
+            <CardTitle className="text-xl font-bold text-[#2d4a22] flex items-center gap-2 mt-1">
+              <Sprout className="h-5 w-5 opacity-70" /> {totalHarvestedKg.toLocaleString()} kg
             </CardTitle>
           </CardHeader>
         </Card>
         
         <Card className="border-0 shadow-sm border-b-4 border-b-blue-600">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Plantilla de Empleados</CardDescription>
-            <CardTitle className="text-3xl font-bold text-blue-600 flex items-center gap-2">
-              <Users className="h-6 w-6 opacity-70" /> {totalEmployees}
+            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">Empleados</CardDescription>
+            <CardTitle className="text-xl font-bold text-blue-600 flex items-center gap-2 mt-1">
+              <Users className="h-5 w-5 opacity-70" /> {totalEmployees}
             </CardTitle>
           </CardHeader>
         </Card>
 
         <Card className="border-0 shadow-sm border-b-4 border-b-amber-500">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Cosechas Registradas</CardDescription>
-            <CardTitle className="text-3xl font-bold text-amber-500 flex items-center gap-2">
-              <Activity className="h-6 w-6 opacity-70" /> {harvests.length}
+            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">Cosechas Registradas</CardDescription>
+            <CardTitle className="text-xl font-bold text-amber-500 flex items-center gap-2 mt-1">
+              <Activity className="h-5 w-5 opacity-70" /> {harvests.length}
             </CardTitle>
           </CardHeader>
         </Card>
 
         <Card className="border-0 shadow-sm border-b-4 border-b-purple-600">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Usuarios del Sistema</CardDescription>
-            <CardTitle className="text-3xl font-bold text-purple-600 flex items-center gap-2">
-              <Tractor className="h-6 w-6 opacity-70" /> {users.length}
+            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">Usuarios</CardDescription>
+            <CardTitle className="text-xl font-bold text-purple-600 flex items-center gap-2 mt-1">
+              <Tractor className="h-5 w-5 opacity-70" /> {users.length}
             </CardTitle>
           </CardHeader>
         </Card>
