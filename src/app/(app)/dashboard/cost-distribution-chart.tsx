@@ -11,41 +11,43 @@ import { Pie, PieChart as RechartsPieChart, Cell } from 'recharts';
 const costChartConfig = {
   costs: {
     label: "Costos",
-    color: "hsl(var(--chart-1))",
+    color: "#16a34a",
   },
   'Cosecha': {
     label: "Cosecha",
-    color: "hsl(var(--chart-1))",
+    color: "#16a34a", // Verde Cosecha
   },
   'Embalaje': {
     label: "Embalaje",
-    color: "hsl(var(--chart-2))",
+    color: "#f59e0b", // Naranja Amber
   },
-   'Mano de Obra': {
+  'Mano de Obra': {
     label: "Mano de Obra",
-    color: "hsl(var(--chart-5))",
+    color: "#e11d48", // Rojo / Rose
   },
   'Insumos': {
     label: "Insumos",
-    color: "hsl(var(--chart-3))",
+    color: "#eab308", // Amarillo Dorado
   },
   'Riego': {
     label: "Riego",
-    color: "hsl(var(--chart-4))",
+    color: "#0284c7", // Azul Cielo
   },
-   'Mantenimiento': {
+  'Mantenimiento': {
     label: "Mantenimiento",
-    color: "hsl(var(--chart-5))",
+    color: "#9333ea", // Púrpura
   },
   'Servicios': {
     label: "Servicios",
-    color: "hsl(var(--chart-1))",
+    color: "#0d9488", // Verde Azulado Teal
   },
   'Otro': {
-      label: "Otro",
-      color: "hsl(var(--muted))"
+    label: "Otro",
+    color: "#78716c", // Gris Piedra
   }
 } as const;
+
+const FALLBACK_PALETTE = ['#16a34a', '#f59e0b', '#e11d48', '#0284c7', '#9333ea', '#0d9488', '#eab308', '#78716c'];
 
 function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boolean}) {
   const { loading, transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs } = useContext(AppDataContext);
@@ -75,10 +77,10 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
   }, [otherExpenses, totalHarvestLaborCost, totalPackagingLaborCost, totalCulturalPracticeCost]);
 
   const costDistributionData = useMemo(() => 
-      Object.entries(costByCategory).map(([category, value]) => ({
+      Object.entries(costByCategory).map(([category, value], idx) => ({
           name: category,
           value,
-          fill: costChartConfig[category as keyof typeof costChartConfig]?.color || 'hsl(var(--muted))'
+          fill: costChartConfig[category as keyof typeof costChartConfig]?.color || FALLBACK_PALETTE[idx % FALLBACK_PALETTE.length]
       })).filter(item => item.value > 0),
   [costByCategory]);
 
