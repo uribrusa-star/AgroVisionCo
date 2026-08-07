@@ -409,36 +409,30 @@ function ProductionPaymentHistoryComponent() {
       </Dialog>
 
       <Dialog open={isLabelOpen} onOpenChange={setIsLabelOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-[550px]">
+        <DialogContent className="max-w-[100vw] sm:max-w-[550px] p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Etiqueta de Trazabilidad</DialogTitle>
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
-              <div className="w-full overflow-x-auto pb-2 flex justify-start sm:justify-center">
+              <div className="w-full overflow-x-auto pb-4 flex justify-start sm:justify-center">
                 <div 
                   ref={labelRef} 
-                  className="relative overflow-hidden p-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0"
+                  className="relative overflow-hidden p-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
                   style={{ 
-                    backgroundColor: '#F7F4EB', // Beige/cream paper color
                     width: '500px',
                     minWidth: '500px',
-                    height: '320px',
-                    minHeight: '320px',
+                    height: '340px',
+                    minHeight: '340px',
                     color: '#333333',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
                   }}
                 >
-                {/* Botanical Background Watermark */}
-                <div 
-                  className="absolute right-0 top-0 bottom-0 w-[75%] opacity-35 pointer-events-none"
-                  style={{
-                    backgroundImage: 'url("/botanical-strawberry.jpg")',
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right center',
-                    mixBlendMode: 'multiply'
-                  }}
+                {/* Botanical Background Watermark - standard img tag for html2canvas iOS compatibility */}
+                <img 
+                  src="/botanical-strawberry.jpg" 
+                  alt=""
+                  className="absolute right-[-5%] top-0 h-full w-[70%] object-contain opacity-25 pointer-events-none z-0"
+                  crossOrigin="anonymous"
                 />
 
                 {/* Left Column (Data) */}
@@ -459,14 +453,14 @@ function ProductionPaymentHistoryComponent() {
                   </div>
 
                   {/* Call to Action Left */}
-                  <div className="mt-5 w-[85%]">
+                  <div className="mt-4 w-[85%]">
                       <p className="text-[15px] font-bold text-stone-700 uppercase tracking-widest leading-snug text-justify" style={{ fontFamily: "'Inter', sans-serif" }}>
                           Conozca la historia de su frutilla
                       </p>
                   </div>
 
                   {/* Batch Data */}
-                  <div className="mt-5 space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <div className="mt-4 space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
                     <p className="text-sm text-stone-800">Lote: <b className="text-black text-base">{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
                     <p className="text-sm text-stone-800">Fecha: <b className="text-black text-base">{new Date(selectedLog.date).toLocaleDateString('es-ES')}</b></p>
                     <p className="text-[10px] text-stone-600 font-mono tracking-tight mt-1">{selectedLog.traceabilityId}</p>
