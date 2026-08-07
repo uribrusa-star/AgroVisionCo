@@ -81,7 +81,8 @@ export default function LoginPage() {
             router.push('/dashboard');
           }
         } else {
-          form.setError("root", { message: "Correo electrónico o contraseña incorrectos."});
+          const errorData = await response.json().catch(() => ({}));
+          form.setError("root", { message: errorData.error || "Correo electrónico o contraseña incorrectos."});
         }
       } catch (error) {
         // Handle offline login fallback (using local users state)

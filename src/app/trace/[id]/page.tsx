@@ -176,28 +176,30 @@ export default function TracePage() {
                                 <p className="font-bold text-base md:text-lg text-gray-800 truncate max-w-[120px] sm:max-w-full" title={data.collectorName}>{data.collectorName}</p>
                             </div>
                         </div>
-                        <motion.div 
-                            whileHover={{ scale: 1.03 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => setShowBpaModal(true)}
-                            className="flex items-center gap-3.5 p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden"
-                        >
-                            <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-400/10 rounded-full blur-md pointer-events-none" />
-                            <div className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 group-hover:scale-110 transition-transform">
-                                <ShieldCheck className="h-7 w-7 text-emerald-400 animate-pulse" />
-                            </div>
-                            <div className="flex-grow min-w-0">
-                                <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                                    <Award className="h-3 w-3 text-amber-400" /> Sello Oficial BPA
+                        {data.bpaCertified && (
+                            <motion.div 
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => setShowBpaModal(true)}
+                                className="flex items-center gap-3.5 p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden"
+                            >
+                                <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-400/10 rounded-full blur-md pointer-events-none" />
+                                <div className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <ShieldCheck className="h-7 w-7 text-emerald-400 animate-pulse" />
                                 </div>
-                                <p className="font-extrabold text-sm sm:text-base mt-0.5 group-hover:text-emerald-200 transition-colors flex items-center justify-between">
-                                    <span>Verificado G.A.P.</span>
-                                </p>
-                                <p className="text-[10px] text-emerald-100/90 underline decoration-dotted underline-offset-2 mt-0.5">
-                                    Presiona para ver garantía
-                                </p>
-                            </div>
-                        </motion.div>
+                                <div className="flex-grow min-w-0">
+                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                        <Award className="h-3 w-3 text-amber-400" /> Sello Oficial BPA
+                                    </div>
+                                    <p className="font-extrabold text-sm sm:text-base mt-0.5 group-hover:text-emerald-200 transition-colors flex items-center justify-between">
+                                        <span>Verificado G.A.P.</span>
+                                    </p>
+                                    <p className="text-[10px] text-emerald-100/90 underline decoration-dotted underline-offset-2 mt-0.5">
+                                        Presiona para ver garantía
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
                     </CardContent>
                 </Card>
 
