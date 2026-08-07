@@ -280,18 +280,22 @@ export default function AdminDashboardPage() {
       </div>
 
       <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-[800px] mb-6">
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" /> Analíticas
+        <TabsList className="grid w-full grid-cols-4 max-w-[800px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
+          <TabsTrigger value="analytics" title="Analíticas" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <Activity className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span className="hidden sm:inline">Analíticas</span>
           </TabsTrigger>
-          <TabsTrigger value="directory" className="flex items-center gap-2">
-            <Building className="h-4 w-4" /> Directorio
+          <TabsTrigger value="directory" title="Directorio" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <Building className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span className="hidden sm:inline">Directorio</span>
           </TabsTrigger>
-          <TabsTrigger value="finance" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" /> Finanzas
+          <TabsTrigger value="finance" title="Finanzas" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <DollarSign className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Finanzas</span>
           </TabsTrigger>
-          <TabsTrigger value="comms" className="flex items-center gap-2">
-            <BellRing className="h-4 w-4" /> Comunicaciones
+          <TabsTrigger value="comms" title="Comunicaciones" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <BellRing className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+            <span className="hidden sm:inline">Comunicaciones</span>
           </TabsTrigger>
         </TabsList>
 
