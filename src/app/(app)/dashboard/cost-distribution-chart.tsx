@@ -11,6 +11,7 @@ import { Pie, PieChart as RechartsPieChart, Cell } from 'recharts';
 const costChartConfig = {
   costs: {
     label: "Costos",
+    color: "hsl(var(--chart-1))",
   },
   'Cosecha': {
     label: "Cosecha",
@@ -81,24 +82,60 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
       })).filter(item => item.value > 0),
   [costByCategory]);
 
+  const totalCost = useMemo(() => 
+    costDistributionData.reduce((acc, item) => acc + item.value, 0),
+  [costDistributionData]);
+
   const chart = (
-    <ChartContainer config={costChartConfig} className="h-[250px] lg:h-[300px] w-full">
+    <div className="flex flex-col items-center w-full">
+      <ChartContainer config={costChartConfig} className="h-[200px] sm:h-[240px] w-full">
         <RechartsPieChart>
-            <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-            <Pie 
-              data={costDistributionData} 
-              dataKey="value" 
-              nameKey="name" 
-              innerRadius={isForPdf ? 50 : 60} 
-              labelLine={!isForPdf} 
-              label={({name, percent}) => `${costChartConfig[name as keyof typeof costChartConfig]?.label || name} (${(percent * 100).toFixed(0)}%)`}
-            >
-                {costDistributionData.map((entry) => (
-                    <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                ))}
-            </Pie>
+          <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => `$${Number(value).toLocaleString('es-AR')}`} />} />
+          <Pie 
+            data={costDistributionData} 
+            dataKey="value" 
+            nameKey="name" 
+            innerRadius={isForPdf ? 45 : 55} 
+            outerRadius={isForPdf ? 75 : 85}
+            paddingAngle={3}
+            strokeWidth={2}
+          >
+            {costDistributionData.map((entry) => (
+              <Cell key={`cell-${entry.name}`} fill={entry.fill} />
+            ))}
+          </Pie>
         </RechartsPieChart>
-    </ChartContainer>
+      </ChartContainer>
+
+      {/* Modern Responsive Legend Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5 w-full mt-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+        {costDistributionData.map((item) => {
+          const percent = totalCost > 0 ? ((item.value / totalCost) * 100).toFixed(0) : 0;
+          const label = costChartConfig[item.name as keyof typeof costChartConfig]?.label || item.name;
+          return (
+            <div key={item.name} className="flex items-center justify-between text-xs py-0.5 px-1 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
+              <div className="flex items-center gap-2 truncate min-w-0">
+                <span 
+                  className="w-3 h-3 rounded-full shrink-0 shadow-sm" 
+                  style={{ backgroundColor: item.fill }} 
+                />
+                <span className="text-stone-700 dark:text-stone-300 font-medium truncate">
+                  {label}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                <span className="text-stone-900 dark:text-stone-100 font-bold">
+                  ${item.value.toLocaleString('es-AR')}
+                </span>
+                <span className="text-stone-400 dark:text-stone-500 font-medium text-[11px] min-w-[32px] text-right">
+                  ({percent}%)
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 
   if (isForPdf) {
