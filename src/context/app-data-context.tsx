@@ -1210,7 +1210,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         };
         setBatches(prev => [newBatch, ...prev]);
 
-        const batchRef = doc(db, 'batches', newBatch.id);
+        const batchDocId = `${currentUser?.establishmentId || 'main'}_${newBatch.id}`;
+        const batchRef = doc(db, 'batches', batchDocId);
         setDoc(batchRef, newBatch).catch(error => {
             console.error("Failed to add batch:", error);
             setBatches(prev => prev.filter(b => b.id !== newBatch.id));
@@ -1223,7 +1224,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         setBatches(prev => prev.map(b => b.id === updatedBatch.id ? updatedBatch : b));
 
         try {
-            const batchRef = doc(db, 'batches', updatedBatch.id);
+            const batchDocId = `${currentUser?.establishmentId || 'main'}_${updatedBatch.id}`;
+            const batchRef = doc(db, 'batches', batchDocId);
             await setDoc(batchRef, updatedBatch, { merge: true });
         } catch (error) {
             console.error("Failed to edit batch:", error);
@@ -1235,8 +1237,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const deleteBatch = (batchId: string) => {
         const originalBatches = batches;
         setBatches(prev => prev.filter(b => b.id !== batchId));
-        
-        deleteDoc(doc(db, 'batches', batchId)).catch(error => {
+        const batchDocId = `${currentUser?.establishmentId || 'main'}_${batchId}`;
+        deleteDoc(doc(db, 'batches', batchDocId)).catch(error => {
             console.error("Failed to delete batch:", error);
             setBatches(originalBatches);
             toast({ title: "Error", description: "No se pudo eliminar el lote.", variant: "destructive"});
