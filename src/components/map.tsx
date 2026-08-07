@@ -301,7 +301,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                 {/* Right Panel */}
                 <div className="w-full sm:w-72 flex flex-col gap-4 pointer-events-auto max-h-[45vh] sm:max-h-[90%] overflow-y-auto pb-4 pr-1 scrollbar-hide">
                     {phiStatus.isBlocked && (
-                        <div className="bg-red-500/90 backdrop-blur-md text-white border border-red-600 shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right">
+                        <div className="bg-red-500/90 backdrop-blur-md text-white border border-red-600 shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right shrink-0">
                             <div className="flex items-center gap-2 font-bold text-sm uppercase mb-2">
                                 <AlertTriangle className="h-5 w-5 animate-pulse" />
                                 BLOQUEADO (PHI)
@@ -317,7 +317,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                     )}
 
                     {lotSanityLogs.length > 0 && (
-                        <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right overflow-y-auto max-h-48">
+                        <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right overflow-y-auto max-h-48 shrink-0">
                             <h4 className="text-xs uppercase text-red-600 font-bold mb-3 flex items-center gap-1">
                                 <AlertTriangle className="h-4 w-4" /> Alertas Sanitarias
                             </h4>
@@ -369,7 +369,7 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                         </div>
                     )}
 
-                    <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right">
+                    <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right shrink-0">
                         <h4 className="text-xs uppercase text-muted-foreground font-bold mb-3">Historial</h4>
                         <div className="space-y-4">
                             <div className="flex items-start gap-3">
