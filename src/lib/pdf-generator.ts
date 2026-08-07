@@ -1060,8 +1060,8 @@ export const generateSubscriptionReceiptPDF = (
   logoDataUri?: string
 ) => {
   const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
-  const pageWidth = doc.internal.pageSize.width;
-  const pageHeight = doc.internal.pageSize.height;
+  const pageWidth = doc.internal.pageSize.width; // 210mm
+  const pageHeight = doc.internal.pageSize.height; // 297mm
   
   // Date calculations
   const today = new Date();
@@ -1074,12 +1074,12 @@ export const generateSubscriptionReceiptPDF = (
   const startBillingStr = todayStr;
   const endBillingStr = expiryStr;
   
-  // Outer Border
+  // --- Outer Border (Spans from y=10 to y=275, taking full A4 height) ---
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
-  doc.rect(10, 10, pageWidth - 20, 180);
+  doc.rect(10, 10, pageWidth - 20, 265);
   
-  // --- Header Section ---
+  // --- Header Section (y=10 to y=45) ---
   doc.line(10, 45, pageWidth - 10, 45); // Line under header
   
   // Left Header
@@ -1108,7 +1108,7 @@ export const generateSubscriptionReceiptPDF = (
   doc.setFont("helvetica", "normal");
   doc.text("Responsable Monotributo", 49, 40);
   
-  // Middle Header (C)
+  // Middle Header Box (C)
   doc.rect(pageWidth / 2 - 8, 10, 16, 16);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
@@ -1152,134 +1152,157 @@ export const generateSubscriptionReceiptPDF = (
   doc.setFont("helvetica", "normal");
   doc.text("01/01/2026", pageWidth / 2 + 60, 41);
   
-  // --- Billing Period ---
+  // --- Billing Period (y=45 to y=57) ---
   doc.setFillColor(245, 245, 245);
-  doc.rect(10, 45, pageWidth - 20, 10, "F");
+  doc.rect(10, 45, pageWidth - 20, 12, "F");
   doc.setDrawColor(0, 0, 0);
-  doc.line(10, 55, pageWidth - 10, 55);
+  doc.line(10, 57, pageWidth - 10, 57);
   
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.text("Período Facturado Desde:", 12, 51);
+  doc.text("Período Facturado Desde:", 12, 52);
   doc.setFont("helvetica", "normal");
-  doc.text(startBillingStr, 53, 51);
+  doc.text(startBillingStr, 53, 52);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Hasta:", 80, 51);
+  doc.text("Hasta:", 80, 52);
   doc.setFont("helvetica", "normal");
-  doc.text(endBillingStr, 92, 51);
+  doc.text(endBillingStr, 92, 52);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Fecha de Vto. para el Pago:", 140, 51);
+  doc.text("Fecha de Vto. para el Pago:", 140, 52);
   doc.setFont("helvetica", "normal");
-  doc.text(expiryStr, 185, 51);
+  doc.text(expiryStr, 185, 52);
   
-  // --- Client Info ---
+  // --- Client Info (y=57 to y=75) ---
   doc.line(10, 75, pageWidth - 10, 75);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Apellido y Nombre / Razón Social:", 12, 61);
+  doc.text("Apellido y Nombre / Razón Social:", 12, 63);
   doc.setFont("helvetica", "normal");
-  doc.text(producerName, 68, 61);
+  doc.text(producerName, 68, 63);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Email:", pageWidth / 2 + 10, 61);
+  doc.text("Email:", pageWidth / 2 + 10, 63);
   doc.setFont("helvetica", "normal");
-  doc.text(email, pageWidth / 2 + 22, 61);
+  doc.text(email, pageWidth / 2 + 22, 63);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Condición frente al IVA:", 12, 67);
+  doc.text("Condición frente al IVA:", 12, 70);
   doc.setFont("helvetica", "normal");
-  doc.text("Consumidor Final", 50, 67);
+  doc.text("Consumidor Final", 50, 70);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Condición de Pago:", pageWidth / 2 + 10, 67);
+  doc.text("Condición de Pago:", pageWidth / 2 + 10, 70);
   doc.setFont("helvetica", "normal");
-  doc.text("Mercado Pago (Transferencia / Tarjeta)", pageWidth / 2 + 42, 67);
+  doc.text("Mercado Pago (Transferencia / Tarjeta)", pageWidth / 2 + 42, 70);
   
-  // --- Table Header ---
-  doc.setFillColor(30, 41, 59); // Dark blue/slate
-  doc.rect(10, 75, pageWidth - 20, 8, "F");
+  // --- Table Header (y=75 to y=85) ---
+  doc.setFillColor(30, 41, 59); // Dark slate
+  doc.rect(10, 75, pageWidth - 20, 10, "F");
   
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text("Código", 12, 80);
-  doc.text("Producto / Servicio", 40, 80);
-  doc.text("Cant.", 140, 80);
-  doc.text("Precio Unit.", 155, 80);
-  doc.text("Subtotal", 182, 80);
+  doc.setFontSize(9);
+  doc.text("Código", 12, 81);
+  doc.text("Producto / Servicio", 40, 81);
+  doc.text("Cant.", 140, 81);
+  doc.text("Precio Unit.", 155, 81);
+  doc.text("Subtotal", 182, 81);
   
-  // --- Table Row ---
+  // --- Table Body & Vertical Columns (y=85 to y=205) ---
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   
-  doc.text("SUB-PREM", 12, 88);
+  doc.text("SUB-PREM", 12, 93);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Suscripción Mensual - AgroVista Premium", 40, 88);
+  doc.text("Suscripción Mensual - AgroVista Premium", 40, 93);
   
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(100, 100, 100);
-  doc.text("Acceso mensual a la plataforma web AgroVista.", 40, 93);
-  doc.text(`Período cubierto: ${startBillingStr} al ${endBillingStr}`, 40, 97);
+  doc.text("Acceso mensual a la plataforma web AgroVista.", 40, 99);
+  doc.text(`Período cubierto: ${startBillingStr} al ${endBillingStr}`, 40, 104);
   
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(0, 0, 0);
   
-  doc.text("1,00", 142, 88);
+  doc.text("1,00", 142, 93);
   
   const formattedAmount = amount.toLocaleString("es-AR", { minimumFractionDigits: 2 });
-  doc.text(`$ ${formattedAmount}`, 172, 88, { align: "right" });
-  doc.text(`$ ${formattedAmount}`, 197, 88, { align: "right" });
+  doc.text(`$ ${formattedAmount}`, 172, 93, { align: "right" });
+  doc.text(`$ ${formattedAmount}`, 197, 93, { align: "right" });
   
-  doc.line(10, 105, pageWidth - 10, 105);
+  // Vertical Column Dividers inside table body
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.line(35, 75, 35, 205);
+  doc.line(135, 75, 135, 205);
+  doc.line(150, 75, 150, 205);
+  doc.line(175, 75, 175, 205);
   
-  // --- Totals ---
-  doc.line(10, 130, pageWidth - 10, 130);
+  // Table Bottom Divider Line
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(10, 205, pageWidth - 10, 205);
+  
+  // --- Totals Section (y=205 to y=230) ---
+  doc.line(10, 230, pageWidth - 10, 230);
   
   doc.setFont("helvetica", "bold");
-  doc.text("Subtotal:", 140, 115);
+  doc.setFontSize(10);
+  doc.text("Subtotal:", 140, 214);
   doc.setFont("helvetica", "normal");
-  doc.text(`$ ${formattedAmount}`, 197, 115, { align: "right" });
+  doc.text(`$ ${formattedAmount}`, 197, 214, { align: "right" });
   
   doc.setFont("helvetica", "bold");
-  doc.text("Importe Total:", 140, 123);
   doc.setFontSize(11);
-  doc.text(`$ ${formattedAmount}`, 197, 123, { align: "right" });
+  doc.text("Importe Total:", 140, 224);
+  doc.setFontSize(12);
+  doc.text(`$ ${formattedAmount}`, 197, 224, { align: "right" });
   
-  // --- AFIP Footer ---
-  // QR Placeholder
-  doc.setFillColor(230, 230, 230);
-  doc.rect(15, 140, 30, 30, "F");
-  doc.setFontSize(6);
-  doc.setTextColor(150, 150, 150);
-  doc.text("QR AFIP", 30, 155, { align: "center" });
-  
-  doc.setTextColor(0, 102, 204);
-  doc.setFontSize(16);
+  // --- AFIP / ARCA Footer Section (y=230 to y=275) ---
+  // QR Placeholder Box
+  doc.setFillColor(240, 240, 240);
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(15, 234, 34, 34, "FD");
+  doc.setFontSize(7);
+  doc.setTextColor(120, 120, 120);
   doc.setFont("helvetica", "bold");
-  doc.text("ARCA / AFIP", pageWidth - 12, 145, { align: "right" });
+  doc.text("CÓDIGO QR", 32, 250, { align: "center" });
+  doc.setFontSize(6);
+  doc.setFont("helvetica", "normal");
+  doc.text("ARCA / AFIP", 32, 254, { align: "center" });
+  
+  // Right AFIP Data
+  doc.setTextColor(0, 102, 204);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("ARCA / AFIP", pageWidth - 12, 243, { align: "right" });
   
   doc.setTextColor(0, 0, 0);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Comprobante Autorizado", pageWidth - 12, 251, { align: "right" });
+  
   doc.setFontSize(9);
-  doc.text("Comprobante Autorizado", pageWidth - 12, 152, { align: "right" });
-  
+  doc.setFont("helvetica", "normal");
   const cae = Math.floor(Math.random() * 100000000000000).toString().padStart(14, '0');
-  doc.text(`CAE N°: ${cae}`, pageWidth - 12, 159, { align: "right" });
+  doc.text(`CAE N°: ${cae}`, pageWidth - 12, 259, { align: "right" });
   
-  // Valid CAE until is +10 days
+  // Valid CAE until (+10 days)
   const caeVto = format(new Date(today.getTime() + 10 * 24 * 60 * 60 * 1000), "dd/MM/yyyy");
-  doc.text(`Fecha de Vto. de CAE: ${caeVto}`, pageWidth - 12, 166, { align: "right" });
+  doc.text(`Fecha de Vto. de CAE: ${caeVto}`, pageWidth - 12, 267, { align: "right" });
   
-  // --- Disclaimer ---
+  // --- Disclaimer Footer (y=281, outside outer box) ---
   doc.setFontSize(7);
   doc.setTextColor(100, 100, 100);
   doc.setFont("helvetica", "normal");
   const disclaimer = "Nota sobre validez fiscal: Ejemplo de Factura C para Monotributista correspondiente a la plataforma AgroVista emitida vía Web Service / Facturador Integrado (Resolución General 4291/2018 ARCA/AFIP).";
-  doc.text(disclaimer, 10, 195, { maxWidth: pageWidth - 20 });
+  doc.text(disclaimer, 10, 281, { maxWidth: pageWidth - 20 });
   
   doc.save(`Factura_Suscripcion_${producerName.replace(/\s+/g, "_")}.pdf`);
 };
