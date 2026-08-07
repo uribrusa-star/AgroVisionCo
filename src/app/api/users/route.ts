@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { sessionOptions } from '@/lib/session';
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    
     const body = await request.json();
-    const { name, password, role, producerId, establishmentId, email } = body;
+    const { name, password, role, establishmentId, email } = body;
+    const sessionUserId = session.user.id;
 
-    if (!name || !password || !role || !producerId || !establishmentId) {
+    if (!name || !password || !role || !establishmentId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -14,10 +24,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid role for self-service creation' }, { status: 400 });
     }
 
-    // Verify the user making the request is a Productor
-    const producerDoc = await adminDb.collection('users').doc(producerId).get();
-    if (!producerDoc.exists || producerDoc.data()?.role !== 'Productor') {
-      return NextResponse.json({ error: 'Unauthorized. Only Producers can create users.' }, { status: 403 });
+    // Verify the user making the request is a Productor or SuperAdmin
+    const producerDoc = await adminDb.collection('users').doc(sessionUserId).get();
+    if (!producerDoc.exists || (producerDoc.data()?.role !== 'Productor' && producerDoc.data()?.role !== 'SuperAdmin')) {
+      return NextResponse.json({ error: 'Unauthorized. Only Producers and Admins can create users.' }, { status: 403 });
     }
 
     const isSuperAdmin = producerDoc.data()?.establishmentId === 'main';

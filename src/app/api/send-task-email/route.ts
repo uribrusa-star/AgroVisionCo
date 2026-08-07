@@ -1,10 +1,19 @@
 
 import { NextResponse } from 'next/server';
 import { sendEmail } from '@/services/email-service';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { sessionOptions } from '@/lib/session';
 import type { Task, User } from '@/lib/types';
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { task, user } = body as { task: Task, user: User };
 

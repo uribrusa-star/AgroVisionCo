@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { adminMessaging, adminDb } from '@/lib/firebase-admin';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { sessionOptions } from '@/lib/session';
 
 export async function POST(req: Request) {
   try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { title, body: messageBody, severity, targetRoles, targetUserId, targetUserIds } = body;
 

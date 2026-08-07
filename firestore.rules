@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función auxiliar para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Por defecto, denegamos todo el acceso
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Permitir acceso a todas las colecciones SOLAMENTE a usuarios logueados.
+    // En una iteración futura, podemos agregar validación estricta por `establishmentId`.
+    match /users/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /establishment/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /collectors/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /packers/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /harvests/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /packagingLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /culturalPracticeLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /agronomistLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /phenologyLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /predictionLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /diagnosisLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /supplies/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /tasks/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /batches/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /collectorPayments/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /producerLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /transactions/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /knowledge/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /notifications/{document} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
