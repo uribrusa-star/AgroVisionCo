@@ -3,6 +3,7 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
+import { adminDb } from '@/lib/firebase-admin';
 
 // Inicializar cliente de MercadoPago (Modo Sandbox/Prueba por defecto)
 // En producción, esto debería venir de process.env.MP_ACCESS_TOKEN
@@ -16,6 +17,15 @@ export async function POST(request: Request) {
     if (!session.user || session.user.role !== 'Productor') {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
+    let subscriptionPrice = 80000;
+    try {
+      const financeDoc = await adminDb.collection('platformSettings').doc('finance').get();
+      if (financeDoc.exists) {
+        subscriptionPrice = financeDoc.data()?.subscriptionPrice || 80000;
+      }
+    } catch (e) {
+      console.error("Error reading subscriptionPrice:", e);
+    }
 
     const preference = new Preference(client);
 
@@ -27,7 +37,7 @@ export async function POST(request: Request) {
             title: 'Suscripción Mensual AgroVista',
             description: 'Acceso completo a las herramientas de gestión agrícola',
             quantity: 1,
-            unit_price: 100, // $100 ARS (Precio de prueba real)
+            unit_price: subscriptionPrice,
             currency_id: 'ARS',
           }
         ],

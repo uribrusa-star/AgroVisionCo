@@ -18,6 +18,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const PasswordSchema = z.object({
   newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
@@ -40,6 +42,7 @@ export default function ProfilePage() {
   const [isPending, startTransition] = useTransition();
   const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
   const { theme, setTheme } = useTheme();
+  const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
 
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
@@ -63,6 +66,14 @@ export default function ProfilePage() {
           notificationEmail: currentUser.notificationEmail || ''
         });
     }
+
+    const unsubscribe = onSnapshot(doc(db, 'platformSettings', 'finance'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().subscriptionPrice) {
+        setSubscriptionPrice(docSnap.data().subscriptionPrice);
+      }
+    });
+
+    return () => unsubscribe();
   }, [currentUser, profileForm]);
 
   if(!currentUser) {
@@ -231,7 +242,7 @@ export default function ProfilePage() {
                     <div className="mt-4 sm:mt-0">
                       {currentUser.subscriptionStatus !== 'active' ? (
                         <Button onClick={handleSubscribe} disabled={isPending} className="w-full sm:w-auto">
-                          {isPending ? "Procesando..." : "Suscribirse por $100 / mes"}
+                          {isPending ? "Procesando..." : `Suscribirse por $${subscriptionPrice.toLocaleString('es-AR')} / mes`}
                         </Button>
                       ) : (
                         <Button variant="outline" disabled className="w-full sm:w-auto text-green-600 border-green-200 bg-green-50/50">
