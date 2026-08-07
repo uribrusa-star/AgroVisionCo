@@ -177,7 +177,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
                   <Polygon 
                     key={`existing-${idx}`} 
                     paths={paths} 
-                    options={{ fillColor: '#94a3b8', fillOpacity: 0.2, strokeColor: '#cbd5e1', strokeWeight: 1 }} 
+                    options={{ fillColor: '#38bdf8', fillOpacity: 0.35, strokeColor: '#0284c7', strokeWeight: 2 }} 
                   />
                 );
               }
