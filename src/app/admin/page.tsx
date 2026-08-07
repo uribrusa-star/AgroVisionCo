@@ -1,4 +1,4 @@
-'use client';
+Ôªø'use client';
 
 import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
       });
       toast({
         title: newValue ? "Sello Otorgado" : "Sello Revocado",
-        description: `Se ha ${newValue ? 'aprobado' : 'retirado'} el Sello de Buenas Pr·cticas AgrÌcolas.`,
+        description: `Se ha ${newValue ? 'aprobado' : 'retirado'} el Sello de Buenas Pr√°cticas Agr√≠colas.`,
       });
     } catch (error) {
       toast({ title: "Error", description: "No se pudo actualizar el Sello.", variant: "destructive" });
@@ -107,11 +107,11 @@ export default function AdminDashboardPage() {
         subscriptionExpiryDate: expiryDate.toISOString()
       });
       toast({
-        title: "SuscripciÛn Actualizada",
+        title: "Suscripci√≥n Actualizada",
         description: `El plan ha sido cambiado a ${newStatus === 'active' ? 'Premium' : newStatus === 'trial' ? 'Prueba' : newStatus}.`,
       });
     } catch (error) {
-      toast({ title: "Error", description: "No se pudo actualizar la suscripciÛn.", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo actualizar la suscripci√≥n.", variant: "destructive" });
     }
   };
 
@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-headline font-bold text-stone-900 tracking-tight">Panel de Control Central</h1>
-          <p className="text-stone-500 mt-1">GestiÛn global, finanzas y certificaciÛn de establecimientos AgroVista</p>
+          <p className="text-stone-500 mt-1">Gesti√≥n global, finanzas y certificaci√≥n de establecimientos AgroVista</p>
         </div>
       </div>
 
@@ -151,10 +151,10 @@ export default function AdminDashboardPage() {
                 <Building className="h-6 w-6 text-[#2d4a22]" />
                 Directorio de Clientes
               </CardTitle>
-              <CardDescription>Administra los accesos y emite Sellos de Buenas Pr·cticas (BPA).</CardDescription>
+              <CardDescription>Administra los accesos y emite Sellos de Buenas Pr√°cticas (BPA).</CardDescription>
             </CardHeader>
             
-            {/* VISTA M”VIL: Tarjetas */}
+            {/* VISTA M√ìVIL: Tarjetas */}
             <div className="md:hidden p-4 space-y-4 bg-stone-50/50">
               {establishments.length === 0 ? (
                 <p className="text-center text-stone-500 py-4">No hay establecimientos registrados.</p>
@@ -206,8 +206,8 @@ export default function AdminDashboardPage() {
                 <TableHeader className="bg-white">
                   <TableRow className="hover:bg-transparent border-stone-100">
                     <TableHead className="py-4 pl-6 font-semibold text-stone-600">Establecimiento / Productor</TableHead>
-                    <TableHead className="py-4 font-semibold text-stone-600">UbicaciÛn</TableHead>
-                    <TableHead className="py-4 font-semibold text-stone-600">Encargado TÈcnico</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600">Ubicaci√≥n</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600">Encargado T√©cnico</TableHead>
                     <TableHead className="py-4 text-center font-semibold text-stone-600 w-40">Sello BPA</TableHead>
                     <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 w-40">Estado de Cuenta</TableHead>
                   </TableRow>
@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
             <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <DollarSign className="h-6 w-6 text-emerald-600" />
-                GestiÛn de Suscripciones
+                Gesti√≥n de Suscripciones
               </CardTitle>
               <CardDescription>Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
             </CardHeader>
@@ -346,7 +346,7 @@ export default function AdminDashboardPage() {
                               <SelectValue placeholder="Estado" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="trial" className="text-blue-700 font-medium">Prueba (14 dÌas)</SelectItem>
+                              <SelectItem value="trial" className="text-blue-700 font-medium">Prueba (14 d√≠as)</SelectItem>
                               <SelectItem value="active" className="text-green-700 font-medium">Premium</SelectItem>
                               <SelectItem value="past_due" className="text-red-700 font-medium">Atrasada</SelectItem>
                               <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
