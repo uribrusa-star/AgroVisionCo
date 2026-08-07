@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized. Only Producers and Admins can create users.' }, { status: 403 });
     }
 
-    const isSuperAdmin = producerDoc.data()?.establishmentId === 'main';
+    const isSuperAdmin = producerDoc.data()?.role === 'SuperAdmin' || producerDoc.data()?.establishmentId === 'main';
 
     if (role === 'Productor' && !isSuperAdmin) {
       return NextResponse.json({ error: 'Unauthorized. Only the Super Admin can create Producers.' }, { status: 403 });

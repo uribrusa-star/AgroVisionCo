@@ -18,6 +18,19 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, getDocs, query, where } from 'firebase/firestore';
 import type { EstablishmentData, User } from '@/lib/types';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Plus } from 'lucide-react';
+
+const CreateProducerSchema = z.object({
+  name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
+  email: z.string().email("Correo inválido."),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+  establishmentId: z.string().min(1, "El ID es obligatorio."),
+});
 
 export default function AdminDashboardPage() {
   const { currentUser } = useContext(AppDataContext);
@@ -36,6 +49,15 @@ export default function AdminDashboardPage() {
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastSeverity, setBroadcastSeverity] = useState('info');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+  // Create producer state
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const createForm = useForm<z.infer<typeof CreateProducerSchema>>({
+    resolver: zodResolver(CreateProducerSchema),
+    defaultValues: { name: '', email: '', password: '', establishmentId: '' },
+  });
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'SuperAdmin') return;
@@ -197,6 +219,46 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleCreateProducer = async (values: z.infer<typeof CreateProducerSchema>) => {
+    setIsCreating(true);
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.name,
+          role: 'Productor',
+          password: values.password,
+          email: values.email,
+          establishmentId: values.establishmentId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'No se pudo crear el productor');
+      }
+
+      toast({
+        title: "Cliente Creado",
+        description: `${values.name} ha sido agregado exitosamente.`,
+      });
+      
+      setIsCreateDialogOpen(false);
+      createForm.reset();
+      
+    } catch (error: any) {
+      toast({
+        title: "Error al crear",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-stone-500 animate-pulse">Cargando plataforma...</div>;
   }
@@ -230,12 +292,17 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="directory" className="mt-0">
           <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Building className="h-6 w-6 text-[#2d4a22]" />
-                Directorio de Clientes
-              </CardTitle>
-              <CardDescription>Administra los accesos y emite Sellos de Buenas Prácticas (BPA).</CardDescription>
+            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Building className="h-6 w-6 text-[#2d4a22]" />
+                  Directorio de Clientes
+                </CardTitle>
+                <CardDescription className="mt-1">Administra los accesos, sella y gestiona productores titulares.</CardDescription>
+              </div>
+              <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-[#2d4a22] hover:bg-[#1a2d13]">
+                <Plus className="mr-2 h-4 w-4" /> Agregar Productor
+              </Button>
             </CardHeader>
             
             {/* VISTA MÓVIL: Tarjetas */}
@@ -537,6 +604,91 @@ export default function AdminDashboardPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog for creating a new Producer */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Agregar Nuevo Productor</DialogTitle>
+                <DialogDescription>
+                    Crea un nuevo cliente (Productor titular) que administrará su propio establecimiento en la plataforma.
+                </DialogDescription>
+            </DialogHeader>
+            <Form {...createForm}>
+                <form onSubmit={createForm.handleSubmit(handleCreateProducer)} className="space-y-4">
+                     <FormField
+                        control={createForm.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Nombre Completo / Razón Social</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ej. Estancia Las Marías" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    
+                    <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-primary/20">
+                        <div className="flex items-center gap-2 text-primary font-medium mb-2">
+                            <ShieldAlert className="h-4 w-4" />
+                            <p className="text-sm">Datos de Ingreso y Sistema</p>
+                        </div>
+                        <FormField
+                            control={createForm.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Correo del Productor (Login)</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="contacto@lasmarias.co" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={createForm.control}
+                            name="establishmentId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>ID del Establecimiento</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="EST-001" {...field} className="uppercase" />
+                                    </FormControl>
+                                    <FormDescription>Un ID único corto para referenciar a este campo.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <FormField
+                        control={createForm.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Contraseña Inicial (Mínimo 6 caracteres)</FormLabel>
+                                <FormControl>
+                                    <Input type="password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">Cancelar</Button>
+                        </DialogClose>
+                        <Button type="submit" disabled={isCreating}>
+                            {isCreating ? "Creando..." : "Crear Productor"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

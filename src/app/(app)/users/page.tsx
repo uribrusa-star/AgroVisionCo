@@ -34,10 +34,8 @@ const PasswordSchema = z.object({
 
 const CreateUserSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
-  role: z.enum(['Ingeniero Agronomo', 'Encargado', 'Productor']),
+  role: z.enum(['Ingeniero Agronomo', 'Encargado']),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
-  email: z.string().optional(),
-  establishmentId: z.string().optional(),
 });
 
 export default function UsersPage() {
@@ -54,8 +52,6 @@ export default function UsersPage() {
   
   const [isPending, startTransition] = useTransition();
 
-  const isSuperAdmin = currentUser?.establishmentId === 'main' && currentUser?.role === 'Productor';
-
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
@@ -63,7 +59,7 @@ export default function UsersPage() {
 
   const createForm = useForm<z.infer<typeof CreateUserSchema>>({
     resolver: zodResolver(CreateUserSchema),
-    defaultValues: { name: '', role: 'Encargado', password: '', email: '', establishmentId: '' },
+    defaultValues: { name: '', role: 'Encargado', password: '' },
   });
   
   const selectedRole = createForm.watch('role');
@@ -120,16 +116,8 @@ export default function UsersPage() {
   const onCreateSubmit = (values: z.infer<typeof CreateUserSchema>) => {
     startTransition(async () => {
       try {
+        let targetEstablishmentId = currentUser.establishmentId;
         
-        let targetEstablishmentId = currentUser.establishmentId || 'main';
-        
-        if (values.role === 'Productor') {
-            if (!values.email || !values.establishmentId) {
-                throw new Error("El correo y el ID de establecimiento son obligatorios para crear un Productor.");
-            }
-            targetEstablishmentId = values.establishmentId;
-        }
-
         const response = await fetch('/api/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -137,7 +125,6 @@ export default function UsersPage() {
             name: values.name,
             role: values.role,
             password: values.password,
-            email: values.email,
             producerId: currentUser.id,
             establishmentId: targetEstablishmentId,
           }),
@@ -173,7 +160,7 @@ export default function UsersPage() {
           <PageHeader title="Usuarios" description="Vea y gestione los usuarios del sistema." />
           <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              {isSuperAdmin ? "Crear Cuenta (Usuario/Productor)" : "Agregar Empleado"}
+              Agregar Empleado
           </Button>
       </div>
 
@@ -208,7 +195,7 @@ export default function UsersPage() {
                           </div>
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
-                          {(isSuperAdmin || user.role !== 'Productor') && (
+                          {user.role !== 'Productor' && (
                               <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                       <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -330,11 +317,9 @@ export default function UsersPage() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>{isSuperAdmin ? 'Crear Nueva Cuenta' : 'Agregar Nuevo Empleado'}</DialogTitle>
+                <DialogTitle>Agregar Nuevo Empleado</DialogTitle>
                 <DialogDescription>
-                    {isSuperAdmin 
-                        ? 'Crea un nuevo Productor para la plataforma, o un empleado para tu propio establecimiento.'
-                        : 'Crea una cuenta para que un Ingeniero o Encargado acceda a tu establecimiento.'}
+                    Crea una cuenta para que un Ingeniero o Encargado acceda a tu establecimiento.
                 </DialogDescription>
             </DialogHeader>
             <Form {...createForm}>
@@ -367,52 +352,12 @@ export default function UsersPage() {
                                     <SelectContent>
                                         <SelectItem value="Encargado">Encargado</SelectItem>
                                         <SelectItem value="Ingeniero Agronomo">Ingeniero Agrónomo</SelectItem>
-                                        {isSuperAdmin && (
-                                            <SelectItem value="Productor">Productor (Nuevo Cliente)</SelectItem>
-                                        )}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
-                    
-                    {selectedRole === 'Productor' && (
-                        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-primary/20">
-                            <div className="flex items-center gap-2 text-primary font-medium mb-2">
-                                <ShieldAlert className="h-4 w-4" />
-                                <p className="text-sm">Configuración de Nuevo Establecimiento</p>
-                            </div>
-                            <FormField
-                                control={createForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Correo del Productor</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="productor03@agrovista.co" {...field} />
-                                        </FormControl>
-                                        <FormDescription>El correo con el que iniciará sesión.</FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={createForm.control}
-                                name="establishmentId"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>ID de Establecimiento</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="EST-003" {...field} className="uppercase" />
-                                        </FormControl>
-                                        <FormDescription>Un ID único para su granja (ej. EST-003).</FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                    )}
 
                     <FormField
                         control={createForm.control}
