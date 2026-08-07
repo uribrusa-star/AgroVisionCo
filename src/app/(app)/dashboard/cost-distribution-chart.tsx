@@ -91,7 +91,7 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
               nameKey="name" 
               innerRadius={isForPdf ? 50 : 60} 
               labelLine={!isForPdf} 
-              label={isForPdf ? ({name, percent}) => `${costChartConfig[name as keyof typeof costChartConfig]?.label || name}: ${(percent * 100).toFixed(0)}%` : undefined}
+              label={({name, percent}) => `${costChartConfig[name as keyof typeof costChartConfig]?.label || name} (${(percent * 100).toFixed(0)}%)`}
             >
                 {costDistributionData.map((entry) => (
                     <Cell key={`cell-${entry.name}`} fill={entry.fill} />
