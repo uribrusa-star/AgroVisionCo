@@ -429,7 +429,10 @@ function ProductionPaymentHistoryComponent() {
                   <div className="flex-1 space-y-1 text-[11px]">
                     <p>Lote: <b>{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
                     <p>Fecha: <b>{new Date(selectedLog.date).toLocaleDateString()}</b></p>
-                    <p className="text-[9px] text-gray-400 break-all font-mono">{selectedLog.traceabilityId}</p>
+                    <p className="text-[9px] text-gray-400 break-all font-mono mb-1">{selectedLog.traceabilityId}</p>
+                    <p className="text-[10px] text-green-700 font-bold leading-tight mt-1">
+                      ¡Escaneame para ver la historia de tu frutilla!
+                    </p>
                   </div>
                   <div className="border p-1">
                     <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={80} />
