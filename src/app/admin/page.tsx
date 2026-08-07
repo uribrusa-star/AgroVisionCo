@@ -27,6 +27,9 @@ export default function AdminDashboardPage() {
   const [establishments, setEstablishments] = useState<EstablishmentData[]>([]);
   const [producers, setProducers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subPrice, setSubPrice] = useState(80000);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [editPriceValue, setEditPriceValue] = useState(80000);
 
   // Broadcast state
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -65,9 +68,21 @@ export default function AdminDashboardPage() {
       setLoading(false);
     });
 
+    // Subscribe to platform settings for finance
+    const unsubscribeSettings = onSnapshot(doc(db, 'platformSettings', 'finance'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.subscriptionPrice) {
+          setSubPrice(data.subscriptionPrice);
+          setEditPriceValue(data.subscriptionPrice);
+        }
+      }
+    });
+
     return () => {
       unsubscribeEst();
       unsubscribeProd();
+      unsubscribeSettings();
     };
   }, [currentUser]);
 
@@ -124,6 +139,25 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleUpdatePrice = async () => {
+    try {
+      await updateDoc(doc(db, 'platformSettings', 'finance'), {
+        subscriptionPrice: editPriceValue
+      }).catch(async (err) => {
+        // Si el documento no existe, setDoc
+        const { setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'platformSettings', 'finance'), { subscriptionPrice: editPriceValue });
+      });
+      setIsEditingPrice(false);
+      toast({
+        title: "Precio Actualizado",
+        description: `El valor de la suscripción mensual se ha actualizado a $${editPriceValue.toLocaleString('es-AR')}.`,
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo actualizar el precio.", variant: "destructive" });
+    }
+  };
+
   const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!broadcastTitle || !broadcastBody) {
@@ -168,7 +202,6 @@ export default function AdminDashboardPage() {
   }
 
   // Finance Metrics
-  const subPrice = 80000;
   const activeCount = producers.filter(p => p.subscriptionStatus === 'active').length;
   const trialCount = producers.filter(p => p.subscriptionStatus === 'trial' || !p.subscriptionStatus).length;
   const mrr = activeCount * subPrice;
@@ -316,12 +349,27 @@ export default function AdminDashboardPage() {
         <TabsContent value="finance" className="mt-0 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-0 shadow-sm border-b-4 border-b-emerald-600">
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 relative">
                 <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">MRR (Ingresos Mensuales)</CardDescription>
-                <CardTitle className="text-3xl font-bold text-emerald-600 flex items-center gap-2">
-                  <DollarSign className="h-6 w-6 opacity-70" /> 
-                  ${mrr.toLocaleString('es-AR')} ARS
-                </CardTitle>
+                
+                {isEditingPrice ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Input 
+                      type="number" 
+                      value={editPriceValue} 
+                      onChange={(e) => setEditPriceValue(Number(e.target.value))}
+                      className="w-32 h-8 text-sm"
+                    />
+                    <Button size="sm" onClick={handleUpdatePrice} className="h-8 px-2 bg-emerald-600 hover:bg-emerald-700">Guardar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setIsEditingPrice(false); setEditPriceValue(subPrice); }} className="h-8 px-2">Cancelar</Button>
+                  </div>
+                ) : (
+                  <CardTitle className="text-3xl font-bold text-emerald-600 flex items-center gap-2 cursor-pointer group" onClick={() => setIsEditingPrice(true)}>
+                    <DollarSign className="h-6 w-6 opacity-70" /> 
+                    ${mrr.toLocaleString('es-AR')} ARS
+                    <span className="text-xs font-normal text-stone-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">(Click para editar cuota de ${subPrice.toLocaleString('es-AR')})</span>
+                  </CardTitle>
+                )}
               </CardHeader>
             </Card>
 
