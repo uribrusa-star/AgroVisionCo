@@ -107,27 +107,27 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
         </RechartsPieChart>
       </ChartContainer>
 
-      {/* Modern Responsive Legend Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5 w-full mt-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+      {/* Modern Responsive Legend List */}
+      <div className="flex flex-col gap-2 w-full mt-3 pt-3 border-t border-stone-100 dark:border-stone-800">
         {costDistributionData.map((item) => {
           const percent = totalCost > 0 ? ((item.value / totalCost) * 100).toFixed(0) : 0;
           const label = costChartConfig[item.name as keyof typeof costChartConfig]?.label || item.name;
           return (
-            <div key={item.name} className="flex items-center justify-between text-xs py-0.5 px-1 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
-              <div className="flex items-center gap-2 truncate min-w-0">
+            <div key={item.name} className="flex items-center justify-between text-xs py-1 px-1.5 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
+              <div className="flex items-center gap-2 truncate min-w-0 pr-2">
                 <span 
                   className="w-3 h-3 rounded-full shrink-0 shadow-sm" 
                   style={{ backgroundColor: item.fill }} 
                 />
-                <span className="text-stone-700 dark:text-stone-300 font-medium truncate">
+                <span className="text-stone-700 dark:text-stone-300 font-semibold truncate">
                   {label}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <div className="flex items-center gap-2 shrink-0 ml-auto">
                 <span className="text-stone-900 dark:text-stone-100 font-bold">
                   ${item.value.toLocaleString('es-AR')}
                 </span>
-                <span className="text-stone-400 dark:text-stone-500 font-medium text-[11px] min-w-[32px] text-right">
+                <span className="text-stone-400 dark:text-stone-500 font-semibold text-[11px] min-w-[36px] text-right">
                   ({percent}%)
                 </span>
               </div>
