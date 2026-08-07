@@ -174,42 +174,50 @@ function ProductionPaymentHistoryComponent() {
     });
   }
 
-  const handlePrintLabel = async () => {
+  const handlePrintLabel = async (action: 'download' | 'share' = 'download') => {
     if (!labelRef.current) return;
-    toast({ title: 'Generando Etiqueta', description: 'Por favor espere...' });
+    toast({ title: action === 'share' ? 'Preparando...' : 'Generando Etiqueta', description: 'Por favor espere...' });
     
     try {
         const html2canvas = (await import('html2canvas')).default;
         const canvas = await html2canvas(labelRef.current, { scale: 3 });
         const dataUrl = canvas.toDataURL('image/png');
         
-        try {
-            const res = await fetch(dataUrl);
-            const blob = await res.blob();
-            const file = new File([blob], `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`, { type: 'image/png' });
-            
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'Etiqueta de Trazabilidad',
-                });
-                toast({ title: 'Éxito', description: 'Etiqueta compartida correctamente.' });
+        if (action === 'share') {
+            try {
+                const res = await fetch(dataUrl);
+                const blob = await res.blob();
+                const file = new File([blob], `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`, { type: 'image/png' });
+                
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Etiqueta de Trazabilidad',
+                    });
+                    toast({ title: 'Éxito', description: 'Etiqueta compartida correctamente.' });
+                } else {
+                    toast({ title: 'Aviso', description: 'Tu dispositivo no soporta compartir directamente, se descargará en su lugar.' });
+                    action = 'download'; // Fallback to download
+                }
+            } catch (e) {
+                console.error("Share failed", e);
+                // If user cancels share, it throws an AbortError, we shouldn't necessarily download.
                 return;
             }
-        } catch (e) {
-            console.error("Share failed", e);
         }
 
-        const link = document.createElement('a');
-        link.download = `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        toast({ title: 'Éxito', description: 'Etiqueta descargada correctamente.' });
-    } catch (error) {
-        console.error("Error generating label:", error);
+        if (action === 'download') {
+            const link = document.createElement('a');
+            link.download = `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toast({ title: 'Éxito', description: 'Etiqueta descargada correctamente.' });
+        }
+    } catch (e) {
+        console.error("Label generation failed", e);
         toast({ title: 'Error', description: 'No se pudo generar la etiqueta.', variant: 'destructive' });
     }
   }
@@ -481,7 +489,16 @@ function ProductionPaymentHistoryComponent() {
                 </div>
               </div>
               </div>
-              <Button onClick={handlePrintLabel} className="w-full">Descargar Etiqueta (PNG)</Button>
+              <div className="flex gap-2 w-full">
+                {typeof navigator !== 'undefined' && !!navigator.share && (
+                  <Button onClick={() => handlePrintLabel('share')} variant="outline" className="flex-1 border-[#2d4a22] text-[#2d4a22] hover:bg-[#2d4a22] hover:text-white transition-colors">
+                    Compartir Etiqueta
+                  </Button>
+                )}
+                <Button onClick={() => handlePrintLabel('download')} className="flex-1 bg-[#2d4a22] hover:bg-[#1f3317] text-white">
+                  Descargar (PNG)
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
