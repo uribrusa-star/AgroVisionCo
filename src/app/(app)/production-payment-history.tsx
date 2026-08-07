@@ -415,28 +415,74 @@ function ProductionPaymentHistoryComponent() {
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
-              <div ref={labelRef} className="bg-white text-black p-4 rounded-lg border">
-                <div className="flex gap-3 items-center border-b pb-2 mb-2">
-                  <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <img src="/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto' }} />
+              <div 
+                ref={labelRef} 
+                className="relative overflow-hidden p-6 rounded-md border-2 border-stone-300 shadow-md flex"
+                style={{ 
+                  backgroundColor: '#F7F4EB', // Beige/cream paper color
+                  width: '500px',
+                  height: '320px',
+                  color: '#333333',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
+                }}
+              >
+                {/* Botanical Background Watermark */}
+                <div 
+                  className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none"
+                  style={{
+                    backgroundImage: 'url("/botanical-strawberry.jpg")',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'left center',
+                    mixBlendMode: 'multiply'
+                  }}
+                />
+
+                {/* Left Column (Data) */}
+                <div className="flex-1 flex flex-col justify-between z-10 pr-4">
+                  {/* Header Logo & Name */}
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+                        <div className="leading-none">
+                            <h2 className="text-xl font-bold tracking-tight text-[#2d4a22]">AgroVista</h2>
+                            <p className="text-[10px] text-gray-600 tracking-widest uppercase">{establishmentData?.location.locality}</p>
+                        </div>
+                    </div>
+                    <div className="mt-3">
+                        <p className="text-sm text-stone-600 font-serif">Establecimiento:</p>
+                        <h3 className="text-2xl font-serif text-[#a67c00] drop-shadow-sm font-bold leading-none">{establishmentData?.producer}</h3>
+                    </div>
                   </div>
-                  <div className="text-left leading-tight">
-                    <h3 className="font-bold text-sm">{establishmentData?.producer}</h3>
-                    <p className="text-[10px] text-gray-500">{establishmentData?.location.locality}</p>
+
+                  {/* Call to Action Left */}
+                  <div className="mt-4">
+                      <p className="text-sm font-bold text-stone-700 uppercase tracking-widest leading-tight">
+                          Conozca la historia<br/>de su frutilla
+                      </p>
+                  </div>
+
+                  {/* Batch Data */}
+                  <div className="mt-4 space-y-1">
+                    <p className="text-lg text-stone-800">Lote: <b className="text-black">{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
+                    <p className="text-lg text-stone-800">Fecha: <b className="text-black">{new Date(selectedLog.date).toLocaleDateString('es-ES')}</b></p>
+                    <p className="text-xs text-stone-600 font-mono tracking-tight mt-1">{selectedLog.traceabilityId}</p>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <div className="flex-1 space-y-1 text-[11px]">
-                    <p>Lote: <b>{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
-                    <p>Fecha: <b>{new Date(selectedLog.date).toLocaleDateString()}</b></p>
-                    <p className="text-[9px] text-gray-400 break-all font-mono mb-1">{selectedLog.traceabilityId}</p>
-                    <p className="text-[10px] text-green-700 font-bold leading-tight mt-1">
-                      ¡Escaneame para ver la historia de tu frutilla!
-                    </p>
+
+                {/* Right Column (QR) */}
+                <div className="w-[180px] flex flex-col items-center justify-end z-10 pb-2">
+                  <div className="bg-white p-2 border-2 border-[#a67c00] rounded-sm shadow-sm relative">
+                    {/* Decorative gold corners */}
+                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#a67c00] -translate-x-1 -translate-y-1"></div>
+                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#a67c00] translate-x-1 -translate-y-1"></div>
+                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#a67c00] -translate-x-1 translate-y-1"></div>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#a67c00] translate-x-1 translate-y-1"></div>
+                    
+                    <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={130} />
                   </div>
-                  <div className="border p-1">
-                    <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={80} />
-                  </div>
+                  <p className="text-center text-[10px] text-stone-800 font-medium leading-tight mt-3">
+                    Y descubrí su historia,<br/>desde la flor hasta tu mesa.
+                  </p>
                 </div>
               </div>
               <Button onClick={handlePrintLabel} className="w-full">Descargar Etiqueta (PNG)</Button>
