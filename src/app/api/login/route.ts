@@ -69,6 +69,23 @@ export async function POST(request: Request) {
     if (!user || user.password !== password) {
       return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
     }
+
+    // Verificar si el establecimiento está suspendido
+    if (user.role !== 'SuperAdmin' && user.establishmentId) {
+      try {
+        const estDoc = await adminDb.collection('establishment').doc(user.establishmentId).get();
+        if (estDoc.exists) {
+          const estData = estDoc.data();
+          if (estData?.isActive === false) {
+            return NextResponse.json({ 
+              error: 'Tu cuenta se encuentra suspendida temporalmente. Por favor comunícate con administración para regularizarla.' 
+            }, { status: 403 });
+          }
+        }
+      } catch (error) {
+        console.error('Error verificando estado del establecimiento:', error);
+      }
+    }
     
     // Update lastLoginAt
     const lastLoginAt = new Date().toISOString();

@@ -74,7 +74,7 @@ export async function GET(request: Request) {
           notes: log.notes,
           images: log.images
       })),
-      bpaCertified: true,
+      bpaCertified: estSnap.exists ? (estSnap.data()?.hasGoodPracticesSeal === true) : false,
       bpaDetails: {
           phiCompliant: true,
           zeroResiduesGuaranteed: true,
