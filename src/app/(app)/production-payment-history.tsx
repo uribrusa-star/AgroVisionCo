@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import type { CollectorPaymentLog } from '@/lib/types';
+import { generateA4TraceabilitySheetPDF } from '@/lib/pdf-generator';
 
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: any) => jsPDF;
@@ -200,6 +201,24 @@ function ProductionPaymentHistoryComponent() {
       }
     });
   }
+
+  const handleGenerateA4Sheet = async () => {
+    if (!selectedLog) return;
+    try {
+      toast({ title: "Generando Planilla A4", description: "Preparando hoja con 8 etiquetas..." });
+      await generateA4TraceabilitySheetPDF(
+        getHarvestForLog(selectedLog)?.batchNumber || 'N/A',
+        selectedLog.date,
+        selectedLog.traceabilityId,
+        establishmentData?.producer || 'AgroVista',
+        establishmentData?.location?.locality || '',
+        '/logo.png'
+      );
+      toast({ title: "Éxito", description: "Planilla A4 descargada correctamente." });
+    } catch {
+      toast({ title: "Error", description: "No se pudo generar la planilla A4.", variant: "destructive" });
+    }
+  };
 
   const handlePrintLabel = async (action: 'download' | 'share' = 'download') => {
     if (!labelRef.current) return;
@@ -456,24 +475,33 @@ function ProductionPaymentHistoryComponent() {
                             </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-2 w-full order-3">
+                        <div className="grid grid-cols-3 gap-1.5 w-full order-3">
                         <Button 
                             variant="outline" 
                             onClick={handleGenerateReceipt} 
                             disabled={isPdfPending || !canManage}
-                            className="w-full text-[11px] h-10 px-1 sm:text-sm"
+                            className="w-full text-[10px] sm:text-xs h-10 px-1 font-medium"
                         >
-                            <FileDown className="h-4 w-4 mr-1" />
+                            <FileDown className="h-3.5 w-3.5 mr-1 shrink-0" />
                             {isPdfPending ? "..." : "Recibo"}
                         </Button>
                         <Button 
                             variant="outline" 
                             onClick={() => setIsLabelOpen(true)} 
                             disabled={!canManage}
-                            className="w-full text-[11px] h-10 px-1 sm:text-sm"
+                            className="w-full text-[10px] sm:text-xs h-10 px-1 font-medium"
                         >
-                            <QrCode className="h-4 w-4 mr-1" />
+                            <QrCode className="h-3.5 w-3.5 mr-1 shrink-0" />
                             Etiqueta
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            onClick={handleGenerateA4Sheet} 
+                            disabled={!canManage}
+                            className="w-full text-[10px] sm:text-xs h-10 px-1 font-medium bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                        >
+                            <QrCode className="h-3.5 w-3.5 mr-1 shrink-0 text-emerald-600" />
+                            Planilla A4 (8x)
                         </Button>
                         </div>
                     </>

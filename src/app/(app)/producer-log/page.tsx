@@ -18,6 +18,7 @@ import { IncomeChart } from './income-chart';
 import { MonthlyHarvestChart } from '../monthly-harvest-chart';
 import { ProfitabilityTrendChart } from './profitability-trend-chart';
 import { SmartHarvestAlerts } from './smart-harvest-alerts';
+import { A4LabelsGenerator } from './a4-labels-generator';
 import { ExportButton } from './export-button';
 import { WeatherCard } from '@/components/weather-card';
 
@@ -152,6 +153,11 @@ export default function ProducerLogPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <IncomeChart transactions={transactions} />
             <MonthlyHarvestChart harvests={harvests} />
+        </div>
+
+        {/* Generador de Planilla A4 de Etiquetas */}
+        <div className="w-full">
+            <A4LabelsGenerator />
         </div>
 
         {/* Fila 4: Alertas Inteligentes */}

@@ -1307,3 +1307,148 @@ export const generateSubscriptionReceiptPDF = (
   doc.save(`Factura_Suscripcion_${producerName.replace(/\s+/g, "_")}.pdf`);
 };
 
+export const generateA4TraceabilitySheetPDF = async (
+  batchNumber: string | number,
+  harvestDate: string,
+  traceabilityId: string,
+  producerName: string,
+  locality?: string,
+  logoDataUri?: string
+) => {
+  const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+  
+  const traceUrl = typeof window !== 'undefined' ? `${window.location.origin}/trace/${traceabilityId}` : `https://agrovista.com.ar/trace/${traceabilityId}`;
+  
+  // Fetch QR Code Data URI
+  let qrDataUri = '';
+  try {
+    const qrApiUrl = `https://quickchart.io/qr?text=${encodeURIComponent(traceUrl)}&size=200&margin=1`;
+    const res = await fetch(qrApiUrl);
+    const blob = await res.blob();
+    qrDataUri = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    console.warn("Could not fetch QR code image for A4 sheet");
+  }
+
+  const greenColor: [number, number, number] = [45, 74, 34]; // #2d4a22
+  const formattedDate = format(new Date(harvestDate), 'dd/MM/yyyy');
+
+  const labelWidth = 92;
+  const labelHeight = 63;
+  const colX = [10, 108];
+  const rowY = [10, 78, 146, 214];
+
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 2; c++) {
+      const lx = colX[c];
+      const ly = rowY[r];
+
+      // Outer white card & border
+      doc.setFillColor(255, 255, 255);
+      doc.rect(lx, ly, labelWidth, labelHeight, "F");
+      doc.setDrawColor(210, 210, 210);
+      doc.setLineWidth(0.4);
+      doc.rect(lx, ly, labelWidth, labelHeight, "S");
+
+      // Logo if provided
+      if (logoDataUri) {
+        try {
+          doc.addImage(logoDataUri, "PNG", lx + 6, ly + 6, 8, 8);
+        } catch {
+          // ignore logo failure
+        }
+      }
+
+      // Title & Locality
+      doc.setTextColor(greenColor[0], greenColor[1], greenColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("AgroVista", logoDataUri ? lx + 16 : lx + 6, ly + 11);
+
+      if (locality) {
+        doc.setFontSize(6);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(120, 120, 120);
+        doc.text(locality.toUpperCase(), logoDataUri ? lx + 16 : lx + 6, ly + 15);
+      }
+
+      // Establishment & Producer Name
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+      doc.text("Establecimiento:", lx + 6, ly + 22);
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(greenColor[0], greenColor[1], greenColor[2]);
+      doc.text(producerName || 'AgroVista', lx + 6, ly + 28);
+
+      // Call to action subtitle
+      doc.setFontSize(6);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(80, 80, 80);
+      doc.text("CONOZCA LA HISTORIA DE SU FRUTILLA", lx + 6, ly + 35);
+
+      // Batch Details
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(50, 50, 50);
+      doc.text(`Lote:`, lx + 6, ly + 43);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${batchNumber}`, lx + 16, ly + 43);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(50, 50, 50);
+      doc.text(`Fecha:`, lx + 6, ly + 49);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 0, 0);
+      doc.text(formattedDate, lx + 17, ly + 49);
+
+      // ID
+      doc.setFontSize(5.5);
+      doc.setFont("courier", "normal");
+      doc.setTextColor(120, 120, 120);
+      doc.text(traceabilityId, lx + 6, ly + 56);
+
+      // QR Code Box (Right Side)
+      const qx = lx + 59;
+      const qy = ly + 10;
+      const qSize = 27;
+
+      doc.setDrawColor(greenColor[0], greenColor[1], greenColor[2]);
+      doc.setLineWidth(0.5);
+      doc.rect(qx, qy, qSize, qSize, "S");
+
+      // Decorative green corners
+      const cLen = 2.5;
+      doc.line(qx - 0.8, qy - 0.8, qx - 0.8 + cLen, qy - 0.8);
+      doc.line(qx - 0.8, qy - 0.8, qx - 0.8, qy - 0.8 + cLen);
+
+      doc.line(qx + qSize + 0.8, qy - 0.8, qx + qSize + 0.8 - cLen, qy - 0.8);
+      doc.line(qx + qSize + 0.8, qy - 0.8, qx + qSize + 0.8, qy - 0.8 + cLen);
+
+      doc.line(qx - 0.8, qy + qSize + 0.8, qx - 0.8 + cLen, qy + qSize + 0.8);
+      doc.line(qx - 0.8, qy + qSize + 0.8, qx - 0.8, qy + qSize + 0.8 - cLen);
+
+      doc.line(qx + qSize + 0.8, qy + qSize + 0.8, qx + qSize + 0.8 - cLen, qy + qSize + 0.8);
+      doc.line(qx + qSize + 0.8, qy + qSize + 0.8, qx + qSize + 0.8, qy + qSize + 0.8 - cLen);
+
+      // Add QR Image if fetched
+      if (qrDataUri) {
+        try {
+          doc.addImage(qrDataUri, "PNG", qx + 1, qy + 1, qSize - 2, qSize - 2);
+        } catch {
+          // fallback
+        }
+      }
+    }
+  }
+
+  doc.save(`Planilla_8_Etiquetas_Lote_${batchNumber}.pdf`);
+};
+
