@@ -56,7 +56,7 @@ service cloud.firestore {
     match /batches/{document} {
       allow read, write: if isAuthenticated();
     }
-    match /collectorPayments/{document} {
+    match /collectorPaymentLogs/{document} {
       allow read, write: if isAuthenticated();
     }
     match /producerLogs/{document} {
