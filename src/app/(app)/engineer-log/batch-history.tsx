@@ -63,9 +63,15 @@ export function BatchHistory() {
   const onEditSubmit = async (data: EditBatchValues) => {
     if (!editingBatch) return;
     
+    // Si la fecha solo tiene YYYY-MM-DD (length 10), le agregamos el mediodía UTC 
+    // para que la conversión a hora local en cualquier país no le reste un día.
+    const safePreloadedDate = data.preloadedDate.length === 10 
+      ? `${data.preloadedDate}T12:00:00.000Z` 
+      : data.preloadedDate;
+    
     await editBatch({
       ...editingBatch,
-      preloadedDate: data.preloadedDate,
+      preloadedDate: safePreloadedDate,
       varieties: data.varieties,
     });
 
