@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
     // Generate email
     const estSuffix = establishmentId.toLowerCase().replace(/[^a-z0-9]/g, '');
-    let finalEmail = email; // Used if role === 'Productor'
+    let finalEmail = email?.toLowerCase(); // Used if role === 'Productor'
     
     if (role === 'Ingeniero Agronomo') {
       finalEmail = `ing-${estSuffix}@agrovista.co`;

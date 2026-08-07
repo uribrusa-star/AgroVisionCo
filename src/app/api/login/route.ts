@@ -41,7 +41,8 @@ export async function POST(request: Request) {
     const cookieStore = await cookies();
     const session = await getIronSession(cookieStore, sessionOptions);
 
-    const { email, password, clientUser } = await request.json();
+    let { email, password, clientUser } = await request.json();
+    email = email?.toLowerCase();
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Faltan credenciales.' }, { status: 400 });
