@@ -1,7 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit, orderBy, doc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,35 +10,34 @@ export async function GET(request: Request) {
   }
 
   try {
-    const harvestsRef = collection(db, 'harvests');
-    const q = query(harvestsRef, where('traceabilityId', '==', id), limit(1));
-    const querySnapshot = await getDocs(q);
+    const harvestsRef = adminDb.collection('harvests');
+    const querySnapshot = await harvestsRef.where('traceabilityId', '==', id).limit(1).get();
 
     if (querySnapshot.empty) {
       return NextResponse.json({ error: 'ID de trazabilidad no encontrado.' }, { status: 404 });
     }
 
     const harvestDoc = querySnapshot.docs[0];
-    const harvest = { id: harvestDoc.id, ...harvestDoc.data() };
+    const harvest = { id: harvestDoc.id, ...harvestDoc.data() } as any;
 
     const batchIdStr = harvest.batchNumber;
     const batchIdsToSearch = batchIdStr.split(',').map((s: string) => s.trim()).filter(Boolean);
     const estId = harvest.establishmentId || 'main';
     
-    const estRef = doc(db, 'establishment', estId);
-    const estSnap = await getDoc(estRef);
-    const establishmentName = estSnap.exists() ? estSnap.data().producer : 'AgroVista';
+    const estRef = adminDb.collection('establishment').doc(estId);
+    const estSnap = await estRef.get();
+    const establishmentName = estSnap.exists ? estSnap.data()?.producer : 'AgroVista';
 
-    const phenologyLogsRef = collection(db, 'phenologyLogs');
+    const phenologyLogsRef = adminDb.collection('phenologyLogs');
     const logsPromises = batchIdsToSearch.flatMap((b: string) => [
-      getDocs(query(phenologyLogsRef, where('batchIds', 'array-contains', b), where('establishmentId', '==', estId))),
-      getDocs(query(phenologyLogsRef, where('batchId', '==', b), where('establishmentId', '==', estId)))
+      phenologyLogsRef.where('batchIds', 'array-contains', b).where('establishmentId', '==', estId).get(),
+      phenologyLogsRef.where('batchId', '==', b).where('establishmentId', '==', estId).get()
     ]);
 
-    const agronomistLogsRef = collection(db, 'agronomistLogs');
+    const agronomistLogsRef = adminDb.collection('agronomistLogs');
     const agLogsPromises = batchIdsToSearch.flatMap((b: string) => [
-      getDocs(query(agronomistLogsRef, where('batchIds', 'array-contains', b), where('establishmentId', '==', estId))),
-      getDocs(query(agronomistLogsRef, where('batchId', '==', b), where('establishmentId', '==', estId)))
+      agronomistLogsRef.where('batchIds', 'array-contains', b).where('establishmentId', '==', estId).get(),
+      agronomistLogsRef.where('batchId', '==', b).where('establishmentId', '==', estId).get()
     ]);
 
     const [phenologySnapshots, agSnapshots] = await Promise.all([
@@ -54,7 +51,7 @@ export async function GET(request: Request) {
     });
 
     const phenologyLogs = Array.from(phenologyLogsMap.values())
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
 
     const agLogsMap = new Map();
@@ -69,7 +66,7 @@ export async function GET(request: Request) {
       harvestDate: harvest.date,
       batchId: harvest.batchNumber,
       collectorName: harvest.collector.name,
-      phenologyLogs: phenologyLogs.map(log => ({
+      phenologyLogs: phenologyLogs.map((log: any) => ({
           date: log.date,
           developmentState: log.developmentState,
           flowerCount: log.flowerCount,
