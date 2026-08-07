@@ -49,6 +49,7 @@ function ProductionPaymentHistoryComponent() {
   const logoRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const labelContainerRef = useRef<HTMLDivElement>(null);
+  const scaleWrapperRef = useRef<HTMLDivElement>(null);
   const [labelScale, setLabelScale] = useState(1);
   const { editHarvest } = useContext(AppDataContext);
 
@@ -205,6 +206,12 @@ function ProductionPaymentHistoryComponent() {
     toast({ title: action === 'share' ? 'Preparando...' : 'Generando Etiqueta', description: 'Por favor espere...' });
     
     try {
+        if (scaleWrapperRef.current) {
+            scaleWrapperRef.current.style.transform = 'scale(1)';
+        }
+        // Wait briefly for the browser to recalculate unscaled styles before capturing
+        await new Promise(resolve => setTimeout(resolve, 50));
+
         const html2canvas = (await import('html2canvas')).default;
         const canvas = await html2canvas(labelRef.current, { 
             scale: 3,
@@ -215,6 +222,11 @@ function ProductionPaymentHistoryComponent() {
                 }
             }
         });
+        
+        if (scaleWrapperRef.current) {
+            scaleWrapperRef.current.style.transform = `scale(${labelScale})`;
+        }
+        
         const dataUrl = canvas.toDataURL('image/png');
         
         if (action === 'share') {
@@ -480,7 +492,7 @@ function ProductionPaymentHistoryComponent() {
           {selectedLog && (
             <div className="space-y-4">
               <div ref={labelContainerRef} className="w-full relative overflow-hidden transition-all duration-200" style={{ height: `${340 * labelScale}px` }}>
-                <div className="absolute top-0 left-1/2 -ml-[250px]" style={{ transform: `scale(${labelScale})`, transformOrigin: 'top center', width: '500px', height: '340px' }}>
+                <div ref={scaleWrapperRef} className="absolute top-0 left-1/2 -ml-[250px]" style={{ transform: `scale(${labelScale})`, transformOrigin: 'top center', width: '500px', height: '340px' }}>
                   <div 
                     ref={labelRef} 
                     id="traceability-label"
