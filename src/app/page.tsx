@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Leaf, BarChart3, MapPin } from 'lucide-react';
+import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -17,8 +17,36 @@ export default function LandingPage() {
   // Easter egg state
   const [isMusicMode, setIsMusicMode] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [volume, setVolume] = React.useState(0.5);
+  const [volume, setVolume] = React.useState(0.3); // 30% default volume
   const audioRef = React.useRef<HTMLAudioElement>(null);
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Set initial volume when audio mounts
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [audioRef.current]);
+
+  const resetTimeout = React.useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setIsMusicMode(false);
+    }, 10000);
+  }, []);
+
+  useEffect(() => {
+    if (isMusicMode) {
+      resetTimeout();
+    } else {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    }
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [isMusicMode, resetTimeout]);
 
   useEffect(() => {
     if (currentUser) {
@@ -42,49 +70,51 @@ export default function LandingPage() {
               title="Click here for a surprise"
             />
           ) : (
-            <div className="relative group">
+            <div 
+              className="relative group"
+              onMouseMove={resetTimeout}
+              onMouseEnter={resetTimeout}
+            >
               <div 
-                className="text-3xl cursor-pointer hover:scale-110 transition-transform"
+                className="text-3xl cursor-pointer hover:scale-110 transition-transform flex items-center justify-center w-8 h-8"
                 onClick={() => setIsMusicMode(false)}
               >
                 🎶
               </div>
               
-              {/* Music Player Popover */}
-              <div className="absolute top-full left-0 mt-2 bg-white dark:bg-green-900 border border-stone-200 dark:border-green-700 shadow-xl rounded-lg p-3 flex flex-col gap-3 min-w-[150px] z-50">
-                <div className="flex justify-center gap-4">
-                  <button 
-                    onClick={() => {
-                      if (audioRef.current) {
-                        audioRef.current.play();
-                        setIsPlaying(true);
-                      }
-                    }}
-                    className="text-xl hover:scale-110 transition-transform"
-                    title="Reproducir"
-                  >
-                    ▶️
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (audioRef.current) {
-                        audioRef.current.pause();
-                        setIsPlaying(false);
-                      }
-                    }}
-                    className="text-xl hover:scale-110 transition-transform"
-                    title="Pausar"
-                  >
-                    ⏸️
-                  </button>
+              {/* Music Player Popover (Minimalist) */}
+              <div className="absolute top-full left-0 mt-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm rounded-md p-3 flex flex-col gap-4 min-w-[140px] z-50">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium tracking-wider text-stone-500 uppercase">Fondo</span>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => {
+                        if (audioRef.current) {
+                          if (isPlaying) {
+                            audioRef.current.pause();
+                            setIsPlaying(false);
+                          } else {
+                            audioRef.current.play();
+                            setIsPlaying(true);
+                          }
+                        }
+                        resetTimeout();
+                      }}
+                      className="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors"
+                      title={isPlaying ? "Pausar" : "Reproducir"}
+                    >
+                      {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
+                
                 <div className="flex items-center gap-2">
-                  <span className="text-xs">🔉</span>
+                  <Volume2 className="h-3 w-3 text-stone-400" />
                   <input 
                     type="range" 
                     min="0" 
                     max="1" 
-                    step="0.05" 
+                    step="0.01" 
                     value={volume}
                     onChange={(e) => {
                       const newVol = parseFloat(e.target.value);
@@ -92,10 +122,10 @@ export default function LandingPage() {
                       if (audioRef.current) {
                         audioRef.current.volume = newVol;
                       }
+                      resetTimeout();
                     }}
-                    className="w-full accent-green-600 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full accent-stone-700 dark:accent-stone-400 h-1 bg-stone-200 dark:bg-stone-800 rounded-lg appearance-none cursor-pointer"
                   />
-                  <span className="text-xs">🔊</span>
                 </div>
                 <audio 
                   ref={audioRef} 
