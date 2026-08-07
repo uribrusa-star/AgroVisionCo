@@ -1,4 +1,4 @@
-export type UserRole = 'Productor' | 'Ingeniero Agronomo' | 'Encargado';
+export type UserRole = 'Productor' | 'Ingeniero Agronomo' | 'Encargado' | 'SuperAdmin';
 
 export type PushNotification = {
   id: string;
@@ -235,6 +235,8 @@ export type Task = {
 
 export type EstablishmentData = {
   id: string;
+  isActive?: boolean;
+  hasGoodPracticesSeal?: boolean;
   producer: string;
   technicalManager: string;
   location: {

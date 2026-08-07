@@ -90,8 +90,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [showResetButton, setShowResetButton] = useState(false);
 
   useEffect(() => {
-    if (isClient && !loading && !currentUser) {
+    if (isClient && !loading) {
+      if (!currentUser) {
         router.replace('/');
+      } else if (currentUser.role === 'SuperAdmin') {
+        router.replace('/admin');
+      }
     }
   }, [isClient, loading, currentUser, router]);
 

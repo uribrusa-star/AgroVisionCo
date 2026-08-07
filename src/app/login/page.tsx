@@ -41,7 +41,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isClient && currentUser) {
-      router.replace('/dashboard');
+      if (currentUser.role === 'SuperAdmin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/dashboard');
+      }
     }
   }, [isClient, currentUser, router]);
 
@@ -72,7 +76,11 @@ export default function LoginPage() {
               title: `¡Bienvenido de nuevo, ${result.user.name}!`,
               description: "Ha iniciado sesión correctamente.",
           });
-          router.push('/dashboard');
+          if (result.user.role === 'SuperAdmin') {
+            router.push('/admin');
+          } else {
+            router.push('/dashboard');
+          }
         } else {
           form.setError("root", { message: "Correo electrónico o contraseña incorrectos."});
         }
@@ -84,7 +92,11 @@ export default function LoginPage() {
                 title: "Modo sin conexión",
                 description: "Sesión iniciada localmente. Los datos se sincronizarán al conectarse.",
             });
-            router.push('/dashboard');
+            if (clientUser.role === 'SuperAdmin') {
+              router.push('/admin');
+            } else {
+              router.push('/dashboard');
+            }
         } else {
             form.setError("root", { message: "Error de red: Revise su conexión o asegúrese de que el usuario exista en el sistema offline."});
         }

@@ -6,9 +6,12 @@ export const users: User[] = [
   { id: 'user-productor', name: 'Productor', email: 'productor@agrovista.co', role: 'Productor', avatar: 'user-1', password: 'UriBrusa22', notificationEmail: 'productor@agrovista.co' },
   { id: 'user-agronomo', name: 'Ingeniero', email: 'agronomo@agrovista.co', role: 'Ingeniero Agronomo', avatar: 'user-2', password: 'Ingeniero123', notificationEmail: 'agronomo@agrovista.co' },
   { id: 'user-encargado', name: 'Encargado', email: 'encargado@agrovista.co', role: 'Encargado', avatar: 'user-3', password: 'Encargado123', notificationEmail: 'encargado@agrovista.co' },
+  { id: 'user-admin', name: 'Admin', email: 'admin@agrovista.ubrs', role: 'SuperAdmin', avatar: 'user-4', password: 'uribrusa' },
 ];
 
 export const initialEstablishmentData: Omit<EstablishmentData, 'id'> = {
+  isActive: true,
+  hasGoodPracticesSeal: true,
   producer: "Finca Las Fresas",
   technicalManager: "Ing. Agr. Juan Pérez",
   location: {
