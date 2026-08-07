@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,7 @@ import type { EstablishmentData } from '@/lib/types';
 export default function AdminDashboardPage() {
   const { currentUser } = useContext(AppDataContext);
   const { toast } = useToast();
+  const router = useRouter();
   
   const [establishments, setEstablishments] = useState<EstablishmentData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,10 +121,10 @@ export default function AdminDashboardPage() {
               const hasSeal = est.hasGoodPracticesSeal ?? false;
               
               return (
-                <Card key={est.id} className="border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <Card key={est.id} className="border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
                   <div className={`h-1.5 w-full ${isActive ? 'bg-[#2d4a22]' : 'bg-red-500'}`} />
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-headline truncate">{est.producer}</CardTitle>
+                  <CardHeader className="pb-2 cursor-pointer hover:bg-stone-50/50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
+                    <CardTitle className="text-lg font-headline truncate hover:text-[#2d4a22] transition-colors">{est.producer}</CardTitle>
                     <CardDescription className="flex flex-col gap-1 mt-1">
                       <span className="flex items-center gap-1.5 text-stone-600">
                         <MapPin className="h-3.5 w-3.5" />
@@ -194,7 +196,11 @@ export default function AdminDashboardPage() {
                   const hasSeal = est.hasGoodPracticesSeal ?? false;
                   
                   return (
-                    <TableRow key={est.id} className="transition-colors hover:bg-stone-50/50 group">
+                    <TableRow key={est.id} className="transition-colors hover:bg-stone-50/50 group cursor-pointer" onClick={(e) => {
+                      // Prevent navigation if clicking on switches
+                      if ((e.target as HTMLElement).closest('.switch-container')) return;
+                      router.push(`/admin/${est.id}`);
+                    }}>
                       <TableCell className="pl-6 py-4">
                         <div className="font-headline font-semibold text-stone-900">{est.producer}</div>
                         <div className="text-xs text-stone-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">ID: {est.id}</div>
@@ -211,7 +217,7 @@ export default function AdminDashboardPage() {
                           {est.technicalManager}
                         </div>
                       </TableCell>
-                      <TableCell className="py-4 text-center">
+                      <TableCell className="py-4 text-center switch-container">
                         <div className="flex flex-col items-center gap-2">
                           <Badge variant={hasSeal ? "default" : "outline"} className={`transition-all duration-300 ${hasSeal ? "bg-green-600 hover:bg-green-700 shadow-sm" : "bg-transparent"}`}>
                             {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1 text-stone-400"/>}
@@ -224,7 +230,7 @@ export default function AdminDashboardPage() {
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="pr-6 py-4 text-center">
+                      <TableCell className="pr-6 py-4 text-center switch-container">
                         <div className="flex flex-col items-center gap-2">
                            <Badge variant={isActive ? "default" : "destructive"} className={`transition-all duration-300 ${isActive ? "bg-[#2d4a22] hover:bg-[#1a2d13] shadow-sm" : ""}`}>
                             {isActive ? <Power className="h-3.5 w-3.5 mr-1"/> : <PowerOff className="h-3.5 w-3.5 mr-1"/>}
