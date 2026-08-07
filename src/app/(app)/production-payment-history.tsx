@@ -54,14 +54,21 @@ function ProductionPaymentHistoryComponent() {
 
   useEffect(() => {
     const updateScale = () => {
-      if (labelContainerRef.current) {
-        const containerWidth = labelContainerRef.current.offsetWidth;
-        setLabelScale(Math.min(1, containerWidth / 500));
+      if (typeof window !== 'undefined') {
+        const screenWidth = window.innerWidth;
+        if (screenWidth < 550) {
+          // Adjust for dialog padding/margins on small screens (approx 32-40px total)
+          const availableWidth = screenWidth - 40;
+          setLabelScale(Math.min(1, availableWidth / 500));
+        } else {
+          setLabelScale(1);
+        }
       }
     };
     
-    // Slight delay to ensure modal is fully rendered
-    const timeout = setTimeout(updateScale, 50);
+    updateScale();
+    // Re-check after dialog animation finishes
+    const timeout = setTimeout(updateScale, 300);
     window.addEventListener('resize', updateScale);
     return () => {
       clearTimeout(timeout);
