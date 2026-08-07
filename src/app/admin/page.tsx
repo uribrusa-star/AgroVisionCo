@@ -133,13 +133,14 @@ export default function AdminDashboardPage() {
 
     setIsBroadcasting(true);
     try {
-      const res = await fetch('/api/admin/broadcast', {
+      const res = await fetch('/api/alerts/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: broadcastTitle,
           body: broadcastBody,
-          severity: broadcastSeverity
+          severity: broadcastSeverity,
+          targetRoles: ['Productor', 'Ingeniero Agronomo', 'Encargado', 'Recolector', 'Embalador']
         })
       });
 
