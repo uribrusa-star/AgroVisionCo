@@ -418,7 +418,7 @@ function ProductionPaymentHistoryComponent() {
               <div className="w-full overflow-x-auto pb-4 flex justify-start sm:justify-center">
                 <div 
                   ref={labelRef} 
-                  className="relative overflow-hidden p-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
+                  className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
                   style={{ 
                     width: '500px',
                     minWidth: '500px',
@@ -431,12 +431,12 @@ function ProductionPaymentHistoryComponent() {
                 <img 
                   src="/botanical-strawberry.png" 
                   alt=""
-                  className="absolute right-[-5%] top-0 h-full w-[70%] object-contain opacity-25 pointer-events-none z-0"
+                  className="absolute right-[-12%] top-0 h-full w-[70%] object-contain opacity-25 pointer-events-none z-0"
                   crossOrigin="anonymous"
                 />
 
                 {/* Left Column (Data) */}
-                <div className="flex-1 flex flex-col justify-between z-10 pr-4">
+                <div className="flex-1 flex flex-col justify-start z-10 pr-4">
                   {/* Header Logo & Name */}
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-3">
@@ -446,7 +446,7 @@ function ProductionPaymentHistoryComponent() {
                             <p className="text-[11px] text-gray-600 tracking-[0.2em] uppercase mt-1">{establishmentData?.location.locality}</p>
                         </div>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-2">
                         <p className="text-lg text-stone-600 font-serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Establecimiento:</p>
                         <h3 className="text-4xl text-[#a67c00] drop-shadow-sm font-bold leading-none mt-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{establishmentData?.producer}</h3>
                     </div>
@@ -460,7 +460,7 @@ function ProductionPaymentHistoryComponent() {
                   </div>
 
                   {/* Batch Data */}
-                  <div className="mt-4 space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                  <div className="mt-auto space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
                     <p className="text-sm text-stone-800">Lote: <b className="text-black text-base">{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
                     <p className="text-sm text-stone-800">Fecha: <b className="text-black text-base">{new Date(selectedLog.date).toLocaleDateString('es-ES')}</b></p>
                     <p className="text-[10px] text-stone-600 font-mono tracking-tight mt-1">{selectedLog.traceabilityId}</p>
