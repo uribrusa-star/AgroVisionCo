@@ -26,9 +26,9 @@ export default function AdminDashboardPage() {
     const unsubscribe = onSnapshot(collection(db, 'establishment'), (snapshot) => {
       const ests: EstablishmentData[] = [];
       snapshot.forEach((doc) => {
-        // Only include those that look like establishments (skip 'main' if it doesn't have a producer name, but actually let's just grab all valid ones)
+        // Only include those that look like establishments
         const data = doc.data() as EstablishmentData;
-        if (data.producer && doc.id !== 'main') {
+        if (data.producer) {
           ests.push({ ...data, id: doc.id });
         }
       });
