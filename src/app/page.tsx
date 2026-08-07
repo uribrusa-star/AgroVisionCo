@@ -13,6 +13,12 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 export default function LandingPage() {
   const { currentUser } = useContext(AppDataContext);
   const router = useRouter();
+  
+  // Easter egg state
+  const [isMusicMode, setIsMusicMode] = React.useState(false);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [volume, setVolume] = React.useState(0.5);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (currentUser) {
@@ -24,8 +30,82 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen bg-background dark:bg-green-950">
       {/* Navbar */}
       <header className="px-6 py-4 flex items-center justify-between border-b dark:border-green-800 bg-background/95 dark:bg-green-950/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="AgroVista Logo" width={32} height={32} />
+        <div className="flex items-center gap-2 relative">
+          {!isMusicMode ? (
+            <Image 
+              src="/logo.png" 
+              alt="AgroVista Logo" 
+              width={32} 
+              height={32} 
+              className="cursor-pointer transition-transform hover:scale-105"
+              onClick={() => setIsMusicMode(true)}
+              title="Click here for a surprise"
+            />
+          ) : (
+            <div className="relative group">
+              <div 
+                className="text-3xl cursor-pointer hover:scale-110 transition-transform"
+                onClick={() => setIsMusicMode(false)}
+              >
+                🎶
+              </div>
+              
+              {/* Music Player Popover */}
+              <div className="absolute top-full left-0 mt-2 bg-white dark:bg-green-900 border border-stone-200 dark:border-green-700 shadow-xl rounded-lg p-3 flex flex-col gap-3 min-w-[150px] z-50">
+                <div className="flex justify-center gap-4">
+                  <button 
+                    onClick={() => {
+                      if (audioRef.current) {
+                        audioRef.current.play();
+                        setIsPlaying(true);
+                      }
+                    }}
+                    className="text-xl hover:scale-110 transition-transform"
+                    title="Reproducir"
+                  >
+                    ▶️
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (audioRef.current) {
+                        audioRef.current.pause();
+                        setIsPlaying(false);
+                      }
+                    }}
+                    className="text-xl hover:scale-110 transition-transform"
+                    title="Pausar"
+                  >
+                    ⏸️
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs">🔉</span>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1" 
+                    step="0.05" 
+                    value={volume}
+                    onChange={(e) => {
+                      const newVol = parseFloat(e.target.value);
+                      setVolume(newVol);
+                      if (audioRef.current) {
+                        audioRef.current.volume = newVol;
+                      }
+                    }}
+                    className="w-full accent-green-600 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <span className="text-xs">🔊</span>
+                </div>
+                <audio 
+                  ref={audioRef} 
+                  src="/huevo-de-pascua.mp3" 
+                  preload="none" 
+                  loop
+                />
+              </div>
+            </div>
+          )}
           <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVista</span>
         </div>
         <nav>
