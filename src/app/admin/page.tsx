@@ -24,6 +24,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
+import { AdminAnalytics } from './admin-analytics';
 
 const CreateProducerSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -277,8 +278,11 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="directory" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-[600px] mb-6">
+      <Tabs defaultValue="analytics" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 max-w-[800px] mb-6">
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" /> Analíticas
+          </TabsTrigger>
           <TabsTrigger value="directory" className="flex items-center gap-2">
             <Building className="h-4 w-4" /> Directorio
           </TabsTrigger>
@@ -289,6 +293,10 @@ export default function AdminDashboardPage() {
             <BellRing className="h-4 w-4" /> Comunicaciones
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="analytics" className="mt-0">
+          <AdminAnalytics establishments={establishments} />
+        </TabsContent>
 
         <TabsContent value="directory" className="mt-0">
           <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
