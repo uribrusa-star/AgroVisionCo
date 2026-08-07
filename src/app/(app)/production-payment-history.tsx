@@ -428,12 +428,14 @@ function ProductionPaymentHistoryComponent() {
               >
                 {/* Botanical Background Watermark */}
                 <div 
-                  className="absolute right-0 top-0 bottom-0 w-1/2 opacity-30 pointer-events-none"
+                  className="absolute right-0 top-0 bottom-0 w-[65%] opacity-35 pointer-events-none"
                   style={{
                     backgroundImage: 'url("/botanical-strawberry.jpg")',
-                    backgroundSize: 'cover',
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'left center',
-                    mixBlendMode: 'multiply'
+                    mixBlendMode: 'multiply',
+                    transform: 'translateX(-5%)' // Move slightly left
                   }}
                 />
 
@@ -441,31 +443,31 @@ function ProductionPaymentHistoryComponent() {
                 <div className="flex-1 flex flex-col justify-between z-10 pr-4">
                   {/* Header Logo & Name */}
                   <div className="flex flex-col items-start gap-1">
-                    <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
-                        <div className="leading-none">
-                            <h2 className="text-xl font-bold tracking-tight text-[#2d4a22]">AgroVista</h2>
-                            <p className="text-[10px] text-gray-600 tracking-widest uppercase">{establishmentData?.location.locality}</p>
+                    <div className="flex items-center gap-3">
+                        <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+                        <div className="flex flex-col justify-center pt-1">
+                            <h2 className="text-2xl font-bold tracking-tight text-[#2d4a22] leading-none" style={{ fontFamily: "'Inter', sans-serif" }}>AgroVista</h2>
+                            <p className="text-[11px] text-gray-600 tracking-[0.2em] uppercase leading-tight mt-0.5">{establishmentData?.location.locality}</p>
                         </div>
                     </div>
-                    <div className="mt-3">
-                        <p className="text-sm text-stone-600 font-serif">Establecimiento:</p>
-                        <h3 className="text-2xl font-serif text-[#a67c00] drop-shadow-sm font-bold leading-none">{establishmentData?.producer}</h3>
+                    <div className="mt-4">
+                        <p className="text-lg text-stone-600 font-serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Establecimiento:</p>
+                        <h3 className="text-4xl text-[#a67c00] drop-shadow-sm font-bold leading-none mt-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{establishmentData?.producer}</h3>
                     </div>
                   </div>
 
                   {/* Call to Action Left */}
-                  <div className="mt-4">
-                      <p className="text-sm font-bold text-stone-700 uppercase tracking-widest leading-tight">
-                          Conozca la historia<br/>de su frutilla
+                  <div className="mt-5 w-[85%]">
+                      <p className="text-[15px] font-bold text-stone-700 uppercase tracking-widest leading-snug text-justify" style={{ fontFamily: "'Inter', sans-serif" }}>
+                          Conozca la historia de su frutilla
                       </p>
                   </div>
 
                   {/* Batch Data */}
-                  <div className="mt-4 space-y-1">
-                    <p className="text-lg text-stone-800">Lote: <b className="text-black">{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
-                    <p className="text-lg text-stone-800">Fecha: <b className="text-black">{new Date(selectedLog.date).toLocaleDateString('es-ES')}</b></p>
-                    <p className="text-xs text-stone-600 font-mono tracking-tight mt-1">{selectedLog.traceabilityId}</p>
+                  <div className="mt-5 space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                    <p className="text-sm text-stone-800">Lote: <b className="text-black text-base">{getHarvestForLog(selectedLog)?.batchNumber}</b></p>
+                    <p className="text-sm text-stone-800">Fecha: <b className="text-black text-base">{new Date(selectedLog.date).toLocaleDateString('es-ES')}</b></p>
+                    <p className="text-[10px] text-stone-600 font-mono tracking-tight mt-1">{selectedLog.traceabilityId}</p>
                   </div>
                 </div>
 
