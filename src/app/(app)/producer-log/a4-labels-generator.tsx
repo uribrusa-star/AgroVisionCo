@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useContext, useState, useRef } from 'react';
-import Image from 'next/image';
 import QRCode from "react-qr-code";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,17 +13,28 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export function A4LabelsGenerator() {
-  const { collectorPaymentLogs, batches, establishmentData } = useContext(AppDataContext);
+  const { collectorPaymentLogs, harvests, batches, establishmentData } = useContext(AppDataContext);
   const { toast } = useToast();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [activeLog, setActiveLog] = useState<typeof logsWithBatch[0] | null>(null);
   const hiddenLabelRef = useRef<HTMLDivElement>(null);
 
+  const getBatchNumberForLog = (log: { harvestId?: string; batchId?: string }) => {
+    if (log.harvestId) {
+      const harvest = (harvests || []).find(h => h.id === log.harvestId);
+      if (harvest?.batchNumber) return harvest.batchNumber;
+    }
+    if (log.batchId) {
+      const batch = (batches || []).find(b => b.id === log.batchId);
+      if (batch?.batchNumber) return batch.batchNumber;
+    }
+    return 'N/A';
+  };
+
   const logsWithBatch = (collectorPaymentLogs || []).map(log => {
-    const batch = (batches || []).find(b => b.id === log.batchId);
     return {
       ...log,
-      batchNumber: batch?.batchNumber || 'N/A'
+      batchNumber: getBatchNumberForLog(log)
     };
   }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -39,7 +49,7 @@ export function A4LabelsGenerator() {
 
     try {
       // Wait for React to mount the activeLog inside hiddenLabelRef
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       if (hiddenLabelRef.current) {
         const html2canvas = (await import('html2canvas')).default;
@@ -76,70 +86,71 @@ export function A4LabelsGenerator() {
 
   return (
     <>
-      {/* Hidden offscreen label DOM container for html2canvas high-res capture */}
+      {/* Hidden offscreen label DOM container - EXACT COPY of #traceability-label in production-payment-history.tsx */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
         {activeLog && (
           <div 
             ref={hiddenLabelRef}
-            style={{ width: '500px', height: '340px' }}
-            className="p-5 border-2 border-stone-200 rounded-lg shadow-sm bg-white text-stone-800 flex flex-col justify-between relative overflow-hidden shrink-0"
+            id="traceability-label"
+            className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-white"
+            style={{ 
+              width: '500px',
+              minWidth: '500px',
+              height: '340px',
+              minHeight: '340px',
+              color: '#333333',
+            }}
           >
-            {/* Botanical Background Watermark */}
-            <div className="absolute inset-0 pointer-events-none opacity-10 flex items-center justify-center">
-              <Image 
-                src="/botanical-strawberry.png" 
-                alt="Strawberry Botanical Watermark" 
-                width={380} 
-                height={380} 
-                className="object-contain" 
-              />
-            </div>
+            {/* Botanical Background Watermark - standard img tag for html2canvas compatibility */}
+            <img 
+              src="/botanical-strawberry.png" 
+              alt=""
+              className="absolute right-[-12%] top-0 h-full w-[70%] object-contain opacity-25 pointer-events-none z-0"
+              crossOrigin="anonymous"
+            />
 
-            <div className="flex justify-between items-stretch h-full gap-4 relative z-10">
-              {/* Left Column (Brand & Batch Details) */}
-              <div className="flex flex-col justify-between flex-1 pr-2">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Image src="/logo.png" alt="AgroVista Logo" width={28} height={28} className="h-7 w-auto object-contain" />
-                    <div>
-                      <h3 className="text-lg font-bold text-[#2d4a22] leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>AgroVista</h3>
-                      {establishmentData?.location?.locality && (
-                        <p className="text-[10px] text-stone-500 font-medium tracking-wider uppercase">
-                          {establishmentData.location.locality}
-                        </p>
-                      )}
+            {/* Left Column (Data) */}
+            <div className="flex-1 flex flex-col justify-start z-10 pr-4">
+              {/* Header Logo & Name */}
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-3">
+                    <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+                    <div className="flex flex-col justify-center">
+                        <h2 className="text-2xl font-bold tracking-tight text-[#2d4a22]" style={{ fontFamily: "'Inter', sans-serif" }}>AgroVista</h2>
+                        <p className="text-[11px] text-gray-600 tracking-[0.2em] uppercase mt-1">{establishmentData?.location?.locality}</p>
                     </div>
-                  </div>
-
-                  <div className="my-2">
-                    <p className="text-xs text-stone-500 italic">Establecimiento:</p>
-                    <p className="text-xl font-bold text-[#2d4a22]" style={{ fontFamily: "'Playfair Display', serif" }}>
-                      {establishmentData?.producer || 'AgroVista'}
-                    </p>
-                  </div>
-                  
-                  <p className="text-[11px] font-bold text-stone-700 tracking-wider uppercase mt-1">
-                    CONOZCA LA HISTORIA DE SU FRUTILLA
-                  </p>
                 </div>
-
-                <div className="mt-auto space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
-                  <p className="text-sm text-stone-800">Lote: <b className="text-black text-base">{activeLog.batchNumber}</b></p>
-                  <p className="text-sm text-stone-800">Fecha: <b className="text-black text-base">{new Date(activeLog.date).toLocaleDateString('es-ES')}</b></p>
-                  <p className="text-[10px] text-stone-600 font-mono tracking-tight mt-1">{activeLog.traceabilityId}</p>
+                <div className="mt-2">
+                    <p className="text-lg text-stone-600 font-serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Establecimiento:</p>
+                    <h3 className="text-4xl text-[#2d4a22] drop-shadow-sm font-bold leading-none mt-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{establishmentData?.producer}</h3>
                 </div>
               </div>
 
-              {/* Right Column (QR) */}
-              <div className="w-[180px] flex flex-col items-center justify-center z-10 pb-2">
-                <div className="p-2 border-2 border-[#2d4a22] rounded-sm shadow-sm relative bg-white">
-                  <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#2d4a22] -translate-x-1 -translate-y-1"></div>
-                  <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#2d4a22] translate-x-1 -translate-y-1"></div>
-                  <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#2d4a22] -translate-x-1 translate-y-1"></div>
-                  <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#2d4a22] translate-x-1 translate-y-1"></div>
-                  
-                  <QRCode value={`${originUrl}/trace/${activeLog.traceabilityId}`} size={130} bgColor="transparent" />
-                </div>
+              {/* Call to Action Left */}
+              <div className="mt-4 w-[85%]">
+                  <p className="text-[15px] font-bold text-stone-700 uppercase tracking-widest leading-snug text-justify" style={{ fontFamily: "'Inter', sans-serif" }}>
+                      Conozca la historia de su frutilla
+                  </p>
+              </div>
+
+              {/* Batch Data */}
+              <div className="mt-auto space-y-1" style={{ fontFamily: "'Inter', sans-serif" }}>
+                <p className="text-sm text-stone-800">Lote: <b className="text-black text-base">{activeLog.batchNumber}</b></p>
+                <p className="text-sm text-stone-800">Fecha: <b className="text-black text-base">{new Date(activeLog.date).toLocaleDateString('es-ES')}</b></p>
+                <p className="text-[10px] text-stone-600 font-mono tracking-tight mt-1">{activeLog.traceabilityId}</p>
+              </div>
+            </div>
+
+            {/* Right Column (QR) */}
+            <div className="w-[180px] flex flex-col items-center justify-center z-10 pb-2">
+              <div className="p-2 border-2 border-[#2d4a22] rounded-sm shadow-sm relative bg-white">
+                {/* Decorative green corners */}
+                <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#2d4a22] -translate-x-1 -translate-y-1"></div>
+                <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#2d4a22] translate-x-1 -translate-y-1"></div>
+                <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#2d4a22] -translate-x-1 translate-y-1"></div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#2d4a22] translate-x-1 translate-y-1"></div>
+                
+                <QRCode value={`${originUrl}/trace/${activeLog.traceabilityId}`} size={130} bgColor="transparent" />
               </div>
             </div>
           </div>
