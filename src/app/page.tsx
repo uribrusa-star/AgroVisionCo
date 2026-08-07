@@ -96,8 +96,11 @@ export default function LandingPage() {
               </div>
               
               {/* Music Player Popover (Minimalist) */}
-              {showMenu && (
-                <div className="absolute top-full left-0 mt-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm rounded-md p-3 flex flex-col gap-4 min-w-[140px] z-50">
+              <div 
+                className={`absolute top-full left-0 mt-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm rounded-md p-3 flex flex-col gap-4 min-w-[140px] z-50 transition-all duration-500 ease-in-out ${
+                  showMenu ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+                }`}
+              >
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-medium tracking-wider text-stone-500 uppercase">Volumen</span>
                   </div>
@@ -122,7 +125,7 @@ export default function LandingPage() {
                     />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
           <audio 
