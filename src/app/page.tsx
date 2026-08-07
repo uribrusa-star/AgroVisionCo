@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2 } from 'lucide-react';
+import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2, Music } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -82,7 +82,7 @@ export default function LandingPage() {
               onMouseEnter={showMenu ? resetTimeout : undefined}
             >
               <div 
-                className="text-3xl cursor-pointer hover:scale-110 transition-transform flex items-center justify-center w-8 h-8"
+                className="cursor-pointer transition-transform flex items-center justify-center w-8 h-8 animate-float text-green-600 dark:text-green-400"
                 onClick={() => {
                   setIsPlaying(false);
                   setShowMenu(false);
@@ -92,7 +92,7 @@ export default function LandingPage() {
                 }}
                 title="Pausar música"
               >
-                🎵
+                <Music className="w-8 h-8 drop-shadow-sm" />
               </div>
               
               {/* Music Player Popover (Minimalist) */}
