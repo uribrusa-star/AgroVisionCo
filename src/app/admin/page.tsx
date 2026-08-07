@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare } from 'lucide-react';
+import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, getDocs, query, where } from 'firebase/firestore';
@@ -469,7 +469,76 @@ export default function AdminDashboardPage() {
               </CardTitle>
               <CardDescription>Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
+            {/* VISTA MÓVIL: Tarjetas Expandibles */}
+            <div className="md:hidden p-4 space-y-3 bg-stone-50/50">
+              {producers.map((prod) => {
+                const status = prod.subscriptionStatus || 'trial';
+                const statusLabels = {
+                  'active': { label: 'Premium', color: 'bg-green-100 text-green-700' },
+                  'trial': { label: 'Prueba', color: 'bg-blue-100 text-blue-700' },
+                  'past_due': { label: 'Atrasada', color: 'bg-red-100 text-red-700' },
+                  'canceled': { label: 'Cancelada', color: 'bg-stone-100 text-stone-700' },
+                };
+                
+                return (
+                  <details key={prod.id} className="group bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer list-none">
+                      <div>
+                        <div className="font-headline font-semibold text-stone-900">{prod.name}</div>
+                        <div className="text-xs text-stone-500 mt-0.5">ID: {prod.establishmentId || 'N/A'}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`border-0 font-semibold ${statusLabels[status as keyof typeof statusLabels]?.color}`}>
+                          {statusLabels[status as keyof typeof statusLabels]?.label}
+                        </Badge>
+                        <ChevronDown className="h-4 w-4 text-stone-400 group-open:rotate-180 transition-transform" />
+                      </div>
+                    </summary>
+                    <div className="px-4 pb-4 pt-2 border-t border-stone-100 space-y-3 bg-stone-50/50">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-stone-500">Email:</span>
+                        <span className="font-medium text-stone-700 truncate max-w-[200px]">{prod.notificationEmail || prod.email}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-stone-500">Vencimiento:</span>
+                        <span className="font-medium text-stone-700">
+                          {prod.subscriptionExpiryDate 
+                            ? new Date(prod.subscriptionExpiryDate).toLocaleDateString('es-ES') 
+                            : 'No definida'}
+                        </span>
+                      </div>
+                      <div className="pt-2">
+                        <label className="text-xs text-stone-500 mb-1 block">Modificar Estado:</label>
+                        <Select 
+                          defaultValue={status} 
+                          onValueChange={(val) => updateSubscription(prod.id, val)}
+                        >
+                          <SelectTrigger className={`w-full font-semibold focus:ring-0 ${
+                            status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 
+                            status === 'trial' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
+                            status === 'past_due' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-stone-100 text-stone-700 border-stone-200'
+                          }`}>
+                            <SelectValue placeholder="Estado" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="trial" className="text-blue-700 font-medium">Prueba (14 días)</SelectItem>
+                            <SelectItem value="active" className="text-green-700 font-medium">Premium</SelectItem>
+                            <SelectItem value="past_due" className="text-red-700 font-medium">Atrasada</SelectItem>
+                            <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </details>
+                )
+              })}
+              {producers.length === 0 && (
+                <div className="text-center py-8 text-stone-500">No hay productores registrados.</div>
+              )}
+            </div>
+
+            {/* VISTA ESCRITORIO: Tabla */}
+            <CardContent className="hidden md:block p-0 overflow-x-auto">
               <Table className="min-w-[600px]">
                 <TableHeader className="bg-white">
                   <TableRow className="hover:bg-transparent border-stone-100">
