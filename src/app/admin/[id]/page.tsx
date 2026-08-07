@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Tractor, Sprout, Building, ShieldCheck, MapPin, Pickaxe, Package, Activity, Clock, CreditCard, AlertTriangle, CheckCircle2 } from 'lucide-react';
@@ -88,8 +89,8 @@ export default function AdminEstablishmentDetail() {
   const mainProducer = users.find(u => u.role === 'Productor') || users[0];
   const subStatus = mainProducer?.subscriptionStatus || 'active';
   const subLabels = {
-    'active': { text: 'Activa', color: 'text-green-600', bg: 'bg-green-100', icon: CheckCircle2 },
-    'trial': { text: 'Periodo de Prueba', color: 'text-blue-600', bg: 'bg-blue-100', icon: Clock },
+    'active': { text: 'Suscripto', color: 'text-green-600', bg: 'bg-green-100', icon: CheckCircle2 },
+    'trial': { text: 'En prueba', color: 'text-blue-600', bg: 'bg-blue-100', icon: Clock },
     'past_due': { text: 'Atrasada', color: 'text-red-600', bg: 'bg-red-100', icon: AlertTriangle },
     'canceled': { text: 'Cancelada', color: 'text-stone-500', bg: 'bg-stone-200', icon: AlertTriangle },
   };
@@ -120,18 +121,60 @@ export default function AdminEstablishmentDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card className="border-0 shadow-sm border-b-4 border-b-emerald-600">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px]">Plan de Suscripción</CardDescription>
-            <CardTitle className="text-xl font-bold flex items-center gap-2 mt-1">
-              <CreditCard className="h-5 w-5 text-emerald-600" />
-              <Badge className={`${subLabels[subStatus as keyof typeof subLabels]?.bg} ${subLabels[subStatus as keyof typeof subLabels]?.color} shadow-none font-bold border-0`}>
-                <SubIcon className="h-3 w-3 mr-1" />
-                {subLabels[subStatus as keyof typeof subLabels]?.text}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Card className="border-0 shadow-sm border-b-4 border-b-emerald-600 cursor-pointer hover:bg-stone-50 transition-colors group">
+              <CardHeader className="pb-2">
+                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-[10px] group-hover:text-emerald-600 transition-colors">Plan de Suscripción</CardDescription>
+                <CardTitle className="text-xl font-bold flex items-center gap-2 mt-1">
+                  <CreditCard className="h-5 w-5 text-emerald-600" />
+                  <Badge className={`${subLabels[subStatus as keyof typeof subLabels]?.bg} ${subLabels[subStatus as keyof typeof subLabels]?.color} shadow-none font-bold border-0`}>
+                    <SubIcon className="h-3 w-3 mr-1" />
+                    {subLabels[subStatus as keyof typeof subLabels]?.text}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl">
+            <DialogHeader className="pb-4 border-b border-stone-100">
+              <DialogTitle className="flex items-center gap-2 text-xl text-stone-800">
+                <CreditCard className="h-5 w-5 text-emerald-600" />
+                Detalles de Suscripción
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+                <span className="text-sm text-stone-500 font-medium">Estado Actual</span>
+                <Badge className={`${subLabels[subStatus as keyof typeof subLabels]?.bg} ${subLabels[subStatus as keyof typeof subLabels]?.color} shadow-none border-0`}>
+                  {subLabels[subStatus as keyof typeof subLabels]?.text}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+                <span className="text-sm text-stone-500 font-medium">Titular de la Cuenta</span>
+                <span className="text-sm font-semibold text-stone-800">{mainProducer?.name || 'No definido'}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+                <span className="text-sm text-stone-500 font-medium">Correo Electrónico</span>
+                <span className="text-sm font-semibold text-stone-800">{mainProducer?.email || 'No definido'}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+                <span className="text-sm text-stone-500 font-medium">Fecha de Vencimiento</span>
+                <span className="text-sm font-semibold text-stone-800">
+                  {mainProducer?.subscriptionExpiryDate 
+                    ? new Date(mainProducer.subscriptionExpiryDate).toLocaleDateString('es-ES') 
+                    : (subStatus === 'trial' ? 'En 14 días' : 'No definida')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
+                <span className="text-sm text-stone-500 font-medium">ID MercadoPago</span>
+                <span className="text-xs font-mono font-semibold text-stone-800">
+                  {mainProducer?.mercadoPagoSubscriptionId || 'N/A'}
+                </span>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Card className="border-0 shadow-sm border-b-4 border-b-[#2d4a22]">
           <CardHeader className="pb-2">
