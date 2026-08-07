@@ -1307,6 +1307,28 @@ export const generateSubscriptionReceiptPDF = (
   doc.save(`Factura_Suscripcion_${producerName.replace(/\s+/g, "_")}.pdf`);
 };
 
+export const generateA4SheetFromImageDataUrl = (
+  imageDataUrl: string,
+  batchNumber: string | number
+) => {
+  const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+  
+  const labelWidth = 92;
+  const labelHeight = 62.56; // 500:340 aspect ratio
+  const colX = [10, 108];
+  const rowY = [10, 77.5, 145, 212.5];
+
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 2; c++) {
+      const lx = colX[c];
+      const ly = rowY[r];
+      doc.addImage(imageDataUrl, "PNG", lx, ly, labelWidth, labelHeight);
+    }
+  }
+
+  doc.save(`Planilla_8_Etiquetas_Lote_${batchNumber}.pdf`);
+};
+
 export const generateA4TraceabilitySheetPDF = async (
   batchNumber: string | number,
   harvestDate: string,

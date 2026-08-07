@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import type { CollectorPaymentLog } from '@/lib/types';
-import { generateA4TraceabilitySheetPDF } from '@/lib/pdf-generator';
+import { generateA4TraceabilitySheetPDF, generateA4SheetFromImageDataUrl } from '@/lib/pdf-generator';
 
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: any) => jsPDF;
@@ -220,7 +220,7 @@ function ProductionPaymentHistoryComponent() {
     }
   };
 
-  const handlePrintLabel = async (action: 'download' | 'share' = 'download') => {
+  const handlePrintLabel = async (action: 'download' | 'share' | 'a4' = 'download') => {
     if (!labelRef.current) return;
     toast({ title: action === 'share' ? 'Preparando...' : 'Generando Etiqueta', description: 'Por favor espere...' });
     
@@ -247,6 +247,13 @@ function ProductionPaymentHistoryComponent() {
         }
         
         const dataUrl = canvas.toDataURL('image/png');
+        
+        if (action === 'a4') {
+            const batchNum = selectedLog ? getHarvestForLog(selectedLog)?.batchNumber || 'N/A' : 'N/A';
+            generateA4SheetFromImageDataUrl(dataUrl, batchNum);
+            toast({ title: 'Éxito', description: 'Planilla A4 de 8 etiquetas descargada correctamente.' });
+            return;
+        }
         
         if (action === 'share') {
             try {
@@ -588,14 +595,18 @@ function ProductionPaymentHistoryComponent() {
               </div>
               </div>
               </div>
-              <div className="flex gap-2 w-full">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
                 {typeof navigator !== 'undefined' && !!navigator.share && (
-                  <Button onClick={() => handlePrintLabel('share')} variant="outline" className="flex-1 border-[#2d4a22] text-[#2d4a22] hover:bg-[#2d4a22] hover:text-white transition-colors">
-                    Compartir Etiqueta
+                  <Button onClick={() => handlePrintLabel('share')} variant="outline" className="flex-1 border-[#2d4a22] text-[#2d4a22] hover:bg-[#2d4a22] hover:text-white transition-colors text-xs">
+                    Compartir (PNG)
                   </Button>
                 )}
-                <Button onClick={() => handlePrintLabel('download')} className="flex-1 bg-[#2d4a22] hover:bg-[#1f3317] text-white">
+                <Button onClick={() => handlePrintLabel('download')} variant="outline" className="flex-1 border-stone-300 text-stone-800 hover:bg-stone-100 text-xs">
                   Descargar (PNG)
+                </Button>
+                <Button onClick={() => handlePrintLabel('a4')} className="flex-1 bg-[#2d4a22] hover:bg-[#1f3317] text-white text-xs font-semibold">
+                  <QrCode className="h-4 w-4 mr-1" />
+                  Planilla A4 (8x)
                 </Button>
               </div>
             </div>
