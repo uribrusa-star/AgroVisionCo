@@ -83,7 +83,7 @@ function MonthlyHarvestChartComponent({ harvests }: { harvests: Harvest[] }) {
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col justify-between">
       <CardHeader>
         <CardTitle>Cosecha Mensual</CardTitle>
         <CardDescription>Total de kilogramos cosechados por mes.</CardDescription>

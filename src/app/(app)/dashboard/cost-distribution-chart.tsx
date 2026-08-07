@@ -169,7 +169,7 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col justify-between">
       <CardHeader>
         <CardTitle>Distribución de Costos</CardTitle>
         <CardDescription>Desglose de los costos operativos totales registrados.</CardDescription>

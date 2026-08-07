@@ -86,7 +86,7 @@ export function ProfitabilityTrendChart() {
   }
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="h-full flex flex-col justify-between">
       <CardHeader>
         <CardTitle>Tendencia de Rentabilidad</CardTitle>
         <CardDescription>Evolución del margen neto mensual en Pesos Argentinos.</CardDescription>

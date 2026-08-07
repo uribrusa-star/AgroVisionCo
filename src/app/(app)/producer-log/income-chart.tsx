@@ -73,7 +73,7 @@ function IncomeChartComponent({ transactions }: { transactions: Transaction[] })
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col justify-between">
       <CardHeader>
         <CardTitle>Ingresos Mensuales</CardTitle>
         <CardDescription>Total de ingresos (ventas) registrados por mes.</CardDescription>

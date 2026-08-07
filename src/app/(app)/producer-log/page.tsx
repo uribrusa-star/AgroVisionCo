@@ -138,15 +138,19 @@ export default function ProducerLogPage() {
             </Card>
         </div>
 
-        {/* Fila 2: Tendencia de Rentabilidad */}
-        <div className="w-full">
-            <ProfitabilityTrendChart />
+        {/* Fila 2: Tendencia de Rentabilidad (2 cols) + Distribución de Costos (1 col) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+                <ProfitabilityTrendChart />
+            </div>
+            <div className="lg:col-span-1">
+                <CostDistributionChart />
+            </div>
         </div>
 
-        {/* Fila 3: Gráficos circulares y de barras (3 columnas) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Fila 3: Ingresos Mensuales (1 col) + Cosecha Mensual (1 col) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <IncomeChart transactions={transactions} />
-            <CostDistributionChart />
             <MonthlyHarvestChart harvests={harvests} />
         </div>
 
