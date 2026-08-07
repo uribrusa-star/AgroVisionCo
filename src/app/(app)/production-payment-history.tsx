@@ -496,7 +496,7 @@ function ProductionPaymentHistoryComponent() {
                   <div 
                     ref={labelRef} 
                     id="traceability-label"
-                    className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
+                    className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-white"
                   style={{ 
                     width: '500px',
                     minWidth: '500px',
@@ -526,7 +526,7 @@ function ProductionPaymentHistoryComponent() {
                     </div>
                     <div className="mt-2">
                         <p className="text-lg text-stone-600 font-serif" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Establecimiento:</p>
-                        <h3 className="text-4xl text-[#a67c00] drop-shadow-sm font-bold leading-none mt-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{establishmentData?.producer}</h3>
+                        <h3 className="text-4xl text-[#2d4a22] drop-shadow-sm font-bold leading-none mt-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{establishmentData?.producer}</h3>
                     </div>
                   </div>
 
@@ -547,12 +547,12 @@ function ProductionPaymentHistoryComponent() {
 
                 {/* Right Column (QR) */}
                 <div className="w-[180px] flex flex-col items-center justify-center z-10 pb-2">
-                  <div className="p-2 border-2 border-[#a67c00] rounded-sm shadow-sm relative">
-                    {/* Decorative gold corners */}
-                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#a67c00] -translate-x-1 -translate-y-1"></div>
-                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#a67c00] translate-x-1 -translate-y-1"></div>
-                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#a67c00] -translate-x-1 translate-y-1"></div>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#a67c00] translate-x-1 translate-y-1"></div>
+                  <div className="p-2 border-2 border-[#2d4a22] rounded-sm shadow-sm relative">
+                    {/* Decorative green corners */}
+                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#2d4a22] -translate-x-1 -translate-y-1"></div>
+                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#2d4a22] translate-x-1 -translate-y-1"></div>
+                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#2d4a22] -translate-x-1 translate-y-1"></div>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#2d4a22] translate-x-1 translate-y-1"></div>
                     
                     <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={130} bgColor="transparent" />
                   </div>
