@@ -204,20 +204,10 @@ function ProductionPaymentHistoryComponent() {
 
   const handleGenerateA4Sheet = async () => {
     if (!selectedLog) return;
-    try {
-      toast({ title: "Generando Planilla A4", description: "Preparando hoja con 8 etiquetas..." });
-      await generateA4TraceabilitySheetPDF(
-        getHarvestForLog(selectedLog)?.batchNumber || 'N/A',
-        selectedLog.date,
-        selectedLog.traceabilityId,
-        establishmentData?.producer || 'AgroVista',
-        establishmentData?.location?.locality || '',
-        '/logo.png'
-      );
-      toast({ title: "Éxito", description: "Planilla A4 descargada correctamente." });
-    } catch {
-      toast({ title: "Error", description: "No se pudo generar la planilla A4.", variant: "destructive" });
-    }
+    setIsLabelOpen(true);
+    setTimeout(() => {
+      handlePrintLabel('a4');
+    }, 200);
   };
 
   const handlePrintLabel = async (action: 'download' | 'share' | 'a4' = 'download') => {
