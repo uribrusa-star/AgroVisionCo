@@ -415,17 +415,20 @@ function ProductionPaymentHistoryComponent() {
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
-              <div 
-                ref={labelRef} 
-                className="relative overflow-hidden p-6 rounded-md border-2 border-stone-300 shadow-md flex"
-                style={{ 
-                  backgroundColor: '#F7F4EB', // Beige/cream paper color
-                  width: '500px',
-                  height: '320px',
-                  color: '#333333',
-                  backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
-                }}
-              >
+              <div className="w-full overflow-x-auto pb-2 flex justify-start sm:justify-center">
+                <div 
+                  ref={labelRef} 
+                  className="relative overflow-hidden p-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0"
+                  style={{ 
+                    backgroundColor: '#F7F4EB', // Beige/cream paper color
+                    width: '500px',
+                    minWidth: '500px',
+                    height: '320px',
+                    minHeight: '320px',
+                    color: '#333333',
+                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100\' height=\'100\' filter=\'url(%23noise)\' opacity=\'0.08\'/%3E%3C/svg%3E")',
+                  }}
+                >
                 {/* Botanical Background Watermark */}
                 <div 
                   className="absolute right-0 top-0 bottom-0 w-[65%] opacity-35 pointer-events-none"
@@ -486,6 +489,7 @@ function ProductionPaymentHistoryComponent() {
                     Y descubrí su historia,<br/>desde la flor hasta tu mesa.
                   </p>
                 </div>
+              </div>
               </div>
               <Button onClick={handlePrintLabel} className="w-full">Descargar Etiqueta (PNG)</Button>
             </div>
