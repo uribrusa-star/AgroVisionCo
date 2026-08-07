@@ -3,15 +3,18 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import type { EstablishmentData } from '@/lib/types';
+import { collection, onSnapshot, doc, updateDoc, getDocs, query, where } from 'firebase/firestore';
+import type { EstablishmentData, User } from '@/lib/types';
 
 export default function AdminDashboardPage() {
   const { currentUser } = useContext(AppDataContext);
@@ -19,35 +22,45 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   
   const [establishments, setEstablishments] = useState<EstablishmentData[]>([]);
+  const [producers, setProducers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'SuperAdmin') return;
     
-    // Subscribe to all establishments in real-time
-    const unsubscribe = onSnapshot(collection(db, 'establishment'), (snapshot) => {
+    // Subscribe to establishments
+    const unsubscribeEst = onSnapshot(collection(db, 'establishment'), (snapshot) => {
       const ests: EstablishmentData[] = [];
       snapshot.forEach((doc) => {
-        // Only include those that look like establishments
         const data = doc.data() as EstablishmentData;
         if (data.producer) {
           ests.push({ ...data, id: doc.id });
         }
       });
       setEstablishments(ests);
-      setLoading(false);
     }, (error) => {
       console.error("Error fetching establishments:", error);
-      toast({
-        title: "Error de Sincronizaci贸n",
-        description: "No se pudieron cargar los establecimientos.",
-        variant: "destructive",
+    });
+
+    // Subscribe to producers for finance
+    const qProducers = query(collection(db, 'users'), where('role', '==', 'Productor'));
+    const unsubscribeProd = onSnapshot(qProducers, (snapshot) => {
+      const prods: User[] = [];
+      snapshot.forEach((doc) => {
+        prods.push({ ...doc.data(), id: doc.id } as User);
       });
+      setProducers(prods);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching producers:", error);
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [currentUser, toast]);
+    return () => {
+      unsubscribeEst();
+      unsubscribeProd();
+    };
+  }, [currentUser]);
 
   const toggleGoodPractices = async (id: string, currentValue: boolean | undefined) => {
     const newValue = !currentValue;
@@ -57,19 +70,14 @@ export default function AdminDashboardPage() {
       });
       toast({
         title: newValue ? "Sello Otorgado" : "Sello Revocado",
-        description: `Se ha ${newValue ? 'aprobado' : 'retirado'} el Sello de Buenas Pr谩cticas Agr铆colas.`,
+        description: `Se ha ${newValue ? 'aprobado' : 'retirado'} el Sello de Buenas Pr醕ticas Agr韈olas.`,
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el Sello.",
-        variant: "destructive"
-      });
+      toast({ title: "Error", description: "No se pudo actualizar el Sello.", variant: "destructive" });
     }
   };
 
   const toggleActiveStatus = async (id: string, currentValue: boolean | undefined) => {
-    // If undefined, we assume it was active by default
     const newValue = currentValue === undefined ? false : !currentValue;
     try {
       await updateDoc(doc(db, 'establishment', id), {
@@ -81,11 +89,29 @@ export default function AdminDashboardPage() {
         variant: newValue ? 'default' : 'destructive',
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el estado.",
-        variant: "destructive"
+      toast({ title: "Error", description: "No se pudo actualizar el estado.", variant: "destructive" });
+    }
+  };
+
+  const updateSubscription = async (userId: string, newStatus: string) => {
+    try {
+      let expiryDate = new Date();
+      if (newStatus === 'trial') {
+        expiryDate.setDate(expiryDate.getDate() + 14); // +14 days for trial
+      } else if (newStatus === 'active') {
+        expiryDate.setMonth(expiryDate.getMonth() + 1); // +1 month for premium
+      }
+
+      await updateDoc(doc(db, 'users', userId), {
+        subscriptionStatus: newStatus,
+        subscriptionExpiryDate: expiryDate.toISOString()
       });
+      toast({
+        title: "Suscripci髇 Actualizada",
+        description: `El plan ha sido cambiado a ${newStatus === 'active' ? 'Premium' : newStatus === 'trial' ? 'Prueba' : newStatus}.`,
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo actualizar la suscripci髇.", variant: "destructive" });
     }
   };
 
@@ -93,164 +119,249 @@ export default function AdminDashboardPage() {
     return <div className="p-8 text-center text-stone-500 animate-pulse">Cargando plataforma...</div>;
   }
 
+  // Finance Metrics
+  const subPrice = 80000;
+  const activeCount = producers.filter(p => p.subscriptionStatus === 'active').length;
+  const trialCount = producers.filter(p => p.subscriptionStatus === 'trial' || !p.subscriptionStatus).length;
+  const mrr = activeCount * subPrice;
+
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in duration-500">
+    <div className="space-y-6 animate-in fade-in zoom-in duration-500 pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-headline font-bold text-stone-900 tracking-tight">Panel de Control Central</h1>
-          <p className="text-stone-500 mt-1">Gesti贸n global y certificaci贸n de establecimientos AgroVista</p>
+          <p className="text-stone-500 mt-1">Gesti髇 global, finanzas y certificaci髇 de establecimientos AgroVista</p>
         </div>
       </div>
 
-      <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
-        <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Building className="h-6 w-6 text-[#2d4a22]" />
-            Directorio de Clientes
-          </CardTitle>
-          <CardDescription>Administra los accesos y emite Sellos de Buenas Pr谩cticas (BPA).</CardDescription>
-        </CardHeader>
-        
-        {/* VISTA M脫VIL: Tarjetas en lugar de tabla */}
-        <div className="md:hidden p-4 space-y-4 bg-stone-50/50">
-          {establishments.length === 0 ? (
-            <p className="text-center text-stone-500 py-4">No hay establecimientos registrados.</p>
-          ) : (
-            establishments.map((est) => {
-              const isActive = est.isActive ?? true;
-              const hasSeal = est.hasGoodPracticesSeal ?? false;
-              
-              return (
-                <Card key={est.id} className="border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow relative">
-                  <div className={`h-1.5 w-full ${isActive ? 'bg-[#2d4a22]' : 'bg-red-500'}`} />
-                  <CardHeader className="pb-2 cursor-pointer hover:bg-stone-50/50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
-                    <CardTitle className="text-lg font-headline truncate hover:text-[#2d4a22] transition-colors">{est.producer}</CardTitle>
-                    <CardDescription className="flex flex-col gap-1 mt-1">
-                      <span className="flex items-center gap-1.5 text-stone-600">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {est.location?.locality}, {est.location?.province}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-stone-600">
-                        <UserIcon className="h-3.5 w-3.5" />
-                        {est.technicalManager}
-                      </span>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-4 pt-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Sello BPA Control */}
-                      <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 border border-stone-100 gap-3">
-                        <Badge variant={hasSeal ? "default" : "outline"} className={`w-full justify-center py-1 ${hasSeal ? "bg-green-600 hover:bg-green-700 shadow-sm" : ""}`}>
-                          {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1.5"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1.5"/>}
-                          {hasSeal ? 'Certificado' : 'Sin Sello'}
-                        </Badge>
-                        <Switch 
-                          checked={hasSeal}
-                          onCheckedChange={() => toggleGoodPractices(est.id, hasSeal)}
-                          className="data-[state=checked]:bg-green-600"
-                        />
-                      </div>
-                      
-                      {/* Estado Control */}
-                      <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 border border-stone-100 gap-3">
-                         <Badge variant={isActive ? "default" : "destructive"} className={`w-full justify-center py-1 ${isActive ? "bg-[#2d4a22] hover:bg-[#1a2d13] shadow-sm" : ""}`}>
-                          {isActive ? <Power className="h-3.5 w-3.5 mr-1.5"/> : <PowerOff className="h-3.5 w-3.5 mr-1.5"/>}
-                          {isActive ? 'Activo' : 'Suspendido'}
-                        </Badge>
-                        <Switch 
-                          checked={isActive}
-                          onCheckedChange={() => toggleActiveStatus(est.id, isActive)}
-                          className="data-[state=checked]:bg-[#2d4a22]"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })
-          )}
-        </div>
+      <Tabs defaultValue="directory" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
+          <TabsTrigger value="directory" className="flex items-center gap-2">
+            <Building className="h-4 w-4" /> Directorio
+          </TabsTrigger>
+          <TabsTrigger value="finance" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" /> Finanzas
+          </TabsTrigger>
+        </TabsList>
 
-        {/* VISTA ESCRITORIO: Tabla elegante */}
-        <CardContent className="hidden md:block p-0">
-          <Table>
-            <TableHeader className="bg-white">
-              <TableRow className="hover:bg-transparent border-stone-100">
-                <TableHead className="py-4 pl-6 font-semibold text-stone-600">Establecimiento / Productor</TableHead>
-                <TableHead className="py-4 font-semibold text-stone-600">Ubicaci贸n</TableHead>
-                <TableHead className="py-4 font-semibold text-stone-600">Encargado T茅cnico</TableHead>
-                <TableHead className="py-4 text-center font-semibold text-stone-600 w-40">Sello BPA</TableHead>
-                <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 w-40">Estado de Cuenta</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        <TabsContent value="directory" className="mt-0">
+          <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
+            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Building className="h-6 w-6 text-[#2d4a22]" />
+                Directorio de Clientes
+              </CardTitle>
+              <CardDescription>Administra los accesos y emite Sellos de Buenas Pr醕ticas (BPA).</CardDescription>
+            </CardHeader>
+            
+            {/* VISTA M覸IL: Tarjetas */}
+            <div className="md:hidden p-4 space-y-4 bg-stone-50/50">
               {establishments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-stone-500">
-                    No hay establecimientos registrados.
-                  </TableCell>
-                </TableRow>
+                <p className="text-center text-stone-500 py-4">No hay establecimientos registrados.</p>
               ) : (
                 establishments.map((est) => {
                   const isActive = est.isActive ?? true;
                   const hasSeal = est.hasGoodPracticesSeal ?? false;
                   
                   return (
-                    <TableRow key={est.id} className="transition-colors hover:bg-stone-50/50 group cursor-pointer" onClick={(e) => {
-                      // Prevent navigation if clicking on switches
-                      if ((e.target as HTMLElement).closest('.switch-container')) return;
-                      router.push(`/admin/${est.id}`);
-                    }}>
-                      <TableCell className="pl-6 py-4">
-                        <div className="font-headline font-semibold text-stone-900">{est.producer}</div>
-                        <div className="text-xs text-stone-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">ID: {est.id}</div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="flex items-center text-stone-600">
-                          <MapPin className="h-3.5 w-3.5 mr-1.5 text-stone-400" />
-                          {est.location?.locality}, {est.location?.province}
+                    <Card key={est.id} className="border-stone-200 overflow-hidden shadow-sm relative">
+                      <div className={`h-1.5 w-full ${isActive ? 'bg-[#2d4a22]' : 'bg-red-500'}`} />
+                      <CardHeader className="pb-2 cursor-pointer hover:bg-stone-50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
+                        <CardTitle className="text-lg font-headline truncate">{est.producer}</CardTitle>
+                        <CardDescription className="flex flex-col gap-1 mt-1">
+                          <span className="flex items-center gap-1.5 text-stone-600">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {est.location?.locality}, {est.location?.province}
+                          </span>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-4 pt-2">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 border border-stone-100 gap-3">
+                            <Badge variant={hasSeal ? "default" : "outline"} className={`w-full justify-center py-1 ${hasSeal ? "bg-green-600 shadow-sm" : ""}`}>
+                              {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1.5"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1.5"/>}
+                              {hasSeal ? 'Certificado' : 'Sin Sello'}
+                            </Badge>
+                            <Switch checked={hasSeal} onCheckedChange={() => toggleGoodPractices(est.id, hasSeal)} className="data-[state=checked]:bg-green-600" />
+                          </div>
+                          
+                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 border border-stone-100 gap-3">
+                             <Badge variant={isActive ? "default" : "destructive"} className={`w-full justify-center py-1 ${isActive ? "bg-[#2d4a22] shadow-sm" : ""}`}>
+                              {isActive ? <Power className="h-3.5 w-3.5 mr-1.5"/> : <PowerOff className="h-3.5 w-3.5 mr-1.5"/>}
+                              {isActive ? 'Activo' : 'Suspendido'}
+                            </Badge>
+                            <Switch checked={isActive} onCheckedChange={() => toggleActiveStatus(est.id, isActive)} className="data-[state=checked]:bg-[#2d4a22]" />
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="py-4">
-                        <div className="flex items-center text-stone-700 font-medium">
-                          <UserIcon className="h-3.5 w-3.5 mr-1.5 text-stone-400" />
-                          {est.technicalManager}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 text-center switch-container">
-                        <div className="flex flex-col items-center gap-2">
-                          <Badge variant={hasSeal ? "default" : "outline"} className={`transition-all duration-300 ${hasSeal ? "bg-green-600 hover:bg-green-700 shadow-sm" : "bg-transparent"}`}>
-                            {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1 text-stone-400"/>}
-                            {hasSeal ? 'Certificado' : 'Sin Sello'}
-                          </Badge>
-                          <Switch 
-                            checked={hasSeal}
-                            onCheckedChange={() => toggleGoodPractices(est.id, hasSeal)}
-                            className="data-[state=checked]:bg-green-600"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="pr-6 py-4 text-center switch-container">
-                        <div className="flex flex-col items-center gap-2">
-                           <Badge variant={isActive ? "default" : "destructive"} className={`transition-all duration-300 ${isActive ? "bg-[#2d4a22] hover:bg-[#1a2d13] shadow-sm" : ""}`}>
-                            {isActive ? <Power className="h-3.5 w-3.5 mr-1"/> : <PowerOff className="h-3.5 w-3.5 mr-1"/>}
-                            {isActive ? 'Habilitado' : 'Suspendido'}
-                          </Badge>
-                          <Switch 
-                            checked={isActive}
-                            onCheckedChange={() => toggleActiveStatus(est.id, isActive)}
-                            className="data-[state=checked]:bg-[#2d4a22]"
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                      </CardContent>
+                    </Card>
                   )
                 })
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            </div>
+
+            {/* VISTA ESCRITORIO: Tabla elegante */}
+            <CardContent className="hidden md:block p-0">
+              <Table>
+                <TableHeader className="bg-white">
+                  <TableRow className="hover:bg-transparent border-stone-100">
+                    <TableHead className="py-4 pl-6 font-semibold text-stone-600">Establecimiento / Productor</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600">Ubicaci髇</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600">Encargado T閏nico</TableHead>
+                    <TableHead className="py-4 text-center font-semibold text-stone-600 w-40">Sello BPA</TableHead>
+                    <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 w-40">Estado de Cuenta</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {establishments.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center py-12 text-stone-500">No hay establecimientos registrados.</TableCell></TableRow>
+                  ) : (
+                    establishments.map((est) => {
+                      const isActive = est.isActive ?? true;
+                      const hasSeal = est.hasGoodPracticesSeal ?? false;
+                      return (
+                        <TableRow key={est.id} className="transition-colors hover:bg-stone-50/50 group cursor-pointer" onClick={(e) => {
+                          if ((e.target as HTMLElement).closest('.switch-container')) return;
+                          router.push(`/admin/${est.id}`);
+                        }}>
+                          <TableCell className="pl-6 py-4">
+                            <div className="font-headline font-semibold text-stone-900">{est.producer}</div>
+                            <div className="text-xs text-stone-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">ID: {est.id}</div>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="flex items-center text-stone-600"><MapPin className="h-3.5 w-3.5 mr-1.5 text-stone-400" />{est.location?.locality}, {est.location?.province}</div>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="flex items-center text-stone-700 font-medium"><UserIcon className="h-3.5 w-3.5 mr-1.5 text-stone-400" />{est.technicalManager}</div>
+                          </TableCell>
+                          <TableCell className="py-4 text-center switch-container">
+                            <div className="flex flex-col items-center gap-2">
+                              <Badge variant={hasSeal ? "default" : "outline"} className={`transition-all duration-300 ${hasSeal ? "bg-green-600 hover:bg-green-700 shadow-sm" : "bg-transparent"}`}>
+                                {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1 text-stone-400"/>}
+                                {hasSeal ? 'Certificado' : 'Sin Sello'}
+                              </Badge>
+                              <Switch checked={hasSeal} onCheckedChange={() => toggleGoodPractices(est.id, hasSeal)} className="data-[state=checked]:bg-green-600" />
+                            </div>
+                          </TableCell>
+                          <TableCell className="pr-6 py-4 text-center switch-container">
+                            <div className="flex flex-col items-center gap-2">
+                               <Badge variant={isActive ? "default" : "destructive"} className={`transition-all duration-300 ${isActive ? "bg-[#2d4a22] hover:bg-[#1a2d13] shadow-sm" : ""}`}>
+                                {isActive ? <Power className="h-3.5 w-3.5 mr-1"/> : <PowerOff className="h-3.5 w-3.5 mr-1"/>}
+                                {isActive ? 'Habilitado' : 'Suspendido'}
+                              </Badge>
+                              <Switch checked={isActive} onCheckedChange={() => toggleActiveStatus(est.id, isActive)} className="data-[state=checked]:bg-[#2d4a22]" />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="finance" className="mt-0 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="border-0 shadow-sm border-b-4 border-b-emerald-600">
+              <CardHeader className="pb-2">
+                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">MRR (Ingresos Mensuales)</CardDescription>
+                <CardTitle className="text-3xl font-bold text-emerald-600 flex items-center gap-2">
+                  <DollarSign className="h-6 w-6 opacity-70" /> 
+                  ${mrr.toLocaleString('es-AR')} ARS
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-0 shadow-sm border-b-4 border-b-blue-600">
+              <CardHeader className="pb-2">
+                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Usuarios Activos (Premium)</CardDescription>
+                <CardTitle className="text-3xl font-bold text-blue-600 flex items-center gap-2">
+                  <CheckCircle2 className="h-6 w-6 opacity-70" /> 
+                  {activeCount}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-0 shadow-sm border-b-4 border-b-amber-500">
+              <CardHeader className="pb-2">
+                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">En Periodo de Prueba</CardDescription>
+                <CardTitle className="text-3xl font-bold text-amber-500 flex items-center gap-2">
+                  <Clock className="h-6 w-6 opacity-70" /> 
+                  {trialCount}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+
+          <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
+            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <DollarSign className="h-6 w-6 text-emerald-600" />
+                Gesti髇 de Suscripciones
+              </CardTitle>
+              <CardDescription>Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader className="bg-white">
+                  <TableRow className="hover:bg-transparent border-stone-100">
+                    <TableHead className="py-4 pl-6 font-semibold text-stone-600">Productor Titular</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600">Email de Contacto</TableHead>
+                    <TableHead className="py-4 text-center font-semibold text-stone-600">Vencimiento</TableHead>
+                    <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 w-48">Plan / Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {producers.map((prod) => {
+                    const status = prod.subscriptionStatus || 'trial';
+                    
+                    return (
+                      <TableRow key={prod.id} className="transition-colors hover:bg-stone-50/50">
+                        <TableCell className="pl-6 py-4">
+                          <div className="font-headline font-semibold text-stone-900">{prod.name}</div>
+                          <div className="text-xs text-stone-500 mt-0.5">Establecimiento ID: {prod.establishmentId || 'N/A'}</div>
+                        </TableCell>
+                        <TableCell className="py-4 text-stone-600 text-sm">
+                          {prod.email}
+                        </TableCell>
+                        <TableCell className="py-4 text-center">
+                          <span className="text-sm font-medium text-stone-700">
+                            {prod.subscriptionExpiryDate 
+                              ? new Date(prod.subscriptionExpiryDate).toLocaleDateString('es-ES') 
+                              : 'No definida'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="pr-6 py-4 text-center">
+                          <Select 
+                            defaultValue={status} 
+                            onValueChange={(val) => updateSubscription(prod.id, val)}
+                          >
+                            <SelectTrigger className={`w-full font-semibold border-0 ring-0 focus:ring-0 ${
+                              status === 'active' ? 'bg-green-100 text-green-700' : 
+                              status === 'trial' ? 'bg-blue-100 text-blue-700' : 
+                              status === 'past_due' ? 'bg-red-100 text-red-700' : 'bg-stone-100 text-stone-700'
+                            }`}>
+                              <SelectValue placeholder="Estado" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="trial" className="text-blue-700 font-medium">Prueba (14 d韆s)</SelectItem>
+                              <SelectItem value="active" className="text-green-700 font-medium">Premium</SelectItem>
+                              <SelectItem value="past_due" className="text-red-700 font-medium">Atrasada</SelectItem>
+                              <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
