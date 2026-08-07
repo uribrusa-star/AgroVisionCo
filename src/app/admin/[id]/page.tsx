@@ -155,8 +155,8 @@ export default function AdminEstablishmentDetail() {
                 <span className="text-sm font-semibold text-stone-800">{mainProducer?.name || 'No definido'}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
-                <span className="text-sm text-stone-500 font-medium">Correo Electrónico</span>
-                <span className="text-sm font-semibold text-stone-800">{mainProducer?.email || 'No definido'}</span>
+                <span className="text-sm text-stone-500 font-medium">Correo de Contacto</span>
+                <span className="text-sm font-semibold text-stone-800">{mainProducer?.notificationEmail || mainProducer?.email || 'No definido'}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-stone-50 rounded-lg">
                 <span className="text-sm text-stone-500 font-medium">Fecha de Vencimiento</span>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -324,7 +324,7 @@ export default function AdminDashboardPage() {
                           <div className="text-xs text-stone-500 mt-0.5">Establecimiento ID: {prod.establishmentId || 'N/A'}</div>
                         </TableCell>
                         <TableCell className="py-4 text-stone-600 text-sm">
-                          {prod.email}
+                          {prod.notificationEmail || prod.email}
                         </TableCell>
                         <TableCell className="py-4 text-center">
                           <span className="text-sm font-medium text-stone-700">
