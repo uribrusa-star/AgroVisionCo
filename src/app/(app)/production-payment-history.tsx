@@ -423,10 +423,11 @@ function ProductionPaymentHistoryComponent() {
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
-              <div className="w-full overflow-x-auto pb-4 flex justify-start sm:justify-center">
-                <div 
-                  ref={labelRef} 
-                  className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
+              <div className="w-full max-w-full overflow-x-auto pb-4 flex justify-start sm:justify-center rounded-md">
+                <div className="inline-flex">
+                  <div 
+                    ref={labelRef} 
+                    className="relative overflow-hidden px-6 pt-4 pb-6 rounded-md border-2 border-stone-300 shadow-md flex shrink-0 bg-[#F7F4EB]"
                   style={{ 
                     width: '500px',
                     minWidth: '500px',
@@ -487,6 +488,7 @@ function ProductionPaymentHistoryComponent() {
                     <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={130} bgColor="transparent" />
                   </div>
                 </div>
+              </div>
               </div>
               </div>
               <div className="flex gap-2 w-full">
