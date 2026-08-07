@@ -207,14 +207,36 @@ function ProductionPaymentHistoryComponent() {
         }
 
         if (action === 'download') {
-            const link = document.createElement('a');
-            link.download = `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             
-            toast({ title: 'Éxito', description: 'Etiqueta descargada correctamente.' });
+            if (isIOS) {
+                // iOS heavily restricts programmatic downloads via a-tags for data URIs.
+                // The most reliable fallback is to open it in a new tab or prompt the user.
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <html>
+                            <head><title>Etiqueta AgroVista</title></head>
+                            <body style="margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background-color:#f3f4f6;font-family:sans-serif;">
+                                <p style="padding:20px;text-align:center;color:#4b5563;">Mantén presionada la imagen para guardarla en Fotos.</p>
+                                <img src="${dataUrl}" style="max-width:90%;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);" />
+                            </body>
+                        </html>
+                    `);
+                    toast({ title: 'Éxito', description: 'Mantén presionada la imagen en la nueva pestaña para guardarla.' });
+                } else {
+                     toast({ title: 'Aviso', description: 'Tu navegador bloqueó la ventana emergente. Intenta usar el botón Compartir y selecciona "Guardar Imagen".' });
+                }
+            } else {
+                const link = document.createElement('a');
+                link.download = `etiqueta_${selectedLog?.collectorName || 'trazabilidad'}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                toast({ title: 'Éxito', description: 'Etiqueta descargada correctamente.' });
+            }
         }
     } catch (e) {
         console.error("Label generation failed", e);
