@@ -15,9 +15,9 @@ export default function LandingPage() {
   const router = useRouter();
   
   // Easter egg state
-  const [isMusicMode, setIsMusicMode] = React.useState(false);
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [volume, setVolume] = React.useState(0.3); // 30% default volume
+  const [showMenu, setShowMenu] = React.useState(false);
+  const [volume, setVolume] = React.useState(0.15); // 15% default volume
   const audioRef = React.useRef<HTMLAudioElement>(null);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -33,12 +33,12 @@ export default function LandingPage() {
       clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = setTimeout(() => {
-      setIsMusicMode(false);
+      setShowMenu(false);
     }, 10000);
   }, []);
 
   useEffect(() => {
-    if (isMusicMode) {
+    if (showMenu) {
       resetTimeout();
     } else {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -46,7 +46,7 @@ export default function LandingPage() {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [isMusicMode, resetTimeout]);
+  }, [showMenu, resetTimeout]);
 
   useEffect(() => {
     if (currentUser) {
@@ -59,83 +59,78 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="px-6 py-4 flex items-center justify-between border-b dark:border-green-800 bg-background/95 dark:bg-green-950/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex items-center gap-2 relative">
-          {!isMusicMode ? (
+          {!isPlaying ? (
             <Image 
               src="/logo.png" 
               alt="AgroVista Logo" 
               width={32} 
               height={32} 
               className="cursor-pointer transition-transform hover:scale-105"
-              onClick={() => setIsMusicMode(true)}
-              title="Click here for a surprise"
+              onClick={() => {
+                setIsPlaying(true);
+                setShowMenu(true);
+                if (audioRef.current) {
+                  audioRef.current.play();
+                }
+              }}
+              title="Reproducir música"
             />
           ) : (
             <div 
               className="relative group"
-              onMouseMove={resetTimeout}
-              onMouseEnter={resetTimeout}
+              onMouseMove={showMenu ? resetTimeout : undefined}
+              onMouseEnter={showMenu ? resetTimeout : undefined}
             >
               <div 
                 className="text-3xl cursor-pointer hover:scale-110 transition-transform flex items-center justify-center w-8 h-8"
-                onClick={() => setIsMusicMode(false)}
+                onClick={() => {
+                  setIsPlaying(false);
+                  setShowMenu(false);
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                  }
+                }}
+                title="Pausar música"
               >
-                🎶
+                🎵
               </div>
               
               {/* Music Player Popover (Minimalist) */}
-              <div className="absolute top-full left-0 mt-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm rounded-md p-3 flex flex-col gap-4 min-w-[140px] z-50">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-medium tracking-wider text-stone-500 uppercase">Fondo</span>
-                  <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => {
+              {showMenu && (
+                <div className="absolute top-full left-0 mt-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm rounded-md p-3 flex flex-col gap-4 min-w-[140px] z-50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-medium tracking-wider text-stone-500 uppercase">Volumen</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-3 w-3 text-stone-400" />
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="1" 
+                      step="0.01" 
+                      value={volume}
+                      onChange={(e) => {
+                        const newVol = parseFloat(e.target.value);
+                        setVolume(newVol);
                         if (audioRef.current) {
-                          if (isPlaying) {
-                            audioRef.current.pause();
-                            setIsPlaying(false);
-                          } else {
-                            audioRef.current.play();
-                            setIsPlaying(true);
-                          }
+                          audioRef.current.volume = newVol;
                         }
                         resetTimeout();
                       }}
-                      className="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors"
-                      title={isPlaying ? "Pausar" : "Reproducir"}
-                    >
-                      {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    </button>
+                      className="w-full accent-stone-700 dark:accent-stone-400 h-1 bg-stone-200 dark:bg-stone-800 rounded-lg appearance-none cursor-pointer"
+                    />
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <Volume2 className="h-3 w-3 text-stone-400" />
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="1" 
-                    step="0.01" 
-                    value={volume}
-                    onChange={(e) => {
-                      const newVol = parseFloat(e.target.value);
-                      setVolume(newVol);
-                      if (audioRef.current) {
-                        audioRef.current.volume = newVol;
-                      }
-                      resetTimeout();
-                    }}
-                    className="w-full accent-stone-700 dark:accent-stone-400 h-1 bg-stone-200 dark:bg-stone-800 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-                <audio 
-                  ref={audioRef} 
-                  src="/huevo-de-pascua.mp3" 
-                  preload="none" 
-                  loop
-                />
-              </div>
+              )}
             </div>
           )}
+          <audio 
+            ref={audioRef} 
+            src="/huevo-de-pascua.mp3" 
+            preload="none" 
+            loop
+          />
           <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVista</span>
         </div>
         <nav>
