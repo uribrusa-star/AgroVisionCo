@@ -479,8 +479,8 @@ function ProductionPaymentHistoryComponent() {
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4">
-              <div ref={labelContainerRef} className="w-full flex justify-center overflow-hidden transition-all duration-200" style={{ height: `${340 * labelScale}px` }}>
-                <div style={{ transform: `scale(${labelScale})`, transformOrigin: 'top center', width: '500px', height: '340px' }}>
+              <div ref={labelContainerRef} className="w-full relative overflow-hidden transition-all duration-200" style={{ height: `${340 * labelScale}px` }}>
+                <div className="absolute top-0 left-1/2 -ml-[250px]" style={{ transform: `scale(${labelScale})`, transformOrigin: 'top center', width: '500px', height: '340px' }}>
                   <div 
                     ref={labelRef} 
                     id="traceability-label"
