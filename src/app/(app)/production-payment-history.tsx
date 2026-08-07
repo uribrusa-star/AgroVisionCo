@@ -409,7 +409,7 @@ function ProductionPaymentHistoryComponent() {
       </Dialog>
 
       <Dialog open={isLabelOpen} onOpenChange={setIsLabelOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Etiqueta de Trazabilidad</DialogTitle>
           </DialogHeader>
@@ -431,14 +431,13 @@ function ProductionPaymentHistoryComponent() {
                 >
                 {/* Botanical Background Watermark */}
                 <div 
-                  className="absolute right-0 top-0 bottom-0 w-[65%] opacity-35 pointer-events-none"
+                  className="absolute right-0 top-0 bottom-0 w-[75%] opacity-35 pointer-events-none"
                   style={{
                     backgroundImage: 'url("/botanical-strawberry.jpg")',
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'left center',
-                    mixBlendMode: 'multiply',
-                    transform: 'translateX(-5%)' // Move slightly left
+                    backgroundPosition: 'right center',
+                    mixBlendMode: 'multiply'
                   }}
                 />
 
@@ -448,9 +447,9 @@ function ProductionPaymentHistoryComponent() {
                   <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-3">
                         <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
-                        <div className="flex flex-col justify-center pt-1">
-                            <h2 className="text-2xl font-bold tracking-tight text-[#2d4a22] leading-none" style={{ fontFamily: "'Inter', sans-serif" }}>AgroVista</h2>
-                            <p className="text-[11px] text-gray-600 tracking-[0.2em] uppercase leading-tight mt-0.5">{establishmentData?.location.locality}</p>
+                        <div className="flex flex-col justify-center">
+                            <h2 className="text-2xl font-bold tracking-tight text-[#2d4a22]" style={{ fontFamily: "'Inter', sans-serif" }}>AgroVista</h2>
+                            <p className="text-[11px] text-gray-600 tracking-[0.2em] uppercase mt-1">{establishmentData?.location.locality}</p>
                         </div>
                     </div>
                     <div className="mt-4">
@@ -475,19 +474,16 @@ function ProductionPaymentHistoryComponent() {
                 </div>
 
                 {/* Right Column (QR) */}
-                <div className="w-[180px] flex flex-col items-center justify-end z-10 pb-2">
-                  <div className="bg-white p-2 border-2 border-[#a67c00] rounded-sm shadow-sm relative">
+                <div className="w-[180px] flex flex-col items-center justify-center z-10 pb-2">
+                  <div className="p-2 border-2 border-[#a67c00] rounded-sm shadow-sm relative">
                     {/* Decorative gold corners */}
                     <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#a67c00] -translate-x-1 -translate-y-1"></div>
                     <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[#a67c00] translate-x-1 -translate-y-1"></div>
                     <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[#a67c00] -translate-x-1 translate-y-1"></div>
                     <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[#a67c00] translate-x-1 translate-y-1"></div>
                     
-                    <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={130} />
+                    <QRCode value={`${window.location.origin}/trace/${selectedLog.traceabilityId}`} size={130} bgColor="transparent" />
                   </div>
-                  <p className="text-center text-[10px] text-stone-800 font-medium leading-tight mt-3">
-                    Y descubrí su historia,<br/>desde la flor hasta tu mesa.
-                  </p>
                 </div>
               </div>
               </div>
