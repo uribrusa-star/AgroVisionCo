@@ -542,8 +542,9 @@ export const generateAgronomistReportPDF = async (
 
   // Delimited Lot Map (Native Vector polygon layer with satellite background layout)
   let geoJsonObj: any = null;
-  if (establishment.location.geoJsonData) {
-    try { geoJsonObj = typeof establishment.location.geoJsonData === 'string' ? JSON.parse(establishment.location.geoJsonData) : establishment.location.geoJsonData; } catch {}
+  const locAny = establishment.location as any;
+  if (locAny && locAny.geoJsonData) {
+    try { geoJsonObj = typeof locAny.geoJsonData === 'string' ? JSON.parse(locAny.geoJsonData) : locAny.geoJsonData; } catch {}
   }
 
   const mapW = pageWidth - 30;
@@ -918,7 +919,7 @@ export const generateAgronomistReportPDF = async (
   doc.addPage(); addHeader();
   yPos = 30;
 
-  yPos = sectionBanner('ALERTAS CRÍTICAS E INVENTARIO', yPos);
+  yPos = sectionTitle('ALERTAS CRÍTICAS E INVENTARIO', yPos);
 
   if (reportData.alerts && reportData.alerts.length > 0) {
     reportData.alerts.forEach((alt) => {
