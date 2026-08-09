@@ -186,20 +186,20 @@ export function HarvestSummary() {
                 El informe se compilará en un documento PDF formal, ideal para análisis y archivo.
             </p>
             {/* Hidden elements for rendering and capturing */}
-            <div style={{ position: 'fixed', opacity: 0, zIndex: -100, left: 0, top: 0, width: 'auto', height: 'auto' }} aria-hidden="true">
-              <div ref={costChartRef} className='p-4 bg-card w-[450px]'>
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} aria-hidden="true">
+              <div ref={costChartRef} className='p-4 bg-white text-stone-900 w-[480px] overflow-visible'>
                  <CostDistributionChart isForPdf={true} />
               </div>
-               <div ref={monthlyChartRef} className="p-4 bg-card w-[450px]">
+               <div ref={monthlyChartRef} className="p-4 bg-white text-stone-900 w-[480px] overflow-visible">
                    <MonthlyHarvestChart harvests={harvests} />
                </div>
-               <div ref={batchYieldChartRef} className="p-4 bg-card w-[450px]">
+               <div ref={batchYieldChartRef} className="p-4 bg-white text-stone-900 w-[480px] overflow-visible">
                     <BatchYieldChart />
                </div>
-               <div ref={profitabilityChartRef} className="p-4 bg-card w-[450px]">
+               <div ref={profitabilityChartRef} className="p-4 bg-white text-stone-900 w-[480px] overflow-visible">
                     <ProfitabilityTrendChart />
                </div>
-               <div ref={incomeChartRef} className="p-4 bg-card w-[450px]">
+               <div ref={incomeChartRef} className="p-4 bg-white text-stone-900 w-[480px] overflow-visible">
                     <IncomeChart transactions={transactions} />
                </div>
             </div>

@@ -115,21 +115,21 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
           const percent = totalCost > 0 ? ((item.value / totalCost) * 100).toFixed(0) : 0;
           const label = costChartConfig[item.name as keyof typeof costChartConfig]?.label || item.name;
           return (
-            <div key={item.name} className="flex items-center justify-between text-xs py-1 px-1.5 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors">
-              <div className="flex items-center gap-2 truncate min-w-0 pr-2">
+            <div key={item.name} className="flex items-center justify-between text-xs py-1.5 px-2 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors leading-normal">
+              <div className="flex items-center gap-2 min-w-0 pr-2 overflow-visible">
                 <span 
                   className="w-3 h-3 rounded-full shrink-0 shadow-sm" 
                   style={{ backgroundColor: item.fill }} 
                 />
-                <span className="text-stone-700 dark:text-stone-300 font-semibold truncate">
+                <span className="text-stone-700 dark:text-stone-300 font-semibold whitespace-nowrap leading-normal overflow-visible">
                   {label}
                 </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0 ml-auto">
-                <span className="text-stone-900 dark:text-stone-100 font-bold">
+              <div className="flex items-center gap-2 shrink-0 ml-auto leading-normal">
+                <span className="text-stone-900 dark:text-stone-100 font-bold leading-normal">
                   ${item.value.toLocaleString('es-AR')}
                 </span>
-                <span className="text-stone-400 dark:text-stone-500 font-semibold text-[11px] min-w-[36px] text-right">
+                <span className="text-stone-400 dark:text-stone-500 font-semibold text-[11px] min-w-[36px] text-right leading-normal">
                   ({percent}%)
                 </span>
               </div>
@@ -143,11 +143,11 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
   if (isForPdf) {
     // For PDF generation, we need the Card structure to be captured by html2canvas
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Distribución de Costos</CardTitle>
+        <Card className="bg-white text-stone-900 overflow-visible">
+            <CardHeader className="pb-2">
+                <CardTitle className="text-stone-900 text-lg font-bold">Distribución de Costos</CardTitle>
             </CardHeader>
-            <CardContent>{chart}</CardContent>
+            <CardContent className="pt-0 pb-4 overflow-visible">{chart}</CardContent>
         </Card>
     )
   }
