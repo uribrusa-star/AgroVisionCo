@@ -769,6 +769,59 @@ export const generateProducerHarvestReportPDF = (
     }
   };
 
+  const renderRichMarkdown = (text: string, startX: number, startY: number, maxW: number) => {
+    let currentY = startY;
+    let normalized = text.replace(/(\d+\.\s\*\*)/g, '\n$1');
+    normalized = normalized.replace(/\n{3,}/g, '\n\n').trim();
+    const paragraphs = normalized.split('\n');
+
+    paragraphs.forEach(paragraph => {
+      if (!paragraph.trim()) {
+        currentY += 4;
+        return;
+      }
+
+      if (currentY > pageHeight - 30) {
+        doc.addPage();
+        addHeader();
+        currentY = 35;
+      }
+
+      const parts = paragraph.split('**');
+      let currentX = startX;
+      let lineHeight = 5;
+
+      parts.forEach((part, index) => {
+        if (!part) return;
+        const isBold = index % 2 === 1;
+        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+        
+        const words = part.split(/(\s+)/);
+        words.forEach(word => {
+          if (!word) return;
+          const wordWidth = doc.getTextWidth(word + ' ');
+          
+          if (currentX + wordWidth > startX + maxW && word.trim() !== '') {
+            currentY += lineHeight;
+            currentX = startX;
+            if (currentY > pageHeight - 30) {
+              doc.addPage();
+              addHeader();
+              currentY = 35;
+              doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+            }
+            if (word.trim() === '') return;
+          }
+          
+          doc.text(word, currentX, currentY);
+          currentX += wordWidth;
+        });
+      });
+      currentY += lineHeight + 4;
+    });
+    return currentY;
+  };
+
   // --- PORTADA ---
   doc.setFillColor(darkBlue[0], darkBlue[1], darkBlue[2]);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
@@ -884,13 +937,8 @@ export const generateProducerHarvestReportPDF = (
 
   yPos += 45;
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const analysisLines = doc.splitTextToSize(reportData.analysisAndInterpretation, pageWidth - 40);
-  const analysisHeight = (analysisLines.length * 4.2) + 8;
-
   // --- ANÁLISIS E INTERPRETACIÓN ---
-  if (yPos + 8 + analysisHeight > pageHeight - 20) {
+  if (yPos > pageHeight - 40) {
     doc.addPage();
     addHeader();
     yPos = 35;
@@ -900,18 +948,13 @@ export const generateProducerHarvestReportPDF = (
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
   doc.text('ANÁLISIS E INTERPRETACIÓN (IA)', 15, yPos);
-  yPos += 8;
+  yPos += 12;
 
-
-
-  doc.setFillColor(249, 250, 251);
-  doc.roundedRect(15, yPos, pageWidth - 30, analysisHeight, 2, 2, 'F');
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 30, 30);
-  doc.text(analysisLines, 20, yPos + 8);
+  yPos = renderRichMarkdown(reportData.analysisAndInterpretation, 15, yPos, pageWidth - 30);
 
-  yPos += analysisHeight + 15;
+  yPos += 15;
 
   // --- ANÁLISIS GRÁFICO ---
   doc.addPage();
@@ -1020,32 +1063,15 @@ export const generateProducerHarvestReportPDF = (
   addHeader();
   yPos = 35;
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const recLines = doc.splitTextToSize(reportData.conclusionsAndRecommendations, pageWidth - 40);
-  const recHeight = (recLines.length * 4.2) + 8;
-
-  if (yPos + 10 + recHeight > pageHeight - 20) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-  }
-
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
   doc.text('CONCLUSIONES Y RECOMENDACIONES (IA)', 15, yPos);
-  yPos += 10;
+  yPos += 12;
 
-
-
-  doc.setFillColor(lightBlue[0], lightBlue[1], lightBlue[2]);
-  doc.setDrawColor(mediumBlue[0], mediumBlue[1], mediumBlue[2]);
-  doc.roundedRect(15, yPos, pageWidth - 30, recHeight, 2, 2, 'FD');
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 30, 30);
-  doc.text(recLines, 20, yPos + 8);
+  yPos = renderRichMarkdown(reportData.conclusionsAndRecommendations, 15, yPos, pageWidth - 30);
 
   addFooter();
   doc.save(`Informe_Produccion_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
