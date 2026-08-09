@@ -186,6 +186,7 @@ export const generateTraceabilityPDF = (
         if (currentY > pageHeight - 30) {
           doc.addPage();
           addHeader();
+          doc.setTextColor(30, 30, 30);
           currentY = 35;
         }
 
@@ -209,6 +210,7 @@ export const generateTraceabilityPDF = (
               if (currentY > pageHeight - 30) {
                 doc.addPage();
                 addHeader();
+                doc.setTextColor(30, 30, 30);
                 currentY = 35;
                 doc.setFont('helvetica', isBold ? 'bold' : 'normal');
               }
@@ -854,6 +856,7 @@ export const generateProducerHarvestReportPDF = (
       if (currentY > pageHeight - 30) {
         doc.addPage();
         addHeader();
+        doc.setTextColor(30, 30, 30);
         currentY = 35;
       }
 
@@ -877,6 +880,7 @@ export const generateProducerHarvestReportPDF = (
             if (currentY > pageHeight - 30) {
               doc.addPage();
               addHeader();
+              doc.setTextColor(30, 30, 30);
               currentY = 35;
               doc.setFont('helvetica', isBold ? 'bold' : 'normal');
             }
@@ -1107,6 +1111,11 @@ export const generateProducerHarvestReportPDF = (
   );
 
   // --- DESGLOSE DE COSTOS ---
+  if (yPos > pageHeight - 60) {
+    doc.addPage();
+    addHeader();
+    yPos = 35;
+  }
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);

@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { generateTraceabilityPDF, generateMonthlyProductionPDF } from '@/lib/pdf-generator';
+import { summarizeTraceabilityData } from '@/ai/flows/summarize-traceability-data';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
@@ -135,7 +136,6 @@ export default function TraceabilityPage() {
           notas: e.description || '-'
         })));
         
-        const { summarizeTraceabilityData } = await import('@/ai/flows/summarize-traceability-data');
         aiSummary = await summarizeTraceabilityData({
           batchName: selectedBatch.id,
           establishmentName: establishmentData?.producer || 'AgroVista',
