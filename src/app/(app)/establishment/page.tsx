@@ -552,7 +552,28 @@ export default function EstablishmentPage() {
       >
           {(form: any) => (
               <>
-                  <FormField control={form.control} name="variety" render={({ field }) => ( <FormItem> <FormLabel>Variedades</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                  <FormField control={form.control} name="variety" render={({ field }) => ( 
+                    <FormItem> 
+                      <FormLabel>Variedades</FormLabel> 
+                      <FormControl>
+                        <>
+                          <Input list="known-varieties" placeholder="Ej: San Andreas, Otra" {...field} />
+                          <datalist id="known-varieties">
+                            <option value="San Andreas" />
+                            <option value="Marisma" />
+                            <option value="Cleopatra" />
+                            <option value="Camarosa" />
+                            <option value="Fronteras" />
+                            <option value="Monterey" />
+                            <option value="Albion" />
+                            <option value="Rociera" />
+                            <option value="Rábida" />
+                          </datalist>
+                        </>
+                      </FormControl> 
+                      <FormMessage /> 
+                    </FormItem> 
+                  )} />
                   <FormField control={form.control} name="date" render={({ field }) => ( <FormItem> <FormLabel>Fecha de Plantación</FormLabel> <FormControl><Input type="date" {...field} /></FormControl> <FormMessage /> </FormItem> )} />
                   <FormField control={form.control} name="origin" render={({ field }) => ( <FormItem> <FormLabel>Origen de Plantas</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
                   <FormField control={form.control} name="density" render={({ field }) => ( <FormItem> <FormLabel>Densidad</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />

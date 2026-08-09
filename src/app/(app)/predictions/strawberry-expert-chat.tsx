@@ -29,10 +29,12 @@ export function StrawberryExpertChat() {
 
   useEffect(() => {
     if (expertChatHistory.length === 0) {
+      const location = establishmentData?.location?.locality || 'la zona';
+      const varieties = establishmentData?.planting?.variety || 'tus cultivos';
       setExpertChatHistory([
         {
           role: 'model',
-          content: '¡Hola! Soy tu consultor experto en frutilla para la zona de Coronda. ¿En qué puedo ayudarte hoy con tus variedades San Andreas, Marisma o Cleopatra?'
+          content: `¡Hola! Soy tu consultor experto en frutilla para ${location}. ¿En qué puedo ayudarte hoy con tus variedades ${varieties}?`
         }
       ]);
     }
