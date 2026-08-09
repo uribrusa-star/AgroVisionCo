@@ -30,10 +30,16 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
 
   const { toast } = useToast();
   
-  const [mode, setMode] = useState<'idle' | 'draw' | 'gps'>('idle');
+  const [mode, setMode] = useState<'idle' | 'draw' | 'gps' | 'coords'>('idle');
   const [currentPoints, setCurrentPoints] = useState<LatLng[]>([]);
   const [drawnPolygon, setDrawnPolygon] = useState<LatLng[] | null>(null);
   
+  // Manual Coordinates inputs
+  const [manualLat, setManualLat] = useState('');
+  const [manualLng, setManualLng] = useState('');
+  const [coordsText, setCoordsText] = useState('');
+  const [showBatchCoordsImport, setShowBatchCoordsImport] = useState(false);
+
   // Real-time GPS tracking state
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
@@ -146,6 +152,64 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
 
     const accuracyText = gpsAccuracy ? ` (Precisión: ±${Math.round(gpsAccuracy)}m)` : '';
     toast({ title: `Punto #${currentPoints.length + 1} marcado`, description: `Coordenadas capturadas con éxito${accuracyText}.` });
+  };
+
+  const handleAddManualCoordinate = () => {
+    const lat = parseFloat(manualLat.trim());
+    const lng = parseFloat(manualLng.trim());
+
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      toast({ title: 'Coordenadas inválidas', description: 'Por favor ingrese valores numéricos válidos para latitud (-90 a 90) y longitud (-180 a 180).', variant: 'destructive' });
+      return;
+    }
+
+    const newPoint = { lat, lng };
+    setCurrentPoints(prev => [...prev, newPoint]);
+    if (mapRef.current) {
+      mapRef.current.panTo(newPoint);
+      mapRef.current.setZoom(18);
+    }
+
+    setManualLat('');
+    setManualLng('');
+    toast({ title: `Punto #${currentPoints.length + 1} añadido`, description: `Coordenada (${lat.toFixed(5)}, ${lng.toFixed(5)}) agregada.` });
+  };
+
+  const handleImportBatchCoordinates = () => {
+    if (!coordsText.trim()) return;
+
+    const lines = coordsText.split('\n');
+    const importedPoints: LatLng[] = [];
+
+    lines.forEach(line => {
+      const clean = line.trim();
+      if (!clean) return;
+      const parts = clean.split(/[,;\s]+/).map(s => parseFloat(s.trim()));
+      if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        // Soporta tanto lat,lng como lng,lat si lat está en rango [-90, 90]
+        let lat = parts[0];
+        let lng = parts[1];
+        if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
+          // Swap if inverted
+          const tmp = lat; lat = lng; lng = tmp;
+        }
+        importedPoints.push({ lat, lng });
+      }
+    });
+
+    if (importedPoints.length === 0) {
+      toast({ title: 'No se reconocieron coordenadas', description: 'Formato esperado: latitud, longitud (un par por línea).', variant: 'destructive' });
+      return;
+    }
+
+    setCurrentPoints(prev => [...prev, ...importedPoints]);
+    if (mapRef.current && importedPoints.length > 0) {
+      mapRef.current.panTo(importedPoints[0]);
+    }
+
+    setCoordsText('');
+    setShowBatchCoordsImport(false);
+    toast({ title: 'Coordenadas importadas', description: `Se añadieron ${importedPoints.length} vértices al lote.` });
   };
 
   const handleUndoLastPoint = () => {
@@ -269,7 +333,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
             )}
 
             {/* Render in-progress Points and Lines */}
-            {(mode === 'draw' || mode === 'gps') && currentPoints.map((pt, i) => (
+            {(mode === 'draw' || mode === 'gps' || mode === 'coords') && currentPoints.map((pt, i) => (
               <Circle
                 key={`point-${i}`}
                 center={pt}
@@ -284,7 +348,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
               />
             ))}
             
-            {(mode === 'draw' || mode === 'gps') && currentPoints.length > 1 && (
+            {(mode === 'draw' || mode === 'gps' || mode === 'coords') && currentPoints.length > 1 && (
               <Polyline
                 path={currentPoints}
                 options={{ strokeColor: '#f59e0b', strokeWeight: 3, zIndex: 15 }}
@@ -304,13 +368,94 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
           <div className="absolute top-4 left-4 right-4 flex justify-between pointer-events-none z-20">
              <div className="flex flex-col gap-2 pointer-events-auto w-full max-w-lg">
                {!drawnPolygon && mode === 'idle' && (
-                 <div className="flex gap-2">
+                 <div className="flex flex-wrap gap-2">
                    <Button onClick={() => setMode('draw')} className="bg-background text-foreground hover:bg-muted shadow-lg border">
                      <MousePointer2 className="h-4 w-4 mr-2" /> Dibujar en Mapa
                    </Button>
                    <Button onClick={() => setMode('gps')} className="bg-background text-foreground hover:bg-muted shadow-lg border">
                      <Navigation className="h-4 w-4 mr-2" /> Usar GPS en Vivo
                    </Button>
+                   <Button onClick={() => setMode('coords')} className="bg-background text-foreground hover:bg-muted shadow-lg border">
+                     <MapPin className="h-4 w-4 mr-2" /> Ingresar Coordenadas
+                   </Button>
+                 </div>
+               )}
+
+               {mode === 'coords' && (
+                 <div className="flex flex-col gap-3 bg-background/95 backdrop-blur-md p-4 rounded-lg shadow-xl border">
+                   <div className="flex justify-between items-center border-b pb-2">
+                     <div>
+                       <span className="font-bold text-foreground">Ingreso por Coordenadas ({currentPoints.length} vértices)</span>
+                       <p className="text-xs text-muted-foreground">Ingrese los puntos exactos o pegue una lista completa</p>
+                     </div>
+                     {currentPoints.length > 0 && (
+                       <Button size="sm" variant="outline" onClick={handleUndoLastPoint} className="text-amber-600 border-amber-300">
+                         <Undo2 className="h-4 w-4 mr-1" /> Deshacer Último
+                       </Button>
+                     )}
+                   </div>
+
+                   {!showBatchCoordsImport ? (
+                     <div className="space-y-3">
+                       <div className="grid grid-cols-2 gap-2">
+                         <div>
+                           <Label className="text-xs">Latitud</Label>
+                           <Input 
+                             placeholder="Ej. -31.95336" 
+                             value={manualLat} 
+                             onChange={(e) => setManualLat(e.target.value)} 
+                             className="h-9"
+                           />
+                         </div>
+                         <div>
+                           <Label className="text-xs">Longitud</Label>
+                           <Input 
+                             placeholder="Ej. -60.93462" 
+                             value={manualLng} 
+                             onChange={(e) => setManualLng(e.target.value)} 
+                             className="h-9"
+                           />
+                         </div>
+                       </div>
+                       
+                       <div className="flex gap-2">
+                         <Button onClick={handleAddManualCoordinate} className="bg-amber-500 hover:bg-amber-600 text-white flex-1 font-bold h-9">
+                           <Plus className="h-4 w-4 mr-1" /> Añadir Punto
+                         </Button>
+                         <Button variant="outline" onClick={() => setShowBatchCoordsImport(true)} className="h-9 text-xs">
+                           Pegar Lista
+                         </Button>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className="space-y-2">
+                       <Label className="text-xs">Pegar Coordenadas (Latitud, Longitud por línea)</Label>
+                       <textarea 
+                         rows={4}
+                         placeholder={`-31.95336, -60.93462\n-31.95410, -60.93410\n-31.95420, -60.93500`}
+                         value={coordsText}
+                         onChange={(e) => setCoordsText(e.target.value)}
+                         className="w-full text-xs p-2 rounded-md border bg-background font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                       />
+                       <div className="flex gap-2">
+                         <Button onClick={handleImportBatchCoordinates} className="bg-blue-600 hover:bg-blue-700 text-white flex-1 font-bold h-8 text-xs">
+                           Importar Lista
+                         </Button>
+                         <Button variant="ghost" onClick={() => setShowBatchCoordsImport(false)} className="h-8 text-xs">
+                           Volver
+                         </Button>
+                       </div>
+                     </div>
+                   )}
+
+                   <div className="flex gap-2 border-t pt-2 mt-1">
+                     {currentPoints.length >= 3 && (
+                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-md flex-1 font-bold">
+                         Terminar Lote
+                       </Button>
+                     )}
+                     <Button variant="destructive" size="sm" onClick={handleClear}>Cancelar</Button>
+                   </div>
                  </div>
                )}
 
