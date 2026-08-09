@@ -113,7 +113,7 @@ export function AgronomistReportGenerator() {
 
         const { generateAgronomistReportPDF } = await import('@/lib/pdf-generator');
         
-        generateAgronomistReportPDF(
+        await generateAgronomistReportPDF(
             establishmentData,
             currentUser.name,
             aiResult,
@@ -122,7 +122,9 @@ export function AgronomistReportGenerator() {
                 monthlyHarvest: monthlyHarvestImg,
                 batchYield: batchYieldImg
             },
-            logoPngDataUri
+            logoPngDataUri,
+            batches,
+            harvests
         );
         
         toast({
