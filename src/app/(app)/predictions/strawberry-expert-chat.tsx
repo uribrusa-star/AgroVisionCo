@@ -89,6 +89,13 @@ export function StrawberryExpertChat() {
                 knowledgeBase.map(item => `--- ${item.title} ---\n${item.content}`).join('\n\n');
         }
 
+        const totalKg = harvests.reduce((sum, h) => sum + h.kilograms, 0);
+        const totalArea = batches.reduce((sum, b) => {
+            const batchArea = b.varieties?.reduce((vSum, v) => vSum + (v.area || 0), 0) || 0;
+            return sum + batchArea;
+        }, 0);
+        const avgYieldPerHa = totalArea > 0 ? (totalKg / totalArea).toFixed(2) : 'N/A';
+
         let context = `${specializedKnowledge}
 ${userKnowledge}
 
@@ -98,20 +105,25 @@ Dato del Establecimiento:
 - Productor: ${establishmentData.producer}
 - Ubicación: ${establishmentData.location.locality}, ${establishmentData.location.province}
 - Sistema: ${establishmentData.system}
-- Variedades: ${establishmentData.planting.variety}
-- Fecha de Plantación: ${establishmentData.planting.date}
-- Superficie Frutilla: ${establishmentData.area.strawberry} ha
+- Superficie Total Frutilla (Declarada): ${establishmentData.area.strawberry} ha
+- Superficie Plantada (Calculada por lotes): ${totalArea.toFixed(2)} ha
 
 Estado Actual de los Lotes:
-${batches.map(b => `- Lote ${b.id}: Variedades: ${b.varieties?.map(v => `${v.name} (${v.plantCount || 'cant. no especificada'})`).join(', ') || 'Sin variedades asignadas'}, Estado: ${b.status}`).join('\n')}
+${batches.map(b => {
+    const bArea = b.varieties?.reduce((sum, v) => sum + (v.area || 0), 0) || 0;
+    return `- Lote ${b.id} (${bArea > 0 ? bArea.toFixed(2) + ' ha' : 'área desconocida'}): Variedades: ${b.varieties?.map(v => `${v.name} (${v.area ? v.area.toFixed(2) + 'ha' : 'N/A'})`).join(', ') || 'Sin variedades'}, Estado: ${b.status}`;
+}).join('\n')}
 
 Inventario de Insumos (Disponible en el Establecimiento):
 ${supplies.length > 0 
-    ? supplies.map(s => `- ${s.name} (${s.type}): Composición: ${s.info.activeIngredient}, Stock: ${s.stock !== undefined ? s.stock.toFixed(2) : 'N/A'} kg/L, Dosis: ${s.info.dose}`).join('\n')
+    ? supplies.map(s => `- ${s.name} (${s.type}): Composición: ${s.info.activeIngredient}, Stock: ${s.stock !== undefined ? s.stock.toFixed(2) : 'N/A'} kg/L, Dosis recomendada: ${s.info.dose}`).join('\n')
     : 'No hay insumos registrados en el inventario.'}
 
-Últimas Cosechas:
-${harvests.slice(0, 5).map(h => `- ${new Date(h.date).toLocaleDateString()}: ${h.kilograms}kg en Lote ${h.batchNumber}`).join('\n')}
+Resumen de Cosechas (Campaña Actual):
+- Producción Total Acumulada: ${totalKg.toFixed(2)} kg
+- Rendimiento Promedio: ${avgYieldPerHa} kg/ha
+Últimas 5 recolecciones:
+${harvests.slice(0, 5).map(h => `  * ${new Date(h.date).toLocaleDateString()}: ${h.kilograms}kg en Lote ${h.batchNumber}`).join('\n')}
 
 ${agronomistLogs.slice(0, 10).map(l => {
     const products = l.supplies && l.supplies.length > 0 

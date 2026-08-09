@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { predictYield } from '@/ai/flows/predict-yield';
+import { getRelevantKnowledge } from '@/ai/knowledge/strawberry-knowledge';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -108,17 +109,18 @@ export function YieldPredictionPanel() {
 
         const recentEnvironmentalLogs = agronomistLogs.filter(log => log.type === 'Condiciones Ambientales' && new Date(log.date) > thirtyDaysAgo);
 
-        if (recentHarvests.length === 0) {
-            toast({
-                title: "Datos Insuficientes",
-                description: "No hay cosechas recientes para este lote. La predicción podría no ser precisa.",
-                variant: 'destructive'
-            });
-            return;
-        }
+        const targetBatch = batches.find(b => b.id === values.batchId);
+        const batchVarietiesList = targetBatch?.varieties?.map(v => v.name) || [];
+        const batchVarietiesStr = batchVarietiesList.length > 0 ? batchVarietiesList.join(', ') : 'Desconocida';
+        const batchArea = targetBatch?.varieties?.reduce((sum, v) => sum + (v.area || 0), 0) || 0;
+        
+        const varietyKnowledge = getRelevantKnowledge(batchVarietiesList);
 
         const result = await predictYield({
           batchId: values.batchId,
+          batchVarieties: batchVarietiesStr,
+          batchArea: batchArea,
+          varietyKnowledge: varietyKnowledge,
           latitude: lat,
           longitude: lng,
           recentHarvests: JSON.stringify(recentHarvests),

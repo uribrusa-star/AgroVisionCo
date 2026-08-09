@@ -14,9 +14,12 @@ import { getWeatherForecast } from '../tools/weather-tool';
 
 const PredictYieldInputSchema = z.object({
   batchId: z.string().describe('El ID del lote para el cual se hace la predicción.'),
+  batchVarieties: z.string().describe('Las variedades plantadas en el lote.'),
+  batchArea: z.number().describe('El tamaño del lote en hectáreas.'),
+  varietyKnowledge: z.string().describe('Conocimiento botánico y teórico sobre las variedades plantadas en el lote.'),
   latitude: z.number().describe('La latitud del establecimiento.'),
   longitude: z.number().describe('La longitud del establecimiento.'),
-  recentHarvests: z.string().describe('JSON string con los datos de las últimas cosechas del lote.'),
+  recentHarvests: z.string().describe('JSON string con los datos de las últimas cosechas del lote (puede estar vacío si aún no hay).'),
   agronomistLogs: z.string().describe('JSON string con la bitácora de actividades agronómicas recientes (fertilización, riego, etc.).'),
   phenologyLogs: z.string().describe('JSON string con la bitácora de seguimiento fenológico reciente (floración, fructificación).'),
   environmentalLogs: z.string().describe('JSON string con los registros de condiciones ambientales recientes (temperatura, humedad).'),
@@ -50,21 +53,22 @@ const prompt = ai.definePrompt({
 
     **Instrucciones:**
     1.  **Obtén el pronóstico del tiempo**: Usa la herramienta 'getWeatherForecast' con la latitud y longitud proporcionadas para obtener el pronóstico climático para los próximos 7 días.
-    2.  **Analiza en silencio los datos proporcionados**: Revisa el pronóstico del tiempo que obtuviste, los datos de cosechas recientes, las actividades agronómicas, el estado fenológico y las condiciones ambientales pasadas.
-    3.  **Sintetiza la información**: Identifica los factores clave que influirán en el rendimiento. Por ejemplo:
-        *   ¿Una fertilización reciente de Fructificación o Maduración podría impulsar la producción?
-        *   ¿Un aumento en el número de flores/frutos reportado en la fenología se traducirá en una mayor cosecha?
-        *   ¿Las condiciones climáticas pronosticadas (ej. temperaturas ideales, estrés por calor, heladas) favorecerán o perjudicarán el desarrollo y maduración de la fruta?
-        *   ¿La tendencia de las cosechas recientes es ascendente, descendente o estable?
+    2.  **Analiza en silencio los datos proporcionados**: Revisa el pronóstico del tiempo, los datos de cosechas recientes, las actividades agronómicas, el estado fenológico, las condiciones ambientales pasadas, y CRUCIALMENTE, la genética de la variedad ({{{varietyKnowledge}}}) y el tamaño del lote ({{{batchArea}}} ha).
+    3.  **Sintetiza la información**: Identifica los factores clave que influirán en el rendimiento.
+        *   Si **hay** cosechas recientes: ¿La tendencia es ascendente, descendente o estable? ¿Cómo impacta la fenología actual y la genética de la variedad en el próximo pico de cosecha de las {{{batchArea}}} hectáreas?
+        *   Si **no hay** cosechas recientes: Utiliza el estado fenológico (ej. inicio de floración), el clima proyectado y la ficha técnica de la variedad para estimar cuándo comenzará la cosecha y proyectar el primer volumen esperado para un lote de {{{batchArea}}} hectáreas.
     4.  **Genera una Predicción (en español)**:
         *   Redacta una predicción clara y concisa (máximo 2-3 frases).
-        *   Debe incluir una **estimación porcentual** del cambio en el rendimiento (ej. "aumento del 10-15%", "disminución del 5%", "rendimiento estable").
-        *   Justifica la predicción mencionando **1 o 2 de los factores más influyentes** que identificaste. Por ejemplo: "...debido a las óptimas temperaturas pronosticadas y la reciente aplicación de fertilizantes de engorde."
-    5.  **Establece el Nivel de Confianza**: Basado en la calidad y consistencia de los datos, determina si tu confianza en la predicción es 'Alta', 'Media' o 'Baja'. Por ejemplo, si faltan datos de fenología o el pronóstico es muy incierto, la confianza podría ser 'Media' o 'Baja'.
+        *   Si hay historial de cosecha, incluye una estimación porcentual del cambio. Si no hay historial, estima un volumen inicial en kg basándote en la variedad y el tamaño del lote.
+        *   Justifica la predicción mencionando factores influyentes (clima, fenología o curva de la variedad).
+    5.  **Establece el Nivel de Confianza**: Basado en la calidad y consistencia de los datos, determina si tu confianza en la predicción es 'Alta', 'Media' o 'Baja'.
 
     **Datos para el Análisis:**
     -   **Ubicación**: Latitud {{{latitude}}}, Longitud {{{longitude}}}
     -   **Lote a Predecir**: {{{batchId}}}
+    -   **Variedades**: {{{batchVarieties}}}
+    -   **Tamaño del Lote**: {{{batchArea}}} hectáreas
+    -   **Ficha Botánica de las Variedades**: {{{varietyKnowledge}}}
     -   **Cosechas Recientes del Lote**: {{{recentHarvests}}}
     -   **Actividades Agronómicas Recientes**: {{{agronomistLogs}}}
     -   **Fenología Reciente**: {{{phenologyLogs}}}
