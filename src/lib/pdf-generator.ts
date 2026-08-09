@@ -161,12 +161,10 @@ export const generateTraceabilityPDF = (
     doc.setTextColor(30, 30, 30);
     yPos = renderMarkdown(aiSummary, 15, finalY, pageWidth - 30) + 15;
     
-    // Add page break if not enough space for table
-    if (yPos > pageHeight - 60) {
-      doc.addPage();
-      addHeader();
-      yPos = 35;
-    }
+    // Forzar siempre una nueva página después del resumen de la IA para que la tabla no quede cortada
+    doc.addPage();
+    addHeader();
+    yPos = 35;
   }
 
   doc.setFontSize(18);
