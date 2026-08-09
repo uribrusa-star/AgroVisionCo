@@ -606,21 +606,19 @@ export const generateAgronomistReportPDF = (
     yPos = (doc as any).lastAutoTable.finalY + 8;
   }
 
-  // 3. MAPA INTERACTIVO DE LOTES DELIMITADOS
-  if (yPos > pageHeight - 65) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-  }
+  // 3. MAPA INTERACTIVO DE LOTES DELIMITADOS (Inicia en nueva página y ocupa media hoja ~100mm)
+  doc.addPage();
+  addHeader();
+  yPos = 35;
 
-  doc.setFontSize(13);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
   doc.text('MAPA INTERACTIVO DE LOTES DELIMITADOS', 15, yPos);
-  yPos += 5;
+  yPos += 6;
 
   const mapW = pageWidth - 30;
-  const mapH = 50;
+  const mapH = 100; // Ocupa al menos la mitad de la hoja para apreciarse con total nitidez
 
   let gmapUrl = '';
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -665,7 +663,7 @@ export const generateAgronomistReportPDF = (
 
   // Si tenemos API Key de Google Maps, usamos la vista satelital híbrida oficial de Google Maps
   if (apiKey && apiKey.length > 5) {
-    gmapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=18&size=800x400&maptype=hybrid${pathParams}&key=${apiKey}`;
+    gmapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=18&size=800x500&maptype=hybrid${pathParams}&key=${apiKey}`;
   }
 
   if (mapImageUri && mapImageUri.length > 100) {
@@ -684,9 +682,9 @@ export const generateAgronomistReportPDF = (
       const lotW = (mapW - 20) / Math.min(lotCount, 4);
       (batches || [{id:'L001'},{id:'L002'},{id:'L003'},{id:'L004'}]).slice(0, 4).forEach((b, idx) => {
         const lx = 15 + 10 + idx * (lotW + 2);
-        const ly = yPos + 8;
+        const ly = yPos + 12;
         const lw = lotW - 4;
-        const lh = mapH - 16;
+        const lh = mapH - 24;
 
         doc.setFillColor(34, 197, 94);
         doc.setGState(new (doc as any).GState({ opacity: 0.35 }));
@@ -711,9 +709,9 @@ export const generateAgronomistReportPDF = (
     const lotW = (mapW - 20) / Math.min(lotCount, 4);
     (batches || [{id:'L001'},{id:'L002'},{id:'L003'},{id:'L004'}]).slice(0, 4).forEach((b, idx) => {
       const lx = 15 + 10 + idx * (lotW + 2);
-      const ly = yPos + 8;
+      const ly = yPos + 12;
       const lw = lotW - 4;
-      const lh = mapH - 16;
+      const lh = mapH - 24;
 
       doc.setFillColor(34, 197, 94);
       doc.setGState(new (doc as any).GState({ opacity: 0.35 }));
@@ -729,11 +727,11 @@ export const generateAgronomistReportPDF = (
     });
   }
 
-  yPos += mapH + 8;
+  yPos += mapH + 10;
 
-  // 4. RENDIMIENTO POR LOTE
+  // 4. RENDIMIENTO POR LOTE (Compartiendo la misma página justo debajo del mapa)
   if (harvests && harvests.length > 0 && batches && batches.length > 0) {
-    if (yPos > pageHeight - 55) {
+    if (yPos > pageHeight - 45) {
       doc.addPage();
       addHeader();
       yPos = 35;
