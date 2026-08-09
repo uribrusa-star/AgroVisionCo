@@ -388,12 +388,12 @@ export const generateAgronomistReportPDF = (
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
   
-  // Colors
-  const darkGreen = [20, 83, 45];   // #14532D
-  const mediumGreen = [34, 197, 94]; // #22C55E
-  const lightGreen = [240, 253, 244]; // #F0FDF4
-  const techGrey = [75, 85, 99];     // #4B5563
-  const alertRed = [220, 38, 38];    // #DC2626
+  const darkGreen = [20, 83, 45];
+  const mediumGreen = [34, 197, 94];
+  const lightGreen = [240, 253, 244];
+  const techGrey = [75, 85, 99];
+  const alertRed = [220, 38, 38];
+  const alertYellow = [234, 179, 8];
 
   const addHeader = (isCover = false) => {
     if (!isCover) {
@@ -421,16 +421,15 @@ export const generateAgronomistReportPDF = (
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(8);
       doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
-      doc.text('AgroVista AI - Gestión de Precisión', 10, pageHeight - 7);
+      doc.text('AgroVista - Gestión de Precisión', 10, pageHeight - 7);
       doc.text('Confidencial', pageWidth - 10, pageHeight - 7, { align: 'right' });
     }
   };
 
-  // --- PORTADA ---
+  // --- PORTADA (Página 1) ---
   doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Decorative lines
   doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
   doc.setLineWidth(2);
   doc.line(20, 40, 20, 250);
@@ -466,7 +465,7 @@ export const generateAgronomistReportPDF = (
   doc.setTextColor(255, 255, 255);
   doc.text(agronomistName.toUpperCase(), 30, 250);
 
-  // --- RESUMEN EJECUTIVO ---
+  // --- DASHBOARD & ALERTAS (Página 2) ---
   doc.addPage();
   addHeader();
   let yPos = 35;
@@ -474,308 +473,219 @@ export const generateAgronomistReportPDF = (
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('RESUMEN EJECUTIVO', 15, yPos);
+  doc.text('DASHBOARD EJECUTIVO', 15, yPos);
   yPos += 10;
 
-  // Status Cards
-  const cardWidth = (pageWidth - 40) / 2;
+  const cardWidth = (pageWidth - 45) / 4;
   
-  // General Status
-  doc.setFillColor(lightGreen[0], lightGreen[1], lightGreen[2]);
-  doc.roundedRect(15, yPos, cardWidth, 25, 2, 2, 'F');
-  doc.setFontSize(10);
-  doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
-  doc.text('ESTADO GENERAL', 20, yPos + 8);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(reportData.executiveSummary.generalStatus === 'Óptimo' ? darkGreen[0] : alertRed[0]);
-  doc.text(reportData.executiveSummary.generalStatus.toUpperCase(), 20, yPos + 18);
+  const drawKpiCard = (title: string, value: string, riskLevel: string | number, xPos: number) => {
+    let color = darkGreen;
+    if (riskLevel === 'Medio' || riskLevel === 'Atención' || riskLevel === 'Alerta') color = alertYellow;
+    if (riskLevel === 'Alto' || riskLevel === 'Riesgo' || riskLevel === 'Crítico' || (typeof riskLevel === 'number' && riskLevel > 0)) color = alertRed;
 
-  // Climate Risk
-  doc.setFillColor(lightGreen[0], lightGreen[1], lightGreen[2]);
-  doc.roundedRect(pageWidth / 2 + 5, yPos, cardWidth, 25, 2, 2, 'F');
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
-  doc.text('RIESGO CLIMÁTICO', pageWidth / 2 + 10, yPos + 8);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(reportData.executiveSummary.climateRisk === 'Bajo' ? darkGreen[0] : alertRed[0]);
-  doc.text(reportData.executiveSummary.climateRisk.toUpperCase(), pageWidth / 2 + 10, yPos + 18);
+    doc.setFillColor(lightGreen[0], lightGreen[1], lightGreen[2]);
+    doc.setDrawColor(color[0], color[1], color[2]);
+    doc.roundedRect(xPos, yPos, cardWidth, 20, 2, 2, 'FD');
+    
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
+    doc.text(title, xPos + 5, yPos + 6);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(color[0], color[1], color[2]);
+    const valText = doc.splitTextToSize(String(value).toUpperCase(), cardWidth - 10);
+    doc.text(valText, xPos + 5, yPos + 14);
+  };
 
-  yPos += 35;
+  drawKpiCard('ESTADO', reportData.executiveSummary.generalStatus, reportData.executiveSummary.generalStatus, 15);
+  drawKpiCard('CLIMA', reportData.executiveSummary.climateRisk, reportData.executiveSummary.climateRisk, 15 + cardWidth + 5);
+  drawKpiCard('SANIDAD', reportData.technicalAnalysis.health.risk, reportData.technicalAnalysis.health.risk, 15 + (cardWidth + 5) * 2);
+  drawKpiCard('STOCK CRÍTICO', `${reportData.executiveSummary.criticalAlertsCount} ALERTAS`, reportData.executiveSummary.criticalAlertsCount, 15 + (cardWidth + 5) * 3);
 
-  // Key Conclusions
+  yPos += 28;
+
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('CONCLUSIONES CLAVE', 15, yPos);
-  yPos += 5;
+  doc.text('RESUMEN Y RECOMENDACIÓN', 15, yPos);
+  yPos += 6;
 
-  const conclusionLines: string[][] = reportData.executiveSummary.conclusions.map(c => 
-    doc.splitTextToSize(`• ${c}`, pageWidth - 45)
-  );
-  const totalConclusionHeight = conclusionLines.reduce((acc, lines) => acc + (lines.length * 5), 0) + 15;
-
-  doc.setFillColor(249, 250, 251); // Gray-50
-  doc.roundedRect(15, yPos, pageWidth - 30, totalConclusionHeight, 2, 2, 'F');
-  
+  const summaryText = reportData.executiveSummary.conclusions.join(" ") + " " + reportData.executiveSummary.mainRecommendation;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(30, 30, 30);
-  let currentConclusionY = yPos + 10;
-  conclusionLines.forEach((lines) => {
-    doc.text(lines, 20, currentConclusionY);
-    currentConclusionY += (lines.length * 5);
-  });
+  const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 30);
+  doc.text(summaryLines, 15, yPos);
+  yPos += (summaryLines.length * 5) + 8;
 
-  yPos += totalConclusionHeight + 10;
-
-  // Main Recommendation Highlight
-  const mainRecText = reportData.executiveSummary.mainRecommendation;
-  
-  // CRITICAL: Set font state BEFORE splitTextToSize to ensure correct width calculation
+  // ALERTAS CRITICAS
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  const mainRecLines = doc.splitTextToSize(mainRecText, pageWidth - 50); // Using 50 for safer margins
-  const mainRecHeight = (mainRecLines.length * 6) + 18;
+  doc.setTextColor(alertRed[0], alertRed[1], alertRed[2]);
+  doc.text('ALERTAS CRÍTICAS E INVENTARIO', 15, yPos);
+  yPos += 8;
 
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.roundedRect(15, yPos, pageWidth - 30, mainRecHeight, 2, 2, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('RECOMENDACIÓN PRINCIPAL', 20, yPos + 8);
-  
-  doc.setFontSize(11);
+  if (reportData.alerts.length > 0) {
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Fecha', 'Evento Detectado', 'Nivel Riesgo', 'Acción Sugerida']],
+      body: reportData.alerts.map(a => [a.date, a.event, a.risk, a.recommendation]),
+      headStyles: { fillColor: alertRed, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [254, 242, 242] },
+      styles: { fontSize: 9, cellPadding: 4 },
+      columnStyles: {
+        0: { width: 22 },
+        1: { width: 45 },
+        2: { width: 22, fontStyle: 'bold' },
+        3: { width: 85 }
+      }
+    });
+    yPos = (doc as any).lastAutoTable.finalY + 15;
+  } else {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
+    doc.text('No se detectaron alertas críticas operativas o de inventario.', 15, yPos);
+    yPos += 10;
+  }
+
+  // --- ANÁLISIS DE CAMPO Y FENOLOGÍA (Página 3) ---
+  doc.addPage();
+  addHeader();
+  yPos = 35;
+
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(mainRecLines, 20, yPos + 17);
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('ANÁLISIS AGRONÓMICO DE CAMPO', 15, yPos);
+  yPos += 10;
 
-  yPos += mainRecHeight + 15;
+  const renderFieldAnalysis = (title: string, desc: string, x: number, w: number) => {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+    doc.text(title, x, yPos);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+    const lines = doc.splitTextToSize(desc, w);
+    doc.text(lines, x, yPos + 6);
+    return (lines.length * 4) + 12;
+  };
 
-  // --- ANÁLISIS TÉCNICO ---
+  const halfWidth = (pageWidth - 40) / 2;
+  let maxH1 = Math.max(
+    renderFieldAnalysis('Clima', reportData.technicalAnalysis.climate.desc, 15, halfWidth),
+    renderFieldAnalysis('Manejo', reportData.technicalAnalysis.management.desc, 15 + halfWidth + 10, halfWidth)
+  );
+  yPos += maxH1;
+
+  let maxH2 = Math.max(
+    renderFieldAnalysis('Fenología', reportData.technicalAnalysis.phenology.desc, 15, halfWidth),
+    renderFieldAnalysis('Sanidad', reportData.technicalAnalysis.health.desc, 15 + halfWidth + 10, halfWidth)
+  );
+  yPos += maxH2 + 5;
+
+  if (chartImages?.phenology) {
+    const props = doc.getImageProperties(chartImages.phenology);
+    const scaledHeight = (props.height * 170) / props.width;
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Evolución Fenológica', 15, yPos);
+    yPos += 5;
+    
+    doc.addImage(chartImages.phenology, 'PNG', 20, yPos, 170, scaledHeight);
+    yPos += scaledHeight + 8;
+    
+    if (reportData.graphicalAnalysis?.phenology) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      const lines = doc.splitTextToSize(reportData.graphicalAnalysis.phenology, 170);
+      doc.text(lines, 20, yPos);
+    }
+  }
+
+  // --- RENDIMIENTOS Y COSECHA (Página 4) ---
+  doc.addPage();
+  addHeader();
+  yPos = 35;
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('PERFORMANCE DE COSECHA Y RENDIMIENTO', 15, yPos);
+  yPos += 15;
+
+  if (chartImages?.monthlyHarvest) {
+    const props1 = doc.getImageProperties(chartImages.monthlyHarvest);
+    const h1 = (props1.height * 80) / props1.width;
+    doc.addImage(chartImages.monthlyHarvest, 'PNG', 15, yPos, 80, h1);
+    
+    if (chartImages?.batchYield) {
+      const props2 = doc.getImageProperties(chartImages.batchYield);
+      const h2 = (props2.height * 80) / props2.width;
+      doc.addImage(chartImages.batchYield, 'PNG', 110, yPos, 80, h2);
+    }
+    yPos += h1 + 10;
+  }
+
+  if (reportData.graphicalAnalysis?.monthlyHarvest || reportData.graphicalAnalysis?.batchYield) {
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Análisis de Rendimiento', 15, yPos);
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const txt = [reportData.graphicalAnalysis?.monthlyHarvest, reportData.graphicalAnalysis?.batchYield].filter(Boolean).join(" ");
+    const lines = doc.splitTextToSize(txt, pageWidth - 30);
+    doc.text(lines, 15, yPos);
+    yPos += (lines.length * 5) + 10;
+  }
+
+  // --- PLAN DE ACCION E INSIGHT (Misma Pagina 4 si cabe, o Pagina 5) ---
   if (yPos > pageHeight - 80) {
     doc.addPage();
     addHeader();
     yPos = 35;
   }
 
-  doc.setFontSize(18);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('ANÁLISIS TÉCNICO', 15, yPos);
-  yPos += 10;
-
-  const getTechCardHeight = (desc: string) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    const lines = doc.splitTextToSize(desc, cardWidth - 10);
-    return Math.max(30, (lines.length * 4) + 15); // Minimum 30mm, compact padding
-  };
-
-  const renderTechCard = (title: string, data: { desc: string, risk: string }, x: number, y: number, height: number) => {
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(229, 231, 235); // Gray-200
-    doc.roundedRect(x, y, cardWidth, height, 2, 2, 'FD');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text(title.toUpperCase(), x + 5, y + 7);
-    
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
-    const lines = doc.splitTextToSize(data.desc, cardWidth - 10);
-    doc.text(lines, x + 5, y + 13);
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`RIESGO: ${data.risk.toUpperCase()}`, x + 5, y + height - 4);
-  };
-
-  const h1 = getTechCardHeight(reportData.technicalAnalysis.climate.desc);
-  const h2 = getTechCardHeight(reportData.technicalAnalysis.phenology.desc);
-  const row1Height = Math.max(h1, h2);
-
-  renderTechCard('Clima', reportData.technicalAnalysis.climate, 15, yPos, row1Height);
-  renderTechCard('Fenología', reportData.technicalAnalysis.phenology, pageWidth / 2 + 5, yPos, row1Height);
-  
-  yPos += row1Height + 5;
-
-  const h3 = getTechCardHeight(reportData.technicalAnalysis.management.desc);
-  const h4 = getTechCardHeight(reportData.technicalAnalysis.health.desc);
-  const row2Height = Math.max(h3, h4);
-
-  if (yPos + row2Height > pageHeight - 30) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-    renderTechCard('Manejo', reportData.technicalAnalysis.management, 15, yPos, row2Height);
-    renderTechCard('Sanidad', reportData.technicalAnalysis.health, pageWidth / 2 + 5, yPos, row2Height);
-    yPos += row2Height + 5;
-  } else {
-    renderTechCard('Manejo', reportData.technicalAnalysis.management, 15, yPos, row2Height);
-    renderTechCard('Sanidad', reportData.technicalAnalysis.health, pageWidth / 2 + 5, yPos, row2Height);
-    yPos += row2Height + 5;
-  }
-
-  // --- ANÁLISIS GRÁFICO ---
-  if (chartImages && (chartImages.phenology || chartImages.monthlyHarvest || chartImages.batchYield)) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text('ANÁLISIS GRÁFICO', 15, yPos);
-    yPos += 15;
-
-    const renderChartWithAnalysis = (title: string, imgData: string, aiText: string | undefined) => {
-      const props = doc.getImageProperties(imgData);
-      const scaledHeight = (props.height * 170) / props.width;
-      
-      let textLines: string[] = [];
-      let textHeight = 0;
-      if (aiText) {
-         doc.setFontSize(10);
-         doc.setFont('helvetica', 'normal');
-         textLines = doc.splitTextToSize(aiText, 170);
-         textHeight = textLines.length * 5 + 5;
-      }
-      
-      if (yPos + scaledHeight + textHeight + 20 > pageHeight - 20) {
-        doc.addPage();
-        addHeader();
-        yPos = 35;
-      }
-
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-      doc.text(title, 20, yPos);
-      yPos += 5;
-      
-      doc.addImage(imgData, 'PNG', 20, yPos, 170, scaledHeight);
-      yPos += scaledHeight + 10;
-      
-      if (aiText) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(30, 30, 30);
-        doc.text(textLines, 20, yPos);
-        yPos += textHeight + 10;
-      } else {
-        yPos += 5;
-      }
-    };
-
-    if (chartImages.phenology) {
-      renderChartWithAnalysis('Evolución Fenológica', chartImages.phenology, reportData.graphicalAnalysis?.phenology);
-    }
-    if (chartImages.monthlyHarvest) {
-      renderChartWithAnalysis('Cosecha Mensual', chartImages.monthlyHarvest, reportData.graphicalAnalysis?.monthlyHarvest);
-    }
-    if (chartImages.batchYield) {
-      renderChartWithAnalysis('Evolución de Cosechas por Lote', chartImages.batchYield, reportData.graphicalAnalysis?.batchYield);
-    }
-  }
-
-  // --- ALERTAS ---
-  if (yPos > pageHeight - 50) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-  } else {
-    yPos += 10;
-  }
-  
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('ALERTAS CRÍTICAS', 15, yPos);
-  yPos += 10;
-
-  autoTable(doc, {
-    startY: yPos,
-    head: [['Fecha', 'Evento Detectado', 'Nivel Riesgo', 'Acción Sugerida']],
-    body: reportData.alerts.map(a => [a.date, a.event, a.risk, a.recommendation]),
-    headStyles: { fillColor: darkGreen, textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: lightGreen },
-    styles: { fontSize: 9, cellPadding: 4 },
-    columnStyles: {
-      0: { width: 25 },
-      1: { width: 45 },
-      2: { width: 25, fontStyle: 'bold' },
-      3: { width: 80 }
-    }
-  });
-
-  yPos = (doc as any).lastAutoTable.finalY + 20;
-
-  // --- RECOMENDACIONES ---
-  if (yPos > pageHeight - 40) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-  }
-
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('PLAN DE ACCIÓN RECOMENDADO', 15, yPos);
-  yPos += 10;
+  doc.text('PLAN DE ACCIÓN SUGERIDO', 15, yPos);
+  yPos += 8;
 
   reportData.recommendations.forEach((rec) => {
-    const problemLines = doc.splitTextToSize(`Problema: ${rec.problem}`, pageWidth - 45);
-    const actionLines = doc.splitTextToSize(`Acción Sugerida: ${rec.action}`, pageWidth - 45);
-    const recHeight = (problemLines.length * 4) + (actionLines.length * 5) + 20;
-
-    if (yPos + recHeight > pageHeight - 20) {
-      doc.addPage();
-      addHeader();
-      yPos = 35;
-    }
-    
-    doc.setFillColor(249, 250, 251);
-    doc.roundedRect(15, yPos, pageWidth - 30, recHeight, 2, 2, 'F');
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text(rec.title.toUpperCase(), 20, yPos + 8);
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
-    doc.text(problemLines, 20, yPos + 16);
-    
     doc.setFontSize(10);
-    doc.setTextColor(30, 30, 30);
     doc.setFont('helvetica', 'bold');
-    doc.text(actionLines, 20, yPos + 16 + (problemLines.length * 4) + 5);
+    doc.setTextColor(30, 30, 30);
+    doc.text(`• ${rec.title}: `, 15, yPos);
     
-    yPos += recHeight + 10;
+    const actionText = `${rec.problem} -> ${rec.action}`;
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(actionText, pageWidth - 35);
+    doc.text(lines, 20, yPos + 5);
+    yPos += (lines.length * 5) + 5;
   });
-
-  // --- AI INSIGHT ---
-  const insightLines = doc.splitTextToSize(reportData.aiInsight, pageWidth - 45);
-  const insightHeight = (insightLines.length * 5) + 20;
-
-  if (yPos + insightHeight > pageHeight - 20) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-  }
   
+  yPos += 10;
+
+  // Insight
   doc.setFillColor(lightGreen[0], lightGreen[1], lightGreen[2]);
   doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  const insightLines = doc.splitTextToSize(reportData.aiInsight, pageWidth - 45);
+  const insightHeight = (insightLines.length * 5) + 20;
   doc.roundedRect(15, yPos, pageWidth - 30, insightHeight, 2, 2, 'FD');
   
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('INSIGHT DE INTELIGENCIA ARTIFICIAL', 20, yPos + 10);
+  doc.text('INSIGHT AGROVISION', 20, yPos + 10);
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');

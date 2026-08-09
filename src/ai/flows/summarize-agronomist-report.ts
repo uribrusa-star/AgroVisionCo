@@ -26,6 +26,8 @@ const SummarizeAgronomistReportOutputSchema = z.object({
   executiveSummary: z.object({
     generalStatus: z.enum(['Óptimo', 'Atención', 'Riesgo']),
     climateRisk: z.enum(['Bajo', 'Medio', 'Alto']),
+    stockStatus: z.enum(['Suficiente', 'Alerta', 'Crítico']),
+    criticalAlertsCount: z.number(),
     conclusions: z.array(z.string()),
     mainRecommendation: z.string(),
   }),
@@ -83,17 +85,18 @@ const prompt = ai.definePrompt({
     - Bitácora de Fenología (Estados de crecimiento): {{{phenologyLogs}}}
     - Historial de Cosechas (Rendimientos): {{{harvestLogs}}}
 
-    **Instrucciones de Redacción:**
-    1. **Lenguaje Profesional**: Usa terminología técnica precisa (ej. "estrés hídrico", "presión de inóculo", "balance nutricional").
-    2. **Capacidad de Síntesis**: Evita párrafos largos. El reporte se mostrará en bloques visuales.
-    3. **Objetividad y Auditoría**: Basa tus juicios estrictamente en los datos. Cruza las hectáreas de los lotes y la genética con los rendimientos.
-    4. **Secciones:**
-       - **Executive Summary**: Determina el estado general basándote en la sanidad y fenología actual.
-       - **Technical Analysis**: Desglosa la situación en 4 áreas (Clima, Fenología, Manejo, Sanidad). Haz énfasis en si el desarrollo fenológico y el rendimiento se ajustan a lo esperado para las variedades plantadas según la ficha botánica.
-       - **Alertas**: Identifica los eventos más críticos. **CRUCIAL**: Revisa la bitácora agronómica y compárala con el inventario de insumos (suppliesData). Si notas un uso intensivo de un producto cuyo stock es muy bajo o está por agotarse, genera una alerta urgente aquí.
-       - **Recommendations**: Proporciona acciones concretas para resolver problemas detectados o reabastecer insumos.
-       - **Graphical Analysis**: Analiza brevemente lo que representarían los gráficos de Fenología, Cosecha Mensual y Cosecha por Lote, usando los datos.
-       - **AI Insight**: Un párrafo integrador que analice la correlación entre el clima, la fenología, la genética y las prácticas realizadas.
+    **Instrucciones de Redacción (CRÍTICO):**
+    1. **Lenguaje Directo y Presente:** PROHIBIDO usar tiempos condicionales o hipotéticos (No uses "El gráfico mostraría" o "Se observaría"). Debes afirmar categóricamente basado en los datos: "Se registra...", "La curva de cosecha muestra...", "El rendimiento actual es...".
+    2. **Métricas Cuantitativas:** Al hablar de rendimientos, debes calcular matemáticamente los kg/ha cruzando los kilos cosechados con las hectáreas de los lotes indicadas en 'Lotes y Genética'.
+    3. **Contexto Operativo en Alertas:** Si generas una alerta de stock bajo, DEBES explicar el impacto operativo ("Riesgo de interrupción del plan de llenado de fruto por falta de Triple 18").
+    
+    **Secciones:**
+       - **Executive Summary:** Evalúa el estado general, el clima y el estado del stock (Suficiente, Alerta, Crítico). Cuenta las alertas críticas y pon el número en \`criticalAlertsCount\`.
+       - **Technical Analysis:** Desglosa Clima, Fenología, Manejo, Sanidad. Justifica con datos directos.
+       - **Alertas:** Identifica riesgos fitosanitarios o quiebres de inventario (cruzando bitácora vs suppliesData).
+       - **Recommendations:** Acciones directas y planificadas (Nutrición, Sanidad).
+       - **Graphical Analysis:** Describe analíticamente la curva fenológica, mensual y por lotes asumiendo que el gráfico ya está dibujado al lado del texto. Explica las diferencias de rendimiento entre variedades.
+       - **AI Insight:** Una conclusión de valor agronómico gerencial de 3 a 5 líneas que integre todo el escenario.
 
     Genera el JSON estructurado solicitado.`,
   });
