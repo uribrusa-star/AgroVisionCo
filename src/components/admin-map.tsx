@@ -50,7 +50,10 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
             if (isNaN(lat) || isNaN(lng)) return null;
             
             const severity = (data.highestProb > 70 || data.count > 2) ? 'Alta' : 'Media';
-            const radius = Math.min(3000 + (data.count * 1000), 10000);
+            // Derive radius from the establishment's actual productive area so the
+            // circle covers roughly the same footprint as the field.
+            const areaSqM = (est.area?.strawberry || est.area?.total || 1) * 10000;
+            const radius = Math.max(60, Math.round(Math.sqrt(areaSqM / Math.PI)));
             
             return {
                 id: `pest-${estId}`,
@@ -149,7 +152,7 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                     <Circle
                         key={`heat-${idx}`}
                         center={{ lat: data.lat, lng: data.lng }}
-                        radius={400 + Math.min(data.weight, 20) * 50}
+                        radius={Math.max(60, Math.round(Math.sqrt((data.weight * 10000) / Math.PI)))}
                         options={{
                             fillColor: '#ef4444',
                             fillOpacity: Math.min(0.2 + (data.weight / 30), 0.75),
