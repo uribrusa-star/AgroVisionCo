@@ -59,7 +59,7 @@ const prompt = ai.definePrompt({
 
         *   **Resumen Ejecutivo**: Escribe un único párrafo que sintetice los hallazgos más importantes. Menciona el volumen total de producción, el rendimiento por hectárea y el aspecto más destacado de los costos en ARS (ej. "El costo de mano de obra representa el mayor porcentaje...").
 
-        *   **Análisis e Interpretación**: Redacta un análisis objetivo y detallado en ARS.
+        *   **Análisis e Interpretación**: Redacta un análisis objetivo y detallado en ARS. **Usa formato Markdown con viñetas numéricas o puntos (como `1. **Tema**:` o `- **Tema**:`) para estructurar visualmente la lectura y que no sea un bloque de texto plano.**
             *   Comenta sobre la producción ({{{productionData}}}). Es CRUCIAL que consideres la superficie cultivada real. Un alto rendimiento en kg/ha es más impresionante en una superficie grande que en una pequeña. Evalúa si la producción total es coherente con la superficie.
             *   Analiza la estructura de costos ({{{costData}}}). ¿Qué categoría tiene el mayor impacto en el costo total? ¿Son los costos de mano de obra una parte significativa? Utiliza siempre el símbolo '$' para los montos.
             *   Relaciona las actividades de la bitácora del agrónomo ({{{agronomistLogs}}}) con los resultados. ¿Las aplicaciones de insumos se reflejan en los costos? ¿Parecen haber tenido un impacto en la producción?

@@ -93,6 +93,82 @@ export const generateTraceabilityPDF = (
   addHeader();
   let yPos = 35;
 
+  if (aiSummary) {
+    let finalY = 35;
+
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+    doc.text('SÍNTESIS DE LA CAMPAÑA (IA)', 15, finalY);
+    finalY += 12;
+
+    const renderMarkdown = (text: string, startX: number, startY: number, maxW: number) => {
+      let currentY = startY;
+      let normalized = text.replace(/(\d+\.\s\*\*)/g, '\n$1');
+      normalized = normalized.replace(/\n{3,}/g, '\n\n').trim();
+      const paragraphs = normalized.split('\n');
+
+      paragraphs.forEach(paragraph => {
+        if (!paragraph.trim()) {
+          currentY += 4;
+          return;
+        }
+
+        if (currentY > pageHeight - 30) {
+          doc.addPage();
+          addHeader();
+          doc.setTextColor(30, 30, 30);
+          currentY = 35;
+        }
+
+        const parts = paragraph.split('**');
+        let currentX = startX;
+        let lineHeight = 5;
+
+        parts.forEach((part, index) => {
+          if (!part) return;
+          const isBold = index % 2 === 1;
+          doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+          
+          const words = part.split(/(\s+)/);
+          words.forEach(word => {
+            if (!word) return;
+            const wordWidth = doc.getTextWidth(word + ' ');
+            
+            if (currentX + wordWidth > startX + maxW && word.trim() !== '') {
+              currentY += lineHeight;
+              currentX = startX;
+              if (currentY > pageHeight - 30) {
+                doc.addPage();
+                addHeader();
+                doc.setTextColor(30, 30, 30);
+                currentY = 35;
+                doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+              }
+              if (word.trim() === '') return;
+            }
+            
+            doc.text(word, currentX, currentY);
+            currentX += wordWidth;
+          });
+        });
+        currentY += lineHeight + 4;
+      });
+      return currentY;
+    };
+
+    doc.setFontSize(10);
+    doc.setTextColor(30, 30, 30);
+    yPos = renderMarkdown(aiSummary, 15, finalY, pageWidth - 30) + 15;
+    
+    // Add page break if not enough space for table
+    if (yPos > pageHeight - 60) {
+      doc.addPage();
+      addHeader();
+      yPos = 35;
+    }
+  }
+
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
@@ -160,76 +236,7 @@ export const generateTraceabilityPDF = (
     }
   });
 
-  if (aiSummary) {
-    doc.addPage();
-    addHeader();
-    let finalY = 35;
 
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text('SÍNTESIS DE LA CAMPAÑA (IA)', 15, finalY);
-    finalY += 12;
-
-    const renderMarkdown = (text: string, startX: number, startY: number, maxW: number) => {
-      let currentY = startY;
-      let normalized = text.replace(/(\d+\.\s\*\*)/g, '\n$1');
-      normalized = normalized.replace(/\n{3,}/g, '\n\n').trim();
-      const paragraphs = normalized.split('\n');
-
-      paragraphs.forEach(paragraph => {
-        if (!paragraph.trim()) {
-          currentY += 4;
-          return;
-        }
-
-        if (currentY > pageHeight - 30) {
-          doc.addPage();
-          addHeader();
-          doc.setTextColor(30, 30, 30);
-          currentY = 35;
-        }
-
-        const parts = paragraph.split('**');
-        let currentX = startX;
-        let lineHeight = 5;
-
-        parts.forEach((part, index) => {
-          if (!part) return;
-          const isBold = index % 2 === 1;
-          doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-          
-          const words = part.split(/(\s+)/);
-          words.forEach(word => {
-            if (!word) return;
-            const wordWidth = doc.getTextWidth(word + ' ');
-            
-            if (currentX + wordWidth > startX + maxW && word.trim() !== '') {
-              currentY += lineHeight;
-              currentX = startX;
-              if (currentY > pageHeight - 30) {
-                doc.addPage();
-                addHeader();
-                doc.setTextColor(30, 30, 30);
-                currentY = 35;
-                doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-              }
-              if (word.trim() === '') return;
-            }
-            
-            doc.text(word, currentX, currentY);
-            currentX += wordWidth;
-          });
-        });
-        currentY += lineHeight + 4;
-      });
-      return currentY;
-    };
-
-    doc.setFontSize(10);
-    doc.setTextColor(30, 30, 30);
-    renderMarkdown(aiSummary, 15, finalY, pageWidth - 30);
-  }
 
   addFooter();
   doc.save(`Trazabilidad_Lote_${batch.id}_${format(new Date(), 'yyyyMMdd')}.pdf`);
