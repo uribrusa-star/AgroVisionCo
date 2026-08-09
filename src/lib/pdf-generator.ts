@@ -373,629 +373,328 @@ export const generateMonthlyProductionPDF = (
   doc.save(`Produccion_Mensual_${format(month, 'yyyy_MM')}.pdf`);
 };
 
-export const generateAgronomistReportPDF = async (
+export const generateAgronomistReportPDF = (
   establishment: EstablishmentData,
   agronomistName: string,
   reportData: SummarizeAgronomistReportOutput,
-  chartImages?: { phenology: string; monthlyHarvest: string; batchYield: string; },
-  logoDataUri?: string,
-  batches?: Batch[],
-  harvests?: Harvest[]
+  chartImages?: {
+    phenology: string;
+    monthlyHarvest: string;
+    batchYield: string;
+  },
+  logoDataUri?: string
 ) => {
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
+  
+  const darkGreen = [20, 83, 45] as [number, number, number];
+  const mediumGreen = [34, 197, 94] as [number, number, number];
+  const lightGreen = [240, 253, 244] as [number, number, number];
+  const techGrey = [75, 85, 99] as [number, number, number];
+  const alertRed = [220, 38, 38] as [number, number, number];
+  const alertYellow = [234, 179, 8] as [number, number, number];
 
-  // ─── PALETA EDITORIAL B2B ─────────────────────────────────────────────
-  const darkGreen    = [20,  72,  40];   // #144828 Verde AgroVista Institucional
-  const accentGreen  = [50, 130,  70];   // #328246 Verde acento
-  const lightBg      = [247, 249, 247];  // Fondo tarjetas suave
-  const charcoal     = [35,  40,  38];   // #232826 Texto principal (grafito)
-  const mutedGrey    = [100, 110, 105];  // Texto secundario
-  const borderGrey   = [220, 228, 222];  // Bordes limpios
-  const terracotta   = [170,  60,  55];  // Crítico / Alerta (apagado)
-  const amber        = [160, 110,  35];  // Atención / Media (apagado)
-  const successGreen = [40,  120,  60];  // Normal / Baja
-
-  const riskColor = (level: string | number): number[] => {
-    const s = String(level).toLowerCase();
-    if (s.includes('alto') || s.includes('criti') || s.includes('riesgo')) return terracotta;
-    if (s.includes('medio') || s.includes('atenci') || s.includes('alerta')) return amber;
-    return successGreen;
-  };
-
-  const addHeader = () => {
-    doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.rect(0, 0, pageWidth, 18, 'F');
-    doc.setFillColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-    doc.rect(0, 18, pageWidth, 1.2, 'F');
-    if (logoDataUri) doc.addImage(logoDataUri, 'PNG', 10, 3, 12, 12);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
-    doc.text('INFORME TÉCNICO AGRONÓMICO', 26, 11);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
-    doc.text(establishment.producer, 26, 15.5);
-    doc.text(format(new Date(), 'dd/MM/yyyy'), pageWidth - 12, 11, { align: 'right' });
-    doc.text(agronomistName, pageWidth - 12, 15.5, { align: 'right' });
+  const addHeader = (isCover = false) => {
+    if (!isCover) {
+      doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+      doc.rect(0, 0, pageWidth, 20, 'F');
+      if (logoDataUri) {
+        doc.addImage(logoDataUri, 'PNG', 10, 4, 12, 12);
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('INFORME T├ëCNICO AGRON├ôMICO', 25, 12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(establishment.producer, 25, 16);
+      doc.text(format(new Date(), 'dd/MM/yyyy'), pageWidth - 10, 12, { align: 'right' });
+    }
   };
 
   const addFooter = () => {
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      if (i === 1) continue; // Cover has no footer
       doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-      doc.rect(0, pageHeight - 12, pageWidth, 12, 'F');
-      doc.setTextColor(255, 255, 255); doc.setFontSize(8);
-      doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 4.5, { align: 'center' });
-      doc.text('AgroVista · Gestión de Precisión', 12, pageHeight - 4.5);
-      doc.text('Confidencial', pageWidth - 12, pageHeight - 4.5, { align: 'right' });
+      doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text(`P├ígina ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
+      doc.text('AgroVista - Gesti├│n de Precisi├│n', 10, pageHeight - 7);
+      doc.text('Confidencial', pageWidth - 10, pageHeight - 7, { align: 'right' });
     }
   };
 
-  const sectionTitle = (text: string, y: number): number => {
-    doc.setFontSize(18); doc.setFont('helvetica', 'bold');
-    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text(text, 15, y);
-    doc.setFillColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-    doc.rect(15, y + 2, 28, 1.5, 'F');
-    return y + 10;
-  };
-
-  const subHeading = (text: string, y: number): number => {
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text(text, 15, y);
-    return y + 7;
-  };
-
-  const bodyParagraph = (text: string, x: number, y: number, maxW: number): number => {
-    doc.setFontSize(10.5); doc.setFont('helvetica', 'normal');
-    doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-    const lines = doc.splitTextToSize(text || '', maxW);
-    doc.text(lines, x, y);
-    return y + lines.length * 5.2 + 4;
-  };
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 1 — PORTADA INSTITUCIONAL
-  // ═══════════════════════════════════════════════════════════════════════
+  // --- PORTADA (P├ígina 1) ---
   doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-  // Subtle diagonal geometric pattern
-  doc.setDrawColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.setLineWidth(0.3);
-  for (let xi = -30; xi < pageWidth + 100; xi += 20) { doc.line(xi, 0, xi + 90, pageHeight); }
-
-  // Premium white central container
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(16, 50, pageWidth - 32, 175, 4, 4, 'F');
-
-  if (logoDataUri) doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 20, 62, 40, 40);
-
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.setFontSize(24); doc.setFont('helvetica', 'bold');
-  doc.text('INFORME TÉCNICO', pageWidth / 2, 118, { align: 'center' });
-  doc.text('AGRONÓMICO', pageWidth / 2, 129, { align: 'center' });
-
-  doc.setFillColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.rect(pageWidth / 2 - 22, 134, 44, 1.5, 'F');
-
-  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-  doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-  doc.text('ESTABLECIMIENTO', pageWidth / 2, 144, { align: 'center' });
-
-  doc.setFontSize(18); doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text(establishment.producer.toUpperCase(), pageWidth / 2, 154, { align: 'center' });
-
-  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-  doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-  doc.text(`${establishment.location.locality}, ${establishment.location.province}  ·  ${establishment.system}`, pageWidth / 2, 163, { align: 'center' });
-  doc.text(`Fecha del Informe: ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`, pageWidth / 2, 170, { align: 'center' });
-
-  doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
-  doc.setLineWidth(0.5);
-  doc.line(36, 177, pageWidth - 36, 177);
-
-  doc.setFontSize(9.5); doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-  doc.text('RESPONSABLE TÉCNICO', pageWidth / 2, 185, { align: 'center' });
-  doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text(agronomistName.toUpperCase(), pageWidth / 2, 194, { align: 'center' });
-
-  doc.setFillColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.rect(0, pageHeight - 18, pageWidth, 18, 'F');
-  doc.setTextColor(255, 255, 255); doc.setFontSize(9.5); doc.setFont('helvetica', 'normal');
-  doc.text('AgroVista · Gestión de Precisión Agrícola', pageWidth / 2, pageHeight - 7, { align: 'center' });
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 2 — FICHA DEL ESTABLECIMIENTO + MAPA SATELITAL REAL
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  let yPos = 30;
-
-  yPos = sectionTitle('FICHA DEL ESTABLECIMIENTO', yPos);
-
-  // Metric Cards Grid (2x2)
-  const cardW = (pageWidth - 36) / 4;
-  const metrics = [
-    { label: 'SUPERFICIE FRUTILLA', val: `${establishment.area.strawberry} ha` },
-    { label: 'LOTES ACTIVOS', val: String((batches || []).length) },
-    { label: 'VARIEDADES', val: String(Array.from(new Set((batches || []).flatMap(b => b.varieties?.map(v => v.name).filter(Boolean) || []))).length) },
-    { label: 'SISTEMA RIEGO', val: establishment.irrigation?.system || 'Goteo' },
-  ];
-
-  metrics.forEach((m, idx) => {
-    const xp = 15 + idx * (cardW + 2);
-    doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-    doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(xp, yPos, cardW, 20, 2, 2, 'FD');
-    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-    doc.text(m.label, xp + 4, yPos + 6);
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-    doc.text(m.val, xp + 4, yPos + 15);
-  });
-  yPos += 26;
-
-  // Delimited Lot Map (Native Vector polygon layer with satellite background layout)
-  let geoJsonObj: any = null;
-  const locAny = establishment.location as any;
-  if (locAny && locAny.geoJsonData) {
-    try { geoJsonObj = typeof locAny.geoJsonData === 'string' ? JSON.parse(locAny.geoJsonData) : locAny.geoJsonData; } catch {}
+  
+  doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  doc.setLineWidth(2);
+  doc.line(20, 40, 20, 250);
+  
+  if (logoDataUri) {
+    doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 25, 60, 50, 50);
   }
 
-  const mapW = pageWidth - 30;
-  const mapH = 55;
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(36);
+  doc.setFont('helvetica', 'bold');
+  doc.text('INFORME T├ëCNICO', 30, 140);
+  doc.text('AGRON├ôMICO', 30, 155);
 
-  doc.setFillColor(30, 45, 35); // Dark satellite tone background
-  doc.setDrawColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(15, yPos, mapW, mapH, 3, 3, 'FD');
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  doc.text('ESTABLECIMIENTO', 30, 180);
+  doc.setFontSize(22);
+  doc.setTextColor(255, 255, 255);
+  doc.text(establishment.producer.toUpperCase(), 30, 192);
 
-  // Header strip
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.roundedRect(15, yPos, mapW, 7, 3, 3, 'F');
-  doc.rect(15, yPos + 4, mapW, 3, 'F');
-  doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-  doc.text('DELIMITACIÓN DE LOTES EN EL ESTABLECIMIENTO', 20, yPos + 5);
+  doc.setFontSize(12);
+  doc.setTextColor(200, 200, 200);
+  doc.text(`Ubicaci├│n: ${establishment.location.locality}, ${establishment.location.province}`, 30, 202);
+  doc.text(`Sistema: ${establishment.system}`, 30, 208);
+  doc.text(`Fecha: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
 
-  let allCoords: [number, number][] = [];
-  const polygons: { id: string; coords: [number, number][] }[] = [];
+  doc.setFontSize(14);
+  doc.setTextColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  doc.text('PROFESIONAL RESPONSABLE', 30, 240);
+  doc.setFontSize(18);
+  doc.setTextColor(255, 255, 255);
+  doc.text(agronomistName.toUpperCase(), 30, 250);
 
-  if (geoJsonObj && geoJsonObj.features) {
-    geoJsonObj.features.forEach((feat: any) => {
-      const bId = feat.properties?.id || feat.properties?.name || 'Lote';
-      const geom = feat.geometry;
-      if (geom && (geom.type === 'Polygon' || geom.type === 'MultiPolygon')) {
-        const rings = geom.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.map((c: any) => c[0]);
-        rings.forEach((ring: any) => {
-          const pts: [number, number][] = ring.map((pt: any) => [pt[0], pt[1]]);
-          polygons.push({ id: bId, coords: pts });
-          allCoords.push(...pts);
-        });
-      }
-    });
-  }
+  // --- DASHBOARD & ALERTAS (P├ígina 2) ---
+  doc.addPage();
+  addHeader();
+  let yPos = 35;
 
-  if (allCoords.length > 0) {
-    const minLng = Math.min(...allCoords.map(c => c[0]));
-    const maxLng = Math.max(...allCoords.map(c => c[0]));
-    const minLat = Math.min(...allCoords.map(c => c[1]));
-    const maxLat = Math.max(...allCoords.map(c => c[1]));
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('DASHBOARD EJECUTIVO', 15, yPos);
+  yPos += 10;
 
-    const lngSpan = (maxLng - minLng) || 0.001;
-    const latSpan = (maxLat - minLat) || 0.001;
-    const pad = 10;
-    const drawW = mapW - pad * 2;
-    const drawH = mapH - 12 - pad;
+  const cardWidth = (pageWidth - 45) / 4;
+  
+  const drawKpiCard = (title: string, value: string, riskLevel: string | number, xPos: number) => {
+    let color = darkGreen;
+    if (riskLevel === 'Medio' || riskLevel === 'Atenci├│n' || riskLevel === 'Alerta') color = alertYellow;
+    if (riskLevel === 'Alto' || riskLevel === 'Riesgo' || riskLevel === 'Cr├¡tico' || (typeof riskLevel === 'number' && riskLevel > 0)) color = alertRed;
 
-    polygons.forEach((poly) => {
-      const screenPts = poly.coords.map(([lng, lat]) => {
-        const sx = 15 + pad + ((lng - minLng) / lngSpan) * drawW;
-        const sy = yPos + 9 + drawH - ((lat - minLat) / latSpan) * drawH;
-        return { x: sx, y: sy };
-      });
+    doc.setFillColor(lightGreen[0], lightGreen[1], lightGreen[2]);
+    doc.setDrawColor(color[0], color[1], color[2]);
+    doc.roundedRect(xPos, yPos, cardWidth, 20, 2, 2, 'FD');
+    
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
+    doc.text(title, xPos + 5, yPos + 6);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(color[0], color[1], color[2]);
+    const valText = doc.splitTextToSize(String(value).toUpperCase(), cardWidth - 10);
+    doc.text(valText, xPos + 5, yPos + 14);
+  };
 
-      if (screenPts.length > 2) {
-        doc.setFillColor(34, 197, 94);
-        doc.setGState(new (doc as any).GState({ opacity: 0.35 }));
-        doc.setDrawColor(255, 255, 255);
-        doc.setLineWidth(0.8);
+  drawKpiCard('ESTADO', reportData.executiveSummary.generalStatus, reportData.executiveSummary.generalStatus, 15);
+  drawKpiCard('CLIMA', reportData.executiveSummary.climateRisk, reportData.executiveSummary.climateRisk, 15 + cardWidth + 5);
+  drawKpiCard('SANIDAD', reportData.technicalAnalysis.health.risk, reportData.technicalAnalysis.health.risk, 15 + (cardWidth + 5) * 2);
+  drawKpiCard('STOCK CR├ìTICO', `${reportData.executiveSummary.criticalAlertsCount} ALERTAS`, reportData.executiveSummary.criticalAlertsCount, 15 + (cardWidth + 5) * 3);
 
-        const first = screenPts[0];
-        for (let k = 0; k < screenPts.length - 1; k++) {
-          doc.line(screenPts[k].x, screenPts[k].y, screenPts[k + 1].x, screenPts[k + 1].y);
-        }
-        doc.line(screenPts[screenPts.length - 1].x, screenPts[screenPts.length - 1].y, first.x, first.y);
-        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+  yPos += 28;
 
-        const avgX = screenPts.reduce((s, p) => s + p.x, 0) / screenPts.length;
-        const avgY = screenPts.reduce((s, p) => s + p.y, 0) / screenPts.length;
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('RESUMEN Y RECOMENDACI├ôN', 15, yPos);
+  yPos += 6;
 
-        doc.setFillColor(20, 72, 40);
-        doc.roundedRect(avgX - 8, avgY - 3.5, 16, 7, 1.5, 1.5, 'F');
-        doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-        doc.text(poly.id, avgX, avgY + 1.2, { align: 'center' });
-      }
-    });
-  } else {
-    doc.setFontSize(9.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(200, 210, 200);
-    doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province} (${establishment.location.coordinates || 'Sin GPS'})`, pageWidth / 2, yPos + 30, { align: 'center' });
-  }
-  yPos += mapH + 8;
+  const summaryText = reportData.executiveSummary.conclusions.join(" ") + " " + reportData.executiveSummary.mainRecommendation;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 30, 30);
+  const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 30);
+  doc.text(summaryLines, 15, yPos);
+  yPos += (summaryLines.length * 5) + 8;
 
-  // Clean Batch Table
-  if (batches && batches.length > 0) {
-    yPos = subHeading('DISTRIBUCIÓN DE LOTES ACTIVOS', yPos);
-    const batchRows = batches.map(b => {
-      const variety = b.varieties?.map(v => v.name).filter(Boolean).join(', ') || 'Pendiente';
-      const area = b.varieties?.reduce((s, v) => s + (v.area || 0), 0).toFixed(2) || '—';
-      const plantDate = b.varieties?.find(v => v.plantingDate)?.plantingDate;
-      const dateStr = plantDate ? format(new Date(plantDate), 'dd/MM/yyyy') : 'Sin fecha';
-      return [b.id, variety, `${area} ha`, dateStr, 'Activo'];
-    });
+  // ALERTAS CRITICAS
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(alertRed[0], alertRed[1], alertRed[2]);
+  doc.text('ALERTAS CR├ìTICAS E INVENTARIO', 15, yPos);
+  yPos += 8;
 
+  if (reportData.alerts.length > 0) {
     autoTable(doc, {
       startY: yPos,
-      head: [['Lote', 'Variedad', 'Superficie', 'Fecha Plantación', 'Estado']],
-      body: batchRows,
-      headStyles: { fillColor: [darkGreen[0], darkGreen[1], darkGreen[2]] as any, textColor: 255, fontStyle: 'bold', fontSize: 9 },
-      styles: { fontSize: 9.5, cellPadding: 4, textColor: charcoal as any },
-      alternateRowStyles: { fillColor: [248, 250, 248] },
-      columnStyles: { 0: { cellWidth: 20, fontStyle: 'bold' }, 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' } },
+      head: [['Fecha', 'Evento Detectado', 'Nivel Riesgo', 'Acci├│n Sugerida']],
+      body: reportData.alerts.map(a => [a.date, a.event, a.risk, a.recommendation]),
+      headStyles: { fillColor: alertRed, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [254, 242, 242] },
+      styles: { fontSize: 9, cellPadding: 4 },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 22, fontStyle: 'bold' },
+        3: { cellWidth: 85 }
+      }
     });
-    yPos = (doc as any).lastAutoTable.finalY + 10;
+    yPos = (doc as any).lastAutoTable.finalY + 15;
+  } else {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
+    doc.text('No se detectaron alertas cr├¡ticas operativas o de inventario.', 15, yPos);
+    yPos += 10;
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 3 — ESTADO Y DIAGNÓSTICO EJECUTIVO
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
+  // --- AN├üLISIS DE CAMPO Y FENOLOG├ìA (P├ígina 3) ---
+  doc.addPage();
+  addHeader();
+  yPos = 35;
 
-  yPos = sectionTitle('DASHBOARD Y DIAGNÓSTICO EJECUTIVO', yPos);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('AN├üLISIS AGRON├ôMICO DE CAMPO', 15, yPos);
+  yPos += 10;
 
-  // Executive KPI Cards (Wide layout)
-  const kpiW = (pageWidth - 45) / 4;
-  const kpis = [
-    { title: 'ESTADO GENERAL', value: reportData.executiveSummary.generalStatus, risk: reportData.executiveSummary.generalStatus },
-    { title: 'RIESGO CLIMÁTICO', value: reportData.executiveSummary.climateRisk, risk: reportData.executiveSummary.climateRisk },
-    { title: 'RIESGO SANITARIO', value: reportData.technicalAnalysis.health.risk, risk: reportData.technicalAnalysis.health.risk },
-    { title: 'ALERTAS ACTIVAS', value: `${reportData.executiveSummary.criticalAlertsCount} ALERTAS`, risk: reportData.executiveSummary.criticalAlertsCount },
-  ];
+  const renderFieldAnalysis = (title: string, desc: string, x: number, w: number) => {
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+    doc.text(title, x, yPos);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+    const lines = doc.splitTextToSize(desc, w);
+    doc.text(lines, x, yPos + 6);
+    return (lines.length * 4) + 12;
+  };
 
-  kpis.forEach((kpi, i) => {
-    const xp = 15 + i * (kpiW + 5);
-    const col = riskColor(kpi.risk);
-    doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-    doc.setDrawColor(col[0], col[1], col[2]);
-    doc.setLineWidth(0.6);
-    doc.roundedRect(xp, yPos, kpiW, 24, 3, 3, 'FD');
+  const halfWidth = (pageWidth - 40) / 2;
+  let maxH1 = Math.max(
+    renderFieldAnalysis('Clima', reportData.technicalAnalysis.climate.desc, 15, halfWidth),
+    renderFieldAnalysis('Manejo', reportData.technicalAnalysis.management.desc, 15 + halfWidth + 10, halfWidth)
+  );
+  yPos += maxH1;
 
-    doc.setFillColor(col[0], col[1], col[2]);
-    doc.roundedRect(xp, yPos, 3, 24, 1.5, 1.5, 'F');
-
-    doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-    doc.text(kpi.title, xp + 6, yPos + 7);
-
-    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(col[0], col[1], col[2]);
-    const vl = doc.splitTextToSize(String(kpi.value).toUpperCase(), kpiW - 9);
-    doc.text(vl, xp + 6, yPos + 16);
-  });
-  yPos += 32;
-
-  // Editorial Executive Diagnosis (Large readable typography)
-  yPos = subHeading('DIAGNÓSTICO EJECUTIVO DE CAMPO', yPos);
-
-  const summaryText = (reportData.executiveSummary.conclusions || []).join(' ');
-  const sumLines = doc.splitTextToSize(summaryText, pageWidth - 46);
-  const sumBoxH = sumLines.length * 5.2 + 16;
-
-  doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-  doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(15, yPos, pageWidth - 30, sumBoxH, 3, 3, 'FD');
-  doc.setFillColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.roundedRect(15, yPos, 3.5, sumBoxH, 1.5, 1.5, 'F');
-
-  doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('Resumen del Estado Productivo', 23, yPos + 9);
-  doc.setFontSize(10.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-  doc.text(sumLines, 23, yPos + 17);
-  yPos += sumBoxH + 8;
-
-  // Main Recommendation Box
-  const recText = reportData.executiveSummary.mainRecommendation || '';
-  const recLines = doc.splitTextToSize(recText, pageWidth - 46);
-  const recBoxH = recLines.length * 5.2 + 16;
-
-  doc.setFillColor(242, 248, 244);
-  doc.setDrawColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(15, yPos, pageWidth - 30, recBoxH, 3, 3, 'FD');
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.roundedRect(15, yPos, 3.5, recBoxH, 1.5, 1.5, 'F');
-
-  doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('Recomendación Principal del Profesional', 23, yPos + 9);
-  doc.setFontSize(10.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-  doc.text(recLines, 23, yPos + 17);
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 4 — ANÁLISIS AGRONÓMICO DE CAMPO
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
-  yPos = sectionTitle('ANÁLISIS AGRONÓMICO DE CAMPO', yPos);
-
-  const fieldBlocks = [
-    { label: 'CLIMA Y AMBIENTE', data: reportData.technicalAnalysis.climate },
-    { label: 'MANEJO Y FERTIRRIEGO', data: reportData.technicalAnalysis.management },
-    { label: 'EVOLUCIÓN FENOLÓGICA', data: reportData.technicalAnalysis.phenology },
-    { label: 'ESTADO SANITARIO', data: reportData.technicalAnalysis.health },
-  ];
-
-  const halfW = (pageWidth - 40) / 2;
-
-  for (let i = 0; i < fieldBlocks.length; i += 2) {
-    const left = fieldBlocks[i];
-    const right = fieldBlocks[i + 1];
-
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    const lLines = doc.splitTextToSize(left?.data?.desc || '', halfW - 10).length;
-    const rLines = right ? doc.splitTextToSize(right?.data?.desc || '', halfW - 10).length : 0;
-    const blockH = Math.max(lLines, rLines) * 5.2 + 20;
-
-    if (yPos + blockH > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 30; }
-
-    const drawBlock = (block: typeof fieldBlocks[0], xStart: number) => {
-      const col = block.data?.risk ? riskColor(block.data.risk) : accentGreen;
-      doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-      doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
-      doc.setLineWidth(0.4);
-      doc.roundedRect(xStart, yPos, halfW, blockH, 3, 3, 'FD');
-
-      doc.setFillColor(col[0], col[1], col[2]);
-      doc.roundedRect(xStart, yPos, halfW, 8.5, 3, 3, 'F');
-      doc.rect(xStart, yPos + 4, halfW, 4.5, 'F');
-
-      doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
-      const headerLabel = block.data?.risk ? `${block.label}  ·  ${String(block.data.risk).toUpperCase()}` : block.label;
-      doc.text(headerLabel, xStart + 5, yPos + 6);
-
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-      const desc = doc.splitTextToSize(block.data?.desc || 'Sin registros.', halfW - 10);
-      doc.text(desc, xStart + 5, yPos + 15);
-    };
-
-    drawBlock(left, 15);
-    if (right) drawBlock(right, 15 + halfW + 10);
-    yPos += blockH + 8;
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 5 — EVOLUCIÓN FENOLÓGICA (Dedicated Page for Full Quality)
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
-  yPos = sectionTitle('EVOLUCIÓN FENOLÓGICA DEL CULTIVO', yPos);
+  let maxH2 = Math.max(
+    renderFieldAnalysis('Fenolog├¡a', reportData.technicalAnalysis.phenology.desc, 15, halfWidth),
+    renderFieldAnalysis('Sanidad', reportData.technicalAnalysis.health.desc, 15 + halfWidth + 10, halfWidth)
+  );
+  yPos += maxH2 + 5;
 
   if (chartImages?.phenology) {
     const props = doc.getImageProperties(chartImages.phenology);
-    const imgW = pageWidth - 30;
-    const imgH = (props.height * imgW) / props.width;
-
-    doc.addImage(chartImages.phenology, 'PNG', 15, yPos, imgW, imgH);
-    yPos += imgH + 10;
-  }
-
-  if (reportData.graphicalAnalysis?.phenology) {
-    yPos = subHeading('INTERPRETACIÓN FENOLÓGICA', yPos);
-    yPos = bodyParagraph(reportData.graphicalAnalysis.phenology, 15, yPos, pageWidth - 30);
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 6 — PERFORMANCE DE COSECHA Y RENDIMIENTO
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
-  yPos = sectionTitle('PERFORMANCE DE COSECHA Y RENDIMIENTO', yPos);
-
-  if (chartImages?.monthlyHarvest) {
-    const chartW = (pageWidth - 40) / 2;
-    const p1 = doc.getImageProperties(chartImages.monthlyHarvest);
-    const h1 = (p1.height * chartW) / p1.width;
-    doc.addImage(chartImages.monthlyHarvest, 'PNG', 15, yPos, chartW, h1);
-    if (chartImages?.batchYield) {
-      const p2 = doc.getImageProperties(chartImages.batchYield);
-      const h2 = (p2.height * chartW) / p2.width;
-      doc.addImage(chartImages.batchYield, 'PNG', 15 + chartW + 10, yPos, chartW, h2);
-      yPos += Math.max(h1, h2) + 10;
-    } else {
-      yPos += h1 + 10;
+    const scaledHeight = (props.height * 170) / props.width;
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Evoluci├│n Fenol├│gica', 15, yPos);
+    yPos += 5;
+    
+    doc.addImage(chartImages.phenology, 'PNG', 20, yPos, 170, scaledHeight);
+    yPos += scaledHeight + 8;
+    
+    if (reportData.graphicalAnalysis?.phenology) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      const lines = doc.splitTextToSize(reportData.graphicalAnalysis.phenology, 170);
+      doc.text(lines, 20, yPos);
     }
   }
 
-  yPos = subHeading('ANÁLISIS DE RENDIMIENTO PRODUCTIVO', yPos);
-  const analysisText = [reportData.graphicalAnalysis?.monthlyHarvest, reportData.graphicalAnalysis?.batchYield].filter(Boolean).join(' ');
-  yPos = bodyParagraph(analysisText, 15, yPos, pageWidth - 30);
+  // --- RENDIMIENTOS Y COSECHA (P├ígina 4) ---
+  doc.addPage();
+  addHeader();
+  yPos = 35;
 
-  // Clean Breakdown Table per Lot (No confusing grouped rows)
-  if (batches && batches.length > 0) {
-    const totalKg = (harvests || []).reduce((s, h) => s + (h.kilograms || 0), 0);
-
-    const harvestRows = batches.map(b => {
-      const bKg = (harvests || [])
-        .filter(h => h.batchNumber && h.batchNumber.includes(b.id))
-        .reduce((s, h) => s + (h.kilograms || 0), 0);
-
-      const area = b.varieties?.reduce((s, v) => s + (v.area || 0), 0) || 0;
-      const variety = b.varieties?.map(v => v.name).filter(Boolean).join(', ') || '—';
-      const yieldText = area > 0 ? `${(bKg / area).toFixed(1)} kg/ha` : '—';
-
-      return [b.id, variety, `${area.toFixed(2)} ha`, `${bKg.toFixed(2)} kg`, yieldText];
-    });
-
-    if (yPos > pageHeight - 55) { doc.addPage(); addHeader(); yPos = 30; }
-    yPos = subHeading('RENDIMIENTO DETALLADO POR LOTE INDIVIDUAL', yPos);
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Lote', 'Variedad', 'Superficie', 'Total Cosechado', 'Rendimiento']],
-      body: [...harvestRows, ['TOTAL', '—', `${establishment.area.strawberry} ha`, `${totalKg.toFixed(2)} kg`, '—']],
-      headStyles: { fillColor: [darkGreen[0], darkGreen[1], darkGreen[2]] as any, textColor: 255, fontStyle: 'bold', fontSize: 9 },
-      styles: { fontSize: 9.5, cellPadding: 4, textColor: charcoal as any },
-      alternateRowStyles: { fillColor: [248, 250, 248] },
-      didParseCell: (data: any) => {
-        if (data.row.index === harvestRows.length && data.section === 'body') {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [darkGreen[0], darkGreen[1], darkGreen[2]];
-          data.cell.styles.textColor = [255, 255, 255];
-        }
-      },
-    });
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 7 — PLAN DE ACCIÓN SUGERIDO (EDITORIAL ACTION CARDS)
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
-  yPos = sectionTitle('PLAN DE ACCIÓN SUGERIDO', yPos);
-
-  if (reportData.recommendations && reportData.recommendations.length > 0) {
-    reportData.recommendations.forEach((rec, idx) => {
-      const text = ((rec.problem || '') + (rec.action || '')).toLowerCase();
-      const priorityStr = text.includes('criti') || text.includes('urgente') || text.includes('agotado') ? 'PRIORIDAD ALTA'
-        : text.includes('medio') || text.includes('monitoreo') || text.includes('revisar') ? 'PRIORIDAD MEDIA' : 'PROGRAMADO';
-      const col = riskColor(priorityStr);
-
-      doc.setFontSize(10.5); doc.setFont('helvetica', 'normal');
-      const probLines = doc.splitTextToSize(rec.problem || '', pageWidth - 48);
-      const actLines = doc.splitTextToSize(rec.action || '', pageWidth - 48);
-      const cardH = (probLines.length + actLines.length) * 5.2 + 24;
-
-      if (yPos + cardH > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 30; }
-
-      doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-      doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
-      doc.setLineWidth(0.4);
-      doc.roundedRect(15, yPos, pageWidth - 30, cardH, 3, 3, 'FD');
-
-      doc.setFillColor(col[0], col[1], col[2]);
-      doc.roundedRect(15, yPos, 3.5, cardH, 1.5, 1.5, 'F');
-
-      doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(col[0], col[1], col[2]);
-      doc.text(`0${idx + 1} · ${priorityStr}`, 23, yPos + 8);
-
-      doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-      doc.text(rec.title || 'Medida Operativa', 23, yPos + 14);
-
-      let innerY = yPos + 21;
-      doc.setFontSize(9.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-      doc.text('Problema Detectado:', 23, innerY);
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-      doc.text(probLines, 56, innerY);
-
-      innerY += probLines.length * 5.2 + 3;
-      doc.setFont('helvetica', 'bold'); doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-      doc.text('Acción Recomendada:', 23, innerY);
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-      doc.text(actLines, 56, innerY);
-
-      yPos += cardH + 7;
-    });
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 8 — ALERTAS CRÍTICAS E INVENTARIO (Clean Executive List)
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
-  yPos = sectionTitle('ALERTAS CRÍTICAS E INVENTARIO', yPos);
-
-  if (reportData.alerts && reportData.alerts.length > 0) {
-    reportData.alerts.forEach((alt) => {
-      const col = riskColor(alt.risk);
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-      const recLines = doc.splitTextToSize(alt.recommendation || '', pageWidth - 48);
-      const altBoxH = recLines.length * 5.2 + 18;
-
-      if (yPos + altBoxH > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 30; }
-
-      doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-      doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
-      doc.setLineWidth(0.4);
-      doc.roundedRect(15, yPos, pageWidth - 30, altBoxH, 2.5, 2.5, 'FD');
-
-      doc.setFillColor(col[0], col[1], col[2]);
-      doc.roundedRect(15, yPos, 3, altBoxH, 1.5, 1.5, 'F');
-
-      doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(col[0], col[1], col[2]);
-      doc.text(String(alt.risk).toUpperCase(), 22, yPos + 7);
-
-      doc.setFontSize(10.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-      doc.text(alt.event, 42, yPos + 7);
-      doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-      doc.text(alt.date, pageWidth - 20, yPos + 7, { align: 'right' });
-
-      doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-      doc.text(recLines, 22, yPos + 15);
-
-      yPos += altBoxH + 6;
-    });
-  } else {
-    doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-    doc.roundedRect(15, yPos, pageWidth - 30, 16, 2, 2, 'F');
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-    doc.text('No se registraron alertas críticas ni quiebres de stock en el período analizado.', 22, yPos + 10);
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 9 — INSIGHT AGROVISTA (Editorial Conclusion)
-  // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
-  yPos = sectionTitle('INSIGHT FINAL AGROVISTA', yPos);
-
-  // Large decorative quotation symbol
-  doc.setFontSize(60); doc.setFont('helvetica', 'bold');
-  doc.setTextColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.setGState(new (doc as any).GState({ opacity: 0.15 }));
-  doc.text('"', 14, yPos + 16);
-  doc.setGState(new (doc as any).GState({ opacity: 1 }));
-
-  doc.setFontSize(10.5); doc.setFont('helvetica', 'italic');
-  const insightLines = doc.splitTextToSize(reportData.aiInsight || '', pageWidth - 48);
-  const insightBoxH = insightLines.length * 5.4 + 22;
-
-  doc.setFillColor(lightBg[0], lightBg[1], lightBg[2]);
-  doc.setDrawColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(15, yPos, pageWidth - 30, insightBoxH, 4, 4, 'FD');
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.roundedRect(15, yPos, 4, insightBoxH, 1.5, 1.5, 'F');
-
-  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('Perspectiva Estratégica de AgroVista', 24, yPos + 10);
+  doc.text('PERFORMANCE DE COSECHA Y RENDIMIENTO', 15, yPos);
+  yPos += 15;
 
-  doc.setFontSize(10.5); doc.setFont('helvetica', 'italic');
-  doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-  doc.text(insightLines, 24, yPos + 18);
+  if (chartImages?.monthlyHarvest) {
+    const props1 = doc.getImageProperties(chartImages.monthlyHarvest);
+    const h1 = (props1.height * 80) / props1.width;
+    doc.addImage(chartImages.monthlyHarvest, 'PNG', 15, yPos, 80, h1);
+    
+    if (chartImages?.batchYield) {
+      const props2 = doc.getImageProperties(chartImages.batchYield);
+      const h2 = (props2.height * 80) / props2.width;
+      doc.addImage(chartImages.batchYield, 'PNG', 110, yPos, 80, h2);
+    }
+    yPos += h1 + 10;
+  }
+
+  if (reportData.graphicalAnalysis?.monthlyHarvest || reportData.graphicalAnalysis?.batchYield) {
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('An├ílisis de Rendimiento', 15, yPos);
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const txt = [reportData.graphicalAnalysis?.monthlyHarvest, reportData.graphicalAnalysis?.batchYield].filter(Boolean).join(" ");
+    const lines = doc.splitTextToSize(txt, pageWidth - 30);
+    doc.text(lines, 15, yPos);
+    yPos += (lines.length * 5) + 10;
+  }
+
+  // --- PLAN DE ACCION E INSIGHT (Misma Pagina 4 si cabe, o Pagina 5) ---
+  if (yPos > pageHeight - 80) {
+    doc.addPage();
+    addHeader();
+    yPos = 35;
+  }
+
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('PLAN DE ACCI├ôN SUGERIDO', 15, yPos);
+  yPos += 8;
+
+  reportData.recommendations.forEach((rec) => {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 30, 30);
+    doc.text(`ÔÇó ${rec.title}: `, 15, yPos);
+    
+    const actionText = `${rec.problem} -> ${rec.action}`;
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(actionText, pageWidth - 35);
+    doc.text(lines, 20, yPos + 5);
+    yPos += (lines.length * 5) + 5;
+  });
+  
+  yPos += 10;
+
+  // Insight
+  doc.setFillColor(lightGreen[0], lightGreen[1], lightGreen[2]);
+  doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  const insightLines = doc.splitTextToSize(reportData.aiInsight, pageWidth - 45);
+  const insightHeight = (insightLines.length * 5) + 20;
+  doc.roundedRect(15, yPos, pageWidth - 30, insightHeight, 2, 2, 'FD');
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('INSIGHT AGROVISION', 20, yPos + 10);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 30, 30);
+  doc.text(insightLines, 20, yPos + 18);
 
   addFooter();
   doc.save(`Reporte_AgroVista_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 };
-
 
 export const generateProducerHarvestReportPDF = (
   establishment: EstablishmentData,
