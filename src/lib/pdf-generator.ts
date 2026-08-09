@@ -845,7 +845,26 @@ export const generateAgronomistReportPDF = (
 
   doc.setFontSize(10);
   doc.setTextColor(30, 30, 30);
-  yPos = renderMarkdown(reportData.executiveSummary.mainRecommendation || '', 15, yPos, pageWidth - 30) + 12;
+  yPos = renderMarkdown(reportData.executiveSummary.mainRecommendation || '', 15, yPos, pageWidth - 30) + 10;
+
+  // INSIGHT DE INTELIGENCIA ARTIFICIAL (Ubicado estratégicamente luego de la Recomendación Principal)
+  if (reportData.aiInsight) {
+    if (yPos > pageHeight - 45) {
+      doc.addPage();
+      addHeader();
+      yPos = 35;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+    doc.text('INSIGHT DE INTELIGENCIA ARTIFICIAL', 15, yPos);
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setTextColor(30, 30, 30);
+    yPos = renderMarkdown(reportData.aiInsight || '', 15, yPos, pageWidth - 30) + 12;
+  }
 
   // ═══════════════════════════════════════════════════════════════════════
   // PÁG 4 — ANÁLISIS TÉCNICO AGRONÓMICO DE CAMPO
@@ -1024,25 +1043,6 @@ export const generateAgronomistReportPDF = (
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
     doc.text('No se detectaron alertas críticas operativas o de inventario en el período analizado.', 15, yPos);
-    yPos += 12;
-  }
-
-  if (yPos > pageHeight - 50) {
-    doc.addPage();
-    addHeader();
-    yPos = 35;
-  }
-
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('INSIGHT DE INTELIGENCIA ARTIFICIAL', 15, yPos);
-  yPos += 8;
-
-  doc.setFontSize(10);
-  doc.setTextColor(30, 30, 30);
-  yPos = renderMarkdown(reportData.aiInsight || '', 15, yPos, pageWidth - 30);
-
   addFooter();
   doc.save(`Reporte_AgroVista_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 };
