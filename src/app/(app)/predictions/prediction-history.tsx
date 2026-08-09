@@ -3,7 +3,7 @@
 
 import React, { useContext, useTransition, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -50,47 +50,41 @@ export function PredictionHistory() {
                     <CardDescription>Un registro de los últimos análisis de rendimiento generados. Haga clic para ver detalles.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="h-[550px] overflow-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Fecha</TableHead>
-                                    <TableHead>Lote</TableHead>
-                                    <TableHead>Predicción</TableHead>
-                                    <TableHead>Confianza</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading && Array.from({ length: 5 }).map((_, i) => (
-                                    <TableRow key={`skel-${i}`}>
-                                        <TableCell colSpan={4}>
-                                            <Skeleton className="h-10 w-full" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {!loading && predictionLogs.length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={4} className="text-center h-24">
-                                            No hay predicciones guardadas.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {!loading && predictionLogs.map(log => (
-                                    <TableRow key={log.id} onClick={() => setSelectedLog(log)} className="cursor-pointer">
-                                        <TableCell className="text-xs text-muted-foreground">
+                    <div className="h-[550px] overflow-auto pr-2 space-y-3">
+                        {loading && Array.from({ length: 5 }).map((_, i) => (
+                            <Skeleton key={`skel-${i}`} className="h-24 w-full rounded-lg" />
+                        ))}
+                        
+                        {!loading && predictionLogs.length === 0 && (
+                            <div className="flex items-center justify-center h-32 border rounded-lg bg-muted/20 text-muted-foreground text-sm">
+                                No hay predicciones guardadas.
+                            </div>
+                        )}
+                        
+                        {!loading && predictionLogs.map(log => (
+                            <div 
+                                key={log.id} 
+                                onClick={() => setSelectedLog(log)} 
+                                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors gap-4"
+                            >
+                                <div className="space-y-1.5 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline">{log.batchId}</Badge>
+                                        <span className="text-xs text-muted-foreground">
                                             {new Date(log.date).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{log.batchId}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm truncate max-w-[200px]">{log.prediction}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={getConfidenceBadgeVariant(log.confidence)}>{log.confidence}</Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-medium line-clamp-2 text-foreground/90 leading-snug">
+                                        {log.prediction}
+                                    </p>
+                                </div>
+                                <div className="flex items-center shrink-0">
+                                    <Badge variant={getConfidenceBadgeVariant(log.confidence)} className="shadow-sm">
+                                        {log.confidence}
+                                    </Badge>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </CardContent>
             </Card>
