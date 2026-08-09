@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Polygon, Circle, Polyline } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Polygon, Circle, Polyline, Marker } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { MapPin, Navigation, MousePointer2, Save, Trash2, X, Plus } from 'lucide-react';
+import { MapPin, Navigation, MousePointer2, Save, Trash2, X, Plus, Undo2, LocateFixed, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
@@ -34,12 +34,16 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
   const [currentPoints, setCurrentPoints] = useState<LatLng[]>([]);
   const [drawnPolygon, setDrawnPolygon] = useState<LatLng[] | null>(null);
   
+  // Real-time GPS tracking state
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [isGpsLoading, setIsGpsLoading] = useState(false);
+  const watchIdRef = useRef<number | null>(null);
+
   const [batchName, setBatchName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
   const mapRef = useRef<google.maps.Map | null>(null);
-  const polygonRef = useRef<any>(null);
-  const drawingManagerRef = useRef<any>(null);
 
   // Suggested next batch name (e.g., L003 if L002 exists)
   useEffect(() => {
@@ -64,7 +68,55 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
     }
   }, [open, existingGeoJson]);
 
-  // Reset state when opening
+  // Real-time GPS tracking listener
+  useEffect(() => {
+    if (open && mode === 'gps') {
+      if (!navigator.geolocation) {
+        toast({ title: 'GPS No Soportado', description: 'Su navegador o dispositivo no soporta geolocalización.', variant: 'destructive' });
+        return;
+      }
+
+      setIsGpsLoading(true);
+      toast({ title: 'Iniciando GPS en vivo...', description: 'Espere mientras se estabilizan los satélites.' });
+
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(coords);
+          setGpsAccuracy(pos.coords.accuracy);
+          setIsGpsLoading(false);
+
+          if (mapRef.current && !userLocation) {
+            mapRef.current.panTo(coords);
+            mapRef.current.setZoom(19);
+          }
+        },
+        (err) => {
+          console.error("GPS Watch error:", err);
+          setIsGpsLoading(false);
+          toast({ title: 'Error de GPS', description: 'Asegúrese de activar la ubicación del dispositivo.', variant: 'destructive' });
+        },
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
+      );
+    } else {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+      setUserLocation(null);
+      setGpsAccuracy(null);
+      setIsGpsLoading(false);
+    }
+
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, [open, mode]);
+
+  // Reset state when opening or closing
   useEffect(() => {
     if (open) {
       setMode('idle');
@@ -82,30 +134,33 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
   }, [mode]);
 
   const handleCaptureGpsPoint = () => {
-    if (!navigator.geolocation) {
-      toast({ title: 'Error', description: 'Su dispositivo no soporta geolocalización.', variant: 'destructive' });
+    if (!userLocation) {
+      toast({ title: 'Esperando señal GPS...', description: 'Obteniendo su posición actual.', variant: 'destructive' });
       return;
     }
 
-    toast({ title: 'Obteniendo ubicación...', description: 'Por favor espere.' });
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const newPoint = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setCurrentPoints(prev => [...prev, newPoint]);
-        
-        if (mapRef.current) {
-          mapRef.current.panTo(newPoint);
-          mapRef.current.setZoom(19); // Zoom in close for GPS points
-        }
-        
-        toast({ title: 'Punto guardado', description: 'Coordenada capturada con éxito.' });
-      },
-      (error) => {
-        toast({ title: 'Error de GPS', description: 'No se pudo obtener la ubicación. Verifique los permisos.', variant: 'destructive' });
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+    setCurrentPoints(prev => [...prev, { ...userLocation }]);
+    if (mapRef.current) {
+      mapRef.current.panTo(userLocation);
+    }
+
+    const accuracyText = gpsAccuracy ? ` (Precisión: ±${Math.round(gpsAccuracy)}m)` : '';
+    toast({ title: `Punto #${currentPoints.length + 1} marcado`, description: `Coordenadas capturadas con éxito${accuracyText}.` });
+  };
+
+  const handleUndoLastPoint = () => {
+    if (currentPoints.length === 0) return;
+    setCurrentPoints(prev => prev.slice(0, -1));
+    toast({ title: 'Punto eliminado', description: 'Se removió el último vértice marcado.' });
+  };
+
+  const handleCenterOnUser = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.panTo(userLocation);
+      mapRef.current.setZoom(19);
+    } else {
+      toast({ title: 'Buscando señal GPS...', description: 'Asegúrese de activar la ubicación.' });
+    }
   };
 
   const handleFinishPoints = () => {
@@ -113,7 +168,6 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
       toast({ title: 'Faltan puntos', description: 'Un lote debe tener al menos 3 puntos.', variant: 'destructive' });
       return;
     }
-    // Close the polygon
     const finalPoints = [...currentPoints, { ...currentPoints[0] }];
     setDrawnPolygon(finalPoints);
     setMode('idle');
@@ -147,7 +201,7 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
         <div className="bg-primary/10 border-b p-4 flex justify-between items-center z-10 shrink-0">
           <div>
             <h2 className="text-xl font-bold text-foreground">Constructor de Lotes</h2>
-            <p className="text-sm text-muted-foreground">Dibuje en el mapa o camine el perímetro con GPS</p>
+            <p className="text-sm text-muted-foreground">Dibuje en el mapa o camine el perímetro con GPS en tiempo real</p>
           </div>
           <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}><X className="h-5 w-5" /></Button>
         </div>
@@ -172,7 +226,6 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
             {existingGeoJson?.features?.map((feature: any, idx: number) => {
               if (feature.geometry?.type === 'Polygon') {
                 const paths = feature.geometry.coordinates[0].map((c: number[]) => ({ lat: c[1], lng: c[0] }));
-                const name = Object.keys(feature.properties || {}).find(k => k.startsWith('L')) || `Lote ${idx}`;
                 return (
                   <Polygon 
                     key={`existing-${idx}`} 
@@ -184,7 +237,38 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
               return null;
             })}
 
-            {/* Render in-progress Points and Lines for both modes */}
+            {/* Live user GPS Location indicator */}
+            {mode === 'gps' && userLocation && (
+              <>
+                {gpsAccuracy && (
+                  <Circle
+                    center={userLocation}
+                    radius={gpsAccuracy}
+                    options={{
+                      fillColor: '#3b82f6',
+                      fillOpacity: 0.15,
+                      strokeColor: '#2563eb',
+                      strokeOpacity: 0.5,
+                      strokeWeight: 1,
+                    }}
+                  />
+                )}
+                <Marker
+                  position={userLocation}
+                  icon={{
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: '#2563eb',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 3,
+                  }}
+                  title="Tu Ubicación Actual"
+                />
+              </>
+            )}
+
+            {/* Render in-progress Points and Lines */}
             {(mode === 'draw' || mode === 'gps') && currentPoints.map((pt, i) => (
               <Circle
                 key={`point-${i}`}
@@ -216,46 +300,73 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
             )}
           </GoogleMap>
 
-          {/* Overlay UI */}
-          <div className="absolute top-4 left-4 right-4 flex justify-between pointer-events-none">
-             <div className="flex gap-2 pointer-events-auto">
+          {/* Overlay Controls UI */}
+          <div className="absolute top-4 left-4 right-4 flex justify-between pointer-events-none z-20">
+             <div className="flex flex-col gap-2 pointer-events-auto w-full max-w-lg">
                {!drawnPolygon && mode === 'idle' && (
-                 <>
+                 <div className="flex gap-2">
                    <Button onClick={() => setMode('draw')} className="bg-background text-foreground hover:bg-muted shadow-lg border">
                      <MousePointer2 className="h-4 w-4 mr-2" /> Dibujar en Mapa
                    </Button>
                    <Button onClick={() => setMode('gps')} className="bg-background text-foreground hover:bg-muted shadow-lg border">
-                     <Navigation className="h-4 w-4 mr-2" /> Usar GPS
+                     <Navigation className="h-4 w-4 mr-2" /> Usar GPS en Vivo
                    </Button>
-                 </>
+                 </div>
                )}
+
                {mode === 'draw' && (
-                 <div className="flex flex-col gap-2">
-                   <div className="bg-background px-4 py-2 rounded-md shadow-lg border text-sm text-center mb-2 font-semibold">
-                      Haga clic en el mapa para añadir vértices ({currentPoints.length})
+                 <div className="flex flex-col gap-2 bg-background/95 backdrop-blur-md p-3 rounded-lg shadow-xl border">
+                   <div className="text-sm font-semibold text-foreground flex justify-between items-center">
+                     <span>Trazando Lote en Mapa ({currentPoints.length} puntos)</span>
+                     {currentPoints.length > 0 && (
+                       <Button size="sm" variant="outline" onClick={handleUndoLastPoint} className="text-amber-600 border-amber-300">
+                         <Undo2 className="h-4 w-4 mr-1" /> Deshacer Último
+                       </Button>
+                     )}
                    </div>
-                   <div className="flex gap-2">
+                   <div className="flex gap-2 mt-1">
                      {currentPoints.length >= 3 && (
-                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1">
+                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-md flex-1">
                          Terminar Lote
                        </Button>
                      )}
-                     <Button variant="destructive" onClick={handleClear} className="shadow-lg">Cancelar</Button>
+                     <Button variant="destructive" size="sm" onClick={handleClear}>Cancelar</Button>
                    </div>
                  </div>
                )}
+
                {mode === 'gps' && (
-                 <div className="flex flex-col gap-2">
-                   <Button onClick={handleCaptureGpsPoint} className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg h-12 px-6">
-                     <MapPin className="h-5 w-5 mr-2" /> Marcar Posición Actual ({currentPoints.length})
-                   </Button>
-                   <div className="flex gap-2">
+                 <div className="flex flex-col gap-2 bg-background/95 backdrop-blur-md p-4 rounded-lg shadow-xl border">
+                   <div className="flex justify-between items-center border-b pb-2">
+                     <div>
+                       <span className="font-bold text-foreground">Modo GPS en Vivo</span>
+                       <p className="text-xs text-muted-foreground">
+                         {isGpsLoading ? 'Obteniendo señal GPS...' : gpsAccuracy ? `Precisión de señal: ±${Math.round(gpsAccuracy)}m` : 'Ubicación activa'}
+                       </p>
+                     </div>
+                     <Button size="icon" variant="ghost" onClick={handleCenterOnUser} title="Centrar en mi ubicación">
+                       <LocateFixed className="h-5 w-5 text-blue-600 animate-pulse" />
+                     </Button>
+                   </div>
+
+                   <div className="flex items-center gap-2 my-1">
+                     <Button onClick={handleCaptureGpsPoint} disabled={!userLocation} className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg flex-1 h-12 text-base font-bold">
+                       <MapPin className="h-5 w-5 mr-2" /> Marcar Posición Actual ({currentPoints.length})
+                     </Button>
+                     {currentPoints.length > 0 && (
+                       <Button size="icon" variant="outline" onClick={handleUndoLastPoint} title="Deshacer último punto" className="h-12 w-12 text-amber-600 border-amber-400">
+                         <Undo2 className="h-6 w-6" />
+                       </Button>
+                     )}
+                   </div>
+
+                   <div className="flex gap-2 mt-1">
                      {currentPoints.length >= 3 && (
-                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-lg flex-1">
+                       <Button onClick={handleFinishPoints} className="bg-green-600 hover:bg-green-700 text-white shadow-md flex-1 font-bold">
                          Terminar Lote
                        </Button>
                      )}
-                     <Button variant="destructive" onClick={handleClear} className="shadow-lg">Cancelar</Button>
+                     <Button variant="destructive" size="sm" onClick={handleClear}>Cancelar</Button>
                    </div>
                  </div>
                )}
@@ -264,10 +375,10 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
           
           {/* Bottom Dialog for Naming when completed */}
           {drawnPolygon && (
-            <div className="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-none animate-in slide-in-from-bottom-4">
+            <div className="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-none animate-in slide-in-from-bottom-4 z-30">
                <Card className="p-4 w-full max-w-md pointer-events-auto shadow-xl border-primary">
                   <h3 className="font-bold text-lg mb-2 text-primary">Lote Definido</h3>
-                  <p className="text-sm text-muted-foreground mb-4">El polígono se ha trazado correctamente. Asigne un identificador para guardarlo.</p>
+                  <p className="text-sm text-muted-foreground mb-4">El polígono se ha trazado correctamente ({currentPoints.length} vértices). Asigne un identificador para guardarlo.</p>
                   
                   <div className="space-y-4">
                     <div className="space-y-2">
