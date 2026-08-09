@@ -458,8 +458,9 @@ export const generateAgronomistReportPDF = async (
   };
 
   const styledBox = (text: string, label: string, x: number, y: number, w: number, col: number[]): number => {
-    const lines = doc.splitTextToSize(text || '', w - 10);
-    const boxH = lines.length * 4.5 + 16;
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(text || '', w - 12);
+    const boxH = lines.length * 4.5 + 14;
     doc.setFillColor(warmWhite[0], warmWhite[1], warmWhite[2]);
     doc.setDrawColor(col[0], col[1], col[2]);
     doc.setLineWidth(0.4);
@@ -467,9 +468,9 @@ export const generateAgronomistReportPDF = async (
     doc.setFillColor(col[0], col[1], col[2]);
     doc.roundedRect(x, y, 3, boxH, 1, 1, 'F');
     doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(col[0], col[1], col[2]);
-    doc.text(label, x + 6, y + 8);
+    doc.text(label, x + 6, y + 7);
     doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-    doc.text(lines, x + 6, y + 15);
+    doc.text(lines, x + 6, y + 13);
     return y + boxH + 5;
   };
 
@@ -546,9 +547,9 @@ export const generateAgronomistReportPDF = async (
   autoTable(doc, {
     startY: yPos,
     body: infoRows,
-    styles: { fontSize: 9, cellPadding: 3 },
+    styles: { fontSize: 8.5, cellPadding: 2.5 },
     columnStyles: {
-      0: { fontStyle: 'bold', textColor: [darkGreen[0], darkGreen[1], darkGreen[2]] as any, fillColor: [warmWhite[0], warmWhite[1], warmWhite[2]] as any, cellWidth: 55 },
+      0: { fontStyle: 'bold', textColor: [darkGreen[0], darkGreen[1], darkGreen[2]] as any, fillColor: [warmWhite[0], warmWhite[1], warmWhite[2]] as any, cellWidth: 50 },
       1: { textColor: [charcoal[0], charcoal[1], charcoal[2]] as any },
     },
     theme: 'plain',
@@ -556,42 +557,102 @@ export const generateAgronomistReportPDF = async (
   });
   yPos = (doc as any).lastAutoTable.finalY + 8;
 
-  // Static Satellite Map
-  if (establishment.location.coordinates) {
-    const coords = establishment.location.coordinates.split(',').map((s: string) => s.trim());
-    if (coords.length === 2) {
-      try {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-        const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${coords[0]},${coords[1]}&zoom=15&size=560x200&maptype=satellite&markers=color:red|label:E|${coords[0]},${coords[1]}&key=${apiKey}`;
-        const mapResp = await fetch(mapUrl);
-        if (mapResp.ok) {
-          const mapBlob = await mapResp.blob();
-          const mapDataUri: string = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(mapBlob);
-          });
-          const mapW = pageWidth - 30;
-          const mapH = mapW * 200 / 560;
-          doc.setDrawColor(accentGreen[0], accentGreen[1], accentGreen[2]);
+  // Native Vector Delimited Lot Map
+  let geoJsonObj: any = null;
+  if (establishment.location.geoJsonData) {
+    try { geoJsonObj = typeof establishment.location.geoJsonData === 'string' ? JSON.parse(establishment.location.geoJsonData) : establishment.location.geoJsonData; } catch {}
+  }
+
+  if (geoJsonObj && geoJsonObj.features && geoJsonObj.features.length > 0) {
+    const mapW = pageWidth - 30;
+    const mapH = 48;
+
+    // Extract all polygon coordinates
+    let allCoords: [number, number][] = [];
+    const polygons: { id: string; coords: [number, number][] }[] = [];
+
+    geoJsonObj.features.forEach((feat: any) => {
+      const bId = feat.properties?.id || feat.properties?.name || 'Lote';
+      const geom = feat.geometry;
+      if (geom && (geom.type === 'Polygon' || geom.type === 'MultiPolygon')) {
+        const rings = geom.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.map((c: any) => c[0]);
+        rings.forEach((ring: any) => {
+          const pts: [number, number][] = ring.map((pt: any) => [pt[0], pt[1]]);
+          polygons.push({ id: bId, coords: pts });
+          allCoords.push(...pts);
+        });
+      }
+    });
+
+    if (allCoords.length > 0) {
+      const minLng = Math.min(...allCoords.map(c => c[0]));
+      const maxLng = Math.max(...allCoords.map(c => c[0]));
+      const minLat = Math.min(...allCoords.map(c => c[1]));
+      const maxLat = Math.max(...allCoords.map(c => c[1]));
+
+      const lngSpan = (maxLng - minLng) || 0.001;
+      const latSpan = (maxLat - minLat) || 0.001;
+
+      // Draw map container
+      doc.setFillColor(240, 244, 240);
+      doc.setDrawColor(accentGreen[0], accentGreen[1], accentGreen[2]);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(15, yPos, mapW, mapH, 2, 2, 'FD');
+
+      // Header strip for vector map
+      doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+      doc.roundedRect(15, yPos, mapW, 6, 2, 2, 'F');
+      doc.rect(15, yPos + 3, mapW, 3, 'F');
+      doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+      doc.text('MAPA DELIMITADO DE LOTES (SISTEMA INTERACTIVO)', 19, yPos + 4.5);
+
+      const padding = 8;
+      const drawW = mapW - padding * 2;
+      const drawH = mapH - 12 - padding;
+
+      // Render each polygon
+      polygons.forEach((poly, pIdx) => {
+        const screenPts = poly.coords.map(([lng, lat]) => {
+          const sx = 15 + padding + ((lng - minLng) / lngSpan) * drawW;
+          const sy = yPos + 8 + drawH - ((lat - minLat) / latSpan) * drawH;
+          return { x: sx, y: sy };
+        });
+
+        if (screenPts.length > 2) {
+          // Fill polygon with soft green tint
+          doc.setFillColor(210, 235, 215);
+          doc.setDrawColor(darkGreen[0], darkGreen[1], darkGreen[2]);
           doc.setLineWidth(0.5);
-          doc.roundedRect(15, yPos, mapW, mapH, 2, 2, 'S');
-          doc.addImage(mapDataUri, 'JPEG', 15, yPos, mapW, mapH);
-          yPos += mapH + 4;
-          doc.setFontSize(7.5); doc.setFont('helvetica', 'normal');
-          doc.setTextColor(mutedGrey[0], mutedGrey[1], mutedGrey[2]);
-          doc.text(`Vista satelital · ${establishment.location.locality} · Coords: ${establishment.location.coordinates}`, pageWidth / 2, yPos, { align: 'center' });
-          yPos += 8;
+
+          // Draw polygon using lines
+          const first = screenPts[0];
+          for (let k = 0; k < screenPts.length - 1; k++) {
+            doc.line(screenPts[k].x, screenPts[k].y, screenPts[k + 1].x, screenPts[k + 1].y);
+          }
+          doc.line(screenPts[screenPts.length - 1].x, screenPts[screenPts.length - 1].y, first.x, first.y);
+
+          // Calculate centroid for batch label
+          const avgX = screenPts.reduce((s, p) => s + p.x, 0) / screenPts.length;
+          const avgY = screenPts.reduce((s, p) => s + p.y, 0) / screenPts.length;
+
+          // Draw label badge
+          doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+          doc.roundedRect(avgX - 7, avgY - 3, 14, 6, 1, 1, 'F');
+          doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+          doc.text(poly.id, avgX, avgY + 1.2, { align: 'center' });
         }
-      } catch { /* silent */ }
+      });
+
+      yPos += mapH + 6;
     }
   }
 
-  // Batch Distribution Table
+  // Batch Distribution Table (Kept strictly on Page 2 if space permits, or moved cleanly together)
   if (batches && batches.length > 0) {
-    if (yPos > pageHeight - 60) { doc.addPage(); addHeader(); yPos = 30; }
+    if (yPos > pageHeight - 50) { doc.addPage(); addHeader(); yPos = 30; }
     yPos = sectionBanner('DISTRIBUCIÓN DE LOTES', yPos);
-    yPos += 4;
+    yPos += 2;
+
     const batchRows = batches.map(b => {
       const variety = b.varieties?.map(v => v.name).filter(Boolean).join(', ') || 'Pendiente';
       const area = b.varieties?.reduce((s, v) => s + (v.area || 0), 0).toFixed(2) || '—';
@@ -600,16 +661,17 @@ export const generateAgronomistReportPDF = async (
       const status = b.varieties?.every(v => v.name) ? 'Activo' : 'Pendiente';
       return [b.id, variety, `${area} ha`, dateStr, status];
     });
+
     autoTable(doc, {
       startY: yPos,
       head: [['Lote', 'Variedad', 'Superficie', 'Fecha Plantación', 'Estado']],
       body: batchRows,
-      headStyles: { fillColor: [darkGreen[0], darkGreen[1], darkGreen[2]] as any, textColor: 255, fontStyle: 'bold', fontSize: 9 },
-      styles: { fontSize: 9, cellPadding: 3.5 },
+      headStyles: { fillColor: [darkGreen[0], darkGreen[1], darkGreen[2]] as any, textColor: 255, fontStyle: 'bold', fontSize: 8.5 },
+      styles: { fontSize: 8.5, cellPadding: 3 },
       alternateRowStyles: { fillColor: [245, 248, 245] },
       columnStyles: { 0: { cellWidth: 18, fontStyle: 'bold' }, 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' } },
     });
-    yPos = (doc as any).lastAutoTable.finalY + 10;
+    yPos = (doc as any).lastAutoTable.finalY + 8;
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -674,9 +736,13 @@ export const generateAgronomistReportPDF = async (
   for (let i = 0; i < fieldBlocks.length; i += 2) {
     const left = fieldBlocks[i];
     const right = fieldBlocks[i + 1];
-    const lLines = doc.splitTextToSize(left?.data?.desc || '', halfW - 10).length;
-    const rLines = right ? doc.splitTextToSize(right?.data?.desc || '', halfW - 10).length : 0;
-    const blockH = Math.max(lLines, rLines) * 4.5 + 20;
+
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'normal');
+    const lLines = doc.splitTextToSize(left?.data?.desc || '', halfW - 8).length;
+    const rLines = right ? doc.splitTextToSize(right?.data?.desc || '', halfW - 8).length : 0;
+
+    // Tight dynamic block height to prevent excessive blank space
+    const blockH = Math.max(lLines, rLines) * 4.2 + 16;
 
     if (yPos + blockH > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 30; }
 
@@ -687,26 +753,32 @@ export const generateAgronomistReportPDF = async (
       doc.setLineWidth(0.4);
       doc.roundedRect(xStart, yPos, halfW, blockH, 2, 2, 'FD');
       doc.setFillColor(col[0], col[1], col[2]);
-      doc.rect(xStart, yPos, halfW, 9, 'F');
-      doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+      doc.rect(xStart, yPos, halfW, 7.5, 'F');
+      doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
       const headerLabel = block.data?.risk ? `${block.label}  ·  ${String(block.data.risk).toUpperCase()}` : block.label;
-      doc.text(headerLabel, xStart + 4, yPos + 6);
+      doc.text(headerLabel, xStart + 4, yPos + 5.2);
       doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
       const desc = doc.splitTextToSize(block.data?.desc || 'Sin datos registrados.', halfW - 8);
-      doc.text(desc, xStart + 4, yPos + 15);
+      doc.text(desc, xStart + 4, yPos + 12);
     };
 
     drawBlock(left, 15);
     if (right) drawBlock(right, 15 + halfW + 10);
-    yPos += blockH + 8;
+    yPos += blockH + 6;
   }
 
+  // Phenology chart: calculate exact height and ensure NO cutoff
   if (chartImages?.phenology) {
-    if (yPos + 60 > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 30; }
-    yPos = subHeading('EVOLUCIÓN FENOLÓGICA', yPos);
     const props = doc.getImageProperties(chartImages.phenology);
     const imgW = pageWidth - 30;
     const imgH = (props.height * imgW) / props.width;
+
+    // Check if title + chart fit on current page. If not, add page first!
+    if (yPos + imgH + 20 > pageHeight - 20) {
+      doc.addPage(); addHeader(); yPos = 30;
+    }
+
+    yPos = subHeading('EVOLUCIÓN FENOLÓGICA', yPos);
     doc.addImage(chartImages.phenology, 'PNG', 15, yPos, imgW, imgH);
     yPos += imgH + 6;
     if (reportData.graphicalAnalysis?.phenology) {
@@ -742,19 +814,51 @@ export const generateAgronomistReportPDF = async (
   const analysisText = [reportData.graphicalAnalysis?.monthlyHarvest, reportData.graphicalAnalysis?.batchYield].filter(Boolean).join(' ');
   yPos = bodyParagraph(analysisText, 15, yPos, pageWidth - 30);
 
+  // Rendimiento por Lote — Smart Parsing for Multi-Lot entries (e.g. "L001, L002")
   if (harvests && harvests.length > 0) {
     yPos += 4;
     const totalKg = harvests.reduce((s, h) => s + (h.kilograms || 0), 0);
+
+    // Group harvests by batch string
     const byBatch: Record<string, number> = {};
-    harvests.forEach(h => { if (h.batchNumber) byBatch[h.batchNumber] = (byBatch[h.batchNumber] || 0) + (h.kilograms || 0); });
-    const harvestRows = Object.entries(byBatch).map(([bid, kg]) => {
-      const bd = (batches || []).find(b => b.id === bid);
-      const area = bd?.varieties?.reduce((s, v) => s + (v.area || 0), 0) || 0;
-      const variety = bd?.varieties?.map(v => v.name).filter(Boolean).join(', ') || '—';
-      return [bid, variety, `${area.toFixed(2)} ha`, `${kg.toFixed(2)} kg`, area > 0 ? `${(kg / area).toFixed(1)} kg/ha` : '—'];
+    harvests.forEach(h => {
+      if (h.batchNumber) {
+        byBatch[h.batchNumber] = (byBatch[h.batchNumber] || 0) + (h.kilograms || 0);
+      }
     });
+
+    const harvestRows = Object.entries(byBatch).map(([bidStr, kg]) => {
+      // Split multi-batch strings like "L001, L002"
+      const batchIds = bidStr.split(',').map(s => s.trim()).filter(Boolean);
+      const matchingBatches = (batches || []).filter(b => batchIds.includes(b.id));
+
+      let area = 0;
+      let varietyNames: string[] = [];
+
+      if (matchingBatches.length > 0) {
+        matchingBatches.forEach(b => {
+          const bArea = b.varieties?.reduce((s, v) => s + (v.area || 0), 0) || 0;
+          area += bArea;
+          b.varieties?.forEach(v => { if (v.name) varietyNames.push(v.name); });
+        });
+      } else {
+        // Fallback: search individual batches
+        const singleB = (batches || []).find(b => b.id === bidStr);
+        if (singleB) {
+          area = singleB.varieties?.reduce((s, v) => s + (v.area || 0), 0) || 0;
+          varietyNames = singleB.varieties?.map(v => v.name).filter(Boolean) || [];
+        }
+      }
+
+      const variety = Array.from(new Set(varietyNames)).join(', ') || '—';
+      const areaText = area > 0 ? `${area.toFixed(2)} ha` : '—';
+      const yieldText = area > 0 ? `${(kg / area).toFixed(1)} kg/ha` : '—';
+
+      return [bidStr, variety, areaText, `${kg.toFixed(2)} kg`, yieldText];
+    });
+
     if (harvestRows.length > 0) {
-      if (yPos > pageHeight - 60) { doc.addPage(); addHeader(); yPos = 30; }
+      if (yPos > pageHeight - 50) { doc.addPage(); addHeader(); yPos = 30; }
       yPos = subHeading('RENDIMIENTO POR LOTE', yPos);
       autoTable(doc, {
         startY: yPos,
@@ -776,13 +880,12 @@ export const generateAgronomistReportPDF = async (
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 6 — PLAN DE ACCIÓN
+  // PÁG 6 — PLAN DE ACCIÓN SUGERIDO
   // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
+  // Ensure title and table stay TOGETHER
+  if (yPos > pageHeight - 55) { doc.addPage(); addHeader(); yPos = 30; }
   yPos = sectionBanner('PLAN DE ACCIÓN SUGERIDO', yPos);
-  yPos += 6;
+  yPos += 4;
 
   if (reportData.recommendations && reportData.recommendations.length > 0) {
     const actionRows = reportData.recommendations.map(rec => {
@@ -814,11 +917,10 @@ export const generateAgronomistReportPDF = async (
   // ═══════════════════════════════════════════════════════════════════════
   // PÁG 7 — ALERTAS CRÍTICAS E INVENTARIO
   // ═══════════════════════════════════════════════════════════════════════
-  doc.addPage(); addHeader();
-  yPos = 30;
-
+  // Ensure title and table stay TOGETHER
+  if (yPos > pageHeight - 55) { doc.addPage(); addHeader(); yPos = 30; }
   yPos = sectionBanner('ALERTAS CRÍTICAS E INVENTARIO', yPos);
-  yPos += 6;
+  yPos += 4;
 
   if (reportData.alerts && reportData.alerts.length > 0) {
     autoTable(doc, {
@@ -857,15 +959,12 @@ export const generateAgronomistReportPDF = async (
   yPos = sectionBanner('INSIGHT AGROVISTA', yPos);
   yPos += 8;
 
-  // Large decorative quote
-  doc.setFontSize(70); doc.setFont('helvetica', 'bold');
-  doc.setTextColor(accentGreen[0], accentGreen[1], accentGreen[2]);
-  doc.text('"', 12, yPos + 18);
+  // Calculate text wrapping FIRST with correct font size so it doesn't wrap into a narrow strip
+  doc.setFontSize(9.5); doc.setFont('helvetica', 'italic');
+  const insightLines = doc.splitTextToSize(reportData.aiInsight || '', pageWidth - 50);
+  const insightBoxH = insightLines.length * 5.2 + 20;
 
-  // AI insight styled box (italic, not plain text)
-  const insightLines = doc.splitTextToSize(reportData.aiInsight || '', pageWidth - 52);
-  const insightBoxH = insightLines.length * 5.2 + 22;
-
+  // AI insight styled box
   doc.setFillColor(warmWhite[0], warmWhite[1], warmWhite[2]);
   doc.setDrawColor(accentGreen[0], accentGreen[1], accentGreen[2]);
   doc.setLineWidth(0.4);
@@ -875,21 +974,13 @@ export const generateAgronomistReportPDF = async (
 
   doc.setFontSize(10); doc.setFont('helvetica', 'bold');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('Análisis y Perspectiva de AgroVista', 24, yPos + 10);
+  doc.text('Análisis y Perspectiva de AgroVista', 24, yPos + 9);
 
   doc.setFontSize(9.5); doc.setFont('helvetica', 'italic');
   doc.setTextColor(charcoal[0], charcoal[1], charcoal[2]);
-  doc.text(insightLines, 24, yPos + 18);
-  yPos += insightBoxH + 16;
+  doc.text(insightLines, 24, yPos + 17);
 
-  // Closing stamp
-  if (yPos + 22 > pageHeight - 20) { doc.addPage(); addHeader(); yPos = 30; }
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.roundedRect(15, yPos, pageWidth - 30, 20, 3, 3, 'F');
-  if (logoDataUri) doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 6, yPos + 3, 12, 12);
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(255, 255, 255);
-  doc.text('AgroVista · Gestión de Precisión', pageWidth / 2, yPos + 17, { align: 'center' });
-
+  // Apply footer to all pages (No standalone page 9 is generated)
   addFooter();
   doc.save(`Reporte_AgroVista_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 };
