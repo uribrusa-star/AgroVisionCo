@@ -20,6 +20,9 @@ import { BatchYieldChart } from '@/app/(app)/engineer-log/batch-yield-chart';
 
 
 
+import dynamic from 'next/dynamic';
+const MapComponent = dynamic(() => import('@/components/map'), { ssr: false });
+
 export function AgronomistReportGenerator() {
   const [isPending, startTransition] = useTransition();
   const { agronomistLogs, phenologyLogs, currentUser, establishmentData, harvests, batches, supplies } = useContext(AppDataContext);
@@ -28,9 +31,26 @@ export function AgronomistReportGenerator() {
   const phenologyRef = useRef<HTMLDivElement>(null);
   const monthlyRef = useRef<HTMLDivElement>(null);
   const batchRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
 
   if (!currentUser) return null; // Guard clause
   const canManage = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo';
+
+  const mapCenter = React.useMemo(() => {
+    if (establishmentData?.location?.coordinates) {
+      const [lat, lng] = establishmentData.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+      if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+    }
+    return { lat: -31.97092, lng: -60.93112 };
+  }, [establishmentData]);
+
+  const parsedGeoJson = React.useMemo(() => {
+    try {
+      return establishmentData?.geoJsonData ? JSON.parse(establishmentData.geoJsonData) : null;
+    } catch {
+      return null;
+    }
+  }, [establishmentData?.geoJsonData]);
   
   const handleGeneratePdf = () => {
     startTransition(async () => {
@@ -101,25 +121,28 @@ export function AgronomistReportGenerator() {
         const captureChart = async (ref: React.RefObject<HTMLDivElement>) => {
             if (!ref.current) return '';
             const html2canvas = (await import('html2canvas')).default;
-            const canvas = await html2canvas(ref.current, { scale: 3, backgroundColor: '#ffffff' });
+            const canvas = await html2canvas(ref.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
             return canvas.toDataURL('image/png');
         };
 
-        let mapImg = '';
-        try {
-          const mapEl = document.querySelector('.gm-style') || document.querySelector('[data-map-container="true"]');
-          if (mapEl) {
-            const html2canvas = (await import('html2canvas')).default;
-            const mapCanvas = await html2canvas(mapEl as HTMLElement, { useCORS: true, scale: 2 });
-            mapImg = mapCanvas.toDataURL('image/png');
-          }
-        } catch { /* fallback to vector map */ }
-
-        const [phenologyImg, monthlyHarvestImg, batchYieldImg] = await Promise.all([
+        const [phenologyImg, monthlyHarvestImg, batchYieldImg, capturedMapImg] = await Promise.all([
             captureChart(phenologyRef),
             captureChart(monthlyRef),
-            captureChart(batchRef)
+            captureChart(batchRef),
+            captureChart(mapRef)
         ]);
+
+        let mapImg = capturedMapImg;
+        if (!mapImg) {
+          try {
+            const mapEl = document.querySelector('.gm-style') || document.querySelector('[data-map-container="true"]');
+            if (mapEl) {
+              const html2canvas = (await import('html2canvas')).default;
+              const mapCanvas = await html2canvas(mapEl as HTMLElement, { useCORS: true, scale: 2 });
+              mapImg = mapCanvas.toDataURL('image/png');
+            }
+          } catch { /* fallback to static satellite map */ }
+        }
 
         const { generateAgronomistReportPDF } = await import('@/lib/pdf-generator');
         
@@ -178,6 +201,9 @@ export function AgronomistReportGenerator() {
               </div>
               <div ref={batchRef} className="p-4 bg-card w-[600px]">
                   <BatchYieldChart />
+              </div>
+              <div ref={mapRef} className="w-[700px] h-[400px] bg-card p-2" data-map-container="true">
+                  <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />
               </div>
             </div>
         </CardContent>

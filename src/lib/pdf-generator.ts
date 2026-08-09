@@ -663,9 +663,9 @@ export const generateAgronomistReportPDF = (
     extractGeoJson((establishment.location as any)?.geoJsonData, 'Lote');
   }
 
-  // Si tenemos API Key de Google Maps, usamos la vista satelital oficial de Google Maps
+  // Si tenemos API Key de Google Maps, usamos la vista satelital híbrida oficial de Google Maps
   if (apiKey && apiKey.length > 5) {
-    gmapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=16&size=600x300&maptype=hybrid${pathParams}&key=${apiKey}`;
+    gmapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${centerLat},${centerLng}&zoom=18&size=800x400&maptype=hybrid${pathParams}&key=${apiKey}`;
   }
 
   if (mapImageUri && mapImageUri.length > 100) {
