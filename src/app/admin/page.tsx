@@ -41,7 +41,8 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   
   const [establishments, setEstablishments] = useState<EstablishmentData[]>([]);
-  const [pestLogs, setPestLogs] = useState<DiagnosisLog[]>([]);
+  const [diagnosisPestLogs, setDiagnosisPestLogs] = useState<DiagnosisLog[]>([]);
+  const [agroPestLogs, setAgroPestLogs] = useState<DiagnosisLog[]>([]);
   const [producers, setProducers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [subPrice, setSubPrice] = useState(80000);
@@ -119,9 +120,40 @@ export default function AdminDashboardPage() {
            }
         }
       });
-      setPestLogs(logs);
+      setDiagnosisPestLogs(logs);
     }, (error) => {
       console.error("Error fetching global pest logs:", error);
+    });
+
+    const unsubscribeAgroPests = onSnapshot(collection(db, 'agronomistLogs'), (snapshot) => {
+      const logs: DiagnosisLog[] = [];
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      snapshot.forEach((doc) => {
+        const data = doc.data() as any;
+        if (data.date && (data.type === 'Sanidad' || data.type === 'Plaga' || data.diagnosis)) {
+           const logDate = new Date(data.date);
+           if (logDate >= thirtyDaysAgo) {
+               logs.push({ 
+                   id: doc.id,
+                   date: data.date,
+                   establishmentId: data.establishmentId,
+                   result: {
+                       diagnosticoPrincipal: data.diagnosis || data.type || 'Problema Sanitario',
+                       posiblesDiagnosticos: [{ 
+                           nombre: data.diagnosis || data.type || '', 
+                           probabilidad: data.severity === 'Grave' ? 0.9 : (data.severity === 'Moderada' ? 0.6 : 0.4),
+                           descripcion: data.notes || ''
+                       }],
+                       recomendacionGeneral: ''
+                   }
+               } as DiagnosisLog);
+           }
+        }
+      });
+      setAgroPestLogs(logs);
+    }, (error) => {
+      console.error("Error fetching agronomist pest logs:", error);
     });
 
     return () => {
@@ -129,6 +161,7 @@ export default function AdminDashboardPage() {
       unsubscribeProd();
       unsubscribeSettings();
       unsubscribePests();
+      unsubscribeAgroPests();
     };
   }, [currentUser]);
 
@@ -338,7 +371,7 @@ export default function AdminDashboardPage() {
                <CardDescription>Visualización geográfica y operativa de todos los clientes.</CardDescription>
             </CardHeader>
             <div className="h-[600px] w-full p-2 bg-stone-100">
-               <AdminMap establishments={establishments} pestLogs={pestLogs} />
+               <AdminMap establishments={establishments} pestLogs={[...diagnosisPestLogs, ...agroPestLogs]} />
             </div>
           </Card>
         </TabsContent>

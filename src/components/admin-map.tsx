@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, HeatmapLayer, Circle } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Circle } from '@react-google-maps/api';
 import type { EstablishmentData, DiagnosisLog } from '@/lib/types';
 import { Building, MapPin, Activity, Sprout, Layers, Bug } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ type AdminMapProps = {
     pestLogs?: DiagnosisLog[];
 };
 
-const libraries: ("drawing" | "geometry" | "visualization")[] = ["geometry", "visualization"];
+const libraries: ("drawing" | "geometry")[] = ["geometry"];
 
 export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
     const { isLoaded, loadError } = useJsApiLoader({
@@ -86,18 +86,18 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
     }, [establishments, mapInstance]);
 
     const heatmapData = React.useMemo(() => {
-        if (!isLoaded || !window.google) return [];
         return establishments.map(est => {
             if (!est.location || !est.location.coordinates) return null;
             const [lat, lng] = est.location.coordinates.split(',').map(s => parseFloat(s.trim()));
             if (isNaN(lat) || isNaN(lng)) return null;
             
             return {
-                location: new window.google.maps.LatLng(lat, lng),
+                lat,
+                lng,
                 weight: est.area?.strawberry || 1
             };
-        }).filter(Boolean) as google.maps.visualization.WeightedLocation[];
-    }, [establishments, isLoaded]);
+        }).filter(Boolean) as { lat: number, lng: number, weight: number }[];
+    }, [establishments]);
 
     useEffect(() => {
         fitMapToBounds();
@@ -145,31 +145,19 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                 }}
                 onClick={() => setActiveInfoWindow(null)}
             >
-                {mapMode === 'heatmap' && heatmapData.length > 0 && (
-                    <HeatmapLayer 
-                        data={heatmapData}
+                {mapMode === 'heatmap' && heatmapData.map((data, idx) => (
+                    <Circle
+                        key={`heat-${idx}`}
+                        center={{ lat: data.lat, lng: data.lng }}
+                        radius={2000 * Math.max(1, data.weight)}
                         options={{
-                            radius: 30,
-                            opacity: 0.8,
-                            gradient: [
-                                'rgba(0, 255, 255, 0)',
-                                'rgba(0, 255, 255, 1)',
-                                'rgba(0, 191, 255, 1)',
-                                'rgba(0, 127, 255, 1)',
-                                'rgba(0, 63, 255, 1)',
-                                'rgba(0, 0, 255, 1)',
-                                'rgba(0, 0, 223, 1)',
-                                'rgba(0, 0, 191, 1)',
-                                'rgba(0, 0, 159, 1)',
-                                'rgba(0, 0, 127, 1)',
-                                'rgba(63, 0, 91, 1)',
-                                'rgba(127, 0, 63, 1)',
-                                'rgba(191, 0, 31, 1)',
-                                'rgba(255, 0, 0, 1)'
-                            ]
+                            fillColor: '#ef4444',
+                            fillOpacity: 0.15 + (Math.min(data.weight, 10) * 0.05),
+                            strokeWeight: 0,
+                            clickable: false
                         }}
                     />
-                )}
+                ))}
 
                 {mapMode === 'pests' && pestHotspots.map((hotspot) => (
                     <React.Fragment key={hotspot.id}>
@@ -188,7 +176,7 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                         <Marker 
                             position={{ lat: hotspot.lat, lng: hotspot.lng }} 
                             icon={{
-                                url: `http://maps.google.com/mapfiles/ms/icons/${hotspot.severity === 'Alta' ? 'red' : 'yellow'}-dot.png`
+                                url: `https://maps.google.com/mapfiles/ms/icons/${hotspot.severity === 'Alta' ? 'red' : 'yellow'}-dot.png`
                             }}
                             onClick={() => setActiveInfoWindow(hotspot.id)}
                         />
@@ -221,7 +209,7 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
 
                     const isActive = est.isActive !== false;
                     const markerColor = isActive ? (est.hasGoodPracticesSeal ? 'green' : 'blue') : 'red';
-                    const iconUrl = `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`;
+                    const iconUrl = `https://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`;
 
                     return (
                         <Marker
