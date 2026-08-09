@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, HeatmapLayer } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, HeatmapLayer, Circle } from '@react-google-maps/api';
 import type { EstablishmentData } from '@/lib/types';
-import { Building, MapPin, Activity, Sprout, Layers } from 'lucide-react';
+import { Building, MapPin, Activity, Sprout, Layers, Bug } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type AdminMapProps = {
@@ -20,7 +20,13 @@ export function AdminMap({ establishments }: AdminMapProps) {
     
     const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
-    const [mapMode, setMapMode] = useState<'pins' | 'heatmap'>('pins');
+    const [mapMode, setMapMode] = useState<'pins' | 'heatmap' | 'pests'>('pins');
+
+    const pestHotspots = React.useMemo(() => [
+        { id: 'h1', lat: -31.970220, lng: -60.916853, radius: 5000, pest: 'Arañuela Roja', count: 4, severity: 'Alta' },
+        { id: 'h2', lat: -31.7333, lng: -60.5333, radius: 8000, pest: 'Trips', count: 2, severity: 'Media' },
+        { id: 'h3', lat: -32.9468, lng: -60.6393, radius: 3000, pest: 'Botrytis', count: 1, severity: 'Alta' }
+    ], []);
 
     const fitMapToBounds = React.useCallback(() => {
         if (!mapInstance || establishments.length === 0) return;
@@ -81,6 +87,12 @@ export function AdminMap({ establishments }: AdminMapProps) {
                 >
                     <Layers className="h-3.5 w-3.5" /> Calor
                 </button>
+                <button 
+                    onClick={() => setMapMode('pests')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pests' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                >
+                    <Bug className="h-3.5 w-3.5" /> Radar Plagas
+                </button>
             </div>
             <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%', minHeight: '500px', borderRadius: '0.75rem' }}
@@ -122,6 +134,49 @@ export function AdminMap({ establishments }: AdminMapProps) {
                         }}
                     />
                 )}
+
+                {mapMode === 'pests' && pestHotspots.map((hotspot) => (
+                    <React.Fragment key={hotspot.id}>
+                        <Circle
+                            center={{ lat: hotspot.lat, lng: hotspot.lng }}
+                            radius={hotspot.radius}
+                            options={{
+                                fillColor: hotspot.severity === 'Alta' ? '#EF4444' : '#F59E0B',
+                                fillOpacity: 0.35,
+                                strokeColor: hotspot.severity === 'Alta' ? '#DC2626' : '#D97706',
+                                strokeOpacity: 0.8,
+                                strokeWeight: 2,
+                            }}
+                            onClick={() => setActiveInfoWindow(hotspot.id)}
+                        />
+                        <Marker 
+                            position={{ lat: hotspot.lat, lng: hotspot.lng }} 
+                            icon={{
+                                url: `http://maps.google.com/mapfiles/ms/icons/${hotspot.severity === 'Alta' ? 'red' : 'yellow'}-dot.png`
+                            }}
+                            onClick={() => setActiveInfoWindow(hotspot.id)}
+                        />
+                        {activeInfoWindow === hotspot.id && (
+                            <InfoWindow position={{ lat: hotspot.lat, lng: hotspot.lng }} onCloseClick={() => setActiveInfoWindow(null)}>
+                                <div className="p-2 max-w-[200px]">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Bug className={`h-4 w-4 ${hotspot.severity === 'Alta' ? 'text-red-600' : 'text-amber-600'}`} />
+                                        <h3 className="font-bold text-sm text-slate-800">Alerta Fitosanitaria</h3>
+                                    </div>
+                                    <p className="text-xs text-slate-600 mb-1">
+                                        <strong>Plaga:</strong> {hotspot.pest}
+                                    </p>
+                                    <p className="text-xs text-slate-600 mb-2">
+                                        <strong>Productores en riesgo:</strong> {hotspot.count}
+                                    </p>
+                                    <Badge variant={hotspot.severity === 'Alta' ? "destructive" : "default"} className="text-[10px]">
+                                        Gravedad {hotspot.severity}
+                                    </Badge>
+                                </div>
+                            </InfoWindow>
+                        )}
+                    </React.Fragment>
+                ))}
 
                 {mapMode === 'pins' && establishments.map((est) => {
                     if (!est.location || !est.location.coordinates) return null;
