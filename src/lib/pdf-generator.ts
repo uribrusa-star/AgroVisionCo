@@ -153,10 +153,10 @@ export const generateTraceabilityPDF = (
     alternateRowStyles: { fillColor: lightGreen },
     styles: { fontSize: 9, cellPadding: 4, overflow: 'linebreak' },
     columnStyles: {
-      0: { cellWidth: 25 },
-      1: { cellWidth: 45 },
+      0: { cellWidth: 20 },
+      1: { cellWidth: 40 },
       2: { cellWidth: 45 },
-      3: { cellWidth: 65 }
+      3: { cellWidth: 60 }
     }
   });
 

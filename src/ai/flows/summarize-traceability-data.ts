@@ -14,13 +14,18 @@ export type SummarizeTraceabilityDataInput = z.infer<typeof SummarizeTraceabilit
 export async function summarizeTraceabilityData(
   input: SummarizeTraceabilityDataInput
 ): Promise<string> {
-  return summarizeTraceabilityDataFlow(input);
+  const result = await summarizeTraceabilityDataFlow(input);
+  return result.summary;
 }
+
+const SummarizeTraceabilityDataOutputSchema = z.object({
+  summary: z.string().describe('La síntesis ejecutiva narrativa en formato Markdown (2 o 3 párrafos).')
+});
 
 const prompt = ai.definePrompt({
   name: 'summarizeTraceabilityDataPrompt',
   input: {schema: SummarizeTraceabilityDataInputSchema},
-  output: {schema: z.string()},
+  output: {schema: SummarizeTraceabilityDataOutputSchema},
   prompt: `Eres un ingeniero agrónomo experto. Tu tarea es leer la cronología de eventos de trazabilidad de un lote de frutillas y redactar una síntesis ejecutiva narrativa en 2 o 3 párrafos de cómo se desarrolló el ciclo del cultivo.
 
   **Instrucciones:**
@@ -43,7 +48,7 @@ const summarizeTraceabilityDataFlow = ai.defineFlow(
   {
     name: 'summarizeTraceabilityDataFlow',
     inputSchema: SummarizeTraceabilityDataInputSchema,
-    outputSchema: z.string(),
+    outputSchema: SummarizeTraceabilityDataOutputSchema,
   },
   async input => {
     const {output} = await prompt(input);
