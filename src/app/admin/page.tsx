@@ -26,6 +26,7 @@ import { z } from 'zod';
 import { Plus, FileText } from 'lucide-react';
 import { AdminAnalytics } from './admin-analytics';
 import { generateSubscriptionReceiptPDF } from '@/lib/pdf-generator';
+import { AdminMap } from '@/components/admin-map';
 
 const CreateProducerSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -280,10 +281,14 @@ export default function AdminDashboardPage() {
       </div>
 
       <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-[800px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
+        <TabsList className="grid w-full grid-cols-5 max-w-[900px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
           <TabsTrigger value="analytics" title="Analíticas" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
             <Activity className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span className="hidden sm:inline">Analíticas</span>
+          </TabsTrigger>
+          <TabsTrigger value="map" title="Mapa Global" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <MapPin className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+            <span className="hidden sm:inline">Mapa Global</span>
           </TabsTrigger>
           <TabsTrigger value="directory" title="Directorio" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
             <Building className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -301,6 +306,20 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="analytics" className="mt-0">
           <AdminAnalytics establishments={establishments} />
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-0 space-y-6">
+          <Card className="border-0 shadow-lg shadow-black/5 overflow-hidden">
+            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-4">
+               <CardTitle className="flex items-center gap-2 text-xl text-[#2d4a22]">
+                  <MapPin className="h-6 w-6" /> Vista Satelital AgroVision
+               </CardTitle>
+               <CardDescription>Visualización geográfica y operativa de todos los clientes.</CardDescription>
+            </CardHeader>
+            <div className="h-[600px] w-full p-2 bg-stone-100">
+               <AdminMap establishments={establishments} />
+            </div>
+          </Card>
         </TabsContent>
 
         <TabsContent value="directory" className="mt-0">
