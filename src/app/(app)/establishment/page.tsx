@@ -259,10 +259,22 @@ export default function EstablishmentPage() {
           
           await updateEstablishmentData({ geoJsonData: JSON.stringify(updatedGeoJson) });
           
-          // Add the batch to the data entry list as well
-          addBatch({ id: batchName, status: 'pending' });
+          // Calcular el area automaticamente usando Google Maps Geometry Library
+          let calculatedArea: number | undefined = undefined;
+          if (window.google?.maps?.geometry?.spherical) {
+              const path = points.map(p => new window.google.maps.LatLng(p.lat, p.lng));
+              const areaSqMeters = window.google.maps.geometry.spherical.computeArea(path);
+              calculatedArea = parseFloat((areaSqMeters / 10000).toFixed(2));
+          }
           
-          toast({ title: "¡Lote Creado!", description: `El lote ${batchName} ha sido guardado exitosamente.`});
+          // Add the batch to the data entry list as well
+          addBatch({ 
+             id: batchName, 
+             status: 'pending',
+             varieties: calculatedArea ? [{ name: '', area: calculatedArea, plantCount: undefined, plantingDate: '' }] : []
+          });
+          
+          toast({ title: "¡Lote Creado!", description: `El lote ${batchName} ha sido guardado exitosamente con ${calculatedArea ? calculatedArea + ' ha' : 'superficie pendiente'}.`});
       } catch (error) {
           toast({ title: "Error", description: "No se pudo guardar el lote.", variant: "destructive"});
       }
