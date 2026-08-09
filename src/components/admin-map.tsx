@@ -149,11 +149,13 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                     <Circle
                         key={`heat-${idx}`}
                         center={{ lat: data.lat, lng: data.lng }}
-                        radius={2000 * Math.max(1, data.weight)}
+                        radius={400 + Math.min(data.weight, 20) * 50}
                         options={{
                             fillColor: '#ef4444',
-                            fillOpacity: 0.15 + (Math.min(data.weight, 10) * 0.05),
-                            strokeWeight: 0,
+                            fillOpacity: Math.min(0.2 + (data.weight / 30), 0.75),
+                            strokeColor: '#ef4444',
+                            strokeOpacity: 0.5,
+                            strokeWeight: 1,
                             clickable: false
                         }}
                     />

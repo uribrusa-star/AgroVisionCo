@@ -161,10 +161,27 @@ const EditDialog = ({ open, onOpenChange, title, description, schema, defaultVal
 
 
 export default function EstablishmentPage() {
-  const { loading, establishmentData, updateEstablishmentData, addBatch, deleteBatch, currentUser } = useContext(AppDataContext);
+  const { loading, establishmentData, updateEstablishmentData, addBatch, deleteBatch, currentUser, batches } = useContext(AppDataContext);
   const { toast } = useToast();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isBatchBuilderOpen, setIsBatchBuilderOpen] = useState(false);
+
+  // Auto-calculate total strawberry surface from all batch areas
+  const totalBatchStrawberryArea = React.useMemo(() => {
+    if (!batches || batches.length === 0) return null;
+    const total = batches.reduce((sum, batch) => {
+      const batchArea = (batch.varieties || []).reduce((s, v) => s + (v.area || 0), 0);
+      return sum + batchArea;
+    }, 0);
+    return total > 0 ? parseFloat(total.toFixed(2)) : null;
+  }, [batches]);
+
+  // Sync auto-calculated area to Firestore when it changes
+  React.useEffect(() => {
+    if (totalBatchStrawberryArea !== null && establishmentData && totalBatchStrawberryArea !== establishmentData.area.strawberry) {
+      updateEstablishmentData({ area: { ...establishmentData.area, strawberry: totalBatchStrawberryArea } });
+    }
+  }, [totalBatchStrawberryArea]);
 
   const geoJsonForm = useForm<z.infer<typeof geoJsonSchema>>({
     resolver: zodResolver(geoJsonSchema),
@@ -457,7 +474,12 @@ export default function EstablishmentPage() {
 
         <InfoCard title="Superficie y Sistema" icon={Ruler} onEdit={() => handleEdit('area')} editableBy={producerAccess}>
             <InfoItem label="Superficie Total" value={`${establishmentData.area.total} ha`} />
-            <InfoItem label="Destinada a Frutilla" value={`${establishmentData.area.strawberry} ha`} />
+            <InfoItem label="Destinada a Frutilla" value={
+                <span className="flex items-center gap-1.5">
+                  {totalBatchStrawberryArea !== null ? totalBatchStrawberryArea : establishmentData.area.strawberry} ha
+                  {totalBatchStrawberryArea !== null && <span className="text-xs font-normal text-muted-foreground">(suma de lotes)</span>}
+                </span>
+              } />
             <InfoItem label="Sistema Productivo" value={establishmentData.system} />
         </InfoCard>
 
