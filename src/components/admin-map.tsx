@@ -1,16 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, HeatmapLayer } from '@react-google-maps/api';
 import type { EstablishmentData } from '@/lib/types';
-import { Building, MapPin, Activity, Sprout } from 'lucide-react';
+import { Building, MapPin, Activity, Sprout, Layers } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type AdminMapProps = {
     establishments: EstablishmentData[];
 };
 
-const libraries: ("drawing" | "geometry")[] = ["geometry"];
+const libraries: ("drawing" | "geometry" | "visualization")[] = ["geometry", "visualization"];
 
 export function AdminMap({ establishments }: AdminMapProps) {
     const { isLoaded, loadError } = useJsApiLoader({
@@ -20,6 +20,7 @@ export function AdminMap({ establishments }: AdminMapProps) {
     
     const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
+    const [mapMode, setMapMode] = useState<'pins' | 'heatmap'>('pins');
 
     const fitMapToBounds = React.useCallback(() => {
         if (!mapInstance || establishments.length === 0) return;
@@ -42,6 +43,20 @@ export function AdminMap({ establishments }: AdminMapProps) {
         }
     }, [establishments, mapInstance]);
 
+    const heatmapData = React.useMemo(() => {
+        if (!isLoaded || !window.google) return [];
+        return establishments.map(est => {
+            if (!est.location || !est.location.coordinates) return null;
+            const [lat, lng] = est.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            return {
+                location: new window.google.maps.LatLng(lat, lng),
+                weight: est.area?.strawberry || 1
+            };
+        }).filter(Boolean) as google.maps.visualization.WeightedLocation[];
+    }, [establishments, isLoaded]);
+
     useEffect(() => {
         fitMapToBounds();
     }, [fitMapToBounds]);
@@ -52,73 +67,115 @@ export function AdminMap({ establishments }: AdminMapProps) {
     const defaultCenter = { lat: -31.970220, lng: -60.916853 }; // Coronda default
 
     return (
-        <GoogleMap
-            mapContainerStyle={{ width: '100%', height: '100%', minHeight: '500px', borderRadius: '0.75rem' }}
-            center={defaultCenter}
-            zoom={8}
-            onLoad={setMapInstance}
-            onUnmount={() => setMapInstance(null)}
-            options={{
-                mapTypeId: 'satellite',
-                zoomControl: true,
-                streetViewControl: false,
-                mapTypeControl: false,
-                fullscreenControl: true,
-            }}
-            onClick={() => setActiveInfoWindow(null)}
-        >
-            {establishments.map((est) => {
-                if (!est.location || !est.location.coordinates) return null;
-                const [lat, lng] = est.location.coordinates.split(',').map(s => parseFloat(s.trim()));
-                if (isNaN(lat) || isNaN(lng)) return null;
+        <div className="relative w-full h-full">
+            <div className="absolute top-4 left-4 z-10 bg-white dark:bg-stone-900 rounded-lg shadow-md border border-stone-200 dark:border-stone-800 p-1 flex gap-1">
+                <button 
+                    onClick={() => setMapMode('pins')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pins' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                >
+                    <MapPin className="h-3.5 w-3.5" /> Pines
+                </button>
+                <button 
+                    onClick={() => setMapMode('heatmap')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'heatmap' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                >
+                    <Layers className="h-3.5 w-3.5" /> Calor
+                </button>
+            </div>
+            <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%', minHeight: '500px', borderRadius: '0.75rem' }}
+                center={defaultCenter}
+                zoom={8}
+                onLoad={setMapInstance}
+                onUnmount={() => setMapInstance(null)}
+                options={{
+                    mapTypeId: 'satellite',
+                    zoomControl: true,
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: true,
+                }}
+                onClick={() => setActiveInfoWindow(null)}
+            >
+                {mapMode === 'heatmap' && heatmapData.length > 0 && (
+                    <HeatmapLayer 
+                        data={heatmapData}
+                        options={{
+                            radius: 30,
+                            opacity: 0.8,
+                            gradient: [
+                                'rgba(0, 255, 255, 0)',
+                                'rgba(0, 255, 255, 1)',
+                                'rgba(0, 191, 255, 1)',
+                                'rgba(0, 127, 255, 1)',
+                                'rgba(0, 63, 255, 1)',
+                                'rgba(0, 0, 255, 1)',
+                                'rgba(0, 0, 223, 1)',
+                                'rgba(0, 0, 191, 1)',
+                                'rgba(0, 0, 159, 1)',
+                                'rgba(0, 0, 127, 1)',
+                                'rgba(63, 0, 91, 1)',
+                                'rgba(127, 0, 63, 1)',
+                                'rgba(191, 0, 31, 1)',
+                                'rgba(255, 0, 0, 1)'
+                            ]
+                        }}
+                    />
+                )}
 
-                const isActive = est.isActive !== false;
-                const markerColor = isActive ? (est.hasGoodPracticesSeal ? 'green' : 'blue') : 'red';
-                const iconUrl = `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`;
+                {mapMode === 'pins' && establishments.map((est) => {
+                    if (!est.location || !est.location.coordinates) return null;
+                    const [lat, lng] = est.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+                    if (isNaN(lat) || isNaN(lng)) return null;
 
-                return (
-                    <Marker
-                        key={est.id}
-                        position={{ lat, lng }}
-                        icon={iconUrl}
-                        onClick={() => setActiveInfoWindow(est.id)}
-                    >
-                        {activeInfoWindow === est.id && (
-                            <InfoWindow position={{ lat, lng }} onCloseClick={() => setActiveInfoWindow(null)}>
-                                <div className="p-1 max-w-[250px]">
-                                    <h3 className="font-bold text-sm mb-1 text-slate-800">{est.producer}</h3>
-                                    <div className="flex items-center gap-1 text-xs text-slate-600 mb-2">
-                                        <MapPin className="h-3 w-3" />
-                                        <span className="truncate">{est.location.locality}, {est.location.province}</span>
-                                    </div>
-                                    
-                                    <div className="space-y-1 mb-3">
-                                        <div className="flex items-center gap-2 text-xs">
-                                            <Sprout className="h-3.5 w-3.5 text-emerald-600" />
-                                            <span><strong>{est.area?.strawberry || 0} ha</strong> Frutilla</span>
+                    const isActive = est.isActive !== false;
+                    const markerColor = isActive ? (est.hasGoodPracticesSeal ? 'green' : 'blue') : 'red';
+                    const iconUrl = `http://maps.google.com/mapfiles/ms/icons/${markerColor}-dot.png`;
+
+                    return (
+                        <Marker
+                            key={est.id}
+                            position={{ lat, lng }}
+                            icon={iconUrl}
+                            onClick={() => setActiveInfoWindow(est.id)}
+                        >
+                            {activeInfoWindow === est.id && (
+                                <InfoWindow position={{ lat, lng }} onCloseClick={() => setActiveInfoWindow(null)}>
+                                    <div className="p-1 max-w-[250px]">
+                                        <h3 className="font-bold text-sm mb-1 text-slate-800">{est.producer}</h3>
+                                        <div className="flex items-center gap-1 text-xs text-slate-600 mb-2">
+                                            <MapPin className="h-3 w-3" />
+                                            <span className="truncate">{est.location.locality}, {est.location.province}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs">
-                                            <Building className="h-3.5 w-3.5 text-blue-600" />
-                                            <span>{est.system || 'N/A'}</span>
+                                        
+                                        <div className="space-y-1 mb-3">
+                                            <div className="flex items-center gap-2 text-xs">
+                                                <Sprout className="h-3.5 w-3.5 text-emerald-600" />
+                                                <span><strong>{est.area?.strawberry || 0} ha</strong> Frutilla</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs">
+                                                <Building className="h-3.5 w-3.5 text-blue-600" />
+                                                <span>{est.system || 'N/A'}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                            {isActive ? 'Activo' : 'Suspendido'}
-                                        </span>
-                                        {est.hasGoodPracticesSeal && (
-                                            <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-800 flex items-center gap-1">
-                                                <Activity className="h-3 w-3" /> Sello BPA
+                                        
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {isActive ? 'Activo' : 'Suspendido'}
                                             </span>
-                                        )}
+                                            {est.hasGoodPracticesSeal && (
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-800 flex items-center gap-1">
+                                                    <Activity className="h-3 w-3" /> Sello BPA
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </InfoWindow>
-                        )}
-                    </Marker>
-                );
-            })}
-        </GoogleMap>
+                                </InfoWindow>
+                            )}
+                        </Marker>
+                    );
+                })}
+            </GoogleMap>
+        </div>
     );
 }
