@@ -100,8 +100,8 @@ export default function TraceabilityPage() {
     if (!selectedBatch) return;
     
     toast({
-      title: 'Generando Reporte',
-      description: 'Estamos preparando el historial de trazabilidad...',
+      title: 'Generando Reporte y Síntesis IA...',
+      description: 'Por favor espere, estamos analizando la cronología de eventos...',
     });
 
     try {
@@ -126,7 +126,26 @@ export default function TraceabilityPage() {
         (p.batchIds && p.batchIds.includes(selectedBatchId)) || (p.batchId === selectedBatchId)
       );
 
-      generateTraceabilityPDF(selectedBatch, batchHarvests, batchAgLogs, batchPhenology, establishmentData, logoPngDataUri);
+      // Generate AI summary
+      let aiSummary = '';
+      try {
+        const eventsDataStr = JSON.stringify(timelineEvents.map(e => ({
+          fecha: format(e.date, 'dd/MM/yyyy'),
+          tipo: e.title,
+          notas: e.description || '-'
+        })));
+        
+        const { summarizeTraceabilityData } = await import('@/ai/flows/summarize-traceability-data');
+        aiSummary = await summarizeTraceabilityData({
+          batchName: selectedBatch.id,
+          establishmentName: establishmentData?.producer || 'AgroVista',
+          eventsData: eventsDataStr
+        });
+      } catch (error) {
+        console.error("Error generating AI summary:", error);
+      }
+
+      generateTraceabilityPDF(selectedBatch, batchHarvests, batchAgLogs, batchPhenology, establishmentData, logoPngDataUri, aiSummary);
       
       toast({
         title: 'Reporte Generado',
