@@ -105,6 +105,16 @@ export function AgronomistReportGenerator() {
             return canvas.toDataURL('image/png');
         };
 
+        let mapImg = '';
+        try {
+          const mapEl = document.querySelector('.gm-style') || document.querySelector('[data-map-container="true"]');
+          if (mapEl) {
+            const html2canvas = (await import('html2canvas')).default;
+            const mapCanvas = await html2canvas(mapEl as HTMLElement, { useCORS: true, scale: 2 });
+            mapImg = mapCanvas.toDataURL('image/png');
+          }
+        } catch { /* fallback to vector map */ }
+
         const [phenologyImg, monthlyHarvestImg, batchYieldImg] = await Promise.all([
             captureChart(phenologyRef),
             captureChart(monthlyRef),
@@ -124,7 +134,8 @@ export function AgronomistReportGenerator() {
             },
             logoPngDataUri,
             batches,
-            harvests
+            harvests,
+            mapImg
         );
         
         toast({
