@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import { summarizeAgronomistReport } from '@/ai/flows/summarize-agronomist-report';
+import { getRelevantKnowledge } from '@/ai/knowledge/strawberry-knowledge';
 import { FileDown, Sparkles } from 'lucide-react';
 
 import { PhenologyEvolutionChart } from './phenology-evolution-chart';
@@ -21,7 +22,7 @@ import { BatchYieldChart } from '@/app/(app)/engineer-log/batch-yield-chart';
 
 export function AgronomistReportGenerator() {
   const [isPending, startTransition] = useTransition();
-  const { agronomistLogs, phenologyLogs, currentUser, establishmentData, harvests } = useContext(AppDataContext);
+  const { agronomistLogs, phenologyLogs, currentUser, establishmentData, harvests, batches, supplies } = useContext(AppDataContext);
   const { toast } = useToast();
 
   const phenologyRef = useRef<HTMLDivElement>(null);
@@ -69,11 +70,31 @@ export function AgronomistReportGenerator() {
           console.error("Error loading logo:", e);
         }
 
+        const uniqueVarieties = Array.from(new Set(batches.flatMap(b => b.varieties?.map(v => v.name) || [])));
+        const varietyKnowledge = getRelevantKnowledge(uniqueVarieties);
+
+        const batchesData = batches.map(b => ({
+            id: b.id,
+            status: b.status,
+            varieties: b.varieties?.map(v => `${v.name} (${v.area || 0} ha)`).join(', ') || 'N/A'
+        }));
+
+        const suppliesData = supplies.map(s => ({
+            name: s.name,
+            type: s.type,
+            activeIngredient: s.info.activeIngredient,
+            stock: s.stock,
+            recommendedDose: s.info.dose
+        }));
+
         const aiInput = {
-            agronomistLogs: JSON.stringify(agronomistLogs.slice(0, 50)),
-            phenologyLogs: JSON.stringify(phenologyLogs.slice(0, 20)),
-            harvestLogs: JSON.stringify(harvests.slice(0, 50).map(h => ({ date: h.date, kg: h.kilograms, batch: h.batchNumber }))),
+            agronomistLogs: JSON.stringify(agronomistLogs),
+            phenologyLogs: JSON.stringify(phenologyLogs),
+            harvestLogs: JSON.stringify(harvests.map(h => ({ date: h.date, kg: h.kilograms, batch: h.batchNumber }))),
             establishmentData: JSON.stringify(establishmentData),
+            batchesData: JSON.stringify(batchesData),
+            suppliesData: JSON.stringify(suppliesData),
+            varietyKnowledge: varietyKnowledge,
         };
         const aiResult = await summarizeAgronomistReport(aiInput);
 

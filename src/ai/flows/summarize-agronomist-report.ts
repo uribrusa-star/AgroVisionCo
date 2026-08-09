@@ -16,6 +16,9 @@ const SummarizeAgronomistReportInputSchema = z.object({
   phenologyLogs: z.string(),
   harvestLogs: z.string().optional(),
   establishmentData: z.string().optional(),
+  batchesData: z.string().optional(),
+  suppliesData: z.string().optional(),
+  varietyKnowledge: z.string().optional(),
 });
 export type SummarizeAgronomistReportInput = z.infer<typeof SummarizeAgronomistReportInputSchema>;
 
@@ -68,6 +71,13 @@ const prompt = ai.definePrompt({
     **Contexto del Establecimiento:**
     {{{establishmentData}}}
 
+    **Lotes y Genética:**
+    {{{batchesData}}}
+    {{{varietyKnowledge}}}
+
+    **Inventario de Insumos:**
+    {{{suppliesData}}}
+
     **Datos a analizar:**
     - Bitácora Agronómica (Fertilizaciones, Riegos, Sanidad): {{{agronomistLogs}}}
     - Bitácora de Fenología (Estados de crecimiento): {{{phenologyLogs}}}
@@ -76,14 +86,14 @@ const prompt = ai.definePrompt({
     **Instrucciones de Redacción:**
     1. **Lenguaje Profesional**: Usa terminología técnica precisa (ej. "estrés hídrico", "presión de inóculo", "balance nutricional").
     2. **Capacidad de Síntesis**: Evita párrafos largos. El reporte se mostrará en bloques visuales.
-    3. **Objetividad**: Basa tus juicios estrictamente en los datos proporcionados.
+    3. **Objetividad y Auditoría**: Basa tus juicios estrictamente en los datos. Cruza las hectáreas de los lotes y la genética con los rendimientos.
     4. **Secciones:**
        - **Executive Summary**: Determina el estado general basándote en la sanidad y fenología actual.
-       - **Technical Analysis**: Desglosa la situación en 4 áreas (Clima, Fenología, Manejo, Sanidad).
-       - **Alertas**: Identifica los eventos más críticos o riesgosos detectados en los últimos registros.
-       - **Recommendations**: Proporciona acciones concretas para resolver problemas detectados.
+       - **Technical Analysis**: Desglosa la situación en 4 áreas (Clima, Fenología, Manejo, Sanidad). Haz énfasis en si el desarrollo fenológico y el rendimiento se ajustan a lo esperado para las variedades plantadas según la ficha botánica.
+       - **Alertas**: Identifica los eventos más críticos. **CRUCIAL**: Revisa la bitácora agronómica y compárala con el inventario de insumos (suppliesData). Si notas un uso intensivo de un producto cuyo stock es muy bajo o está por agotarse, genera una alerta urgente aquí.
+       - **Recommendations**: Proporciona acciones concretas para resolver problemas detectados o reabastecer insumos.
        - **Graphical Analysis**: Analiza brevemente lo que representarían los gráficos de Fenología, Cosecha Mensual y Cosecha por Lote, usando los datos.
-       - **AI Insight**: Un párrafo integrador que analice la correlación entre el clima, la fenología y las prácticas realizadas.
+       - **AI Insight**: Un párrafo integrador que analice la correlación entre el clima, la fenología, la genética y las prácticas realizadas.
 
     Genera el JSON estructurado solicitado.`,
   });
