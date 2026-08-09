@@ -1037,12 +1037,9 @@ export const generateAgronomistReportPDF = (
         3: { cellWidth: 85 }
       }
     });
-    yPos = (doc as any).lastAutoTable.finalY + 12;
-  } else {
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(techGrey[0], techGrey[1], techGrey[2]);
-    doc.text('No se detectaron alertas críticas operativas o de inventario en el período analizado.', 15, yPos);
+    yPos += 12;
+  }
+
   addFooter();
   doc.save(`Reporte_AgroVista_${establishment.producer.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 };
