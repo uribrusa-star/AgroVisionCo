@@ -2,17 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, HeatmapLayer, Circle } from '@react-google-maps/api';
-import type { EstablishmentData } from '@/lib/types';
+import type { EstablishmentData, DiagnosisLog } from '@/lib/types';
 import { Building, MapPin, Activity, Sprout, Layers, Bug } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type AdminMapProps = {
     establishments: EstablishmentData[];
+    pestLogs?: DiagnosisLog[];
 };
 
 const libraries: ("drawing" | "geometry" | "visualization")[] = ["geometry", "visualization"];
 
-export function AdminMap({ establishments }: AdminMapProps) {
+export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
     const { isLoaded, loadError } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
         libraries,
@@ -22,11 +23,46 @@ export function AdminMap({ establishments }: AdminMapProps) {
     const [activeInfoWindow, setActiveInfoWindow] = useState<string | null>(null);
     const [mapMode, setMapMode] = useState<'pins' | 'heatmap' | 'pests'>('pins');
 
-    const pestHotspots = React.useMemo(() => [
-        { id: 'h1', lat: -31.970220, lng: -60.916853, radius: 5000, pest: 'Arañuela Roja', count: 4, severity: 'Alta' },
-        { id: 'h2', lat: -31.7333, lng: -60.5333, radius: 8000, pest: 'Trips', count: 2, severity: 'Media' },
-        { id: 'h3', lat: -32.9468, lng: -60.6393, radius: 3000, pest: 'Botrytis', count: 1, severity: 'Alta' }
-    ], []);
+    const pestHotspots = React.useMemo(() => {
+        if (!pestLogs || pestLogs.length === 0) return [];
+        
+        const grouped = pestLogs.reduce((acc, log) => {
+            const estId = log.establishmentId;
+            if (!estId) return acc;
+            if (!acc[estId]) {
+                acc[estId] = { count: 0, pests: new Set<string>(), highestProb: 0 };
+            }
+            acc[estId].count += 1;
+            acc[estId].pests.add(log.result.diagnosticoPrincipal);
+            
+            const prob = log.result.posiblesDiagnosticos?.[0]?.probabilidad || 0;
+            if (prob > acc[estId].highestProb) {
+                acc[estId].highestProb = prob;
+            }
+            return acc;
+        }, {} as Record<string, { count: number, pests: Set<string>, highestProb: number }>);
+        
+        return Object.entries(grouped).map(([estId, data]) => {
+            const est = establishments.find(e => e.id === estId);
+            if (!est || !est.location?.coordinates) return null;
+            
+            const [lat, lng] = est.location.coordinates.split(',').map(s => parseFloat(s.trim()));
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            const severity = (data.highestProb > 70 || data.count > 2) ? 'Alta' : 'Media';
+            const radius = Math.min(3000 + (data.count * 1000), 10000);
+            
+            return {
+                id: `pest-${estId}`,
+                lat,
+                lng,
+                radius,
+                pest: Array.from(data.pests).join(', '),
+                count: data.count, // In this real data context, count is "Number of Reports"
+                severity
+            };
+        }).filter(Boolean) as { id: string, lat: number, lng: number, radius: number, pest: string, count: number, severity: string }[];
+    }, [pestLogs, establishments]);
 
     const fitMapToBounds = React.useCallback(() => {
         if (!mapInstance || establishments.length === 0) return;
@@ -167,7 +203,7 @@ export function AdminMap({ establishments }: AdminMapProps) {
                                         <strong>Plaga:</strong> {hotspot.pest}
                                     </p>
                                     <p className="text-xs text-slate-600 mb-2">
-                                        <strong>Productores en riesgo:</strong> {hotspot.count}
+                                        <strong>Reportes en lote:</strong> {hotspot.count}
                                     </p>
                                     <Badge variant={hotspot.severity === 'Alta' ? "destructive" : "default"} className="text-[10px]">
                                         Gravedad {hotspot.severity}

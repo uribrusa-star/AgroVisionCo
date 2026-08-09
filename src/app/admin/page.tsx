@@ -17,7 +17,7 @@ import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as Us
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, getDocs, query, where } from 'firebase/firestore';
-import type { EstablishmentData, User } from '@/lib/types';
+import type { EstablishmentData, User, DiagnosisLog } from '@/lib/types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
@@ -41,6 +41,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   
   const [establishments, setEstablishments] = useState<EstablishmentData[]>([]);
+  const [pestLogs, setPestLogs] = useState<DiagnosisLog[]>([]);
   const [producers, setProducers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [subPrice, setSubPrice] = useState(80000);
@@ -104,10 +105,30 @@ export default function AdminDashboardPage() {
       }
     });
 
+    // Subscribe to all diagnosisLogs globally for Pest Radar
+    const unsubscribePests = onSnapshot(collection(db, 'diagnosisLogs'), (snapshot) => {
+      const logs: DiagnosisLog[] = [];
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      snapshot.forEach((doc) => {
+        const data = doc.data() as DiagnosisLog;
+        if (data.date) {
+           const logDate = new Date(data.date);
+           if (logDate >= thirtyDaysAgo) {
+               logs.push({ ...data, id: doc.id });
+           }
+        }
+      });
+      setPestLogs(logs);
+    }, (error) => {
+      console.error("Error fetching global pest logs:", error);
+    });
+
     return () => {
       unsubscribeEst();
       unsubscribeProd();
       unsubscribeSettings();
+      unsubscribePests();
     };
   }, [currentUser]);
 
@@ -317,7 +338,7 @@ export default function AdminDashboardPage() {
                <CardDescription>Visualización geográfica y operativa de todos los clientes.</CardDescription>
             </CardHeader>
             <div className="h-[600px] w-full p-2 bg-stone-100">
-               <AdminMap establishments={establishments} />
+               <AdminMap establishments={establishments} pestLogs={pestLogs} />
             </div>
           </Card>
         </TabsContent>
