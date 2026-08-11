@@ -821,6 +821,42 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
 
+    const extractLogSupplies = (log?: Partial<AgronomistLog>): { supplyId?: string; name?: string; quantity: number }[] => {
+        if (!log) return [];
+        const list: { supplyId?: string; name?: string; quantity: number }[] = [];
+
+        if (log.supplies && Array.isArray(log.supplies)) {
+            for (const s of log.supplies) {
+                const qty = Number(s.quantity) || 0;
+                if (qty > 0) {
+                    list.push({ supplyId: s.supplyId, name: s.name, quantity: qty });
+                }
+            }
+        }
+
+        if (log.product && log.quantityUsed && Number(log.quantityUsed) > 0) {
+            const qty = Number(log.quantityUsed);
+            const existing = list.find(s => s.name === log.product || (s.supplyId && s.supplyId === log.product));
+            if (!existing) {
+                list.push({ name: log.product, quantity: qty });
+            }
+        }
+
+        return list;
+    };
+
+    const findSupplyInList = (supplyList: Supply[], entry: { supplyId?: string; name?: string }) => {
+        if (entry.supplyId) {
+            const found = supplyList.find(s => s.id === entry.supplyId);
+            if (found) return found;
+        }
+        if (entry.name) {
+            const found = supplyList.find(s => s.name.trim().toLowerCase() === entry.name!.trim().toLowerCase());
+            if (found) return found;
+        }
+        return undefined;
+    };
+
     const addAgronomistLog = async (log: Omit<AgronomistLog, 'id'>) => {
         const newLogRef = doc(collection(db, 'agronomistLogs'));
         const tempId = newLogRef.id;
@@ -833,29 +869,26 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             let lowStockAlertTriggered = false;
             const newTasksToEmail: { task: any, user: any }[] = [];
 
-            const allSuppliesToUpdate = [...(log.supplies || [])];
-            if (log.product && log.quantityUsed) {
-                const existing = supplies.find(s => s.name === log.product);
-                if (existing && !allSuppliesToUpdate.find(s => s.supplyId === existing.id)) {
-                    allSuppliesToUpdate.push({ supplyId: existing.id, name: log.product, quantity: log.quantityUsed });
-                }
-            }
+            const logSupplies = extractLogSupplies(log);
+            const updatedSuppliesMap = new Map<string, number>();
 
-            for (const supplyEntry of allSuppliesToUpdate) {
-                const supplyToUpdate = supplies.find(s => s.id === supplyEntry.supplyId);
+            for (const entry of logSupplies) {
+                const supplyToUpdate = findSupplyInList(supplies, entry);
                 if (supplyToUpdate && supplyToUpdate.stock !== undefined) {
-                    const oldStock = supplyToUpdate.stock;
-                    const newStock = oldStock - supplyEntry.quantity;
+                    const currentStock = updatedSuppliesMap.has(supplyToUpdate.id) ? updatedSuppliesMap.get(supplyToUpdate.id)! : supplyToUpdate.stock;
+                    const newStock = Math.max(0, currentStock - entry.quantity);
+                    updatedSuppliesMap.set(supplyToUpdate.id, newStock);
+
                     const supplyRef = doc(db, 'supplies', supplyToUpdate.id);
                     batch.update(supplyRef, { stock: newStock });
 
-                    if (supplyToUpdate.lowStockThreshold !== undefined && newStock < supplyToUpdate.lowStockThreshold && oldStock >= supplyToUpdate.lowStockThreshold) {
+                    if (supplyToUpdate.lowStockThreshold !== undefined && newStock < supplyToUpdate.lowStockThreshold && currentStock >= supplyToUpdate.lowStockThreshold) {
                         lowStockAlertTriggered = true;
                         const producerUser = users.find(u => u.role === 'Productor');
                         if (producerUser && currentUser) {
                             const newTask: Omit<Task, 'id'> = {
                                 title: `Stock bajo: ${supplyToUpdate.name}`,
-                                description: `El stock de '${supplyToUpdate.name}' ha caído a ${newStock.toFixed(1)} kg/L, por debajo del umbral de ${supplyToUpdate.lowStockThreshold} kg/L. Se recomienda reponer.`,
+                                description: `El stock de '${supplyToUpdate.name}' ha caído a ${newStock.toFixed(2)} kg/L, por debajo del umbral de ${supplyToUpdate.lowStockThreshold} kg/L. Se recomienda reponer.`,
                                 assignedTo: { id: producerUser.id, name: producerUser.name },
                                 createdBy: { id: currentUser.id, name: currentUser.name },
                                 status: 'pending',
@@ -869,6 +902,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                         }
                     }
                 }
+            }
+
+            if (updatedSuppliesMap.size > 0) {
+                setSupplies(prev => prev.map(s => updatedSuppliesMap.has(s.id) ? { ...s, stock: updatedSuppliesMap.get(s.id)! } : s));
             }
     
             await batch.commit();
@@ -917,14 +954,76 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const editAgronomistLog = (updatedLog: AgronomistLog) => {
         const originalLogs = agronomistLogs;
+        const originalSupplies = supplies;
+        const oldLog = agronomistLogs.find(l => l.id === updatedLog.id);
+
         setAgronomistLogs(prev => prev.map(l => l.id === updatedLog.id ? updatedLog : l));
 
-        const logRef = doc(db, 'agronomistLogs', updatedLog.id);
-        const { id, ...data } = updatedLog;
-        setDoc(logRef, sanitizeForFirestore(data), { merge: true }).catch(error => {
-            console.error("Failed to edit agronomist log:", error);
+        const runEdit = async () => {
+            const batch = writeBatch(db);
+            const logRef = doc(db, 'agronomistLogs', updatedLog.id);
+            const { id, ...data } = updatedLog;
+            batch.set(logRef, sanitizeForFirestore(data), { merge: true });
+
+            if (oldLog) {
+                const oldLogSupplies = extractLogSupplies(oldLog);
+                const newLogSupplies = extractLogSupplies(updatedLog);
+                const updatedSuppliesMap = new Map<string, number>();
+
+                for (const supplyItem of supplies) {
+                    if (supplyItem.stock === undefined) continue;
+
+                    // Sum quantities used in oldLog for this supply
+                    let oldQty = 0;
+                    for (const entry of oldLogSupplies) {
+                        const target = findSupplyInList(supplies, entry);
+                        if (target && target.id === supplyItem.id) {
+                            oldQty += entry.quantity;
+                        }
+                    }
+
+                    // Sum quantities used in newLog for this supply
+                    let newQty = 0;
+                    for (const entry of newLogSupplies) {
+                        const target = findSupplyInList(supplies, entry);
+                        if (target && target.id === supplyItem.id) {
+                            newQty += entry.quantity;
+                        }
+                    }
+
+                    const delta = oldQty - newQty; // positive means stock returned, negative means more stock deducted
+                    if (Math.abs(delta) > 0.0001) {
+                        const currentStock = supplyItem.stock;
+                        const restoredStock = Math.max(0, currentStock + delta);
+                        updatedSuppliesMap.set(supplyItem.id, restoredStock);
+
+                        const supplyRef = doc(db, 'supplies', supplyItem.id);
+                        batch.update(supplyRef, { stock: restoredStock });
+
+                        // Resolve pending low stock tasks if stock is restored above threshold
+                        if (supplyItem.lowStockThreshold !== undefined && currentStock < supplyItem.lowStockThreshold && restoredStock >= supplyItem.lowStockThreshold) {
+                            const relatedTask = tasks.find(t => t.title === `Stock bajo: ${supplyItem.name}` && t.status === 'pending');
+                            if (relatedTask) {
+                                batch.delete(doc(db, 'tasks', relatedTask.id));
+                                setTasks(prev => prev.filter(t => t.id !== relatedTask.id));
+                            }
+                        }
+                    }
+                }
+
+                if (updatedSuppliesMap.size > 0) {
+                    setSupplies(prev => prev.map(s => updatedSuppliesMap.has(s.id) ? { ...s, stock: updatedSuppliesMap.get(s.id)! } : s));
+                }
+            }
+
+            await batch.commit();
+        };
+
+        runEdit().catch(error => {
+            console.error("Failed to edit agronomist log and adjust stock:", error);
             setAgronomistLogs(originalLogs);
-            toast({ title: "Error", description: "No se pudo editar el registro.", variant: "destructive"});
+            setSupplies(originalSupplies);
+            toast({ title: "Error", description: "No se pudo editar el registro ni ajustar el stock.", variant: "destructive"});
         });
     };
 
@@ -939,24 +1038,20 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const batch = writeBatch(db);
             batch.delete(doc(db, 'agronomistLogs', logId));
 
-            const allSuppliesToRestore = [...(logToDelete.supplies || [])];
-            if (logToDelete.product && logToDelete.quantityUsed) {
-                const existing = supplies.find(s => s.name === logToDelete.product);
-                if (existing && !allSuppliesToRestore.find(s => s.supplyId === existing.id)) {
-                    allSuppliesToRestore.push({ supplyId: existing.id, name: logToDelete.product, quantity: logToDelete.quantityUsed });
-                }
-            }
+            const suppliesToRestore = extractLogSupplies(logToDelete);
+            const updatedSuppliesMap = new Map<string, number>();
 
-            for (const supplyEntry of allSuppliesToRestore) {
-                const supplyToUpdate = supplies.find(s => s.id === supplyEntry.supplyId);
+            for (const entry of suppliesToRestore) {
+                const supplyToUpdate = findSupplyInList(supplies, entry);
                 if (supplyToUpdate && supplyToUpdate.stock !== undefined) {
-                    const restoredStock = supplyToUpdate.stock + supplyEntry.quantity;
+                    const currentStock = updatedSuppliesMap.has(supplyToUpdate.id) ? updatedSuppliesMap.get(supplyToUpdate.id)! : supplyToUpdate.stock;
+                    const restoredStock = currentStock + entry.quantity;
+                    updatedSuppliesMap.set(supplyToUpdate.id, restoredStock);
+
                     const supplyRef = doc(db, 'supplies', supplyToUpdate.id);
                     batch.update(supplyRef, { stock: restoredStock });
 
-                    setSupplies(prev => prev.map(s => s.id === supplyToUpdate.id ? { ...s, stock: restoredStock } : s));
-
-                    if (supplyToUpdate.lowStockThreshold !== undefined && supplyToUpdate.stock < supplyToUpdate.lowStockThreshold && restoredStock >= supplyToUpdate.lowStockThreshold) {
+                    if (supplyToUpdate.lowStockThreshold !== undefined && currentStock < supplyToUpdate.lowStockThreshold && restoredStock >= supplyToUpdate.lowStockThreshold) {
                         const relatedTask = tasks.find(t => t.title === `Stock bajo: ${supplyToUpdate.name}` && t.status === 'pending');
                         if (relatedTask) {
                             batch.delete(doc(db, 'tasks', relatedTask.id));
@@ -965,6 +1060,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     }
                 }
             }
+
+            if (updatedSuppliesMap.size > 0) {
+                setSupplies(prev => prev.map(s => updatedSuppliesMap.has(s.id) ? { ...s, stock: updatedSuppliesMap.get(s.id)! } : s));
+            }
+
             await batch.commit();
         };
 
