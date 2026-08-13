@@ -111,45 +111,73 @@ export default function DashboardPage() {
         <WeatherCard />
       </PageHeader>
       <PushNotificationBanner />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4 mb-6 sm:mb-8">
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cosecha Total</CardTitle>
-            <Weight className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Cosecha Total</CardTitle>
+            <Weight className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `${dashboardStats.totalHarvest.toLocaleString('es-ES', { maximumFractionDigits: 0 })} kg`}</div>
-            <p className="text-xs text-muted-foreground">Acumulado de la temporada</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" /> : `${dashboardStats.totalHarvest.toLocaleString('es-ES', { maximumFractionDigits: 0 })} kg`}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1" title="Acumulado de la temporada">
+              Acumulado temporada
+            </p>
           </CardContent>
         </Card>
+
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Costo de Mano de Obra</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Costo Mano de Obra">
+              <span className="hidden sm:inline">Costo de Mano de Obra</span>
+              <span className="sm:hidden">Costo Mano Obra</span>
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `$${dashboardStats.totalLaborCost.toLocaleString('es-ES', { maximumFractionDigits: 0 })}`}</div>
-            <p className="text-xs text-muted-foreground">Cosecha + Embalaje + Labores</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" /> : `$${dashboardStats.totalLaborCost.toLocaleString('es-ES', { maximumFractionDigits: 0 })}`}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1" title="Cosecha + Embalaje + Labores">
+              Cosecha + Embalaje...
+            </p>
           </CardContent>
         </Card>
+
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rendimiento Promedio</CardTitle>
-            <BarChartIcon className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Rendimiento Promedio">
+              <span className="hidden sm:inline">Rendimiento Promedio</span>
+              <span className="sm:hidden">Rend. Promedio</span>
+            </CardTitle>
+            <BarChartIcon className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `${dashboardStats.averageYield.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg/lote`}</div>
-            <p className="text-xs text-muted-foreground">Promedio por lote cosechado</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" /> : `${dashboardStats.averageYield.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg/lote`}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1" title="Promedio por lote cosechado">
+              Promedio por lote
+            </p>
           </CardContent>
         </Card>
+
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Día Pico de Cosecha</CardTitle>
-            <CalendarDays className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Día Pico de Cosecha">
+              <span className="hidden sm:inline">Día Pico de Cosecha</span>
+              <span className="sm:hidden">Día Pico</span>
+            </CardTitle>
+            <CalendarDays className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : (dashboardStats.peakDay || 'N/A')}</div>
-            <p className="text-xs text-muted-foreground">El día más productivo</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" /> : (dashboardStats.peakDay || 'N/A')}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1" title="El día más productivo">
+              El día más productivo
+            </p>
           </CardContent>
         </Card>
       </div>
