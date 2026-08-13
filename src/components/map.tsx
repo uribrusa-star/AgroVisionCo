@@ -252,142 +252,145 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         }
 
         return (
-            <div className="absolute inset-0 pointer-events-none flex flex-col sm:flex-row justify-between p-4 z-10 overflow-hidden">
-                {/* Left Panel */}
-                <div className="w-full sm:w-64 flex flex-col gap-4 pointer-events-auto mb-4 sm:mb-0 shrink-0">
-                    <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-left">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-lg text-foreground">Lote: {activeInfoWindow}</h3>
-                            <button onClick={() => {
-                                setActiveInfoWindow(null);
-                                fitMapToBounds();
-                            }} className="p-1 hover:bg-gray-200 rounded-full text-gray-500 transition-colors">
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="text-xs uppercase text-muted-foreground font-bold mb-2">Rendimiento</h4>
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-primary/10 text-primary p-2.5 rounded-lg">
-                                        <Weight className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-lg">{totalKilos.toLocaleString('es-ES')} kg</p>
-                                        <p className="text-xs text-muted-foreground">{lotHarvests.length} cosechas</p>
-                                    </div>
-                                </div>
+            <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-2 sm:p-4 z-10 overflow-hidden">
+                {/* Top Row: Left (Batch Details) & Right (Sanitary/PHI Alerts) */}
+                <div className="flex flex-row justify-between items-start w-full gap-2 pointer-events-none">
+                    {/* Left Panel: Batch Details */}
+                    <div className="w-[52%] max-w-[220px] sm:w-64 sm:max-w-none pointer-events-auto shrink-0">
+                        <div className="bg-background/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xl rounded-xl p-2.5 sm:p-4 transition-all animate-in slide-in-from-left">
+                            <div className="flex items-center justify-between mb-2 sm:mb-4 border-b pb-1 sm:pb-2">
+                                <h3 className="font-bold text-xs sm:text-lg text-foreground truncate">Lote: {activeInfoWindow}</h3>
+                                <button onClick={() => {
+                                    setActiveInfoWindow(null);
+                                    fitMapToBounds();
+                                }} className="p-0.5 sm:p-1 hover:bg-muted rounded-full text-muted-foreground transition-colors shrink-0">
+                                    <X className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+                                </button>
                             </div>
+                            
+                            <div className="space-y-2 sm:space-y-4">
+                                <div>
+                                    <h4 className="text-[9px] sm:text-xs uppercase text-muted-foreground font-bold mb-1 sm:mb-2">Rendimiento</h4>
+                                    <div className="flex items-center gap-1.5 sm:gap-3">
+                                        <div className="bg-primary/10 text-primary p-1.5 sm:p-2.5 rounded-lg shrink-0">
+                                            <Weight className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-xs sm:text-lg truncate">{totalKilos.toLocaleString('es-ES')} kg</p>
+                                            <p className="text-[9px] sm:text-xs text-muted-foreground truncate">{lotHarvests.length} cosechas</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/60">
-                                <div>
-                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Variedad</p>
-                                    <p className="text-sm font-semibold">{variedad}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Densidad</p>
-                                    <p className="text-sm font-semibold">{densidad}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] uppercase text-muted-foreground font-bold">Superficie</p>
-                                    <p className="text-sm font-semibold">{hectareas} ha.</p>
+                                <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pt-1.5 sm:pt-3 border-t border-border/60">
+                                    <div className="min-w-0">
+                                        <p className="text-[8px] sm:text-[10px] uppercase text-muted-foreground font-bold truncate">Variedad</p>
+                                        <p className="text-[10px] sm:text-sm font-semibold truncate">{variedad}</p>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[8px] sm:text-[10px] uppercase text-muted-foreground font-bold truncate">Densidad</p>
+                                        <p className="text-[10px] sm:text-sm font-semibold truncate">{densidad}</p>
+                                    </div>
+                                    <div className="col-span-2 min-w-0">
+                                        <p className="text-[8px] sm:text-[10px] uppercase text-muted-foreground font-bold truncate">Superficie</p>
+                                        <p className="text-[10px] sm:text-sm font-semibold truncate">{hectareas} ha.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Right Panel: Sanitary / PHI Alerts */}
+                    <div className="w-[45%] max-w-[200px] sm:w-72 sm:max-w-none flex flex-col gap-2 pointer-events-auto max-h-[35vh] sm:max-h-[85vh] overflow-y-auto pr-0.5 scrollbar-hide shrink-0">
+                        {phiStatus.isBlocked && (
+                            <div className="bg-red-500/95 backdrop-blur-md text-white border border-red-600 shadow-xl rounded-xl p-2.5 sm:p-4 transition-all animate-in slide-in-from-right shrink-0">
+                                <div className="flex items-center gap-1 sm:gap-2 font-bold text-[10px] sm:text-sm uppercase mb-1 sm:mb-2">
+                                    <AlertTriangle className="h-3.5 w-3.5 sm:h-5 sm:w-5 animate-pulse shrink-0" />
+                                    <span className="truncate">PHI BLOQUEADO</span>
+                                </div>
+                                <p className="text-xs sm:text-sm font-medium truncate">{phiStatus.productName}</p>
+                                <p className="text-[9px] sm:text-xs mt-1 sm:mt-2 opacity-90 truncate">
+                                    Liberación: <span className="font-bold">{phiStatus.unlockDate?.toLocaleDateString('es-ES')}</span> 
+                                </p>
+                            </div>
+                        )}
+
+                        {lotSanityLogs.length > 0 && (
+                            <div className="bg-background/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xl rounded-xl p-2.5 sm:p-4 transition-all animate-in slide-in-from-right overflow-y-auto max-h-36 sm:max-h-48 shrink-0">
+                                <h4 className="text-[9px] sm:text-xs uppercase text-red-600 font-bold mb-1.5 sm:mb-3 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" /> <span className="truncate">Alertas Sanitarias</span>
+                                </h4>
+                                <div className="space-y-1.5 sm:space-y-3">
+                                    {lotSanityLogs.map((log, idx) => (
+                                        <Dialog key={idx}>
+                                            <DialogTrigger asChild>
+                                                <div className="bg-red-50/70 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 p-1.5 sm:p-2 rounded-lg cursor-pointer hover:bg-red-100/50 dark:hover:bg-red-900/40 transition-colors pointer-events-auto">
+                                                    <p className="text-[10px] sm:text-xs font-semibold text-red-800 dark:text-red-400 truncate">{log.product}</p>
+                                                    <div className="flex justify-between items-center mt-0.5">
+                                                        <p className="text-[8px] sm:text-[10px] text-gray-600 dark:text-gray-400 line-clamp-1 flex-1" title={log.notes}>{log.notes}</p>
+                                                        <p className="text-[8px] sm:text-[10px] text-red-600/80 dark:text-red-400/80 font-medium ml-1 shrink-0">{format(new Date(log.date), "dd/MM")}</p>
+                                                    </div>
+                                                </div>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-md pointer-events-auto z-[1000]">
+                                                <DialogHeader>
+                                                    <DialogTitle className="flex items-center gap-2 text-red-600">
+                                                        <AlertTriangle className="h-5 w-5" /> Alerta Sanitaria
+                                                    </DialogTitle>
+                                                    <DialogDescription>
+                                                        Detalles de la observación en el lote.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <div className="space-y-4 pt-2">
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-muted-foreground">Problema / Producto</p>
+                                                        <p className="text-lg font-bold">{log.product}</p>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-muted-foreground">Fecha</p>
+                                                            <p className="text-md">{format(new Date(log.date), "dd/MM/yyyy HH:mm")}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-muted-foreground">Ingeniero</p>
+                                                            <p className="text-md">{log.agronomistName}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-semibold text-muted-foreground">Notas</p>
+                                                        <p className="text-md bg-muted p-3 rounded-lg whitespace-pre-wrap">{log.notes}</p>
+                                                    </div>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Right Panel */}
-                <div className="w-full sm:w-72 flex flex-col gap-4 pointer-events-auto max-h-[45vh] sm:max-h-[90%] overflow-y-auto pb-4 pr-1 scrollbar-hide">
-                    {phiStatus.isBlocked && (
-                        <div className="bg-red-500/90 backdrop-blur-md text-white border border-red-600 shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right shrink-0">
-                            <div className="flex items-center gap-2 font-bold text-sm uppercase mb-2">
-                                <AlertTriangle className="h-5 w-5 animate-pulse" />
-                                BLOQUEADO (PHI)
-                            </div>
-                            <p className="text-sm font-medium">{phiStatus.productName}</p>
-                            <p className="text-xs mt-2 opacity-90">
-                                Liberación: <span className="font-bold">{phiStatus.unlockDate?.toLocaleDateString('es-ES')}</span> 
-                            </p>
-                            <p className="text-[10px] mt-1 opacity-80">
-                                Restan: {phiStatus.remainingDays || 0}d / {phiStatus.remainingHours || 0}hs
-                            </p>
-                        </div>
-                    )}
-
-                    {lotSanityLogs.length > 0 && (
-                        <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right overflow-y-auto max-h-48 shrink-0">
-                            <h4 className="text-xs uppercase text-red-600 font-bold mb-3 flex items-center gap-1">
-                                <AlertTriangle className="h-4 w-4" /> Alertas Sanitarias
-                            </h4>
-                            <div className="space-y-3">
-                                {lotSanityLogs.map((log, idx) => (
-                                    <Dialog key={idx}>
-                                        <DialogTrigger asChild>
-                                            <div className="bg-red-50/50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 p-2 rounded-lg cursor-pointer hover:bg-red-100/50 dark:hover:bg-red-900/40 transition-colors pointer-events-auto">
-                                                <p className="text-xs font-semibold text-red-800 dark:text-red-400">{log.product}</p>
-                                                <div className="flex justify-between items-center mt-1">
-                                                    <p className="text-[10px] text-gray-600 dark:text-gray-400 line-clamp-1 flex-1" title={log.notes}>{log.notes}</p>
-                                                    <p className="text-[10px] text-red-600/80 dark:text-red-400/80 font-medium ml-2">{format(new Date(log.date), "dd/MM")}</p>
-                                                </div>
-                                            </div>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-md pointer-events-auto z-[1000]">
-                                            <DialogHeader>
-                                                <DialogTitle className="flex items-center gap-2 text-red-600">
-                                                    <AlertTriangle className="h-5 w-5" /> Alerta Sanitaria
-                                                </DialogTitle>
-                                                <DialogDescription>
-                                                    Detalles de la observación en el lote.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-4 pt-2">
-                                                <div>
-                                                    <p className="text-sm font-semibold text-muted-foreground">Problema / Producto</p>
-                                                    <p className="text-lg font-bold">{log.product}</p>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-muted-foreground">Fecha</p>
-                                                        <p className="text-md">{format(new Date(log.date), "dd/MM/yyyy HH:mm")}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-muted-foreground">Ingeniero</p>
-                                                        <p className="text-md">{log.agronomistName}</p>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-semibold text-muted-foreground">Notas</p>
-                                                    <p className="text-md bg-muted p-3 rounded-lg whitespace-pre-wrap">{log.notes}</p>
-                                                </div>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="bg-background/90 dark:bg-slate-900/90 backdrop-blur-md border border-border shadow-xl rounded-xl p-4 transition-all animate-in slide-in-from-right shrink-0">
-                        <h4 className="text-xs uppercase text-muted-foreground font-bold mb-3">Historial</h4>
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <div className="bg-blue-500/10 text-blue-600 p-2 rounded-lg mt-0.5">
-                                    <Leaf className="h-4 w-4" />
+                {/* Bottom Row: Right (History Summary Card) */}
+                <div className="flex justify-end w-full pointer-events-none mt-auto pt-2">
+                    <div className="bg-background/95 dark:bg-slate-900/95 backdrop-blur-md border border-border shadow-xl rounded-xl p-2.5 sm:p-4 transition-all animate-in slide-in-from-bottom pointer-events-auto w-auto max-w-[200px] sm:max-w-xs shrink-0">
+                        <h4 className="text-[9px] sm:text-xs uppercase text-muted-foreground font-bold mb-1.5 sm:mb-3">Historial</h4>
+                        <div className="space-y-1.5 sm:space-y-3">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="bg-blue-500/10 text-blue-600 p-1 sm:p-2 rounded-lg shrink-0">
+                                    <Leaf className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </div>
-                                <div>
-                                    <p className="font-bold text-sm">{lotAgronomistLogs.length} Registros</p>
-                                    <p className="text-xs text-muted-foreground">Actividades Sanitarias y Nutricionales</p>
+                                <div className="min-w-0">
+                                    <p className="font-bold text-[10px] sm:text-sm leading-tight truncate">{lotAgronomistLogs.length} Registros</p>
+                                    <p className="text-[8px] sm:text-xs text-muted-foreground truncate hidden sm:block">Actividades Sanitarias</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <div className="bg-green-500/10 text-green-600 p-2 rounded-lg mt-0.5">
-                                    <Notebook className="h-4 w-4" />
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="bg-green-500/10 text-green-600 p-1 sm:p-2 rounded-lg shrink-0">
+                                    <Notebook className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </div>
-                                <div>
-                                    <p className="font-bold text-sm">{lotPhenologyLogs.length} Fases</p>
-                                    <p className="text-xs text-muted-foreground">Estados Fenológicos Registrados</p>
+                                <div className="min-w-0">
+                                    <p className="font-bold text-[10px] sm:text-sm leading-tight truncate">{lotPhenologyLogs.length} Fases</p>
+                                    <p className="text-[8px] sm:text-xs text-muted-foreground truncate hidden sm:block">Estados Fenológicos</p>
                                 </div>
                             </div>
                         </div>
