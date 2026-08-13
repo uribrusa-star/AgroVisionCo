@@ -52,7 +52,12 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         });
 
         if (hasBounds) {
-            mapInstance.fitBounds(bounds);
+            const isMobile = window.innerWidth < 640;
+            const padding = isMobile 
+                ? { top: 60, bottom: 60, left: 20, right: 20 }
+                : { top: 50, bottom: 50, left: 280, right: 300 };
+            
+            mapInstance.fitBounds(bounds, padding);
         }
     }, [geoJsonData, mapInstance]);
 
@@ -104,8 +109,17 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
                                 );
                                 centerPoint.lat /= paths.length;
                                 centerPoint.lng /= paths.length;
+                                
                                 mapInstance.panTo(centerPoint);
-                                mapInstance.setZoom(17);
+                                
+                                const isMobile = window.innerWidth < 640;
+                                if (isMobile) {
+                                    // En celulares: hacemos acercamiento (zoom in) directo al lote seleccionado
+                                    mapInstance.setZoom(18.5);
+                                } else {
+                                    // En pantallas grandes (PC/Tablet): se mantiene en un zoom cómodo e imponente sin alejarse demasiado
+                                    mapInstance.setZoom(17.5);
+                                }
                             }
                         }}
                     />
