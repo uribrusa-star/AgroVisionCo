@@ -50,35 +50,52 @@ export default function EngineerLogPage() {
         <WeatherCard />
       </PageHeader>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Producción Total</CardTitle>
-            <Weight className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 mb-6 sm:mb-8">
+        <Card className="hover:shadow-md transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Producción Total">
+              <span className="hidden sm:inline">Producción Total</span>
+              <span className="sm:hidden">Prod. Total</span>
+            </CardTitle>
+            <Weight className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `${totalProduction.toLocaleString('es-ES')} kg`}</div>
-            <p className="text-xs text-muted-foreground">Acumulado de la temporada</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" /> : `${totalProduction.toLocaleString('es-ES')} kg`}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1">Acumulado temporada</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rendimiento Promedio/Lote</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
+
+        <Card className="hover:shadow-md transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Rendimiento Promedio/Lote">
+              <span className="hidden sm:inline">Rendimiento Promedio/Lote</span>
+              <span className="sm:hidden">Rend. Prom./Lote</span>
+            </CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-24" /> : `${averageYieldPerBatch.toFixed(1)} kg`}</div>
-            <p className="text-xs text-muted-foreground">Promedio en lotes cosechados</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-20 sm:w-24" /> : `${averageYieldPerBatch.toFixed(1)} kg`}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1">Promedio por lote</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Recolectores</CardTitle>
-            <HardHat className="h-4 w-4 text-muted-foreground" />
+
+        <Card className="col-span-2 lg:col-span-1 hover:shadow-md transition-shadow duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Total de Recolectores">
+              <span className="hidden sm:inline">Total de Recolectores</span>
+              <span className="sm:hidden">Recolectores Activos</span>
+            </CardTitle>
+            <HardHat className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-12" /> : collectors.length}</div>
-            <p className="text-xs text-muted-foreground">Activos esta temporada</p>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 flex items-baseline justify-between sm:block">
+            <div className="text-lg sm:text-2xl font-bold tracking-tight">
+              {loading ? <Skeleton className="h-6 sm:h-8 w-12" /> : collectors.length}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5 sm:mt-1">Activos esta temporada</p>
           </CardContent>
         </Card>
       </div>
