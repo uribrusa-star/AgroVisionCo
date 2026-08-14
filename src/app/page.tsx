@@ -9,6 +9,7 @@ import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2, Music } fr
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AppDataContext } from '@/context/app-data-context.tsx';
+import { ContactModal } from '@/components/contact-modal';
 
 export default function LandingPage() {
   const { currentUser } = useContext(AppDataContext);
@@ -192,11 +193,7 @@ export default function LandingPage() {
               reportes agronómicos y mapas interactivos en tiempo real.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link href="/login">
-                <Button size="lg" className="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold">
-                  Comenzar Ahora
-                </Button>
-              </Link>
+              <ContactModal buttonText="Comenzar Ahora" buttonSize="lg" buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold" />
             </div>
           </div>
         </section>
@@ -391,6 +388,21 @@ export default function LandingPage() {
                 </div>
 
               </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action Banner Section */}
+        <section className="py-16 bg-gradient-to-r from-green-900 via-green-850 to-green-950 text-white relative overflow-hidden">
+          <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+            <h2 className="text-3xl sm:text-4xl font-bold font-headline drop-shadow-md">
+              ¿Listo para transformar la gestión de tus lotes de frutilla?
+            </h2>
+            <p className="mt-4 text-green-100 text-base sm:text-lg max-w-2xl mx-auto">
+              Únete a los productores de Coronda y la región que ya están optimizando el rendimiento, la trazabilidad y las ganancias de sus campos.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <ContactModal buttonText="Solicitar Demostración Gratuita" buttonSize="lg" buttonClassName="bg-green-400 hover:bg-green-300 text-green-950 font-bold px-8 py-6 text-lg rounded-full shadow-xl hover:scale-105 transition-all" />
             </div>
           </div>
         </section>
