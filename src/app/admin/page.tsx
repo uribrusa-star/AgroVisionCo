@@ -1020,9 +1020,10 @@ export default function AdminDashboardPage() {
                   {isBroadcasting ? "Enviando..." : "Enviar Notificación Push"}
                 </Button>
               </CardFooter>
-            </Card>
-          </div>
-        </TabsContent>
+            </form>
+          </Card>
+        </div>
+      </TabsContent>
       </Tabs>
 
       {/* Dialog for creating a new Producer */}
