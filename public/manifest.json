@@ -4,9 +4,9 @@
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
-  "name": "AgroVista",
+  "name": "AgroVista Coronda",
   "short_name": "AgroVista",
-  "description": "Gestión de datos en la producción de fresas.",
+  "description": "Plataforma de gestión agrícola y trazabilidad de frutillas nacida en Coronda, Santa Fe.",
   "icons": [
       {
           "src": "/logo.png",

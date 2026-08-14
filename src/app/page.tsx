@@ -163,11 +163,15 @@ export default function LandingPage() {
           </div>
           
           <div className="relative z-10 mx-auto max-w-5xl text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 dark:bg-green-900/40 border border-green-400/30 backdrop-blur-md text-green-300 text-xs sm:text-sm font-semibold mb-6 shadow-lg animate-fade-in">
+              <MapPin className="h-4 w-4 text-green-400 shrink-0" />
+              <span>Nacido en <strong>Coronda, Santa Fe</strong> — Capital Nacional de la Frutilla</span>
+            </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md">
               Trazabilidad Agrícola Inteligente para la Producción de Frutillas
             </h1>
             <p className="mt-6 text-lg leading-8 text-green-50 max-w-3xl mx-auto drop-shadow-sm">
-              AgroVista es la plataforma integral diseñada específicamente para optimizar el rendimiento, 
+              AgroVista es la plataforma integral nacida en <strong>Coronda</strong>, diseñada específicamente para optimizar el rendimiento, 
               controlar la sanidad y maximizar las ganancias de tus lotes de frutillas. Con inteligencia artificial, 
               reportes agronómicos y mapas interactivos en tiempo real.
             </p>
@@ -385,7 +389,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-8 md:order-1 md:mt-0">
             <p className="text-center text-xs leading-5 text-gray-500 dark:text-green-200/60">
-              &copy; {new Date().getFullYear()} AgroVista. Todos los derechos reservados.
+              &copy; {new Date().getFullYear()} AgroVista. Desarrollado en Coronda, Santa Fe, Argentina. Todos los derechos reservados.
             </p>
           </div>
         </div>
