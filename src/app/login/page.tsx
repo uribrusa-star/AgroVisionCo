@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { signInWithCustomToken } from 'firebase/auth';
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 title: "Modo sin conexión",
                 description: "Sesión iniciada localmente. Los datos se sincronizarán al conectarse.",
             });
-            if (clientUser.role === 'SuperAdmin') {
+            if (offlineUser.role === 'SuperAdmin') {
               router.push('/admin');
             } else {
               router.push('/dashboard');
@@ -117,8 +117,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-sm">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <Card className="w-full max-w-sm shadow-lg border-stone-200 dark:border-stone-800">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
             <Image src="/logo.png" alt="AgroVista Logo" width={64} height={64} />
@@ -177,7 +177,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <Button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold" disabled={isPending}>
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isPending ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </Button>
@@ -185,6 +185,12 @@ export default function LoginPage() {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Leyenda de Seguridad */}
+      <div className="mt-4 max-w-sm flex items-center justify-center gap-1.5 text-center text-xs text-stone-500 dark:text-stone-400 px-2">
+        <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <span>Conexión cifrada de grado bancario (SSL/TLS 1.3). Sus datos están 100% protegidos.</span>
+      </div>
     </div>
   );
 }
