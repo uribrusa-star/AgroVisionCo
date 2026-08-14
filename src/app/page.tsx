@@ -189,137 +189,145 @@ export default function LandingPage() {
                 Todo lo que necesitas para tu campo
               </h2>
               <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-green-200/80">
-                Lleva el control exacto de tus cosechas, monitorea la fenología de las plantas y toma decisiones informadas basadas en datos reales.
+                Lleva el control exacto de tus cosechas, monitorea la fenología de las plantas, controla tus finanzas y toma decisiones informadas en tiempo real.
               </p>
             </div>
             
             <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
               <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-                <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/bitacora-agronomo.png" alt="Bitácora" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Bitácora Agronómica</DialogTitle>
-                      <Image src="/bitacora-agronomo.png" alt="Bitácora" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                    </DialogContent>
-                  </Dialog>
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <Leaf className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Bitácora Agronómica
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Registra riegos, fertilizaciones, aplicaciones sanitarias y estados fenológicos en una interfaz fácil e intuitiva.</p>
-                  </dd>
-                </div>
                 
+                {/* 1. Panel de Control */}
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/informes-ia.png" alt="Informes con IA" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/dashboard_mockup.png" alt="Panel de Control" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Informes con IA</DialogTitle>
-                      <Image src="/informes-ia.png" alt="Informes con IA" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <DialogTitle className="sr-only">Panel de Control</DialogTitle>
+                      <Image src="/dashboard_mockup.png" alt="Panel de Control" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Informes con IA
+                    Panel de Control
                   </dt>
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Genera reportes técnicos PDF en segundos. Nuestro consultor impulsado por Google Gemini analiza tus datos y te da recomendaciones clave.</p>
+                    <p className="flex-auto">Resumen visual de cosechas totales, costos de mano de obra, rendimiento promedio por lote y el día de pico productivo de tu temporada.</p>
                   </dd>
                 </div>
 
+                {/* 2. Mapa Interactivo */}
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/map_mockup.png" alt="Mapas" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/map_mockup.png" alt="Mapa Interactivo" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Mapas Interactivos</DialogTitle>
-                      <Image src="/map_mockup.png" alt="Mapas" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <DialogTitle className="sr-only">Mapa Interactivo de Lotes</DialogTitle>
+                      <Image src="/map_mockup.png" alt="Mapa Interactivo" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <MapPin className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Mapas Interactivos
+                    Mapa Interactivo
                   </dt>
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Visualiza el rendimiento de tus lotes en un mapa satelital. Descubre zonas de alta producción o posibles áreas de riesgo al instante.</p>
+                    <p className="flex-auto">Visualización satelital de tus lotes delimitados, alertas sanitarias geolocalizadas, estados de carencia (PHI) y tarjetas flotantes de resumen en tiempo real.</p>
                   </dd>
                 </div>
 
+                {/* 3. Bitácora del Agrónomo */}
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/predicciones_mockup.png" alt="Predicciones y Clima" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/bitacora-agronomo.png" alt="Bitácora del Agrónomo" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Predicciones y Clima</DialogTitle>
-                      <Image src="/predicciones_mockup.png" alt="Predicciones y Clima" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <DialogTitle className="sr-only">Bitácora del Agrónomo</DialogTitle>
+                      <Image src="/bitacora-agronomo.png" alt="Bitácora del Agrónomo" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Predicciones Climáticas
+                    <Leaf className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Bitácora del Agrónomo
                   </dt>
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Anticípate al clima. Accede a predicciones de lluvias, ráfagas y temperatura para proteger tus cultivos y optimizar las fumigaciones.</p>
+                    <p className="flex-auto">Gestión integral de recetas fitosanitarias, riegos, nutrición foliar, monitoreo fenológico e informes agronómicos técnicos generados con IA.</p>
                   </dd>
                 </div>
 
+                {/* 4. Trazabilidad */}
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/entrada_datos_mockup.png" alt="Entrada de Datos Móvil" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/entrada_datos_mockup.png" alt="Trazabilidad y Cosecha" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Entrada de Datos Móvil</DialogTitle>
-                      <Image src="/entrada_datos_mockup.png" alt="Entrada de Datos Móvil" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <DialogTitle className="sr-only">Trazabilidad Agrícola</DialogTitle>
+                      <Image src="/entrada_datos_mockup.png" alt="Trazabilidad y Cosecha" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Ingreso Rápido a Campo
+                    Trazabilidad de Cosecha
                   </dt>
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Registra kilos recolectados, labores culturales y asistencia de empleados desde tu celular en segundos, incluso sin conexión a internet.</p>
+                    <p className="flex-auto">Seguimiento garantizado origen-destino con códigos QR, registro rápido de kilos recolectados por trabajador y embalaje por categoría.</p>
                   </dd>
                 </div>
 
+                {/* 5. Predicciones */}
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/bitacora_productor_mockup.png" alt="Panel del Productor" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/predicciones_mockup.png" alt="Predicciones e Inteligencia" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Panel del Productor</DialogTitle>
-                      <Image src="/bitacora_productor_mockup.png" alt="Panel del Productor" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <DialogTitle className="sr-only">Predicciones e Inteligencia</DialogTitle>
+                      <Image src="/predicciones_mockup.png" alt="Predicciones e Inteligencia" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Panel Financiero y de Pagos
+                    Predicciones Climáticas e IA
                   </dt>
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Visualiza todos tus ingresos y pagos a cosecheros. Mantén la rentabilidad de tu negocio a raya con resúmenes claros y precisos.</p>
+                    <p className="flex-auto">Pronóstico agroclimático en tiempo real, alertas de heladas, prevención de plagas y recomendaciones inteligentes para proteger la producción.</p>
                   </dd>
                 </div>
+
+                {/* 6. Bitácora del Productor */}
+                <div className="flex flex-col items-start">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
+                         <Image src="/bitacora_productor_mockup.png" alt="Bitácora del Productor" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
+                      <DialogTitle className="sr-only">Bitácora del Productor</DialogTitle>
+                      <Image src="/bitacora_productor_mockup.png" alt="Bitácora del Productor" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                    </DialogContent>
+                  </Dialog>
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Bitácora del Productor
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">Administración financiera integral: ingresos por ventas, costos operativos, margen neto, ROI, costo por kilo y liquidación de mano de obra.</p>
+                  </dd>
+                </div>
+
               </dl>
             </div>
           </div>
