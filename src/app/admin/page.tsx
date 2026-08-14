@@ -27,6 +27,7 @@ import { z } from 'zod';
 import { Plus, FileText } from 'lucide-react';
 import { AdminAnalytics } from './admin-analytics';
 import { generateSubscriptionReceiptPDF } from '@/lib/pdf-generator';
+import { generateWeatherAlerts } from '@/ai/flows/generate-weather-alerts';
 import { AdminMap } from '@/components/admin-map';
 
 const CreateProducerSchema = z.object({
@@ -55,6 +56,79 @@ export default function AdminDashboardPage() {
   const [broadcastBody, setBroadcastBody] = useState('');
   const [broadcastSeverity, setBroadcastSeverity] = useState('info');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+  // Dynamic Weather AI State
+  const [weatherAlertsLoading, setWeatherAlertsLoading] = useState(false);
+  const [liveWeatherAlerts, setLiveWeatherAlerts] = useState<Array<{ risk: string; eventDate?: string; recommendation: string; urgency: 'Alta' | 'Media' | 'Baja' }>>([]);
+  const [weatherSummaryText, setWeatherSummaryText] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLiveWeather = async () => {
+      try {
+        setWeatherAlertsLoading(true);
+        // Open-Meteo Coronda coordinates (-31.97, -60.92)
+        const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=-31.97&longitude=-60.92&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_mean&timezone=auto&forecast_days=7`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error("Error al obtener clima");
+        const data = await res.json();
+        const daily = data.daily;
+        
+        const dayNames = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+        const alertsFound: Array<{ risk: string; eventDate?: string; recommendation: string; urgency: 'Alta' | 'Media' | 'Baja' }> = [];
+
+        let minTempEver = 99;
+        let minTempDay = "";
+        let maxRainEver = 0;
+        let maxRainDay = "";
+
+        for (let i = 0; i < daily.time.length; i++) {
+          const dateObj = new Date(daily.time[i] + 'T00:00:00');
+          const dayName = dayNames[dateObj.getDay()];
+          const minT = daily.temperature_2m_min[i];
+          const rain = daily.precipitation_sum[i];
+
+          if (minT < minTempEver) {
+            minTempEver = minT;
+            minTempDay = dayName;
+          }
+          if (rain > maxRainEver) {
+            maxRainEver = rain;
+            maxRainDay = dayName;
+          }
+        }
+
+        if (minTempEver <= 3) {
+          alertsFound.push({
+            risk: "Riesgo de Helada Tardía",
+            eventDate: `Madrugada del ${minTempDay} (${minTempEver}°C)`,
+            recommendation: `Se prevén temperaturas mínimas críticas de ${minTempEver}°C en Coronda para el día ${minTempDay}. Se sugiere activar riego antihelada por aspersión o proteger cultivo con manta térmica.`,
+            urgency: "Alta"
+          });
+        }
+
+        if (maxRainEver >= 15) {
+          alertsFound.push({
+            risk: "Riesgo de Tormenta y Botrytis",
+            eventDate: `${maxRainDay} (${maxRainEver} mm)`,
+            recommendation: `Se pronostican precipitaciones de ${maxRainEver} mm acumuladas para el día ${maxRainDay}. Extremar ventilación de microtúneles el día posterior y aplicar fungicida preventivo previo al evento.`,
+            urgency: "Media"
+          });
+        }
+
+        if (alertsFound.length === 0) {
+          setWeatherSummaryText(`🟢 Condiciones estables para los próximos 7 días en Coronda (Mínima promedio: ${Math.round(minTempEver)}°C). No se detectan heladas ni tormentas de consideración.`);
+        }
+
+        setLiveWeatherAlerts(alertsFound);
+      } catch (err) {
+        console.error("Error al consultar clima en vivo:", err);
+      } finally {
+        setWeatherAlertsLoading(false);
+      }
+    };
+
+    fetchLiveWeather();
+  }, []);
 
   // Create producer state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -834,70 +908,53 @@ export default function AdminDashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                
-                {/* Alerta por Helada */}
-                <div className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-sky-200 dark:border-sky-800 shadow-sm flex flex-col justify-between space-y-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300 font-bold text-xs">
-                      <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" />
-                      <span>Riesgo de Helada Tardía</span>
-                    </div>
-                    <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                      Día Crítico: <strong className="text-stone-800 dark:text-stone-100">Madrugada del Jueves (1°C - 2°C)</strong>. Riesgo de congelamiento foliar en lotes a campo abierto.
-                    </p>
-                  </div>
-                  <Button 
-                    type="button" 
-                    size="sm"
-                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
-                    onClick={() => {
-                      setBroadcastTitle("❄️ ALERTA DE HELADA EN CORONDA: Madrugada del Jueves");
-                      setBroadcastBody("Se prevén temperaturas mínimas críticas de 1°C a 2°C durante la MADRUGADA DEL JUEVES. Se recomienda activar riego antihelada por aspersión el miércoles por la noche o colocar manta térmica en cultivos de frutilla.");
-                      setBroadcastSeverity("critical");
-                      toast({
-                        title: "Alerta de Helada Cargada",
-                        description: "La notificación ha sido pre-completada con el día específico. Revisa y presiona 'Enviar Notificación Push'.",
-                      });
-                    }}
-                  >
-                    <Send className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Cargar Alerta de Helada (Jueves)</span>
-                  </Button>
+              {weatherAlertsLoading ? (
+                <div className="py-6 flex items-center justify-center gap-2 text-stone-500 text-xs font-medium">
+                  <Sparkles className="h-4 w-4 text-sky-500 animate-spin" />
+                  <span>Consultando pronóstico en vivo de Coronda a 7 días...</span>
                 </div>
-
-                {/* Alerta por Lluvia Intensas */}
-                <div className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-blue-200 dark:border-blue-800 shadow-sm flex flex-col justify-between space-y-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-blue-800 dark:text-blue-300 font-bold text-xs">
-                      <CloudRain className="h-4 w-4 text-blue-500 shrink-0" />
-                      <span>Riesgo de Lluvia y Botrytis</span>
+              ) : liveWeatherAlerts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {liveWeatherAlerts.map((alt, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-sky-200 dark:border-sky-800 shadow-sm flex flex-col justify-between space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300 font-bold text-xs">
+                          {alt.risk.includes('Helada') ? <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" /> : <CloudRain className="h-4 w-4 text-blue-500 shrink-0" />}
+                          <span>{alt.risk}</span>
+                        </div>
+                        <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                          Día Crítico: <strong className="text-stone-800 dark:text-stone-100">{alt.eventDate}</strong>
+                        </p>
+                        <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1 line-clamp-2">
+                          {alt.recommendation}
+                        </p>
+                      </div>
+                      <Button 
+                        type="button" 
+                        size="sm"
+                        className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
+                        onClick={() => {
+                          setBroadcastTitle(`️ ${alt.risk.toUpperCase()}: Coronda`);
+                          setBroadcastBody(alt.recommendation);
+                          setBroadcastSeverity(alt.urgency === 'Alta' ? 'critical' : 'warning');
+                          toast({
+                            title: "Alerta Climática Cargada",
+                            description: "Se precargó la notificación con el día y temperatura real. Revisa y presiona 'Enviar Notificación Push'.",
+                          });
+                        }}
+                      >
+                        <Send className="h-3.5 w-3.5 mr-1.5" />
+                        <span>Cargar Alerta para Enviar</span>
+                      </Button>
                     </div>
-                    <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                      Día Crítico: <strong className="text-stone-800 dark:text-stone-100">Viernes (32 mm acumulados)</strong>. Aumento repentino de humedad relativa y riesgo de pudrición gris.
-                    </p>
-                  </div>
-                  <Button 
-                    type="button" 
-                    size="sm"
-                    variant="outline"
-                    className="bg-white dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800 shadow-sm font-semibold text-xs w-full"
-                    onClick={() => {
-                      setBroadcastTitle("🌧️ ALERTA DE TORMENTA Y BOTRYTIS: Día Viernes");
-                      setBroadcastBody("Se pronostican lluvias intensas acumuladas (32 mm) para el DÍA VIERNES. Se recomienda extremar la ventilación de microtúneles el sábado post-lluvia y realizar tratamiento fungicida preventivo previo.");
-                      setBroadcastSeverity("warning");
-                      toast({
-                        title: "Alerta de Tormenta Cargada",
-                        description: "La notificación ha sido pre-completada indicando el día viernes. Revisa y presiona 'Enviar Notificación Push'.",
-                      });
-                    }}
-                  >
-                    <Send className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Cargar Alerta de Lluvia (Viernes)</span>
-                  </Button>
+                  ))}
                 </div>
-
-              </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>{weatherSummaryText || "🟢 Clima favorable y estable en Coronda para los próximos 7 días. No se detectan riesgos climáticos inminentes."}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
