@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function AdminAnalytics({ establishments }: { establishments: EstablishmentData[] }) {
   const [users, setUsers] = useState<User[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
-  const [pestLogs, setPestLogs] = useState<DiagnosisLog[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,7 +41,28 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
         // Fetch diagnosis pest logs
         const pestsSnap = await getDocs(collection(db, 'diagnosisLogs'));
         const pestsData = pestsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiagnosisLog));
-        setPestLogs(pestsData);
+        
+        // Fetch agronomist logs for additional pest data
+        const agroPestsSnap = await getDocs(collection(db, 'agronomistLogs'));
+        const agroPestsData = agroPestsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+
+        const allPests = [...pestsData];
+        agroPestsData.forEach((aDoc: any) => {
+          if (aDoc.diagnosis || aDoc.product || aDoc.type) {
+            allPests.push({
+              id: aDoc.id,
+              date: aDoc.date || new Date().toISOString(),
+              diagnosis: aDoc.diagnosis || aDoc.product || aDoc.type,
+              issue: aDoc.notes || aDoc.type
+            } as DiagnosisLog);
+          }
+        });
+        setPestLogs(allPests);
+
+        // Fetch real batches for variety analytics
+        const batchesSnap = await getDocs(collection(db, 'batches'));
+        const batchesData = batchesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Batch));
+        setBatches(batchesData);
         
       } catch (error) {
         console.error("Error fetching global analytics data:", error);
@@ -81,17 +102,43 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
       .slice(0, 5);
   }, [harvests]);
 
-  // 3. Distribución por Variedad de Frutilla (Estadística Agronómica)
+  // 3. Distribución por Variedad de Frutilla (Dinámico desde Lotes Reales en Firestore)
   const strawberryVarietiesData = useMemo(() => {
-    return [
-      { name: 'San Andreas', val: 42, color: '#15803d' },
-      { name: 'Fortuna', val: 28, color: '#16a34a' },
-      { name: 'Fronteras', val: 18, color: '#22c55e' },
-      { name: 'Camino Real', val: 12, color: '#4ade80' },
-    ];
-  }, []);
+    const varietyCount: { [key: string]: number } = {};
+    
+    batches.forEach(b => {
+      if (b.varieties && Array.isArray(b.varieties)) {
+        b.varieties.forEach(v => {
+          if (v.name) {
+            varietyCount[v.name] = (varietyCount[v.name] || 0) + (v.plantCount || v.area || 1);
+          }
+        });
+      }
+    });
 
-  // 4. Radares Fitosanitarios & Plagas más frecuentes del mes
+    const entries = Object.entries(varietyCount);
+    const COLORS = ['#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac'];
+
+    if (entries.length === 0) {
+      // Distribución por defecto de referencia para la cuenca Coronda si aún no hay lotes configurados
+      return [
+        { name: 'San Andreas', val: 42, color: '#15803d' },
+        { name: 'Fortuna', val: 28, color: '#16a34a' },
+        { name: 'Fronteras', val: 18, color: '#22c55e' },
+        { name: 'Camino Real', val: 12, color: '#4ade80' },
+      ];
+    }
+
+    const totalVal = entries.reduce((acc, [, val]) => acc + val, 0);
+
+    return entries.map(([name, val], idx) => ({
+      name,
+      val: Math.round((val / totalVal) * 100),
+      color: COLORS[idx % COLORS.length]
+    }));
+  }, [batches]);
+
+  // 4. Radares Fitosanitarios & Plagas más frecuentes del mes (Dinámico desde Firestore)
   const pestFrequencyData = useMemo(() => {
     const counts: { [key: string]: number } = {};
     pestLogs.forEach(p => {
