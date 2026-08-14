@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'),
-  title: 'AgroVista | Trazabilidad y Gestión Agrícola de Frutillas en Coronda, Santa Fe',
+  title: 'AgroVista',
   description: 'Nacido en Coronda, Santa Fe (Capital Nacional de la Frutilla). AgroVista es la plataforma líder para la gestión, trazabilidad, control fenológico y análisis con IA de cultivos de frutilla.',
   applicationName: 'AgroVista Coronda',
   authors: [{ name: 'AgroVista Team - Coronda, Santa Fe' }],
