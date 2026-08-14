@@ -593,10 +593,10 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="finance" className="mt-0 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-emerald-600 dark:border-b-emerald-500">
-              <CardHeader className="pb-2 relative">
-                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">MRR (Ingresos Mensuales)</CardDescription>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-2 border-b-emerald-600 dark:border-b-emerald-500">
+              <CardHeader className="p-3 sm:p-4 relative">
+                <CardDescription className="font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[11px]">MRR (Ingresos Mensuales)</CardDescription>
                 
                 {isEditingPrice ? (
                   <div className="flex items-center gap-2 mt-2">
@@ -610,30 +610,30 @@ export default function AdminDashboardPage() {
                     <Button size="sm" variant="ghost" onClick={() => { setIsEditingPrice(false); setEditPriceValue(subPrice); }} className="h-8 px-2 dark:text-stone-300">Cancelar</Button>
                   </div>
                 ) : (
-                  <CardTitle className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer group" onClick={() => setIsEditingPrice(true)}>
-                    <DollarSign className="h-6 w-6 opacity-70" /> 
+                  <CardTitle className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-0.5 cursor-pointer group" onClick={() => setIsEditingPrice(true)}>
+                    <DollarSign className="h-5 w-5 opacity-80" /> 
                     ${mrr.toLocaleString('es-AR')} ARS
-                    <span className="text-xs font-normal text-stone-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">(Click para editar cuota de ${subPrice.toLocaleString('es-AR')})</span>
+                    <span className="text-xs font-normal text-stone-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">(Editar cuota: ${subPrice.toLocaleString('es-AR')})</span>
                   </CardTitle>
                 )}
               </CardHeader>
             </Card>
 
-            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-blue-600 dark:border-b-blue-500">
-              <CardHeader className="pb-2">
-                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Usuarios Activos (Premium)</CardDescription>
-                <CardTitle className="text-3xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                  <CheckCircle2 className="h-6 w-6 opacity-70" /> 
+            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-2 border-b-blue-600 dark:border-b-blue-500">
+              <CardHeader className="p-3 sm:p-4">
+                <CardDescription className="font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[11px]">Usuarios Activos (Premium)</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 mt-0.5">
+                  <CheckCircle2 className="h-5 w-5 opacity-80" /> 
                   {activeCount}
                 </CardTitle>
               </CardHeader>
             </Card>
 
-            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-amber-500 dark:border-b-amber-400">
-              <CardHeader className="pb-2">
-                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">En Periodo de Prueba</CardDescription>
-                <CardTitle className="text-3xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-2">
-                  <Clock className="h-6 w-6 opacity-70" /> 
+            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-2 border-b-amber-500 dark:border-b-amber-400">
+              <CardHeader className="p-3 sm:p-4">
+                <CardDescription className="font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[11px]">En Periodo de Prueba</CardDescription>
+                <CardTitle className="text-xl sm:text-2xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-1.5 mt-0.5">
+                  <Clock className="h-5 w-5 opacity-80" /> 
                   {trialCount}
                 </CardTitle>
               </CardHeader>

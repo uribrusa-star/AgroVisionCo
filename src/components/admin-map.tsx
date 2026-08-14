@@ -116,9 +116,9 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
             <div className="absolute top-4 left-4 z-10 bg-white dark:bg-stone-900 rounded-lg shadow-md border border-stone-200 dark:border-stone-800 p-1 flex gap-1">
                 <button 
                     onClick={() => setMapMode('pins')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pins' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pins' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
                 >
-                    <MapPin className="h-3.5 w-3.5" /> Pines
+                    <Building className="h-3.5 w-3.5" /> Establecimientos
                 </button>
                 <button 
                     onClick={() => setMapMode('heatmap')}

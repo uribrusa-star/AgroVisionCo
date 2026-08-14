@@ -104,32 +104,32 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-[#2d4a22] dark:border-b-emerald-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Producción Global Total</CardDescription>
-            <CardTitle className="text-3xl font-bold text-[#2d4a22] dark:text-emerald-400 flex items-center gap-2">
-              <Sprout className="h-6 w-6 opacity-70" /> 
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-2 border-b-[#2d4a22] dark:border-b-emerald-500">
+          <CardHeader className="p-3 sm:p-4">
+            <CardDescription className="font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[11px]">Producción Global Total</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold text-[#2d4a22] dark:text-emerald-400 flex items-center gap-1.5 mt-0.5">
+              <Sprout className="h-4 w-4 opacity-80" /> 
               {totalKg.toLocaleString()} kg
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-blue-600 dark:border-b-blue-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Usuarios Registrados</CardDescription>
-            <CardTitle className="text-3xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
-              <Users className="h-6 w-6 opacity-70" /> 
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-2 border-b-blue-600 dark:border-b-blue-500">
+          <CardHeader className="p-3 sm:p-4">
+            <CardDescription className="font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[11px]">Usuarios Registrados</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 mt-0.5">
+              <Users className="h-4 w-4 opacity-80" /> 
               {users.length}
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-amber-500 dark:border-b-amber-400">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Establecimientos Activos</CardDescription>
-            <CardTitle className="text-3xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-2">
-              <Building className="h-6 w-6 opacity-70" /> 
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-2 border-b-amber-500 dark:border-b-amber-400">
+          <CardHeader className="p-3 sm:p-4">
+            <CardDescription className="font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[11px]">Establecimientos Activos</CardDescription>
+            <CardTitle className="text-xl sm:text-2xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-1.5 mt-0.5">
+              <Building className="h-4 w-4 opacity-80" /> 
               {establishments.length}
             </CardTitle>
           </CardHeader>
