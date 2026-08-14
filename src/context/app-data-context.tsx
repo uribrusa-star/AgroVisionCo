@@ -250,7 +250,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               producerLogsSnapshot,
               transactionsSnapshot,
               knowledgeSnapshot,
-              contactRequestsSnapshot,
             ] = await Promise.all([
               safeFetch(getDoc(doc(db, 'establishment', currentUser?.establishmentId || 'main')), null),
               safeFetch(getDocs(query(collection(db, 'collectors'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
@@ -269,7 +268,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               safeFetch(getDocs(query(collection(db, 'producerLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
               safeFetch(getDocs(query(collection(db, 'transactions'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
               safeFetch(getDocs(query(collection(db, 'knowledge'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(collection(db, 'contactRequests')), { docs: [] } as any),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
@@ -305,11 +303,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setProducerLogs(producerLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
             setTransactions(transactionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
             setKnowledgeBase(knowledgeSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
-            setContactRequests(
-              contactRequestsSnapshot.docs
-                .map((doc: any) => ({ id: doc.id, ...doc.data() }))
-                .sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()) as ContactRequest[]
-            );
             setPackagingLogs(packagingLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
             setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map((doc: any) => {
               const data = doc.data();
