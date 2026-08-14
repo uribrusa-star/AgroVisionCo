@@ -3,13 +3,25 @@ import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
 
+// Helper to sanitize text and prevent HTML / XSS Injection
+function sanitizeInput(str: string | undefined | null): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
 const contactSchema = z.object({
-  name: z.string().min(2, 'El nombre es obligatorio'),
-  email: z.string().email('Correo electrónico no válido'),
-  phone: z.string().optional(),
-  role: z.string().min(1, 'Selecciona un rol'),
-  location: z.string().optional(),
-  message: z.string().optional(),
+  name: z.string().min(2, 'El nombre es obligatorio').max(100),
+  email: z.string().email('Correo electrónico no válido').max(100),
+  phone: z.string().max(50).optional(),
+  role: z.string().min(1, 'Selecciona un rol').max(80),
+  location: z.string().max(100).optional(),
+  message: z.string().max(1000).optional(),
 });
 
 // GET: Obtener todas las solicitudes de contacto para el Administrador
@@ -31,21 +43,29 @@ export async function GET() {
   }
 }
 
-// POST: Registrar una nueva solicitud desde la landing page
+// POST: Registrar una nueva solicitud desde la landing page con protección contra XSS e inyección
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = contactSchema.parse(body);
 
+    // Sanitizar todas las entradas para evitar inyecciones XSS / HTML
+    const sanitizedName = sanitizeInput(validatedData.name);
+    const sanitizedEmail = sanitizeInput(validatedData.email);
+    const sanitizedPhone = sanitizeInput(validatedData.phone);
+    const sanitizedRole = sanitizeInput(validatedData.role);
+    const sanitizedLocation = sanitizeInput(validatedData.location) || 'Coronda, Santa Fe';
+    const sanitizedMessage = sanitizeInput(validatedData.message);
+
     try {
       if (adminDb) {
         await adminDb.collection('contactRequests').add({
-          name: validatedData.name,
-          email: validatedData.email,
-          phone: validatedData.phone || '',
-          role: validatedData.role,
-          location: validatedData.location || 'Coronda, Santa Fe',
-          message: validatedData.message || '',
+          name: sanitizedName,
+          email: sanitizedEmail,
+          phone: sanitizedPhone || '',
+          role: sanitizedRole,
+          location: sanitizedLocation,
+          message: sanitizedMessage || '',
           createdAt: new Date().toISOString(),
           status: 'pending',
         });
@@ -82,30 +102,30 @@ export async function POST(request: Request) {
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #333;">Nombre:</td>
-              <td style="padding: 8px 0; color: #555;">${validatedData.name}</td>
+              <td style="padding: 8px 0; color: #555;">${sanitizedName}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #333;">Email:</td>
-              <td style="padding: 8px 0; color: #555;"><a href="mailto:${validatedData.email}" style="color: #16a34a;">${validatedData.email}</a></td>
+              <td style="padding: 8px 0; color: #555;"><a href="mailto:${sanitizedEmail}" style="color: #16a34a;">${sanitizedEmail}</a></td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #333;">Teléfono:</td>
-              <td style="padding: 8px 0; color: #555;">${validatedData.phone || 'No especificado'}</td>
+              <td style="padding: 8px 0; color: #555;">${sanitizedPhone || 'No especificado'}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #333;">Perfil / Rol:</td>
-              <td style="padding: 8px 0; color: #555; font-weight: bold; color: #15803d;">${validatedData.role}</td>
+              <td style="padding: 8px 0; font-weight: bold; color: #15803d;">${sanitizedRole}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #333;">Ubicación:</td>
-              <td style="padding: 8px 0; color: #555;">${validatedData.location || 'No especificada'}</td>
+              <td style="padding: 8px 0; color: #555;">${sanitizedLocation}</td>
             </tr>
           </table>
 
-          ${validatedData.message ? `
+          ${sanitizedMessage ? `
             <div style="margin-top: 16px; padding: 12px; background-color: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
               <h4 style="margin: 0 0 6px 0; color: #166534;">Mensaje / Consulta:</h4>
-              <p style="margin: 0; color: #374151; white-space: pre-wrap;">${validatedData.message}</p>
+              <p style="margin: 0; color: #374151; white-space: pre-wrap;">${sanitizedMessage}</p>
             </div>
           ` : ''}
         </div>
@@ -121,7 +141,7 @@ export async function POST(request: Request) {
         from: `"AgroVista Web" <${smtpUser}>`,
         to: destinationEmail,
         replyTo: validatedData.email,
-        subject: `🚨 [Nuevo Cliente AgroVista] ${validatedData.name} (${validatedData.role})`,
+        subject: `🚨 [Nuevo Cliente AgroVista] ${sanitizedName} (${sanitizedRole})`,
         html: htmlContent,
       }).catch((err) => console.error("Error al despachar mail de aviso a Gmail:", err));
     }
