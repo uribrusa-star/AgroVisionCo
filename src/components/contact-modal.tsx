@@ -122,25 +122,25 @@ export function ContactModal({
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[500px] border-none bg-white dark:bg-stone-900 shadow-2xl p-6 sm:p-8 rounded-3xl">
+      <DialogContent className="max-w-[92%] sm:max-w-[460px] max-h-[88vh] overflow-y-auto border-none bg-white dark:bg-stone-900 shadow-2xl p-4 sm:p-6 rounded-2xl">
         {!submitted ? (
           <>
-            <DialogHeader className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-950/80 text-green-700 dark:text-green-300 text-xs font-semibold w-fit">
-                <Sparkles className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                <span>Solicitud de Información / Demo</span>
+            <DialogHeader className="space-y-1 text-left sm:text-center">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-100 dark:bg-green-950/80 text-green-700 dark:text-green-300 text-[11px] font-semibold w-fit">
+                <Sparkles className="h-3 w-3 text-green-600 dark:text-green-400" />
+                <span>Solicitud / Demo</span>
               </div>
-              <DialogTitle className="text-2xl font-bold font-headline text-stone-900 dark:text-stone-100">
+              <DialogTitle className="text-lg sm:text-xl font-bold font-headline text-stone-900 dark:text-stone-100 leading-tight">
                 Comenzar con AgroVista
               </DialogTitle>
-              <DialogDescription className="text-stone-600 dark:text-stone-300 text-sm">
-                Déjanos tus datos y nos pondremos en contacto contigo a la brevedad para coordinar una prueba personalizada de tus lotes.
+              <DialogDescription className="text-stone-600 dark:text-stone-300 text-xs leading-relaxed">
+                Déjanos tus datos para coordinar una prueba personalizada de tus lotes.
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+            <form onSubmit={handleSubmit} className="space-y-2.5 mt-2">
+              <div className="space-y-1">
+                <Label htmlFor="name" className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
                   Nombre y Apellido <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -149,13 +149,13 @@ export function ContactModal({
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="rounded-xl border-stone-200 dark:border-stone-800"
+                  className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
                     Correo Electrónico <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -165,12 +165,12 @@ export function ContactModal({
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    className="rounded-xl border-stone-200 dark:border-stone-800"
+                    className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                <div className="space-y-1">
+                  <Label htmlFor="phone" className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
                     Teléfono / WhatsApp
                   </Label>
                   <Input
@@ -179,22 +179,22 @@ export function ContactModal({
                     placeholder="+54 9 342 ..."
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="rounded-xl border-stone-200 dark:border-stone-800"
+                    className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="role" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="role" className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
                     Perfil / Actividad <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.role}
                     onValueChange={(val) => setFormData({ ...formData, role: val })}
                   >
-                    <SelectTrigger className="rounded-xl border-stone-200 dark:border-stone-800">
-                      <SelectValue placeholder="Selecciona tu perfil" />
+                    <SelectTrigger className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800">
+                      <SelectValue placeholder="Perfil" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Productor de Frutillas">Productor de Frutillas</SelectItem>
@@ -206,8 +206,8 @@ export function ContactModal({
                   </Select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="location" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                <div className="space-y-1">
+                  <Label htmlFor="location" className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
                     Ciudad / Localidad
                   </Label>
                   <Input
@@ -215,44 +215,44 @@ export function ContactModal({
                     placeholder="Ej. Coronda, Santa Fe"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="rounded-xl border-stone-200 dark:border-stone-800"
+                    className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="message" className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+              <div className="space-y-1">
+                <Label htmlFor="message" className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
                   Mensaje / Consulta (Opcional)
                 </Label>
                 <Textarea
                   id="message"
-                  placeholder="¿Cuántas hectáreas o lotes manejas? ¿Dudas específicas?"
+                  placeholder="¿Cuántas hectáreas o lotes manejas?"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  rows={3}
-                  className="rounded-xl border-stone-200 dark:border-stone-800 resize-none text-xs"
+                  rows={2}
+                  className="rounded-lg border-stone-200 dark:border-stone-800 resize-none text-xs p-2"
                 />
               </div>
 
-              <div className="pt-2">
+              <div className="pt-1">
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                  className="w-full h-10 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-xs"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Enviando Solicitud...</span>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Enviando...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4" />
+                      <Send className="h-3.5 w-3.5" />
                       <span>Enviar Solicitud</span>
                     </>
                   )}
                 </Button>
-                <p className="text-[11px] text-center text-stone-500 dark:text-stone-400 mt-2">
+                <p className="text-[10px] text-center text-stone-500 dark:text-stone-400 mt-1.5">
                   Tus datos serán enviados confidencialmente a <span className="font-semibold text-stone-700 dark:text-stone-300">contactoagrovisionco@gmail.com</span>
                 </p>
               </div>
