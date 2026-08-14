@@ -201,12 +201,12 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200 w-full cursor-pointer group">
-                         <Image src="/dashboard_mockup.png" alt="Panel de Control" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/dashboard_mockup_v2.png" alt="Panel de Control" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Panel de Control</DialogTitle>
-                      <Image src="/dashboard_mockup.png" alt="Panel de Control" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      <Image src="/dashboard_mockup_v2.png" alt="Panel de Control" width={1920} height={1080} sizes="100vw" className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
