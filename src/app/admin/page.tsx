@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown } from 'lucide-react';
+import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, getDocs, query, where } from 'firebase/firestore';
@@ -335,10 +335,14 @@ export default function AdminDashboardPage() {
       </div>
 
       <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 max-w-[900px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
+        <TabsList className="grid w-full grid-cols-6 max-w-[1050px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
           <TabsTrigger value="analytics" title="Analíticas" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
             <Activity className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span className="hidden sm:inline">Analíticas</span>
+          </TabsTrigger>
+          <TabsTrigger value="requests" title="Solicitudes" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <Mail className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-green-600 dark:text-green-400" />
+            <span className="hidden sm:inline">Solicitudes</span>
           </TabsTrigger>
           <TabsTrigger value="map" title="Mapa Global" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
             <MapPin className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
@@ -360,6 +364,34 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="analytics" className="mt-0">
           <AdminAnalytics establishments={establishments} />
+        </TabsContent>
+
+        <TabsContent value="requests" className="mt-0 space-y-6">
+          <Card className="border-0 shadow-lg shadow-black/5 overflow-hidden">
+            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-xl text-[#2d4a22]">
+                  <Mail className="h-6 w-6 text-green-600" /> Solicitudes de Clientes y Demos
+                </CardTitle>
+                <CardDescription>Gestión en tiempo real de prospectos y productores interesados.</CardDescription>
+              </div>
+              <Button onClick={() => router.push('/contact-requests')} className="bg-green-600 hover:bg-green-500 text-white font-bold gap-2">
+                <Mail className="w-4 h-4" /> Abrir Módulo Completo
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="p-8 text-center bg-stone-50 rounded-2xl border border-dashed border-stone-300">
+                <Mail className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-stone-900">Bandeja de Solicitudes de Contacto</h3>
+                <p className="text-stone-500 text-sm max-w-md mx-auto mt-1 mb-4">
+                  Todas las consultas y solicitudes enviadas desde &quot;Comenzar Ahora&quot; se sincronizan automáticamente en tu plataforma.
+                </p>
+                <Button onClick={() => router.push('/contact-requests')} className="bg-green-600 hover:bg-green-500 text-white font-bold gap-2">
+                  Ver Solicitudes de Contacto
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="map" className="mt-0 space-y-6">
