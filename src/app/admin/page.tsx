@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown, Mail } from 'lucide-react';
+import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown, Mail, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, doc, updateDoc, getDocs, query, where } from 'firebase/firestore';
@@ -316,6 +317,13 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (loading) {
     return <div className="p-8 text-center text-stone-500 animate-pulse">Cargando plataforma...</div>;
   }
@@ -329,9 +337,32 @@ export default function AdminDashboardPage() {
     <div className="space-y-6 animate-in fade-in zoom-in duration-500 pb-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-headline font-bold text-stone-900 tracking-tight">Panel de Control Central</h1>
-          <p className="text-stone-500 mt-1">Gestión global, finanzas y certificación de establecimientos AgroVista</p>
+          <h1 className="text-3xl md:text-4xl font-headline font-bold text-stone-900 dark:text-stone-100 tracking-tight">Panel de Control Central</h1>
+          <p className="text-stone-500 dark:text-stone-400 mt-1">Gestión global, finanzas y certificación de establecimientos AgroVista</p>
         </div>
+
+        {/* Theme Toggle Button */}
+        {mounted && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="rounded-full px-3.5 py-2 border-stone-300 dark:border-stone-700 bg-white/80 dark:bg-stone-800/80 backdrop-blur-md shadow-sm hover:bg-stone-100 dark:hover:bg-stone-700 transition-all flex items-center gap-2 text-stone-700 dark:text-stone-200"
+            title="Cambiar Modo Claro/Oscuro"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 text-amber-400 animate-spin-once" />
+                <span className="text-xs font-semibold">Modo Claro</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-indigo-500 animate-pulse" />
+                <span className="text-xs font-semibold">Modo Oscuro</span>
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="analytics" className="w-full pb-20 md:pb-0">
