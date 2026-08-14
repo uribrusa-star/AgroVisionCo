@@ -47,13 +47,21 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
         const agroPestsSnap = await getDocs(collection(db, 'agronomistLogs'));
         const agroPestsData = agroPestsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
 
-        const allPests = [...pestsData];
+        const allPests: DiagnosisLog[] = [];
+        pestsData.forEach(p => {
+          if (p.diagnosis || p.issue) {
+            allPests.push(p);
+          }
+        });
+
         agroPestsData.forEach((aDoc: any) => {
-          if (aDoc.diagnosis || aDoc.product || aDoc.type) {
+          const diag = aDoc.diagnosis || aDoc.issue;
+          // Filtrar lecturas climáticas o tareas rutinarias que no sean diagnóstico sanitario
+          if (diag && !diag.startsWith('T:') && !diag.startsWith('Condiciones') && diag !== 'Riego' && diag !== 'Fertilización') {
             allPests.push({
               id: aDoc.id,
               date: aDoc.date || new Date().toISOString(),
-              diagnosis: aDoc.diagnosis || aDoc.product || aDoc.type,
+              diagnosis: diag,
               issue: aDoc.notes || aDoc.type
             } as DiagnosisLog);
           }
@@ -160,12 +168,20 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
     }));
   }, [batches]);
 
-  // 4. Radares Fitosanitarios & Plagas más frecuentes del mes (Dinámico desde Firestore)
+  // 4. Radares Fitosanitarios & Plagas estrictas del mes (Dinámico desde Firestore)
   const pestFrequencyData = useMemo(() => {
     const counts: { [key: string]: number } = {};
+    const excludedKeywords = ['fertilización', 'fumigación', 'riego', 'sanidad general', 'labor cultural', 't:', 'condiciones'];
+    
     pestLogs.forEach(p => {
-      const diag = p.diagnosis || p.issue || 'Sanidad General';
-      counts[diag] = (counts[diag] || 0) + 1;
+      const diag = p.diagnosis || p.issue;
+      if (diag) {
+        const lower = diag.toLowerCase();
+        const isGeneric = excludedKeywords.some(k => lower.includes(k));
+        if (!isGeneric) {
+          counts[diag] = (counts[diag] || 0) + 1;
+        }
+      }
     });
 
     if (Object.keys(counts).length === 0) {
@@ -380,9 +396,9 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg dark:text-stone-100">
               <Bug className="h-5 w-5 text-red-500 dark:text-red-400" />
-              Incidencias Sanitarias Frecuentes (Últimos 30 Días)
+              Radar Fitosanitario: Plagas y Afecciones Frecuentes
             </CardTitle>
-            <CardDescription className="dark:text-stone-400">Diagnósticos detectados por IA e ingenieros agrónomos</CardDescription>
+            <CardDescription className="dark:text-stone-400">Diagnósticos fitosanitarios detectados por IA e ingenieros agrónomos</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[280px] w-full">
