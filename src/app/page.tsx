@@ -226,9 +226,9 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Panel de Control</DialogTitle>
-                      {/* Vista para celulares: scroll vertical amplio y legible */}
+                      {/* Vista para celulares: captura nativa móvil en alta resolución */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de Control Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/dashboard_mobile.jpeg" alt="Panel de Control Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para pantallas de PC / Escritorio */}
                       <div className="hidden sm:block">
@@ -257,7 +257,7 @@ export default function LandingPage() {
                       <DialogTitle className="sr-only">Mapa Interactivo de Lotes</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/map_mockup_v2.jpeg" alt="Mapa Interactivo Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/map_mobile.jpeg" alt="Mapa Interactivo Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
@@ -286,7 +286,7 @@ export default function LandingPage() {
                       <DialogTitle className="sr-only">Bitácora del Agrónomo</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del Agrónomo Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/bitacora-agronomo_mobile.jpeg" alt="Bitácora del Agrónomo Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
@@ -315,7 +315,7 @@ export default function LandingPage() {
                       <DialogTitle className="sr-only">Trazabilidad Agrícola</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/entrada_datos_mockup_v2.jpeg" alt="Trazabilidad Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/entrada_datos_mobile.jpeg" alt="Trazabilidad Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
@@ -344,7 +344,7 @@ export default function LandingPage() {
                       <DialogTitle className="sr-only">Predicciones e Inteligencia</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/predicciones_mockup_v2.jpeg" alt="Predicciones Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/predicciones_mobile.jpeg" alt="Predicciones Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
@@ -373,7 +373,7 @@ export default function LandingPage() {
                       <DialogTitle className="sr-only">Bitácora del Productor</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Bitácora del Productor Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/bitacora_productor_mobile.jpeg" alt="Bitácora del Productor Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
