@@ -156,12 +156,25 @@ export default function AdminDashboardPage() {
       console.error("Error fetching agronomist pest logs:", error);
     });
 
+    // Subscribe to contactRequests in real-time
+    const unsubscribeContactRequests = onSnapshot(collection(db, 'contactRequests'), (snapshot) => {
+      const requests: any[] = [];
+      snapshot.forEach((doc) => {
+        requests.push({ id: doc.id, ...doc.data() });
+      });
+      requests.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      // Realtime sync
+    }, (error) => {
+      console.error("Error listening to contactRequests:", error);
+    });
+
     return () => {
       unsubscribeEst();
       unsubscribeProd();
       unsubscribeSettings();
       unsubscribePests();
       unsubscribeAgroPests();
+      unsubscribeContactRequests();
     };
   }, [currentUser]);
 
@@ -897,17 +910,35 @@ export default function AdminDashboardPage() {
 }
 
 function ContactRequestsAdminView() {
-  const { contactRequests, updateContactRequestStatus, deleteContactRequest } = useContext(AppDataContext);
+  const { contactRequests: contextRequests, updateContactRequestStatus, deleteContactRequest } = useContext(AppDataContext);
+  const [liveRequests, setLiveRequests] = useState<any[]>([]);
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
-  const filteredRequests = contactRequests.filter(req => {
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'contactRequests'), (snapshot) => {
+      const list: any[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      setLiveRequests(list);
+    }, (err) => {
+      console.error("Error subscribing to contactRequests:", err);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const currentRequests = liveRequests.length > 0 ? liveRequests : contextRequests;
+
+  const filteredRequests = currentRequests.filter(req => {
     const matchesSearch =
-      req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (req.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (req.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (req.phone && req.phone.includes(searchTerm)) ||
       (req.location && req.location.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -967,7 +998,7 @@ function ContactRequestsAdminView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-stone-500 font-medium">Total Solicitudes</p>
-              <p className="text-2xl font-bold text-stone-900">{contactRequests.length}</p>
+              <p className="text-2xl font-bold text-stone-900">{currentRequests.length}</p>
             </div>
             <div className="p-2.5 rounded-xl bg-green-100 text-green-700"><Mail className="w-5 h-5" /></div>
           </CardContent>
@@ -978,7 +1009,7 @@ function ContactRequestsAdminView() {
             <div>
               <p className="text-xs text-stone-500 font-medium">Pendientes</p>
               <p className="text-2xl font-bold text-amber-600">
-                {contactRequests.filter(r => r.status === 'pending').length}
+                {currentRequests.filter(r => r.status === 'pending').length}
               </p>
             </div>
             <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700"><Clock className="w-5 h-5" /></div>
@@ -990,7 +1021,7 @@ function ContactRequestsAdminView() {
             <div>
               <p className="text-xs text-stone-500 font-medium">En Gestión</p>
               <p className="text-2xl font-bold text-blue-600">
-                {contactRequests.filter(r => r.status === 'contacted').length}
+                {currentRequests.filter(r => r.status === 'contacted').length}
               </p>
             </div>
             <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700"><MessageSquare className="w-5 h-5" /></div>
@@ -1002,7 +1033,7 @@ function ContactRequestsAdminView() {
             <div>
               <p className="text-xs text-stone-500 font-medium">Productores</p>
               <p className="text-2xl font-bold text-emerald-600">
-                {contactRequests.filter(r => r.role === 'Productor de Frutillas').length}
+                {currentRequests.filter(r => r.role === 'Productor de Frutillas').length}
               </p>
             </div>
             <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700"><CheckCircle2 className="w-5 h-5" /></div>
