@@ -113,22 +113,22 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
 
     return (
         <div className="relative w-full h-full">
-            <div className="absolute top-4 left-4 z-10 bg-white dark:bg-stone-900 rounded-lg shadow-md border border-stone-200 dark:border-stone-800 p-1 flex gap-1">
+            <div className="absolute top-4 left-4 z-10 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md rounded-lg shadow-md border border-stone-200 dark:border-stone-800 p-1 flex gap-1">
                 <button 
                     onClick={() => setMapMode('pins')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pins' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pins' ? 'bg-[#2d4a22] text-white' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
                 >
                     <Building className="h-3.5 w-3.5" /> Establecimientos
                 </button>
                 <button 
                     onClick={() => setMapMode('heatmap')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'heatmap' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'heatmap' ? 'bg-[#2d4a22] text-white' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
                 >
                     <Layers className="h-3.5 w-3.5" /> Calor
                 </button>
                 <button 
                     onClick={() => setMapMode('pests')}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pests' ? 'bg-[#2d4a22] text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${mapMode === 'pests' ? 'bg-[#2d4a22] text-white' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
                 >
                     <Bug className="h-3.5 w-3.5" /> Radar Plagas
                 </button>
@@ -187,16 +187,16 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                         />
                         {activeInfoWindow === hotspot.id && (
                             <InfoWindow position={{ lat: hotspot.lat, lng: hotspot.lng }} onCloseClick={() => setActiveInfoWindow(null)}>
-                                <div className="p-2 max-w-[200px]">
+                                <div className="p-2 max-w-[200px] text-stone-900">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Bug className={`h-4 w-4 ${hotspot.severity === 'Alta' ? 'text-red-600' : 'text-amber-600'}`} />
-                                        <h3 className="font-bold text-sm text-slate-800">Alerta Fitosanitaria</h3>
+                                        <h3 className="font-bold text-sm text-stone-900">Alerta Fitosanitaria</h3>
                                     </div>
-                                    <p className="text-xs text-slate-600 mb-1">
-                                        <strong>Plaga:</strong> {hotspot.pest}
+                                    <p className="text-xs text-stone-700 mb-1">
+                                        <strong className="text-stone-900">Plaga:</strong> {hotspot.pest}
                                     </p>
-                                    <p className="text-xs text-slate-600 mb-2">
-                                        <strong>Reportes en lote:</strong> {hotspot.count}
+                                    <p className="text-xs text-stone-700 mb-2">
+                                        <strong className="text-stone-900">Reportes en lote:</strong> {hotspot.count}
                                     </p>
                                     <Badge variant={hotspot.severity === 'Alta' ? "destructive" : "default"} className="text-[10px]">
                                         Gravedad {hotspot.severity}
@@ -225,31 +225,31 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                         >
                             {activeInfoWindow === est.id && (
                                 <InfoWindow position={{ lat, lng }} onCloseClick={() => setActiveInfoWindow(null)}>
-                                    <div className="p-1 max-w-[250px]">
-                                        <h3 className="font-bold text-sm mb-1 text-slate-800">{est.producer}</h3>
-                                        <div className="flex items-center gap-1 text-xs text-slate-600 mb-2">
-                                            <MapPin className="h-3 w-3" />
-                                            <span className="truncate">{est.location.locality}, {est.location.province}</span>
+                                    <div className="p-1 max-w-[250px] text-stone-900">
+                                        <h3 className="font-bold text-sm mb-1 text-stone-900">{est.producer}</h3>
+                                        <div className="flex items-center gap-1 text-xs text-stone-600 mb-2">
+                                            <MapPin className="h-3 w-3 text-stone-500" />
+                                            <span className="truncate text-stone-700">{est.location.locality}, {est.location.province}</span>
                                         </div>
                                         
-                                        <div className="space-y-1 mb-3">
+                                        <div className="space-y-1 mb-3 text-stone-800">
                                             <div className="flex items-center gap-2 text-xs">
                                                 <Sprout className="h-3.5 w-3.5 text-emerald-600" />
-                                                <span><strong>{est.area?.strawberry || 0} ha</strong> Frutilla</span>
+                                                <span className="text-stone-800"><strong className="text-stone-900">{est.area?.strawberry || 0} ha</strong> Frutilla</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-xs">
                                                 <Building className="h-3.5 w-3.5 text-blue-600" />
-                                                <span>{est.system || 'N/A'}</span>
+                                                <span className="text-stone-800">{est.system || 'N/A'}</span>
                                             </div>
                                         </div>
                                         
                                         <div className="flex flex-wrap gap-1 mt-2">
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                                 {isActive ? 'Activo' : 'Suspendido'}
                                             </span>
                                             {est.hasGoodPracticesSeal && (
-                                                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-800 flex items-center gap-1">
-                                                    <Activity className="h-3 w-3" /> Sello BPA
+                                                <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold bg-blue-100 text-blue-800 flex items-center gap-0.5">
+                                                    <ShieldCheck className="h-3 w-3" /> Sello BPA
                                                 </span>
                                             )}
                                         </div>

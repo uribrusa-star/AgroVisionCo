@@ -456,14 +456,14 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="map" className="mt-0 space-y-6">
-          <Card className="border-0 shadow-lg shadow-black/5 overflow-hidden">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-4">
-               <CardTitle className="flex items-center gap-2 text-xl text-[#2d4a22]">
+          <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
+            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-4">
+               <CardTitle className="flex items-center gap-2 text-xl text-[#2d4a22] dark:text-emerald-400">
                   <MapPin className="h-6 w-6" /> Vista Satelital AgroVision
                </CardTitle>
-               <CardDescription>Visualización geográfica y operativa de todos los clientes.</CardDescription>
+               <CardDescription className="dark:text-stone-400">Visualización geográfica y operativa de todos los clientes.</CardDescription>
             </CardHeader>
-            <div className="h-[600px] w-full p-2 bg-stone-100">
+            <div className="h-[600px] w-full p-2 bg-stone-100 dark:bg-stone-950">
                <AdminMap establishments={establishments} pestLogs={[...diagnosisPestLogs, ...agroPestLogs]} />
             </div>
           </Card>
