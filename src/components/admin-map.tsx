@@ -82,6 +82,8 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
         }).filter(Boolean) as { id: string, lat: number, lng: number, radius: number, pest: string, count: number, severity: string }[];
     }, [pestLogs, establishments]);
 
+    const [hasInitialFit, setHasInitialFit] = useState(false);
+
     const fitMapToBounds = React.useCallback(() => {
         if (!mapInstance || establishments.length === 0) return;
 
@@ -103,23 +105,36 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
         }
     }, [establishments, mapInstance]);
 
-    const heatmapData = React.useMemo(() => {
-        return establishments.map(est => {
-            if (!est.location || !est.location.coordinates) return null;
-            const [lat, lng] = est.location.coordinates.split(',').map(s => parseFloat(s.trim()));
-            if (isNaN(lat) || isNaN(lng)) return null;
-            
-            return {
-                lat,
-                lng,
-                weight: est.area?.strawberry || 1
-            };
-        }).filter(Boolean) as { lat: number, lng: number, weight: number }[];
-    }, [establishments]);
-
+    // Fit map bounds ONLY ONCE on initial load
     useEffect(() => {
-        fitMapToBounds();
-    }, [fitMapToBounds]);
+        if (mapInstance && !hasInitialFit && establishments.length > 0) {
+            fitMapToBounds();
+            setHasInitialFit(true);
+        }
+    }, [mapInstance, hasInitialFit, establishments, fitMapToBounds]);
+
+    // Handle marker click with smooth pan and zoom
+    const handleSelectEstablishment = (estId: string, lat: number, lng: number) => {
+        setActiveInfoWindow(estId);
+        if (mapInstance) {
+            mapInstance.panTo({ lat, lng });
+            // If current zoom is too far out, zoom in to focus on establishment
+            if (mapInstance.getZoom()! < 14) {
+                mapInstance.setZoom(14);
+            }
+        }
+    };
+
+    // Handle pest hotspot click with smooth pan and zoom
+    const handleSelectPest = (hotspotId: string, lat: number, lng: number) => {
+        setActiveInfoWindow(hotspotId);
+        if (mapInstance) {
+            mapInstance.panTo({ lat, lng });
+            if (mapInstance.getZoom()! < 14) {
+                mapInstance.setZoom(14);
+            }
+        }
+    };
 
     if (loadError) return <div className="p-4 text-center text-destructive bg-destructive/10 rounded-lg">Error cargando Google Maps. Verifique su API Key o conexión de red.</div>;
     if (!isLoaded) return <div className="p-4 text-center text-muted-foreground animate-pulse bg-muted/20 rounded-lg">Cargando motor geoespacial...</div>;
@@ -229,12 +244,12 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                                 strokeOpacity: 0.8,
                                 strokeWeight: 2,
                             }}
-                            onClick={() => setActiveInfoWindow(hotspot.id)}
+                            onClick={() => handleSelectPest(hotspot.id, hotspot.lat, hotspot.lng)}
                         />
                         <Marker 
                             position={{ lat: hotspot.lat, lng: hotspot.lng }} 
                             icon={{ url: `https://maps.google.com/mapfiles/ms/icons/${hotspot.severity === 'Alta' ? 'red' : 'yellow'}-dot.png` }}
-                            onClick={() => setActiveInfoWindow(hotspot.id)}
+                            onClick={() => handleSelectPest(hotspot.id, hotspot.lat, hotspot.lng)}
                         />
                         {activeInfoWindow === hotspot.id && (
                             <InfoWindow position={{ lat: hotspot.lat, lng: hotspot.lng }} onCloseClick={() => setActiveInfoWindow(null)}>
@@ -266,7 +281,7 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
                             key={est.id}
                             position={{ lat, lng }}
                             icon={iconUrl}
-                            onClick={() => setActiveInfoWindow(est.id)}
+                            onClick={() => handleSelectEstablishment(est.id, lat, lng)}
                         >
                             {activeInfoWindow === est.id && (
                                 <InfoWindow position={{ lat, lng }} onCloseClick={() => setActiveInfoWindow(null)}>
