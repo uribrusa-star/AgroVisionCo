@@ -470,36 +470,36 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="directory" className="mt-0">
-          <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
+            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Building className="h-6 w-6 text-[#2d4a22]" />
+                <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
+                  <Building className="h-6 w-6 text-[#2d4a22] dark:text-emerald-400" />
                   Directorio de Clientes
                 </CardTitle>
-                <CardDescription className="mt-1">Administra los accesos, sella y gestiona productores titulares.</CardDescription>
+                <CardDescription className="mt-1 dark:text-stone-400">Administra los accesos, sella y gestiona productores titulares.</CardDescription>
               </div>
-              <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-[#2d4a22] hover:bg-[#1a2d13]">
+              <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-[#2d4a22] hover:bg-[#1a2d13] dark:bg-emerald-600 dark:hover:bg-emerald-700">
                 <Plus className="mr-2 h-4 w-4" /> Agregar Productor
               </Button>
             </CardHeader>
             
             {/* VISTA MÓVIL: Tarjetas */}
-            <div className="md:hidden p-4 space-y-4 bg-stone-50/50">
+            <div className="md:hidden p-4 space-y-4 bg-stone-50/50 dark:bg-stone-950/40">
               {establishments.length === 0 ? (
-                <p className="text-center text-stone-500 py-4">No hay establecimientos registrados.</p>
+                <p className="text-center text-stone-500 dark:text-stone-400 py-4">No hay establecimientos registrados.</p>
               ) : (
                 establishments.map((est) => {
                   const isActive = est.isActive ?? true;
                   const hasSeal = est.hasGoodPracticesSeal ?? false;
                   
                   return (
-                    <Card key={est.id} className="border-stone-200 overflow-hidden shadow-sm relative">
-                      <div className={`h-1.5 w-full ${isActive ? 'bg-[#2d4a22]' : 'bg-red-500'}`} />
-                      <CardHeader className="pb-2 cursor-pointer hover:bg-stone-50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
-                        <CardTitle className="text-lg font-headline truncate">{est.producer}</CardTitle>
+                    <Card key={est.id} className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-sm relative">
+                      <div className={`h-1.5 w-full ${isActive ? 'bg-[#2d4a22] dark:bg-emerald-500' : 'bg-red-500'}`} />
+                      <CardHeader className="pb-2 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
+                        <CardTitle className="text-lg font-headline truncate dark:text-stone-100">{est.producer}</CardTitle>
                         <CardDescription className="flex flex-col gap-1 mt-1">
-                          <span className="flex items-center gap-1.5 text-stone-600">
+                          <span className="flex items-center gap-1.5 text-stone-600 dark:text-stone-400">
                             <MapPin className="h-3.5 w-3.5" />
                             {est.location?.locality}, {est.location?.province}
                           </span>
@@ -507,20 +507,20 @@ export default function AdminDashboardPage() {
                       </CardHeader>
                       <CardContent className="pb-4 pt-2">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 border border-stone-100 gap-3">
-                            <Badge variant={hasSeal ? "default" : "outline"} className={`w-full justify-center py-1 ${hasSeal ? "bg-green-600 shadow-sm text-white" : ""}`}>
+                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-700/60 gap-3">
+                            <Badge variant={hasSeal ? "default" : "outline"} className={`w-full justify-center py-1 ${hasSeal ? "bg-green-600 dark:bg-green-600 shadow-sm text-white" : "dark:text-stone-300 dark:border-stone-600"}`}>
                               {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1.5"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1.5"/>}
                               {hasSeal ? 'Certificado' : 'Sin Sello'}
                             </Badge>
                             <Switch checked={hasSeal} onCheckedChange={() => toggleGoodPractices(est.id, hasSeal)} className="data-[state=checked]:bg-green-600" />
                           </div>
                           
-                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 border border-stone-100 gap-3">
-                             <Badge variant={isActive ? "default" : "destructive"} className={`w-full justify-center py-1 ${isActive ? "bg-[#2d4a22] shadow-sm text-white" : ""}`}>
+                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-700/60 gap-3">
+                             <Badge variant={isActive ? "default" : "destructive"} className={`w-full justify-center py-1 ${isActive ? "bg-[#2d4a22] dark:bg-emerald-600 shadow-sm text-white" : ""}`}>
                               {isActive ? <Power className="h-3.5 w-3.5 mr-1.5"/> : <PowerOff className="h-3.5 w-3.5 mr-1.5"/>}
                               {isActive ? 'Activo' : 'Suspendido'}
                             </Badge>
-                            <Switch checked={isActive} onCheckedChange={() => toggleActiveStatus(est.id, isActive)} className="data-[state=checked]:bg-[#2d4a22]" />
+                            <Switch checked={isActive} onCheckedChange={() => toggleActiveStatus(est.id, isActive)} className="data-[state=checked]:bg-[#2d4a22] dark:data-[state=checked]:bg-emerald-600" />
                           </div>
                         </div>
                       </CardContent>
@@ -533,40 +533,40 @@ export default function AdminDashboardPage() {
             {/* VISTA ESCRITORIO: Tabla elegante */}
             <CardContent className="hidden md:block p-0">
               <Table>
-                <TableHeader className="bg-white">
-                  <TableRow className="hover:bg-transparent border-stone-100">
-                    <TableHead className="py-4 pl-6 font-semibold text-stone-600">Establecimiento / Productor</TableHead>
-                    <TableHead className="py-4 font-semibold text-stone-600">Ubicación</TableHead>
-                    <TableHead className="py-4 font-semibold text-stone-600">Encargado Técnico</TableHead>
-                    <TableHead className="py-4 text-center font-semibold text-stone-600 w-40">Sello BPA</TableHead>
-                    <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 w-40">Estado de Cuenta</TableHead>
+                <TableHeader className="bg-white dark:bg-stone-900">
+                  <TableRow className="hover:bg-transparent border-stone-100 dark:border-stone-800">
+                    <TableHead className="py-4 pl-6 font-semibold text-stone-600 dark:text-stone-400">Establecimiento / Productor</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600 dark:text-stone-400">Ubicación</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600 dark:text-stone-400">Encargado Técnico</TableHead>
+                    <TableHead className="py-4 text-center font-semibold text-stone-600 dark:text-stone-400 w-40">Sello BPA</TableHead>
+                    <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 dark:text-stone-400 w-40">Estado de Cuenta</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {establishments.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-12 text-stone-500">No hay establecimientos registrados.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-12 text-stone-500 dark:text-stone-400">No hay establecimientos registrados.</TableCell></TableRow>
                   ) : (
                     establishments.map((est) => {
                       const isActive = est.isActive ?? true;
                       const hasSeal = est.hasGoodPracticesSeal ?? false;
                       return (
-                        <TableRow key={est.id} className="transition-colors hover:bg-stone-50/50 group cursor-pointer" onClick={(e) => {
+                        <TableRow key={est.id} className="transition-colors hover:bg-stone-50/50 dark:hover:bg-stone-800/50 group cursor-pointer border-stone-100 dark:border-stone-800" onClick={(e) => {
                           if ((e.target as HTMLElement).closest('.switch-container')) return;
                           router.push(`/admin/${est.id}`);
                         }}>
                           <TableCell className="pl-6 py-4">
-                            <div className="font-headline font-semibold text-stone-900">{est.producer}</div>
-                            <div className="text-xs text-stone-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">ID: {est.id}</div>
+                            <div className="font-headline font-semibold text-stone-900 dark:text-stone-100">{est.producer}</div>
+                            <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">ID: {est.id}</div>
                           </TableCell>
                           <TableCell className="py-4">
-                            <div className="flex items-center text-stone-600"><MapPin className="h-3.5 w-3.5 mr-1.5 text-stone-400" />{est.location?.locality}, {est.location?.province}</div>
+                            <div className="flex items-center text-stone-600 dark:text-stone-300"><MapPin className="h-3.5 w-3.5 mr-1.5 text-stone-400 dark:text-stone-500" />{est.location?.locality}, {est.location?.province}</div>
                           </TableCell>
                           <TableCell className="py-4">
-                            <div className="flex items-center text-stone-700 font-medium"><UserIcon className="h-3.5 w-3.5 mr-1.5 text-stone-400" />{est.technicalManager}</div>
+                            <div className="flex items-center text-stone-700 dark:text-stone-300 font-medium"><UserIcon className="h-3.5 w-3.5 mr-1.5 text-stone-400 dark:text-stone-500" />{est.technicalManager}</div>
                           </TableCell>
                           <TableCell className="py-4 text-center switch-container">
                             <div className="flex flex-col items-center gap-2">
-                              <Badge variant={hasSeal ? "default" : "outline"} className={`transition-all duration-300 ${hasSeal ? "bg-green-600 text-white hover:bg-green-700 shadow-sm" : "bg-transparent"}`}>
+                              <Badge variant={hasSeal ? "default" : "outline"} className={`transition-all duration-300 ${hasSeal ? "bg-green-600 text-white hover:bg-green-700 shadow-sm" : "bg-transparent dark:text-stone-300 dark:border-stone-600"}`}>
                                 {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1 text-stone-400"/>}
                                 {hasSeal ? 'Certificado' : 'Sin Sello'}
                               </Badge>
@@ -575,11 +575,11 @@ export default function AdminDashboardPage() {
                           </TableCell>
                           <TableCell className="pr-6 py-4 text-center switch-container">
                             <div className="flex flex-col items-center gap-2">
-                               <Badge variant={isActive ? "default" : "destructive"} className={`transition-all duration-300 ${isActive ? "bg-[#2d4a22] hover:bg-[#1a2d13] shadow-sm text-white" : ""}`}>
+                               <Badge variant={isActive ? "default" : "destructive"} className={`transition-all duration-300 ${isActive ? "bg-[#2d4a22] dark:bg-emerald-600 hover:bg-[#1a2d13] shadow-sm text-white" : ""}`}>
                                 {isActive ? <Power className="h-3.5 w-3.5 mr-1"/> : <PowerOff className="h-3.5 w-3.5 mr-1"/>}
                                 {isActive ? 'Habilitado' : 'Suspendido'}
                               </Badge>
-                              <Switch checked={isActive} onCheckedChange={() => toggleActiveStatus(est.id, isActive)} className="data-[state=checked]:bg-[#2d4a22]" />
+                              <Switch checked={isActive} onCheckedChange={() => toggleActiveStatus(est.id, isActive)} className="data-[state=checked]:bg-[#2d4a22] dark:data-[state=checked]:bg-emerald-600" />
                             </div>
                           </TableCell>
                         </TableRow>
@@ -594,9 +594,9 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="finance" className="mt-0 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-0 shadow-sm border-b-4 border-b-emerald-600">
+            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-emerald-600 dark:border-b-emerald-500">
               <CardHeader className="pb-2 relative">
-                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">MRR (Ingresos Mensuales)</CardDescription>
+                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">MRR (Ingresos Mensuales)</CardDescription>
                 
                 {isEditingPrice ? (
                   <div className="flex items-center gap-2 mt-2">
@@ -604,13 +604,13 @@ export default function AdminDashboardPage() {
                       type="number" 
                       value={editPriceValue} 
                       onChange={(e) => setEditPriceValue(Number(e.target.value))}
-                      className="w-32 h-8 text-sm"
+                      className="w-32 h-8 text-sm dark:bg-stone-800 dark:border-stone-700 dark:text-stone-100"
                     />
-                    <Button size="sm" onClick={handleUpdatePrice} className="h-8 px-2 bg-emerald-600 hover:bg-emerald-700">Guardar</Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setIsEditingPrice(false); setEditPriceValue(subPrice); }} className="h-8 px-2">Cancelar</Button>
+                    <Button size="sm" onClick={handleUpdatePrice} className="h-8 px-2 bg-emerald-600 hover:bg-emerald-700 text-white">Guardar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setIsEditingPrice(false); setEditPriceValue(subPrice); }} className="h-8 px-2 dark:text-stone-300">Cancelar</Button>
                   </div>
                 ) : (
-                  <CardTitle className="text-3xl font-bold text-emerald-600 flex items-center gap-2 cursor-pointer group" onClick={() => setIsEditingPrice(true)}>
+                  <CardTitle className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 cursor-pointer group" onClick={() => setIsEditingPrice(true)}>
                     <DollarSign className="h-6 w-6 opacity-70" /> 
                     ${mrr.toLocaleString('es-AR')} ARS
                     <span className="text-xs font-normal text-stone-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">(Click para editar cuota de ${subPrice.toLocaleString('es-AR')})</span>
@@ -619,20 +619,20 @@ export default function AdminDashboardPage() {
               </CardHeader>
             </Card>
 
-            <Card className="border-0 shadow-sm border-b-4 border-b-blue-600">
+            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-blue-600 dark:border-b-blue-500">
               <CardHeader className="pb-2">
-                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Usuarios Activos (Premium)</CardDescription>
-                <CardTitle className="text-3xl font-bold text-blue-600 flex items-center gap-2">
+                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Usuarios Activos (Premium)</CardDescription>
+                <CardTitle className="text-3xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                   <CheckCircle2 className="h-6 w-6 opacity-70" /> 
                   {activeCount}
                 </CardTitle>
               </CardHeader>
             </Card>
 
-            <Card className="border-0 shadow-sm border-b-4 border-b-amber-500">
+            <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-amber-500 dark:border-b-amber-400">
               <CardHeader className="pb-2">
-                <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">En Periodo de Prueba</CardDescription>
-                <CardTitle className="text-3xl font-bold text-amber-500 flex items-center gap-2">
+                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">En Periodo de Prueba</CardDescription>
+                <CardTitle className="text-3xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-2">
                   <Clock className="h-6 w-6 opacity-70" /> 
                   {trialCount}
                 </CardTitle>
@@ -640,76 +640,76 @@ export default function AdminDashboardPage() {
             </Card>
           </div>
 
-          <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <DollarSign className="h-6 w-6 text-emerald-600" />
+          <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
+            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6">
+              <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
+                <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 Gestión de Suscripciones
               </CardTitle>
-              <CardDescription>Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
+              <CardDescription className="dark:text-stone-400">Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
             </CardHeader>
             {/* VISTA MÓVIL: Tarjetas Expandibles */}
-            <div className="md:hidden p-4 space-y-3 bg-stone-50/50">
+            <div className="md:hidden p-4 space-y-3 bg-stone-50/50 dark:bg-stone-950/40">
               {producers.map((prod) => {
                 const status = prod.subscriptionStatus || 'trial';
                 const statusLabels = {
-                  'active': { label: 'Premium', color: 'bg-green-100 text-green-700' },
-                  'trial': { label: 'Prueba', color: 'bg-blue-100 text-blue-700' },
-                  'past_due': { label: 'Atrasada', color: 'bg-red-100 text-red-700' },
-                  'canceled': { label: 'Cancelada', color: 'bg-stone-100 text-stone-700' },
+                  'active': { label: 'Premium', color: 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300' },
+                  'trial': { label: 'Prueba', color: 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' },
+                  'past_due': { label: 'Atrasada', color: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300' },
+                  'canceled': { label: 'Cancelada', color: 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300' },
                 };
                 
                 return (
-                  <details key={prod.id} className="group bg-white rounded-xl border border-stone-200 overflow-hidden shadow-sm">
+                  <details key={prod.id} className="group bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden shadow-sm">
                     <summary className="flex items-center justify-between p-4 cursor-pointer list-none">
                       <div>
-                        <div className="font-headline font-semibold text-stone-900">{prod.name}</div>
-                        <div className="text-xs text-stone-500 mt-0.5">ID: {prod.establishmentId || 'N/A'}</div>
+                        <div className="font-headline font-semibold text-stone-900 dark:text-stone-100">{prod.name}</div>
+                        <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">ID: {prod.establishmentId || 'N/A'}</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={`border-0 font-semibold ${statusLabels[status as keyof typeof statusLabels]?.color}`}>
                           {statusLabels[status as keyof typeof statusLabels]?.label}
                         </Badge>
-                        <ChevronDown className="h-4 w-4 text-stone-400 group-open:rotate-180 transition-transform" />
+                        <ChevronDown className="h-4 w-4 text-stone-400 dark:text-stone-500 group-open:rotate-180 transition-transform" />
                       </div>
                     </summary>
-                    <div className="px-4 pb-4 pt-2 border-t border-stone-100 space-y-3 bg-stone-50/50">
+                    <div className="px-4 pb-4 pt-2 border-t border-stone-100 dark:border-stone-800 space-y-3 bg-stone-50/50 dark:bg-stone-800/40">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-stone-500">Email:</span>
-                        <span className="font-medium text-stone-700 truncate max-w-[200px]">{prod.notificationEmail || prod.email}</span>
+                        <span className="text-stone-500 dark:text-stone-400">Email:</span>
+                        <span className="font-medium text-stone-700 dark:text-stone-200 truncate max-w-[200px]">{prod.notificationEmail || prod.email}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-stone-500">Vencimiento:</span>
-                        <span className="font-medium text-stone-700">
+                        <span className="text-stone-500 dark:text-stone-400">Vencimiento:</span>
+                        <span className="font-medium text-stone-700 dark:text-stone-200">
                           {prod.subscriptionExpiryDate 
                             ? new Date(prod.subscriptionExpiryDate).toLocaleDateString('es-ES') 
                             : 'No definida'}
                         </span>
                       </div>
                       <div className="pt-2">
-                        <label className="text-xs text-stone-500 mb-1 block">Modificar Estado:</label>
+                        <label className="text-xs text-stone-500 dark:text-stone-400 mb-1 block">Modificar Estado:</label>
                         <Select 
                           defaultValue={status} 
                           onValueChange={(val) => updateSubscription(prod.id, val)}
                         >
                           <SelectTrigger className={`w-full font-semibold focus:ring-0 ${
-                            status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 
-                            status === 'trial' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
-                            status === 'past_due' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-stone-100 text-stone-700 border-stone-200'
+                            status === 'active' ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800' : 
+                            status === 'trial' ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' : 
+                            status === 'past_due' ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
                           }`}>
                             <SelectValue placeholder="Estado" />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="trial" className="text-blue-700 font-medium">Prueba (14 días)</SelectItem>
-                            <SelectItem value="active" className="text-green-700 font-medium">Premium</SelectItem>
-                            <SelectItem value="past_due" className="text-red-700 font-medium">Atrasada</SelectItem>
-                            <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
+                          <SelectContent className="dark:bg-stone-900 dark:border-stone-800">
+                            <SelectItem value="trial" className="text-blue-700 dark:text-blue-400 font-medium">Prueba (14 días)</SelectItem>
+                            <SelectItem value="active" className="text-green-700 dark:text-green-400 font-medium">Premium</SelectItem>
+                            <SelectItem value="past_due" className="text-red-700 dark:text-red-400 font-medium">Atrasada</SelectItem>
+                            <SelectItem value="canceled" className="text-stone-700 dark:text-stone-400 font-medium">Cancelada</SelectItem>
                           </SelectContent>
                         </Select>
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="w-full text-stone-600 bg-white hover:bg-stone-50 border-stone-200 shadow-sm font-semibold h-9 mt-2"
+                          className="w-full text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 border-stone-200 dark:border-stone-700 shadow-sm font-semibold h-9 mt-2"
                           onClick={() => {
                             const amount = subPrice;
                             generateSubscriptionReceiptPDF(
@@ -732,19 +732,19 @@ export default function AdminDashboardPage() {
                 )
               })}
               {producers.length === 0 && (
-                <div className="text-center py-8 text-stone-500">No hay productores registrados.</div>
+                <div className="text-center py-8 text-stone-500 dark:text-stone-400">No hay productores registrados.</div>
               )}
             </div>
 
             {/* VISTA ESCRITORIO: Tabla */}
             <CardContent className="hidden md:block p-0 overflow-x-auto">
               <Table className="min-w-[600px]">
-                <TableHeader className="bg-white">
-                  <TableRow className="hover:bg-transparent border-stone-100">
-                    <TableHead className="py-4 pl-6 font-semibold text-stone-600">Productor Titular</TableHead>
-                    <TableHead className="py-4 font-semibold text-stone-600">Email de Contacto</TableHead>
-                    <TableHead className="py-4 text-center font-semibold text-stone-600">Vencimiento</TableHead>
-                    <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 w-48">Plan / Estado</TableHead>
+                <TableHeader className="bg-white dark:bg-stone-900">
+                  <TableRow className="hover:bg-transparent border-stone-100 dark:border-stone-800">
+                    <TableHead className="py-4 pl-6 font-semibold text-stone-600 dark:text-stone-400">Productor Titular</TableHead>
+                    <TableHead className="py-4 font-semibold text-stone-600 dark:text-stone-400">Email de Contacto</TableHead>
+                    <TableHead className="py-4 text-center font-semibold text-stone-600 dark:text-stone-400">Vencimiento</TableHead>
+                    <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 dark:text-stone-400 w-48">Plan / Estado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -752,16 +752,16 @@ export default function AdminDashboardPage() {
                     const status = prod.subscriptionStatus || 'trial';
                     
                     return (
-                      <TableRow key={prod.id} className="transition-colors hover:bg-stone-50/50">
+                      <TableRow key={prod.id} className="transition-colors hover:bg-stone-50/50 dark:hover:bg-stone-800/50 border-stone-100 dark:border-stone-800">
                         <TableCell className="pl-6 py-4">
-                          <div className="font-headline font-semibold text-stone-900">{prod.name}</div>
-                          <div className="text-xs text-stone-500 mt-0.5">Establecimiento ID: {prod.establishmentId || 'N/A'}</div>
+                          <div className="font-headline font-semibold text-stone-900 dark:text-stone-100">{prod.name}</div>
+                          <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Establecimiento ID: {prod.establishmentId || 'N/A'}</div>
                         </TableCell>
-                        <TableCell className="py-4 text-stone-600 text-sm">
+                        <TableCell className="py-4 text-stone-600 dark:text-stone-300 text-sm">
                           {prod.notificationEmail || prod.email}
                         </TableCell>
                         <TableCell className="py-4 text-center">
-                          <span className="text-sm font-medium text-stone-700">
+                          <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
                             {prod.subscriptionExpiryDate 
                               ? new Date(prod.subscriptionExpiryDate).toLocaleDateString('es-ES') 
                               : 'No definida'}
@@ -773,23 +773,23 @@ export default function AdminDashboardPage() {
                             onValueChange={(val) => updateSubscription(prod.id, val)}
                           >
                             <SelectTrigger className={`w-full font-semibold border-0 ring-0 focus:ring-0 ${
-                              status === 'active' ? 'bg-green-100 text-green-700' : 
-                              status === 'trial' ? 'bg-blue-100 text-blue-700' : 
-                              status === 'past_due' ? 'bg-red-100 text-red-700' : 'bg-stone-100 text-stone-700'
+                              status === 'active' ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300' : 
+                              status === 'trial' ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' : 
+                              status === 'past_due' ? 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300' : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300'
                             }`}>
                               <SelectValue placeholder="Estado" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="trial" className="text-blue-700 font-medium">Prueba (14 días)</SelectItem>
-                              <SelectItem value="active" className="text-green-700 font-medium">Premium</SelectItem>
-                              <SelectItem value="past_due" className="text-red-700 font-medium">Atrasada</SelectItem>
-                              <SelectItem value="canceled" className="text-stone-700 font-medium">Cancelada</SelectItem>
+                            <SelectContent className="dark:bg-stone-900 dark:border-stone-800">
+                              <SelectItem value="trial" className="text-blue-700 dark:text-blue-400 font-medium">Prueba (14 días)</SelectItem>
+                              <SelectItem value="active" className="text-green-700 dark:text-green-400 font-medium">Premium</SelectItem>
+                              <SelectItem value="past_due" className="text-red-700 dark:text-red-400 font-medium">Atrasada</SelectItem>
+                              <SelectItem value="canceled" className="text-stone-700 dark:text-stone-400 font-medium">Cancelada</SelectItem>
                             </SelectContent>
                           </Select>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="w-full mt-2 text-stone-600 bg-white hover:bg-stone-50 border-stone-200 shadow-sm"
+                            className="w-full mt-2 text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 border-stone-200 dark:border-stone-700 shadow-sm"
                             onClick={() => {
                               const amount = subPrice;
                               generateSubscriptionReceiptPDF(
@@ -817,18 +817,18 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="comms" className="mt-0">
-          <Card className="border-0 shadow-lg shadow-black/5 bg-white overflow-hidden max-w-3xl">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-6">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <BellRing className="h-6 w-6 text-blue-600" />
+          <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden max-w-3xl">
+            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6">
+              <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
+                <BellRing className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 Alertas Globales (Broadcast)
               </CardTitle>
-              <CardDescription>Envía una notificación push a todos los usuarios de AgroVista (Productores, Ingenieros, Encargados, Recolectores).</CardDescription>
+              <CardDescription className="dark:text-stone-400">Envía una notificación push a todos los usuarios de AgroVista (Productores, Ingenieros, Encargados, Recolectores).</CardDescription>
             </CardHeader>
             <form onSubmit={handleBroadcast}>
               <CardContent className="space-y-6 pt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="broadcast-title" className="text-stone-700">Título de la Notificación</Label>
+                  <Label htmlFor="broadcast-title" className="text-stone-700 dark:text-stone-300">Título de la Notificación</Label>
                   <Input 
                     id="broadcast-title" 
                     placeholder="Ej. Mantenimiento Programado"
@@ -836,56 +836,44 @@ export default function AdminDashboardPage() {
                     onChange={e => setBroadcastTitle(e.target.value)}
                     required
                     maxLength={100}
-                    className="focus-visible:ring-blue-500"
+                    className="focus-visible:ring-blue-500 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-100"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="broadcast-body" className="text-stone-700">Cuerpo del Mensaje</Label>
+                  <Label htmlFor="broadcast-body" className="text-stone-700 dark:text-stone-300">Cuerpo del Mensaje</Label>
                   <Textarea 
                     id="broadcast-body" 
                     placeholder="Ej. Esta noche de 02:00 a 04:00 AM los servidores estarán offline..."
                     value={broadcastBody}
                     onChange={e => setBroadcastBody(e.target.value)}
                     required
-                    maxLength={300}
                     rows={4}
-                    className="resize-none focus-visible:ring-blue-500"
+                    maxLength={300}
+                    className="focus-visible:ring-blue-500 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-100"
                   />
-                  <div className="text-xs text-stone-400 text-right">{broadcastBody.length} / 300</div>
+                  <p className="text-xs text-right text-stone-400 dark:text-stone-500">{broadcastBody.length} / 300</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-stone-700">Nivel de Importancia (Severidad)</Label>
+                  <Label htmlFor="broadcast-severity" className="text-stone-700 dark:text-stone-300">Nivel de Importancia (Severidad)</Label>
                   <Select value={broadcastSeverity} onValueChange={setBroadcastSeverity}>
-                    <SelectTrigger className="w-full sm:w-[250px] focus:ring-blue-500">
-                      <SelectValue placeholder="Seleccionar Severidad" />
+                    <SelectTrigger className="w-full dark:bg-stone-800 dark:border-stone-700 dark:text-stone-100">
+                      <SelectValue placeholder="Seleccionar nivel" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="info">
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500"/> Informativo</div>
-                      </SelectItem>
-                      <SelectItem value="warning">
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500"/> Advertencia</div>
-                      </SelectItem>
-                      <SelectItem value="critical">
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"/> Crítico</div>
-                      </SelectItem>
+                    <SelectContent className="dark:bg-stone-900 dark:border-stone-800">
+                      <SelectItem value="info">🔵 Informativa (Azul)</SelectItem>
+                      <SelectItem value="warning">🟧 Advertencia (Naranja)</SelectItem>
+                      <SelectItem value="critical">🔴 Crítica / Urgente (Roja)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </CardContent>
-              <CardFooter className="bg-stone-50 border-t border-stone-100 flex justify-end py-4">
-                <Button 
-                  type="submit" 
-                  disabled={isBroadcasting} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold flex items-center gap-2 px-6"
-                >
-                  {isBroadcasting ? (
-                    <>Enviando... <Activity className="h-4 w-4 animate-spin" /></>
-                  ) : (
-                    <>Enviar Alerta Masiva <Send className="h-4 w-4" /></>
-                  )}
+              <CardFooter className="bg-stone-50 dark:bg-stone-800/80 border-t border-stone-100 dark:border-stone-800 px-6 py-4 flex justify-between items-center">
+                <p className="text-xs text-stone-500 dark:text-stone-400">Esta acción notificará a todos las cuentas activas.</p>
+                <Button type="submit" disabled={isBroadcasting} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                  <Send className="mr-2 h-4 w-4" />
+                  {isBroadcasting ? "Enviando..." : "Enviar Notificación Push"}
                 </Button>
               </CardFooter>
             </form>
@@ -895,10 +883,10 @@ export default function AdminDashboardPage() {
 
       {/* Dialog for creating a new Producer */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="dark:bg-stone-900 dark:border-stone-800 dark:text-stone-100">
             <DialogHeader>
-                <DialogTitle>Agregar Nuevo Productor</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="dark:text-stone-100">Agregar Nuevo Productor</DialogTitle>
+                <DialogDescription className="dark:text-stone-400">
                     Crea un nuevo cliente (Productor titular) que administrará su propio establecimiento en la plataforma.
                 </DialogDescription>
             </DialogHeader>
@@ -909,17 +897,17 @@ export default function AdminDashboardPage() {
                         name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Nombre Completo / Razón Social</FormLabel>
+                                <FormLabel className="dark:text-stone-300">Nombre Completo / Razón Social</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Ej. Estancia Las Marías" {...field} />
+                                    <Input placeholder="Ej. Estancia Las Marías" {...field} className="dark:bg-stone-800 dark:border-stone-700 dark:text-stone-100" />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
                     
-                    <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-primary/20">
-                        <div className="flex items-center gap-2 text-primary font-medium mb-2">
+                    <div className="space-y-4 p-4 bg-muted/50 dark:bg-stone-800/50 rounded-lg border border-primary/20 dark:border-stone-700">
+                        <div className="flex items-center gap-2 text-primary dark:text-emerald-400 font-medium mb-2">
                             <ShieldAlert className="h-4 w-4" />
                             <p className="text-sm">Datos de Ingreso y Sistema</p>
                         </div>
