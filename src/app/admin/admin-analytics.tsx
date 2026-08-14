@@ -22,6 +22,7 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
   const [users, setUsers] = useState<User[]>([]);
   const [harvests, setHarvests] = useState<Harvest[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [pestLogs, setPestLogs] = useState<DiagnosisLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
