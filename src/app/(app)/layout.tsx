@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HardHat, Leaf, LayoutDashboard, Check, Loader2, PackageSearch, Menu, Building, LogOut, LineChart, Map, KeyRound, Package, BookUser, ClipboardCheck, User as UserIcon } from 'lucide-react';
+import { HardHat, Leaf, LayoutDashboard, Check, Loader2, PackageSearch, Menu, Building, LogOut, LineChart, Map, KeyRound, Package, BookUser, ClipboardCheck, User as UserIcon, Mail } from 'lucide-react';
 import React, { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
