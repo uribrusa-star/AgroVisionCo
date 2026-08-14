@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Circle } from '@react-google-maps/api';
 import type { EstablishmentData, DiagnosisLog } from '@/lib/types';
-import { Building, MapPin, Activity, Sprout, Layers, Bug } from 'lucide-react';
+import { Building, MapPin, Activity, Sprout, Layers, Bug, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type AdminMapProps = {
