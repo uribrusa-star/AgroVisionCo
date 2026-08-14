@@ -890,75 +890,78 @@ export default function AdminDashboardPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="comms" className="mt-0 space-y-6">
-          {/* Detector e Inferencia Automática de Clima Semanal en Tiempo Real con IA */}
-          <Card className="border border-sky-200 dark:border-sky-900/60 bg-gradient-to-r from-sky-50/80 via-blue-50/40 to-emerald-50/40 dark:from-sky-950/40 dark:via-blue-950/20 dark:to-emerald-950/20 shadow-sm max-w-3xl overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300 font-bold text-base">
-                  <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-400 animate-pulse" />
-                  <span>Detector Agronómico de Riesgo Climático Semanal (Coronda)</span>
+        <TabsContent value="comms" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            
+            {/* Detector e Inferencia Automática de Clima Semanal en Tiempo Real con IA */}
+            <Card className="border border-sky-200 dark:border-sky-900/60 bg-gradient-to-r from-sky-50/80 via-blue-50/40 to-emerald-50/40 dark:from-sky-950/40 dark:via-blue-950/20 dark:to-emerald-950/20 shadow-sm overflow-hidden h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300 font-bold text-base">
+                    <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-400 animate-pulse" />
+                    <span>Detector Agronómico de Riesgo Climático Semanal (Coronda)</span>
+                  </div>
+                  <Badge className="bg-sky-100 dark:bg-sky-900 text-sky-900 dark:text-sky-200 border-0 font-semibold text-xs">
+                    Análisis IA Genkit
+                  </Badge>
                 </div>
-                <Badge className="bg-sky-100 dark:bg-sky-900 text-sky-900 dark:text-sky-200 border-0 font-semibold text-xs">
-                  Análisis IA Genkit
-                </Badge>
-              </div>
-              <CardDescription className="text-stone-700 dark:text-stone-300 text-xs mt-1">
-                Analiza las variables meteorológicas de la semana en Coronda (-31.97, -60.92) identificando los días críticos de lluvia y helada para redactar la alerta.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-0">
-              {weatherAlertsLoading ? (
-                <div className="py-6 flex items-center justify-center gap-2 text-stone-500 text-xs font-medium">
-                  <Sparkles className="h-4 w-4 text-sky-500 animate-spin" />
-                  <span>Consultando pronóstico en vivo de Coronda a 7 días...</span>
-                </div>
-              ) : liveWeatherAlerts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {liveWeatherAlerts.map((alt, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-sky-200 dark:border-sky-800 shadow-sm flex flex-col justify-between space-y-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300 font-bold text-xs">
-                          {alt.risk.includes('Helada') ? <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" /> : <CloudRain className="h-4 w-4 text-blue-500 shrink-0" />}
-                          <span>{alt.risk}</span>
+                <CardDescription className="text-stone-700 dark:text-stone-300 text-xs mt-1">
+                  Analiza las variables meteorológicas de la semana en Coronda (-31.97, -60.92) identificando los días críticos de lluvia y helada para redactar la alerta.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                {weatherAlertsLoading ? (
+                  <div className="py-6 flex items-center justify-center gap-2 text-stone-500 text-xs font-medium">
+                    <Sparkles className="h-4 w-4 text-sky-500 animate-spin" />
+                    <span>Consultando pronóstico en vivo de Coronda a 7 días...</span>
+                  </div>
+                ) : liveWeatherAlerts.length > 0 ? (
+                  <div className="space-y-3">
+                    {liveWeatherAlerts.map((alt, idx) => (
+                      <div key={idx} className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-sky-200 dark:border-sky-800 shadow-sm flex flex-col justify-between space-y-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300 font-bold text-xs">
+                            {alt.risk.includes('Helada') ? <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" /> : <CloudRain className="h-4 w-4 text-blue-500 shrink-0" />}
+                            <span>{alt.risk}</span>
+                          </div>
+                          <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                            Día Crítico: <strong className="text-stone-800 dark:text-stone-100">{alt.eventDate}</strong>
+                          </p>
+                          <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1">
+                            {alt.recommendation}
+                          </p>
                         </div>
-                        <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                          Día Crítico: <strong className="text-stone-800 dark:text-stone-100">{alt.eventDate}</strong>
-                        </p>
-                        <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1 line-clamp-2">
-                          {alt.recommendation}
-                        </p>
+                        <Button 
+                          type="button" 
+                          size="sm"
+                          className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
+                          onClick={() => {
+                            setBroadcastTitle(`️ ${alt.risk.toUpperCase()}: Coronda`);
+                            setBroadcastBody(alt.recommendation);
+                            setBroadcastSeverity(alt.urgency === 'Alta' ? 'critical' : 'warning');
+                            toast({
+                              title: "Alerta Climática Cargada",
+                              description: "Se precargó la notificación con el día y temperatura real en el formulario de la derecha.",
+                            });
+                          }}
+                        >
+                          <Send className="h-3.5 w-3.5 mr-1.5" />
+                          <span>Cargar Alerta para Enviar</span>
+                        </Button>
                       </div>
-                      <Button 
-                        type="button" 
-                        size="sm"
-                        className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
-                        onClick={() => {
-                          setBroadcastTitle(`️ ${alt.risk.toUpperCase()}: Coronda`);
-                          setBroadcastBody(alt.recommendation);
-                          setBroadcastSeverity(alt.urgency === 'Alta' ? 'critical' : 'warning');
-                          toast({
-                            title: "Alerta Climática Cargada",
-                            description: "Se precargó la notificación con el día y temperatura real. Revisa y presiona 'Enviar Notificación Push'.",
-                          });
-                        }}
-                      >
-                        <Send className="h-3.5 w-3.5 mr-1.5" />
-                        <span>Cargar Alerta para Enviar</span>
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span>{weatherSummaryText || "🟢 Clima favorable y estable en Coronda para los próximos 7 días. No se detectan riesgos climáticos inminentes."}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{weatherSummaryText || "🟢 Clima favorable y estable en Coronda para los próximos 7 días. No se detectan riesgos climáticos inminentes."}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden max-w-3xl">
+            {/* Formulario de Broadcast */}
+            <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
             <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6">
               <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
                 <BellRing className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -1017,8 +1020,8 @@ export default function AdminDashboardPage() {
                   {isBroadcasting ? "Enviando..." : "Enviar Notificación Push"}
                 </Button>
               </CardFooter>
-            </form>
-          </Card>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
