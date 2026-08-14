@@ -448,7 +448,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <TabsContent value="analytics" className="mt-0">
-          <AdminAnalytics establishments={establishments} />
+          <AdminAnalytics establishments={establishments} subPrice={subPrice} />
         </TabsContent>
 
         <TabsContent value="requests" className="mt-0 space-y-6">
