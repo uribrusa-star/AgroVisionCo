@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AppDataContext } from '@/context/app-data-context.tsx';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Send, CheckCircle2, Loader2, Sparkles, Mail } from 'lucide-react';
+import { Send, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 
 interface ContactModalProps {
   children?: React.ReactNode;
@@ -42,6 +43,7 @@ export function ContactModal({
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
+  const { addContactRequest } = useContext(AppDataContext);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -65,28 +67,34 @@ export function ContactModal({
 
     setLoading(true);
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSubmitted(true);
-        toast({
-          title: '¡Solicitud Recibida!',
-          description: 'Te contactaremos a la brevedad al correo ingresado.',
+      // 1. Guardar directamente en la base de datos de la plataforma (Firestore)
+      if (addContactRequest) {
+        await addContactRequest({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || '',
+          role: formData.role,
+          location: formData.location || 'Coronda, Santa Fe',
+          message: formData.message || '',
         });
-      } else {
-        throw new Error(data.message || 'Error al enviar la solicitud');
       }
+
+      // 2. Intentar también enviar correo por API de respaldo si se requiere
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      }).catch(() => {});
+
+      setSubmitted(true);
+      toast({
+        title: '¡Solicitud Registrada!',
+        description: 'Tu solicitud ha sido guardada en la plataforma con éxito.',
+      });
     } catch (error: any) {
       toast({
         title: 'Error de envío',
-        description: error.message || 'No se pudo enviar el correo en este momento. Inténtalo de nuevo.',
+        description: error.message || 'No se pudo registrar la solicitud. Inténtalo de nuevo.',
         variant: 'destructive',
       });
     } finally {

@@ -51,6 +51,7 @@ const allNavItems = [
   { href: '/predictions', label: 'Predicciones', icon: LineChart, roles: ['Productor', 'Ingeniero Agronomo'] },
   { href: '/tasks', label: 'Tareas', icon: ClipboardCheck, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/producer-log', label: 'Bitácora del Productor', icon: NotebookPen, roles: ['Productor'] },
+  { href: '/contact-requests', label: 'Solicitudes', icon: Mail, roles: ['Productor'] },
   { href: '/collectors', label: 'Recolectores', icon: HardHat, roles: ['Productor', 'Encargado'] },
   { href: '/packers', label: 'Embaladores', icon: Package, roles: ['Productor', 'Encargado'] },
   { href: '/users', label: 'Usuarios', icon: BookUser, roles: ['Productor'] },

@@ -1,5 +1,20 @@
 export type UserRole = 'Productor' | 'Ingeniero Agronomo' | 'Encargado' | 'SuperAdmin';
 
+export type ContactRequestStatus = 'pending' | 'contacted' | 'completed';
+
+export type ContactRequest = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  location?: string;
+  message?: string;
+  createdAt: string;
+  status: ContactRequestStatus;
+  notes?: string;
+};
+
 export type PushNotification = {
   id: string;
   userId: string;
@@ -334,8 +349,12 @@ export type AppData = {
   producerLogs: ProducerLog[];
   transactions: Transaction[];
   knowledgeBase: KnowledgeItem[];
+  contactRequests: ContactRequest[];
   expertChatHistory: { role: 'user' | 'model'; content: string }[];
   setExpertChatHistory: (history: { role: 'user' | 'model'; content: string }[]) => void;
+  addContactRequest: (request: Omit<ContactRequest, 'id' | 'createdAt' | 'status'>) => Promise<void>;
+  updateContactRequestStatus: (requestId: string, status: ContactRequestStatus, notes?: string) => Promise<void>;
+  deleteContactRequest: (requestId: string) => Promise<void>;
   addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number) => Promise<string | undefined>;
   addMultipleHarvests: (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number }[]) => Promise<void>;
   editHarvest: (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string }) => Promise<void>;

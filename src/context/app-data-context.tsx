@@ -2,12 +2,12 @@
 'use client';
 
 import React, { ReactNode, useState, useCallback, useEffect } from 'react';
-import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem } from '@/lib/types';
+import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem, ContactRequest, ContactRequestStatus } from '@/lib/types';
 import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
 import { useToast } from "@/hooks/use-toast";
 import { sendPushNotification } from "@/lib/send-push";
 import { db } from '@/lib/firebase';
-import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy, limit, onSnapshot, updateDoc } from 'firebase/firestore';
 import { getRoleAvatar } from '@/lib/utils';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
 
@@ -33,8 +33,12 @@ export const AppDataContext = React.createContext<AppData>({
   producerLogs: [],
   transactions: [],
   knowledgeBase: [],
+  contactRequests: [],
   expertChatHistory: [],
   setExpertChatHistory: () => {},
+  addContactRequest: async () => { throw new Error('Not implemented') },
+  updateContactRequestStatus: async () => { throw new Error('Not implemented') },
+  deleteContactRequest: async () => { throw new Error('Not implemented') },
   addHarvest: async () => { throw new Error('Not implemented') },
   addMultipleHarvests: async () => { throw new Error('Not implemented') },
   editHarvest: async () => { throw new Error('Not implemented') },
@@ -158,6 +162,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [producerLogs, setProducerLogs] = useState<ProducerLog[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
+    const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
     const [expertChatHistory, setExpertChatHistory] = useState<{ role: 'user' | 'model'; content: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
@@ -245,6 +250,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               producerLogsSnapshot,
               transactionsSnapshot,
               knowledgeSnapshot,
+              contactRequestsSnapshot,
             ] = await Promise.all([
               safeFetch(getDoc(doc(db, 'establishment', currentUser?.establishmentId || 'main')), null),
               safeFetch(getDocs(query(collection(db, 'collectors'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
@@ -263,6 +269,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               safeFetch(getDocs(query(collection(db, 'producerLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
               safeFetch(getDocs(query(collection(db, 'transactions'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
               safeFetch(getDocs(query(collection(db, 'knowledge'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDocs(query(collection(db, 'contactRequests'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
@@ -293,6 +300,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setTasks(tasksSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Task[]);
             setBatches(batchesSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Batch[]);
             setCollectorPaymentLogs(collectorPaymentsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as CollectorPaymentLog[]);
+            setPackagingLogs(packagingLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
+            setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as CulturalPracticeLog[]);
+            setProducerLogs(producerLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
+            setTransactions(transactionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
+            setKnowledgeBase(knowledgeSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
+            setContactRequests(contactRequestsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ContactRequest[]);
             setPackagingLogs(packagingLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
             setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map((doc: any) => {
               const data = doc.data();
@@ -1576,6 +1589,47 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const addContactRequest = async (request: Omit<ContactRequest, 'id' | 'createdAt' | 'status'>) => {
+        try {
+            const newDocRef = doc(collection(db, 'contactRequests'));
+            const newRequest: ContactRequest = {
+                ...request,
+                id: newDocRef.id,
+                createdAt: new Date().toISOString(),
+                status: 'pending',
+            };
+            await setDoc(newDocRef, newRequest);
+            setContactRequests(prev => [newRequest, ...prev]);
+        } catch (error) {
+            console.error("Error al agregar solicitud de contacto:", error);
+            throw error;
+        }
+    };
+
+    const updateContactRequestStatus = async (requestId: string, status: ContactRequestStatus, notes?: string) => {
+        try {
+            const docRef = doc(db, 'contactRequests', requestId);
+            const updatePayload: any = { status };
+            if (notes !== undefined) updatePayload.notes = notes;
+            await updateDoc(docRef, updatePayload);
+            setContactRequests(prev => prev.map(req => req.id === requestId ? { ...req, ...updatePayload } : req));
+        } catch (error) {
+            console.error("Error actualizando estado de solicitud:", error);
+            throw error;
+        }
+    };
+
+    const deleteContactRequest = async (requestId: string) => {
+        try {
+            const docRef = doc(db, 'contactRequests', requestId);
+            await deleteDoc(docRef);
+            setContactRequests(prev => prev.filter(req => req.id !== requestId));
+        } catch (error) {
+            console.error("Error eliminando solicitud de contacto:", error);
+            throw error;
+        }
+    };
+
     const value = {
         loading,
         currentUser,
@@ -1598,8 +1652,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         producerLogs,
         transactions,
         knowledgeBase,
+        contactRequests,
         expertChatHistory,
         setExpertChatHistory,
+        addContactRequest,
+        updateContactRequestStatus,
+        deleteContactRequest,
         addHarvest,
         addMultipleHarvests,
         editHarvest,
