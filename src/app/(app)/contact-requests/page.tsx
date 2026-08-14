@@ -355,7 +355,7 @@ export default function ContactRequestsPage() {
 
       {/* Selected Request Detail Modal */}
       {selectedRequest && (
-        <Dialog open={!!selectedRequest} onOpenChange={(open) => if (!open) setSelectedRequest(null)}>
+        <Dialog open={!!selectedRequest} onOpenChange={(open) => { if (!open) setSelectedRequest(null); }}>
           <DialogContent className="sm:max-w-[550px] border-none bg-white dark:bg-stone-900 shadow-2xl p-6 rounded-3xl">
             <DialogHeader>
               <div className="flex items-center justify-between gap-2">
