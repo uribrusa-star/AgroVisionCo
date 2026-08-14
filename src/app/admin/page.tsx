@@ -156,25 +156,12 @@ export default function AdminDashboardPage() {
       console.error("Error fetching agronomist pest logs:", error);
     });
 
-    // Subscribe to contactRequests in real-time
-    const unsubscribeContactRequests = onSnapshot(collection(db, 'contactRequests'), (snapshot) => {
-      const requests: any[] = [];
-      snapshot.forEach((doc) => {
-        requests.push({ id: doc.id, ...doc.data() });
-      });
-      requests.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      // Realtime sync
-    }, (error) => {
-      console.error("Error listening to contactRequests:", error);
-    });
-
     return () => {
       unsubscribeEst();
       unsubscribeProd();
       unsubscribeSettings();
       unsubscribePests();
       unsubscribeAgroPests();
-      unsubscribeContactRequests();
     };
   }, [currentUser]);
 
@@ -910,32 +897,35 @@ export default function AdminDashboardPage() {
 }
 
 function ContactRequestsAdminView() {
-  const { contactRequests: contextRequests, updateContactRequestStatus, deleteContactRequest } = useContext(AppDataContext);
-  const [liveRequests, setLiveRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'contactRequests'), (snapshot) => {
-      const list: any[] = [];
-      snapshot.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      setLiveRequests(list);
-    }, (err) => {
-      console.error("Error subscribing to contactRequests:", err);
-    });
+  const fetchRequests = async () => {
+    try {
+      const res = await fetch('/api/contact');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.requests)) {
+        setRequests(data.requests);
+      }
+    } catch (err) {
+      console.error("Error al obtener solicitudes:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 10000); // Polling suave cada 10 segundos
+    return () => clearInterval(interval);
   }, []);
 
-  const currentRequests = liveRequests.length > 0 ? liveRequests : contextRequests;
-
-  const filteredRequests = currentRequests.filter(req => {
+  const filteredRequests = requests.filter(req => {
     const matchesSearch =
       (req.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (req.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -961,12 +951,19 @@ function ContactRequestsAdminView() {
     }
   };
 
-  const handleStatusChange = async (requestId: string, newStatus: any) => {
+  const handleStatusChange = async (requestId: string, newStatus: string) => {
     try {
-      await updateContactRequestStatus(requestId, newStatus);
-      toast({ title: 'Estado actualizado', description: 'La solicitud ha sido modificada.' });
-      if (selectedRequest && selectedRequest.id === requestId) {
-        setSelectedRequest({ ...selectedRequest, status: newStatus });
+      const res = await fetch('/api/contact', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: requestId, status: newStatus }),
+      });
+      if (res.ok) {
+        toast({ title: 'Estado actualizado', description: 'La solicitud ha sido modificada.' });
+        setRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: newStatus } : r));
+        if (selectedRequest && selectedRequest.id === requestId) {
+          setSelectedRequest({ ...selectedRequest, status: newStatus });
+        }
       }
     } catch (error) {
       toast({ title: 'Error', description: 'No se pudo actualizar el estado.', variant: 'destructive' });
@@ -975,9 +972,12 @@ function ContactRequestsAdminView() {
 
   const handleDelete = async (requestId: string) => {
     try {
-      await deleteContactRequest(requestId);
-      toast({ title: 'Solicitud eliminada', description: 'Registro eliminado correctamente.' });
-      if (selectedRequest?.id === requestId) setSelectedRequest(null);
+      const res = await fetch(`/api/contact?id=${requestId}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast({ title: 'Solicitud eliminada', description: 'Registro eliminado correctamente.' });
+        setRequests(prev => prev.filter(r => r.id !== requestId));
+        if (selectedRequest?.id === requestId) setSelectedRequest(null);
+      }
     } catch (error) {
       toast({ title: 'Error', description: 'No se pudo eliminar el registro.', variant: 'destructive' });
     }
@@ -998,7 +998,7 @@ function ContactRequestsAdminView() {
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-stone-500 font-medium">Total Solicitudes</p>
-              <p className="text-2xl font-bold text-stone-900">{currentRequests.length}</p>
+              <p className="text-2xl font-bold text-stone-900">{requests.length}</p>
             </div>
             <div className="p-2.5 rounded-xl bg-green-100 text-green-700"><Mail className="w-5 h-5" /></div>
           </CardContent>
@@ -1009,7 +1009,7 @@ function ContactRequestsAdminView() {
             <div>
               <p className="text-xs text-stone-500 font-medium">Pendientes</p>
               <p className="text-2xl font-bold text-amber-600">
-                {currentRequests.filter(r => r.status === 'pending').length}
+                {requests.filter(r => r.status === 'pending').length}
               </p>
             </div>
             <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700"><Clock className="w-5 h-5" /></div>
@@ -1021,7 +1021,7 @@ function ContactRequestsAdminView() {
             <div>
               <p className="text-xs text-stone-500 font-medium">En Gestión</p>
               <p className="text-2xl font-bold text-blue-600">
-                {currentRequests.filter(r => r.status === 'contacted').length}
+                {requests.filter(r => r.status === 'contacted').length}
               </p>
             </div>
             <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700"><MessageSquare className="w-5 h-5" /></div>
@@ -1033,7 +1033,7 @@ function ContactRequestsAdminView() {
             <div>
               <p className="text-xs text-stone-500 font-medium">Productores</p>
               <p className="text-2xl font-bold text-emerald-600">
-                {currentRequests.filter(r => r.role === 'Productor de Frutillas').length}
+                {requests.filter(r => r.role === 'Productor de Frutillas').length}
               </p>
             </div>
             <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700"><CheckCircle2 className="w-5 h-5" /></div>

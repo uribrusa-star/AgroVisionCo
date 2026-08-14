@@ -12,12 +12,31 @@ const contactSchema = z.object({
   message: z.string().optional(),
 });
 
+// GET: Obtener todas las solicitudes de contacto para el Administrador
+export async function GET() {
+  try {
+    if (!adminDb) {
+      return NextResponse.json({ success: true, requests: [] });
+    }
+    const snapshot = await adminDb.collection('contactRequests').get();
+    const requests: any[] = [];
+    snapshot.forEach((doc) => {
+      requests.push({ id: doc.id, ...doc.data() });
+    });
+    requests.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return NextResponse.json({ success: true, requests });
+  } catch (error: any) {
+    console.error('Error al obtener solicitudes de contacto:', error);
+    return NextResponse.json({ success: false, requests: [] }, { status: 500 });
+  }
+}
+
+// POST: Registrar una nueva solicitud desde la landing page
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = contactSchema.parse(body);
 
-    // 1. Guardar solicitud en la colección contactRequests de Firestore mediante adminDb (servidor)
     try {
       if (adminDb) {
         await adminDb.collection('contactRequests').add({
@@ -104,11 +123,7 @@ export async function POST(request: Request) {
         replyTo: validatedData.email,
         subject: `[Contacto AgroVista] ${validatedData.name} - ${validatedData.role}`,
         html: htmlContent,
-      });
-    } else {
-      console.log('--- NUEVA SOLICITUD DE CONTACTO (MODO MOCK DE CORREO) ---');
-      console.log('Para:', destinationEmail);
-      console.log('Datos:', validatedData);
+      }).catch(() => {});
     }
 
     return NextResponse.json({
@@ -124,5 +139,38 @@ export async function POST(request: Request) {
       { success: false, message: 'Ocurrió un error al procesar el envío' },
       { status: 500 }
     );
+  }
+}
+
+// PATCH: Actualizar el estado de una solicitud
+export async function PATCH(request: Request) {
+  try {
+    const { id, status } = await request.json();
+    if (!id || !status) {
+      return NextResponse.json({ success: false, message: 'ID y estado son requeridos' }, { status: 400 });
+    }
+    if (adminDb) {
+      await adminDb.collection('contactRequests').doc(id).update({ status });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}
+
+// DELETE: Eliminar una solicitud
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'ID requerido' }, { status: 400 });
+    }
+    if (adminDb) {
+      await adminDb.collection('contactRequests').doc(id).delete();
+    }
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
