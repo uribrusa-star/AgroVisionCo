@@ -21,8 +21,9 @@ const GenerateWeatherAlertsInputSchema = z.object({
 export type GenerateWeatherAlertsInput = z.infer<typeof GenerateWeatherAlertsInputSchema>;
 
 const AlertSchema = z.object({
-    risk: z.string().describe('El riesgo principal identificado (ej. "Estrés por calor", "Daño por granizo", "Aumento de Botrytis").'),
-    recommendation: z.string().describe('Una recomendación clara y accionable para que el agrónomo mitigue el riesgo.'),
+    risk: z.string().describe('El riesgo principal identificado (ej. "Riesgo de Botrytis por Lluvias Intensas", "Heladas Tardías").'),
+    eventDate: z.string().optional().describe('El día o período específico donde se prevé la mayor intensidad del evento (ej. "Viernes 18 (35 mm)", "Madrugada del Jueves (1°C)").'),
+    recommendation: z.string().describe('Una recomendación clara y accionable indicando el día crítico y la acción preventiva.'),
     urgency: z.enum(['Alta', 'Media', 'Baja']).describe('El nivel de urgencia de la alerta.')
 });
 
@@ -46,13 +47,15 @@ const prompt = ai.definePrompt({
 
     **Instrucciones Obligatorias:**
 
-    1.  **Obtén y Analiza el Pronóstico:** Utiliza la herramienta \`getWeatherForecast\` con la latitud ({{{latitude}}}) y longitud ({{{longitude}}}) proporcionadas para obtener el pronóstico. Este es tu dato principal.
-    2.  **Cruza la Información:** Compara el pronóstico del tiempo obtenido con el estado actual del cultivo (dado por \`phenologyLogs\` y \`agronomistLogs\`). Por ejemplo, si el pronóstico indica lluvias persistentes y los registros de fenología muestran "Fructificación" o "Maduración", el riesgo de "Botrytis" es ALTO. Si el pronóstico indica temperaturas bajo cero, el riesgo de "helada" es crítico.
-    3.  **Genera Alertas Claras:** Para cada riesgo significativo que identifiques, crea una alerta en español.
-        *   **Riesgo:** Sé conciso y claro. Ej: "Riesgo de Botrytis por alta humedad y lluvias".
-        *   **Recomendación:** Debe ser una acción concreta. Ej: "Asegurar ventilación máxima de los túneles y preparar aplicación preventiva de fungicida específico para Botrytis".
+    1.  **Obtén y Analiza el Pronóstico:** Utiliza la herramienta \`getWeatherForecast\` con la latitud ({{{latitude}}}) y longitud ({{{longitude}}}) proporcionadas para obtener el pronóstico a 7 días. Este es tu dato principal.
+    2.  **Identifica los Días Específicos:** Si el pronóstico indica lluvias o heladas, ESPECIFICA EL DÍA O DÍAS EXACTOS de la semana con mayor intensidad o mayor riesgo acumulado (ejemplo: "Viernes (28 mm)" o "Madrugada del Jueves (1°C)").
+    3.  **Cruza la Información:** Compara el pronóstico del tiempo obtenido con el estado actual del cultivo (dado por \`phenologyLogs\` y \`agronomistLogs\`). Por ejemplo, si el pronóstico indica lluvias persistentes y los registros de fenología muestran "Fructificación" o "Maduración", el riesgo de "Botrytis" es ALTO. Si el pronóstico indica temperaturas bajo cero o cercanas a 0°C, el riesgo de "helada" es crítico.
+    4.  **Genera Alertas Claras:** Para cada riesgo significativo que identifiques, crea una alerta en español.
+        *   **Riesgo:** Sé conciso y claro. Ej: "Riesgo Severo de Botrytis por Lluvias Intensas".
+        *   **eventDate:** Indica el día exacto de mayor afectación. Ej: "Viernes 18 de Agosto (32 mm acumulados)".
+        *   **Recomendación:** Debe ser una acción concreta especificando qué hacer antes o después del día del evento. Ej: "Se prevé mayor lluvia el Viernes (32mm). Asegurar ventilación de microtúneles el sábado y aplicar fungicida preventivo previo al evento".
         *   **Urgencia:** Determina la urgencia ('Alta', 'Media', 'Baja') basándote en el impacto potencial.
-    4.  **Respuesta Mínima:** Siempre debes generar al menos una alerta. Si el clima es ideal y no hay riesgos, genera una alerta de urgencia 'Baja' con un riesgo como "Condiciones óptimas de cultivo" y una recomendación como "Mantener monitoreo regular".
+    5.  **Respuesta Mínima:** Siempre debes generar al menos una alerta. Si el clima es ideal y no hay riesgos, genera una alerta de urgencia 'Baja' con un riesgo como "Condiciones óptimas de cultivo" y una recomendación como "Mantener monitoreo regular sin riesgos climáticos inminentes".
 
     **Datos de Contexto:**
     -   **Estado Fenológico:** {{{phenologyLogs}}}

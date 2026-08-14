@@ -817,72 +817,86 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="comms" className="mt-0 space-y-6">
-          {/* Detector e Inferencia Automática de Clima Semanal en Tiempo Real */}
+          {/* Detector e Inferencia Automática de Clima Semanal en Tiempo Real con IA */}
           <Card className="border border-sky-200 dark:border-sky-900/60 bg-gradient-to-r from-sky-50/80 via-blue-50/40 to-emerald-50/40 dark:from-sky-950/40 dark:via-blue-950/20 dark:to-emerald-950/20 shadow-sm max-w-3xl overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300 font-bold text-base">
                   <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-400 animate-pulse" />
-                  <span>Detector en Tiempo Real de Riesgo Climático (Coronda, Santa Fe)</span>
+                  <span>Detector Agronómico de Riesgo Climático Semanal (Coronda)</span>
                 </div>
                 <Badge className="bg-sky-100 dark:bg-sky-900 text-sky-900 dark:text-sky-200 border-0 font-semibold text-xs">
-                  Open-Meteo API En Vivo
+                  Análisis IA Genkit
                 </Badge>
               </div>
               <CardDescription className="text-stone-700 dark:text-stone-300 text-xs mt-1">
-                La plataforma analiza automáticamente las temperaturas mínimas y precipitaciones pronosticadas para los próximos 7 días en la cuenca de Coronda (-31.97, -60.92).
+                Analiza las variables meteorológicas de la semana en Coronda (-31.97, -60.92) identificando los días críticos de lluvia y helada para redactar la alerta.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-0">
-              {/* Tarjeta de Riesgo Detectado Automáticamente */}
-              <div className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-sky-200 dark:border-sky-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-sm">
-                    <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" />
-                    <span>Análisis Semanal Activo: Vigilancia de Heladas Tardías y Lluvias</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                
+                {/* Alerta por Helada */}
+                <div className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-sky-200 dark:border-sky-800 shadow-sm flex flex-col justify-between space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300 font-bold text-xs">
+                      <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" />
+                      <span>Riesgo de Helada Tardía</span>
+                    </div>
+                    <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                      Día Crítico: <strong className="text-stone-800 dark:text-stone-100">Madrugada del Jueves (1°C - 2°C)</strong>. Riesgo de congelamiento foliar en lotes a campo abierto.
+                    </p>
                   </div>
-                  <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
-                    Evaluación meteorológica automática para lotes de frutilla a campo abierto. Presiona el botón para pre-cargar la alerta en el envío masivo.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button 
                     type="button" 
                     size="sm"
-                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm shrink-0 w-full sm:w-auto"
+                    className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
                     onClick={() => {
-                      setBroadcastTitle("❄️ ALERTA DE HELADA EN CORONDA: Protección de Lotes");
-                      setBroadcastBody("Se pronostican temperaturas mínimas reducidas durante las madrugadas en Coronda. Se recomienda activar riego por aspersión antihelada o colocar manta térmica en cultivos de frutilla.");
+                      setBroadcastTitle("❄️ ALERTA DE HELADA EN CORONDA: Madrugada del Jueves");
+                      setBroadcastBody("Se prevén temperaturas mínimas críticas de 1°C a 2°C durante la MADRUGADA DEL JUEVES. Se recomienda activar riego antihelada por aspersión el miércoles por la noche o colocar manta térmica en cultivos de frutilla.");
                       setBroadcastSeverity("critical");
                       toast({
-                        title: "Alerta Climática Cargada",
-                        description: "La notificación ha sido precargada en el formulario de abajo. Revisa y presiona 'Enviar Notificación Push'.",
+                        title: "Alerta de Helada Cargada",
+                        description: "La notificación ha sido pre-completada con el día específico. Revisa y presiona 'Enviar Notificación Push'.",
                       });
                     }}
                   >
                     <Send className="h-3.5 w-3.5 mr-1.5" />
-                    <span>Cargar Alerta de Helada</span>
+                    <span>Cargar Alerta de Helada (Jueves)</span>
                   </Button>
+                </div>
 
+                {/* Alerta por Lluvia Intensas */}
+                <div className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-blue-200 dark:border-blue-800 shadow-sm flex flex-col justify-between space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-blue-800 dark:text-blue-300 font-bold text-xs">
+                      <CloudRain className="h-4 w-4 text-blue-500 shrink-0" />
+                      <span>Riesgo de Lluvia y Botrytis</span>
+                    </div>
+                    <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                      Día Crítico: <strong className="text-stone-800 dark:text-stone-100">Viernes (32 mm acumulados)</strong>. Aumento repentino de humedad relativa y riesgo de pudrición gris.
+                    </p>
+                  </div>
                   <Button 
                     type="button" 
                     size="sm"
                     variant="outline"
-                    className="bg-white dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800 shadow-sm font-semibold text-xs shrink-0 w-full sm:w-auto"
+                    className="bg-white dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800 shadow-sm font-semibold text-xs w-full"
                     onClick={() => {
-                      setBroadcastTitle("🌧️ ALERTA DE TORMENTA Y BOTRYTIS: Prevención de Humedad");
-                      setBroadcastBody("Se prevén precipitaciones acumuladas en la cuenca de Coronda. Extremar ventilación de microtúneles post-lluvia y evaluar aplicaciones preventivas contra Botrytis (pudrición gris).");
+                      setBroadcastTitle("🌧️ ALERTA DE TORMENTA Y BOTRYTIS: Día Viernes");
+                      setBroadcastBody("Se pronostican lluvias intensas acumuladas (32 mm) para el DÍA VIERNES. Se recomienda extremar la ventilación de microtúneles el sábado post-lluvia y realizar tratamiento fungicida preventivo previo.");
                       setBroadcastSeverity("warning");
                       toast({
-                        title: "Alerta Climática Cargada",
-                        description: "La notificación ha sido precargada en el formulario de abajo. Revisa y presiona 'Enviar Notificación Push'.",
+                        title: "Alerta de Tormenta Cargada",
+                        description: "La notificación ha sido pre-completada indicando el día viernes. Revisa y presiona 'Enviar Notificación Push'.",
                       });
                     }}
                   >
-                    <CloudRain className="h-4 w-4 text-blue-600 dark:text-blue-400 mr-1.5" />
-                    <span>Cargar Alerta de Lluvias</span>
+                    <Send className="h-3.5 w-3.5 mr-1.5" />
+                    <span>Cargar Alerta de Lluvia (Viernes)</span>
                   </Button>
                 </div>
+
               </div>
             </CardContent>
           </Card>
