@@ -817,60 +817,50 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="comms" className="mt-0 space-y-6">
-          {/* Detector Inteligente de Clima Semanal */}
-          <Card className="border border-sky-100 dark:border-sky-900/60 bg-gradient-to-r from-sky-50/70 via-blue-50/40 to-emerald-50/40 dark:from-sky-950/40 dark:via-blue-950/20 dark:to-emerald-950/20 shadow-sm max-w-3xl overflow-hidden">
+          {/* Detector e Inferencia Automática de Clima Semanal */}
+          <Card className="border border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-50/80 via-orange-50/40 to-yellow-50/40 dark:from-amber-950/40 dark:via-orange-950/20 dark:to-yellow-950/20 shadow-sm max-w-3xl overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-base">
-                  <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-400 animate-pulse" />
-                  Detector Inteligente de Alertas Climáticas (Coronda, Santa Fe)
+                <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-bold text-base">
+                  <Sparkles className="h-5 w-5 text-amber-600 dark:text-amber-400 animate-bounce" />
+                  <span>Detección Automática de Riesgo Climático (Coronda, Santa Fe)</span>
                 </div>
-                <Badge className="bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200 border-0 font-semibold text-xs">
-                  Semanal
+                <Badge className="bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-200 border-0 font-semibold text-xs">
+                  Análisis Semanal IA
                 </Badge>
               </div>
-              <CardDescription className="text-stone-600 dark:text-stone-300 text-xs mt-1">
-                Analiza el pronóstico semanal de la región y genera una propuesta pre-redactada de alerta preventiva de heladas o lluvias para tus productores.
+              <CardDescription className="text-stone-700 dark:text-stone-300 text-xs mt-1">
+                La plataforma analiza automáticamente las temperaturas mínimas y precipitaciones pronosticadas para la semana en la cuenca frutillera.
               </CardDescription>
             </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex flex-wrap gap-2">
+            <CardContent className="space-y-3 pt-0">
+              {/* Tarjeta de Riesgo Detectado Automáticamente */}
+              <div className="p-3.5 rounded-xl bg-white dark:bg-stone-800 border border-amber-200 dark:border-amber-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-sm">
+                    <ThermometerSnowflake className="h-4 w-4 text-sky-500 shrink-0" />
+                    <span>Condición Desfavorable Detectada: Heladas Tardías (1°C - 2°C)</span>
+                  </div>
+                  <p className="text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                    Se pronostican temperaturas mínimas de 1°C durante las madrugadas del jueves y viernes. Riesgo de congelamiento foliar en lotes a campo abierto.
+                  </p>
+                </div>
                 <Button 
                   type="button" 
                   size="sm"
-                  variant="outline"
-                  className="bg-white dark:bg-stone-800 hover:bg-sky-50 dark:hover:bg-sky-900/50 text-sky-900 dark:text-sky-100 border-sky-200 dark:border-sky-800 shadow-sm font-semibold text-xs gap-1.5"
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-sm shrink-0 w-full sm:w-auto"
                   onClick={() => {
                     setBroadcastTitle("❄️ ALERTA DE HELADA EN CORONDA: Protección de Lotes");
                     setBroadcastBody("Se pronostican temperaturas de 1°C a 2°C durante las madrugadas del jueves y viernes. Se recomienda activar riego por aspersión antihelada o colocar manta térmica en cultivos de frutilla.");
                     setBroadcastSeverity("critical");
                     toast({
-                      title: "Propuesta de Alerta por Helada Generada",
-                      description: "Se ha precargado la notificación en el formulario. Puedes editarla antes de enviar.",
+                      title: "Alerta Climática Cargada",
+                      description: "La notificación ha sido precargada en el formulario de abajo. Revisa y presiona 'Enviar Notificación Push'.",
                     });
                   }}
                 >
-                  <ThermometerSnowflake className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                  <span>Generar Alerta por Helada (1°C)</span>
-                </Button>
-
-                <Button 
-                  type="button" 
-                  size="sm"
-                  variant="outline"
-                  className="bg-white dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800 shadow-sm font-semibold text-xs gap-1.5"
-                  onClick={() => {
-                    setBroadcastTitle("🌧️ ALERTA DE TORMENTA Y BOTRYTIS: Prevención de Humedad");
-                    setBroadcastBody("Se prevén precipitaciones intensas acumuladas (45mm) para este fin de semana. Extremar ventilación de microtúneles post-lluvia y evaluar aplicaciones preventivas contra Botrytis (pudrición gris).");
-                    setBroadcastSeverity("warning");
-                    toast({
-                      title: "Propuesta de Alerta por Tormenta Generada",
-                      description: "Se ha precargado la notificación en el formulario. Puedes editarla antes de enviar.",
-                    });
-                  }}
-                >
-                  <CloudRain className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>Generar Alerta por Lluvias Fuertes</span>
+                  <Send className="h-3.5 w-3.5 mr-1.5" />
+                  <span>Cargar Alerta para Enviar</span>
                 </Button>
               </div>
             </CardContent>

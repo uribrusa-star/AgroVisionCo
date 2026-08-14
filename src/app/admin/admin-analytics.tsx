@@ -181,7 +181,7 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
     ];
   }, []);
 
-  // 7. Distribución por Variedad de Frutilla
+  // 7. Distribución por Variedad de Frutilla (Paleta de Colores Contrastados)
   const strawberryVarietiesData = useMemo(() => {
     const varietyCount: { [key: string]: number } = {};
     
@@ -196,14 +196,15 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
     });
 
     const entries = Object.entries(varietyCount);
-    const COLORS = ['#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac'];
+    // Paleta de colores contrastados: Azul, Amarillo, Verde, Rojo, Púrpura
+    const COLORS = ['#2563eb', '#eab308', '#16a34a', '#dc2626', '#8b5cf6'];
 
     if (entries.length === 0) {
       return [
-        { name: 'San Andreas', val: 42, color: '#15803d' },
-        { name: 'Fortuna', val: 28, color: '#16a34a' },
-        { name: 'Fronteras', val: 18, color: '#22c55e' },
-        { name: 'Camino Real', val: 12, color: '#4ade80' },
+        { name: 'San Andreas', val: 42, color: '#2563eb' },
+        { name: 'Fortuna', val: 28, color: '#eab308' },
+        { name: 'Fronteras', val: 18, color: '#16a34a' },
+        { name: 'Camino Real', val: 12, color: '#dc2626' },
       ];
     }
 
@@ -487,7 +488,7 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       {/* FILA 2: Radar Fitosanitario & Suscripciones SaaS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Radar de Fitosanidad / Plagas del Mes */}
+        {/* Radar de Fitosanidad / Plagas del Mes (Grafico Vertical) */}
         <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg dark:text-stone-100">
@@ -499,24 +500,24 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
           <CardContent>
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={pestFrequencyData} margin={{ top: 10, right: 20, left: 40, bottom: 10 }}>
-                  <CartesianGrid horizontal={false} strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis type="number" tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                <BarChart data={pestFrequencyData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-white dark:bg-stone-800 rounded-lg shadow-md border p-2 text-xs font-semibold">
+                          <div className="bg-white dark:bg-stone-800 rounded-lg shadow-md border p-2.5 text-xs font-semibold">
                             <span>{payload[0].payload.name}</span>
-                            <div className="text-red-500 dark:text-red-400 mt-0.5">{payload[0].value} reportes</div>
+                            <div className="text-red-500 dark:text-red-400 mt-1">{payload[0].value} reportes de campo</div>
                           </div>
                         );
                       }
                       return null;
                     }}
                   />
-                  <Bar dataKey="count" fill="#ef4444" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="count" fill="#ef4444" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
