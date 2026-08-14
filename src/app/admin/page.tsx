@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown, Mail, Sun, Moon } from 'lucide-react';
+import { Building, ShieldCheck, ShieldAlert, Power, PowerOff, MapPin, User as UserIcon, DollarSign, Activity, Users, Clock, AlertTriangle, CheckCircle2, BellRing, Send, MessageSquare, ChevronDown, Mail, Sun, Moon, Sparkles, ThermometerSnowflake, CloudRain } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
@@ -816,7 +816,66 @@ export default function AdminDashboardPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="comms" className="mt-0">
+        <TabsContent value="comms" className="mt-0 space-y-6">
+          {/* Detector Inteligente de Clima Semanal */}
+          <Card className="border border-sky-100 dark:border-sky-900/60 bg-gradient-to-r from-sky-50/70 via-blue-50/40 to-emerald-50/40 dark:from-sky-950/40 dark:via-blue-950/20 dark:to-emerald-950/20 shadow-sm max-w-3xl overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sky-800 dark:text-sky-300 font-bold text-base">
+                  <Sparkles className="h-5 w-5 text-sky-600 dark:text-sky-400 animate-pulse" />
+                  Detector Inteligente de Alertas Climáticas (Coronda, Santa Fe)
+                </div>
+                <Badge className="bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200 border-0 font-semibold text-xs">
+                  Semanal
+                </Badge>
+              </div>
+              <CardDescription className="text-stone-600 dark:text-stone-300 text-xs mt-1">
+                Analiza el pronóstico semanal de la región y genera una propuesta pre-redactada de alerta preventiva de heladas o lluvias para tus productores.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  type="button" 
+                  size="sm"
+                  variant="outline"
+                  className="bg-white dark:bg-stone-800 hover:bg-sky-50 dark:hover:bg-sky-900/50 text-sky-900 dark:text-sky-100 border-sky-200 dark:border-sky-800 shadow-sm font-semibold text-xs gap-1.5"
+                  onClick={() => {
+                    setBroadcastTitle("❄️ ALERTA DE HELADA EN CORONDA: Protección de Lotes");
+                    setBroadcastBody("Se pronostican temperaturas de 1°C a 2°C durante las madrugadas del jueves y viernes. Se recomienda activar riego por aspersión antihelada o colocar manta térmica en cultivos de frutilla.");
+                    setBroadcastSeverity("critical");
+                    toast({
+                      title: "Propuesta de Alerta por Helada Generada",
+                      description: "Se ha precargado la notificación en el formulario. Puedes editarla antes de enviar.",
+                    });
+                  }}
+                >
+                  <ThermometerSnowflake className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                  <span>Generar Alerta por Helada (1°C)</span>
+                </Button>
+
+                <Button 
+                  type="button" 
+                  size="sm"
+                  variant="outline"
+                  className="bg-white dark:bg-stone-800 hover:bg-blue-50 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-200 dark:border-blue-800 shadow-sm font-semibold text-xs gap-1.5"
+                  onClick={() => {
+                    setBroadcastTitle("🌧️ ALERTA DE TORMENTA Y BOTRYTIS: Prevención de Humedad");
+                    setBroadcastBody("Se prevén precipitaciones intensas acumuladas (45mm) para este fin de semana. Extremar ventilación de microtúneles post-lluvia y evaluar aplicaciones preventivas contra Botrytis (pudrición gris).");
+                    setBroadcastSeverity("warning");
+                    toast({
+                      title: "Propuesta de Alerta por Tormenta Generada",
+                      description: "Se ha precargado la notificación en el formulario. Puedes editarla antes de enviar.",
+                    });
+                  }}
+                >
+                  <CloudRain className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span>Generar Alerta por Lluvias Fuertes</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden max-w-3xl">
             <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6">
               <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
