@@ -208,17 +208,13 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       return { result, seriesList, yearsPresent };
     }
 
-    // Modo por establecimiento para un año específico
+    // Modo por establecimiento para un año específico (Sólo datos reales de cosecha)
     for (let i = startMonthIdx; i <= effectiveEnd; i++) {
       const monthData: any = { month: monthNames[i] };
       
-      activeEstNames.forEach((estName, idx) => {
+      activeEstNames.forEach((estName) => {
         const realVal = yearMonthEstMap[targetYear]?.[i]?.[estName];
-        if (realVal !== undefined) {
-          monthData[estName] = realVal;
-        } else {
-          monthData[estName] = Math.round(150 + (idx + 1) * 80 + (i - startMonthIdx) * 120);
-        }
+        monthData[estName] = realVal !== undefined ? realVal : 0;
       });
 
       result.push(monthData);
@@ -439,17 +435,21 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
 
           <div className="w-full sm:w-auto">
             <Select value={selectedSeasonYear} onValueChange={setSelectedSeasonYear}>
-              <SelectTrigger className="w-full sm:w-[220px] bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-xs font-semibold">
+              <SelectTrigger className="w-full sm:w-[260px] bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-xs font-semibold">
                 <SelectValue placeholder="Seleccionar vista" />
               </SelectTrigger>
               <SelectContent className="dark:bg-stone-900 dark:border-stone-800">
-                <SelectItem value="current" className="text-xs font-medium">Temporada Actual (2026)</SelectItem>
+                <SelectItem value="compare" className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                  📊 Comparativa Total (2025 vs 2026)
+                </SelectItem>
+                <SelectItem value="current" className="text-xs font-medium">
+                  🟢 Temporada Actual (2026 por Productor)
+                </SelectItem>
                 {establishmentHarvestTrend.yearsPresent.filter(y => y !== new Date().getFullYear()).map(y => (
-                  <SelectItem key={y} value={String(y)} className="text-xs font-medium">Temporada {y}</SelectItem>
+                  <SelectItem key={y} value={String(y)} className="text-xs font-medium">
+                    🔵 Temporada {y} (Por Productor)
+                  </SelectItem>
                 ))}
-                {establishmentHarvestTrend.yearsPresent.length > 1 && (
-                  <SelectItem value="compare" className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">📊 Comparativa Año tras Año</SelectItem>
-                )}
               </SelectContent>
             </Select>
           </div>
