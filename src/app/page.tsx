@@ -137,26 +137,7 @@ export default function LandingPage() {
           <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVista</span>
         </div>
 
-        <nav className="flex items-center gap-3">
-          {/* Coronda Origin Location Pin with Interactive Popover */}
-          <div className="relative group">
-            <button 
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100/80 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800 text-green-700 dark:text-green-300 transition-all border border-green-300/50 dark:border-green-700/50 shadow-sm"
-              title="Origen del Proyecto: Coronda, Santa Fe"
-            >
-              <MapPin className="w-4.5 h-4.5 text-green-600 dark:text-green-400" />
-            </button>
-            <div className="absolute top-full right-0 mt-2 hidden group-hover:flex group-focus:flex flex-col gap-1 p-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-green-200 dark:border-green-800 shadow-xl rounded-xl w-64 z-50 text-xs animate-in fade-in zoom-in-95 pointer-events-none">
-              <div className="flex items-center gap-1.5 font-bold text-green-700 dark:text-green-400">
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                <span>Origen del Proyecto</span>
-              </div>
-              <p className="text-stone-600 dark:text-stone-300 leading-snug">
-                Nacido en <strong>Coronda, Santa Fe</strong> — Capital Nacional de la Frutilla 🍓
-              </p>
-            </div>
-          </div>
-
+        <nav>
           <Link href="/login">
             <Button variant="outline" className="text-green-700 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/50">
               Iniciar Sesión
