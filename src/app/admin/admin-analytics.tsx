@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { 
   Sprout, 
@@ -133,15 +134,16 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       .slice(0, 5);
   }, [harvests, establishments, totalKg]);
 
-  // 3. Curva de Cosecha Mensual Comparativa por Establecimiento y Año tras Año (si existen datos)
+  // 3. Curva de Cosecha Mensual Comparativa por Establecimiento y Año (con Selector de Temporada)
+  const [selectedSeasonYear, setSelectedSeasonYear] = useState<string>('current');
+
   const establishmentHarvestTrend = useMemo(() => {
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const currentMonthIdx = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
     // Identificar todos los años únicos presentes en los registros de cosecha
-    const yearsPresent = Array.from(new Set(harvests.map(h => h.date ? new Date(h.date).getFullYear() : currentYear))).sort();
-    const hasMultipleYears = yearsPresent.length > 1;
+    const yearsPresent = Array.from(new Set(harvests.map(h => h.date ? new Date(h.date).getFullYear() : currentYear))).sort((a, b) => b - a);
 
     // Auxiliar para mapear ID de establecimiento -> Nombre de Productor / Establecimiento
     const estMap: { [id: string]: string } = {};
@@ -171,9 +173,11 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       }
     });
 
+    const targetYear = selectedSeasonYear === 'current' ? currentYear : (selectedSeasonYear === 'compare' ? currentYear : Number(selectedSeasonYear));
+
     let maxMonthIdx = currentMonthIdx;
-    if (yearMonthEstMap[currentYear]) {
-      Object.keys(yearMonthEstMap[currentYear]).forEach(mStr => {
+    if (yearMonthEstMap[targetYear]) {
+      Object.keys(yearMonthEstMap[targetYear]).forEach(mStr => {
         const mInt = Number(mStr);
         if (mInt > maxMonthIdx) maxMonthIdx = mInt;
       });
@@ -183,12 +187,33 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
     const effectiveEnd = Math.max(startMonthIdx, maxMonthIdx);
     const result = [];
 
+    const COLORS = ['#16a34a', '#2563eb', '#eab308', '#dc2626', '#8b5cf6', '#ec4899'];
+
+    if (selectedSeasonYear === 'compare') {
+      // Muestra la comparación interanual de Totales por Año
+      for (let i = startMonthIdx; i <= effectiveEnd; i++) {
+        const monthData: any = { month: monthNames[i] };
+        yearsPresent.forEach(y => {
+          monthData[`Año ${y}`] = yearTotalMap[y]?.[i] || 0;
+        });
+        result.push(monthData);
+      }
+
+      const seriesList = yearsPresent.map((y, idx) => ({
+        name: `Año ${y}`,
+        color: COLORS[idx % COLORS.length],
+        isDashed: idx > 0
+      }));
+
+      return { result, seriesList, yearsPresent };
+    }
+
+    // Modo por establecimiento para un año específico
     for (let i = startMonthIdx; i <= effectiveEnd; i++) {
       const monthData: any = { month: monthNames[i] };
       
-      // Datos de establecimientos para el año actual
       activeEstNames.forEach((estName, idx) => {
-        const realVal = yearMonthEstMap[currentYear]?.[i]?.[estName];
+        const realVal = yearMonthEstMap[targetYear]?.[i]?.[estName];
         if (realVal !== undefined) {
           monthData[estName] = realVal;
         } else {
@@ -196,36 +221,17 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
         }
       });
 
-      // Si existen datos de años anteriores, agregar la serie del año pasado como comparativa
-      if (hasMultipleYears) {
-        const prevYear = yearsPresent[yearsPresent.length - 2];
-        const prevYearTotal = yearTotalMap[prevYear]?.[i];
-        if (prevYearTotal !== undefined) {
-          monthData[`Total ${prevYear}`] = prevYearTotal;
-        }
-      }
-
       result.push(monthData);
     }
 
-    const COLORS = ['#16a34a', '#2563eb', '#eab308', '#dc2626', '#8b5cf6', '#ec4899'];
     const seriesList = activeEstNames.map((name, idx) => ({
       name,
       color: COLORS[idx % COLORS.length],
       isDashed: false
     }));
 
-    if (hasMultipleYears) {
-      const prevYear = yearsPresent[yearsPresent.length - 2];
-      seriesList.push({
-        name: `Total ${prevYear}`,
-        color: '#94a3b8',
-        isDashed: true
-      });
-    }
-
-    return { result, seriesList, hasMultipleYears };
-  }, [harvests, establishments]);
+    return { result, seriesList, yearsPresent };
+  }, [harvests, establishments, selectedSeasonYear]);
 
   // 4. Eficiencia de Mano de Obra y Recolección
   const laborEfficiency = useMemo(() => {
@@ -418,12 +424,35 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
 
       {/* BLOQUE: Evolución de Cosecha de la Temporada Actual Comparativa por Establecimiento */}
       <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg dark:text-stone-100">
-            <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            Curva de Cosecha Mensual Comparativa por Establecimiento (kg)
-          </CardTitle>
-          <CardDescription className="dark:text-stone-400">Evolución mensual comparando el volumen de cosecha de cada productor en la temporada</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg dark:text-stone-100">
+              <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              Curva de Cosecha Mensual Comparativa (kg)
+            </CardTitle>
+            <CardDescription className="dark:text-stone-400">
+              {selectedSeasonYear === 'compare' 
+                ? "Comparativa interanual de volumen total cosechado año tras año" 
+                : "Evolución mensual comparando el volumen de cosecha de cada productor"}
+            </CardDescription>
+          </div>
+
+          <div className="w-full sm:w-auto">
+            <Select value={selectedSeasonYear} onValueChange={setSelectedSeasonYear}>
+              <SelectTrigger className="w-full sm:w-[220px] bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-xs font-semibold">
+                <SelectValue placeholder="Seleccionar vista" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-stone-900 dark:border-stone-800">
+                <SelectItem value="current" className="text-xs font-medium">Temporada Actual (2026)</SelectItem>
+                {establishmentHarvestTrend.yearsPresent.filter(y => y !== new Date().getFullYear()).map(y => (
+                  <SelectItem key={y} value={String(y)} className="text-xs font-medium">Temporada {y}</SelectItem>
+                ))}
+                {establishmentHarvestTrend.yearsPresent.length > 1 && (
+                  <SelectItem value="compare" className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">📊 Comparativa Año tras Año</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
