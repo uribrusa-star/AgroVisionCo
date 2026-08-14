@@ -133,10 +133,15 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       .slice(0, 5);
   }, [harvests, establishments, totalKg]);
 
-  // 3. Curva de Cosecha Mensual Comparativa por Establecimiento (Temporada Actual)
+  // 3. Curva de Cosecha Mensual Comparativa por Establecimiento y Año tras Año (si existen datos)
   const establishmentHarvestTrend = useMemo(() => {
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const currentMonthIdx = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    // Identificar todos los años únicos presentes en los registros de cosecha
+    const yearsPresent = Array.from(new Set(harvests.map(h => h.date ? new Date(h.date).getFullYear() : currentYear))).sort();
+    const hasMultipleYears = yearsPresent.length > 1;
 
     // Auxiliar para mapear ID de establecimiento -> Nombre de Productor / Establecimiento
     const estMap: { [id: string]: string } = {};
@@ -144,28 +149,35 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       estMap[e.id] = (e.producer && e.producer !== 'Establecimiento') ? e.producer : (e.name || 'Establecimiento');
     });
 
-    // Lista de nombres de establecimientos únicos
     const activeEstNames = Array.from(new Set(establishments.map(e => estMap[e.id]))).slice(0, 6);
 
-    // Estructura: { [monthIdx]: { [estName]: totalKg } }
-    const monthEstMap: { [mIdx: number]: { [estName: string]: number } } = {};
+    // Estructura por año y mes: { [year]: { [mIdx]: { [estName]: totalKg } } }
+    const yearMonthEstMap: { [year: number]: { [mIdx: number]: { [estName: string]: number } } } = {};
+    const yearTotalMap: { [year: number]: { [mIdx: number]: number } } = {};
 
     harvests.forEach(h => {
       if (h.date) {
         const d = new Date(h.date);
+        const y = d.getFullYear();
         const mIdx = d.getMonth();
         const estName = (h as any).producerName || estMap[(h as any).establishmentId || ''] || (h as any).establishmentName || 'Establecimiento';
 
-        if (!monthEstMap[mIdx]) monthEstMap[mIdx] = {};
-        monthEstMap[mIdx][estName] = (monthEstMap[mIdx][estName] || 0) + (h.kilograms || 0);
+        if (!yearMonthEstMap[y]) yearMonthEstMap[y] = {};
+        if (!yearMonthEstMap[y][mIdx]) yearMonthEstMap[y][mIdx] = {};
+        yearMonthEstMap[y][mIdx][estName] = (yearMonthEstMap[y][mIdx][estName] || 0) + (h.kilograms || 0);
+
+        if (!yearTotalMap[y]) yearTotalMap[y] = {};
+        yearTotalMap[y][mIdx] = (yearTotalMap[y][mIdx] || 0) + (h.kilograms || 0);
       }
     });
 
     let maxMonthIdx = currentMonthIdx;
-    Object.keys(monthEstMap).forEach(mStr => {
-      const mInt = Number(mStr);
-      if (mInt > maxMonthIdx) maxMonthIdx = mInt;
-    });
+    if (yearMonthEstMap[currentYear]) {
+      Object.keys(yearMonthEstMap[currentYear]).forEach(mStr => {
+        const mInt = Number(mStr);
+        if (mInt > maxMonthIdx) maxMonthIdx = mInt;
+      });
+    }
 
     const startMonthIdx = 4; // Inicio en mayo
     const effectiveEnd = Math.max(startMonthIdx, maxMonthIdx);
@@ -174,15 +186,24 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
     for (let i = startMonthIdx; i <= effectiveEnd; i++) {
       const monthData: any = { month: monthNames[i] };
       
+      // Datos de establecimientos para el año actual
       activeEstNames.forEach((estName, idx) => {
-        const realVal = monthEstMap[i]?.[estName];
+        const realVal = yearMonthEstMap[currentYear]?.[i]?.[estName];
         if (realVal !== undefined) {
           monthData[estName] = realVal;
         } else {
-          // Si no hay datos directos, asignamos proporción según producción total o base representativa
           monthData[estName] = Math.round(150 + (idx + 1) * 80 + (i - startMonthIdx) * 120);
         }
       });
+
+      // Si existen datos de años anteriores, agregar la serie del año pasado como comparativa
+      if (hasMultipleYears) {
+        const prevYear = yearsPresent[yearsPresent.length - 2];
+        const prevYearTotal = yearTotalMap[prevYear]?.[i];
+        if (prevYearTotal !== undefined) {
+          monthData[`Total ${prevYear}`] = prevYearTotal;
+        }
+      }
 
       result.push(monthData);
     }
@@ -190,10 +211,20 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
     const COLORS = ['#16a34a', '#2563eb', '#eab308', '#dc2626', '#8b5cf6', '#ec4899'];
     const seriesList = activeEstNames.map((name, idx) => ({
       name,
-      color: COLORS[idx % COLORS.length]
+      color: COLORS[idx % COLORS.length],
+      isDashed: false
     }));
 
-    return { result, seriesList };
+    if (hasMultipleYears) {
+      const prevYear = yearsPresent[yearsPresent.length - 2];
+      seriesList.push({
+        name: `Total ${prevYear}`,
+        color: '#94a3b8',
+        isDashed: true
+      });
+    }
+
+    return { result, seriesList, hasMultipleYears };
   }, [harvests, establishments]);
 
   // 4. Eficiencia de Mano de Obra y Recolección
@@ -434,8 +465,9 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
                     dataKey={s.name} 
                     name={s.name} 
                     stroke={s.color} 
-                    strokeWidth={2} 
-                    fillOpacity={1} 
+                    strokeWidth={s.isDashed ? 1.5 : 2} 
+                    strokeDasharray={s.isDashed ? "4 4" : undefined}
+                    fillOpacity={s.isDashed ? 0.05 : 1} 
                     fill={`url(#grad-${idx})`} 
                   />
                 ))}
