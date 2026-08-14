@@ -134,6 +134,25 @@ export default function LandingPage() {
             loop
           />
           <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVista</span>
+          
+          {/* Coronda Origin Location Pin with Interactive Popover */}
+          <div className="relative group">
+            <button 
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100/80 dark:bg-green-900/50 hover:bg-green-200 dark:hover:bg-green-800 text-green-700 dark:text-green-300 transition-all border border-green-300/50 dark:border-green-700/50 shadow-sm"
+              title="Origen del Proyecto: Coronda, Santa Fe"
+            >
+              <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:flex group-focus:flex flex-col gap-1 p-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-green-200 dark:border-green-800 shadow-xl rounded-xl w-64 z-50 text-xs animate-in fade-in zoom-in-95 pointer-events-none">
+              <div className="flex items-center gap-1.5 font-bold text-green-700 dark:text-green-400">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
+                <span>Origen del Proyecto</span>
+              </div>
+              <p className="text-stone-600 dark:text-stone-300 leading-snug">
+                Nacido en <strong>Coronda, Santa Fe</strong> — Capital Nacional de la Frutilla 🍓
+              </p>
+            </div>
+          </div>
         </div>
         <nav>
           <Link href="/login">
@@ -163,10 +182,6 @@ export default function LandingPage() {
           </div>
           
           <div className="relative z-10 mx-auto max-w-5xl text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 dark:bg-green-900/40 border border-green-400/30 backdrop-blur-md text-green-300 text-xs sm:text-sm font-semibold mb-6 shadow-lg animate-fade-in">
-              <MapPin className="h-4 w-4 text-green-400 shrink-0" />
-              <span>Nacido en <strong>Coronda, Santa Fe</strong> — Capital Nacional de la Frutilla</span>
-            </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md">
               Trazabilidad Agrícola Inteligente para la Producción de Frutillas
             </h1>
