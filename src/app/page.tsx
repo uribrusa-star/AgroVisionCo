@@ -210,7 +210,14 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Panel de Control</DialogTitle>
-                      <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de Control" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      {/* Vista para celulares: scroll vertical amplio y legible */}
+                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
+                        <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de Control Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                      </div>
+                      {/* Vista para pantallas de PC / Escritorio */}
+                      <div className="hidden sm:block">
+                        <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de Control" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      </div>
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -232,7 +239,14 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Mapa Interactivo de Lotes</DialogTitle>
-                      <Image src="/map_mockup_v2.jpeg" alt="Mapa Interactivo" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      {/* Vista para celulares */}
+                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
+                        <Image src="/map_mockup_v2.jpeg" alt="Mapa Interactivo Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                      </div>
+                      {/* Vista para PC */}
+                      <div className="hidden sm:block">
+                        <Image src="/map_mockup_v2.jpeg" alt="Mapa Interactivo" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      </div>
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -254,7 +268,14 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Bitácora del Agrónomo</DialogTitle>
-                      <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del Agrónomo" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      {/* Vista para celulares */}
+                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
+                        <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del Agrónomo Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                      </div>
+                      {/* Vista para PC */}
+                      <div className="hidden sm:block">
+                        <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del Agrónomo" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      </div>
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -276,7 +297,14 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Trazabilidad Agrícola</DialogTitle>
-                      <Image src="/entrada_datos_mockup_v2.jpeg" alt="Trazabilidad y Cosecha" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      {/* Vista para celulares */}
+                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
+                        <Image src="/entrada_datos_mockup_v2.jpeg" alt="Trazabilidad Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                      </div>
+                      {/* Vista para PC */}
+                      <div className="hidden sm:block">
+                        <Image src="/entrada_datos_mockup_v2.jpeg" alt="Trazabilidad y Cosecha" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      </div>
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -298,7 +326,14 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Predicciones e Inteligencia</DialogTitle>
-                      <Image src="/predicciones_mockup_v2.jpeg" alt="Predicciones e Inteligencia" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      {/* Vista para celulares */}
+                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
+                        <Image src="/predicciones_mockup_v2.jpeg" alt="Predicciones Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                      </div>
+                      {/* Vista para PC */}
+                      <div className="hidden sm:block">
+                        <Image src="/predicciones_mockup_v2.jpeg" alt="Predicciones e Inteligencia" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      </div>
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -320,7 +355,14 @@ export default function LandingPage() {
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Bitácora del Productor</DialogTitle>
-                      <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Bitácora del Productor" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      {/* Vista para celulares */}
+                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
+                        <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Bitácora del Productor Móvil" width={1000} height={1600} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                      </div>
+                      {/* Vista para PC */}
+                      <div className="hidden sm:block">
+                        <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Bitácora del Productor" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                      </div>
                     </DialogContent>
                   </Dialog>
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
