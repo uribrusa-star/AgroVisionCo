@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useContext } from 'react';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { PageHeader } from '@/components/page-header';
