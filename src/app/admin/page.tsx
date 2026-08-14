@@ -363,13 +363,13 @@ export default function AdminDashboardPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Mobile Floating Capsule Bottom Dock (Inspired by design) */}
-        <div className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[390px] bg-stone-900/90 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-800/80 rounded-full shadow-2xl p-1.5 flex items-center justify-between gap-1 transition-all duration-300">
+        {/* Mobile Floating Capsule Bottom Dock (Frosted White Translucent) */}
+        <div className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[390px] bg-white/85 dark:bg-stone-900/85 backdrop-blur-xl border border-stone-200/80 dark:border-stone-800/80 rounded-full shadow-2xl shadow-stone-900/15 p-1.5 flex items-center justify-between gap-1 transition-all duration-300">
           <TabsList className="flex w-full items-center justify-around bg-transparent p-0 border-0 h-auto space-x-0">
             <TabsTrigger 
               value="analytics" 
               title="Analíticas"
-              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-emerald-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+              className="relative flex items-center justify-center h-11 w-11 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-500 dark:text-stone-400 data-[state=active]:bg-stone-900 data-[state=active]:text-emerald-400 dark:data-[state=active]:bg-white dark:data-[state=active]:text-emerald-600 data-[state=active]:shadow-md data-[state=active]:scale-105"
             >
               <Activity className="h-5 w-5 stroke-[2.2]" />
             </TabsTrigger>
@@ -377,7 +377,7 @@ export default function AdminDashboardPage() {
             <TabsTrigger 
               value="requests" 
               title="Solicitudes"
-              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-green-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+              className="relative flex items-center justify-center h-11 w-11 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-500 dark:text-stone-400 data-[state=active]:bg-stone-900 data-[state=active]:text-green-400 dark:data-[state=active]:bg-white dark:data-[state=active]:text-green-600 data-[state=active]:shadow-md data-[state=active]:scale-105"
             >
               <Mail className="h-5 w-5 stroke-[2.2]" />
             </TabsTrigger>
@@ -385,7 +385,7 @@ export default function AdminDashboardPage() {
             <TabsTrigger 
               value="map" 
               title="Mapa Global"
-              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-blue-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+              className="relative flex items-center justify-center h-11 w-11 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-500 dark:text-stone-400 data-[state=active]:bg-stone-900 data-[state=active]:text-blue-400 dark:data-[state=active]:bg-white dark:data-[state=active]:text-blue-600 data-[state=active]:shadow-md data-[state=active]:scale-105"
             >
               <MapPin className="h-5 w-5 stroke-[2.2]" />
             </TabsTrigger>
@@ -393,7 +393,7 @@ export default function AdminDashboardPage() {
             <TabsTrigger 
               value="directory" 
               title="Directorio"
-              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-amber-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+              className="relative flex items-center justify-center h-11 w-11 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-500 dark:text-stone-400 data-[state=active]:bg-stone-900 data-[state=active]:text-amber-400 dark:data-[state=active]:bg-white dark:data-[state=active]:text-amber-600 data-[state=active]:shadow-md data-[state=active]:scale-105"
             >
               <Building className="h-5 w-5 stroke-[2.2]" />
             </TabsTrigger>
@@ -401,7 +401,7 @@ export default function AdminDashboardPage() {
             <TabsTrigger 
               value="finance" 
               title="Finanzas"
-              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-blue-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+              className="relative flex items-center justify-center h-11 w-11 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-500 dark:text-stone-400 data-[state=active]:bg-stone-900 data-[state=active]:text-blue-400 dark:data-[state=active]:bg-white dark:data-[state=active]:text-blue-600 data-[state=active]:shadow-md data-[state=active]:scale-105"
             >
               <DollarSign className="h-5 w-5 stroke-[2.2]" />
             </TabsTrigger>
@@ -409,7 +409,7 @@ export default function AdminDashboardPage() {
             <TabsTrigger 
               value="comms" 
               title="Comunicaciones"
-              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-purple-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+              className="relative flex items-center justify-center h-11 w-11 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-500 dark:text-stone-400 data-[state=active]:bg-stone-900 data-[state=active]:text-purple-400 dark:data-[state=active]:bg-white dark:data-[state=active]:text-purple-600 data-[state=active]:shadow-md data-[state=active]:scale-105"
             >
               <BellRing className="h-5 w-5 stroke-[2.2]" />
             </TabsTrigger>
