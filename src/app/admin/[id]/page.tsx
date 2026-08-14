@@ -178,16 +178,16 @@ export default function AdminEstablishmentDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <Dialog>
           <DialogTrigger asChild>
             <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-emerald-600 dark:border-b-emerald-500 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/80 transition-colors group">
-              <CardHeader className="pb-2">
-                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[10px] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Plan de Suscripción</CardDescription>
-                <CardTitle className="text-xl font-bold flex items-center gap-2 mt-1">
-                  <CreditCard className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  <Badge className={`${subLabels[subStatus as keyof typeof subLabels]?.bg} ${subLabels[subStatus as keyof typeof subLabels]?.color} dark:bg-emerald-950/60 dark:text-emerald-300 shadow-none font-bold border-0`}>
-                    <SubIcon className="h-3 w-3 mr-1" />
+              <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-2">
+                <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[9px] sm:text-[10px] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">Plan Suscripción</CardDescription>
+                <CardTitle className="text-base sm:text-xl font-bold flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <Badge className={`${subLabels[subStatus as keyof typeof subLabels]?.bg} ${subLabels[subStatus as keyof typeof subLabels]?.color} dark:bg-emerald-950/60 dark:text-emerald-300 shadow-none font-bold border-0 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0`}>
+                    <SubIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                     {subLabels[subStatus as keyof typeof subLabels]?.text}
                   </Badge>
                 </CardTitle>
@@ -235,37 +235,37 @@ export default function AdminEstablishmentDetail() {
         </Dialog>
 
         <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-[#2d4a22] dark:border-b-emerald-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[10px]">Producción Total</CardDescription>
-            <CardTitle className="text-xl font-bold text-[#2d4a22] dark:text-emerald-400 flex items-center gap-2 mt-1">
-              <Sprout className="h-5 w-5 opacity-70" /> {totalHarvestedKg.toLocaleString()} kg
+          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[9px] sm:text-[10px] truncate">Producción Total</CardDescription>
+            <CardTitle className="text-base sm:text-xl font-bold text-[#2d4a22] dark:text-emerald-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+              <Sprout className="h-4 w-4 sm:h-5 sm:w-5 opacity-70 shrink-0" /> {totalHarvestedKg.toLocaleString()} kg
             </CardTitle>
           </CardHeader>
         </Card>
         
         <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-blue-600 dark:border-b-blue-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[10px]">Empleados</CardDescription>
-            <CardTitle className="text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2 mt-1">
-              <Users className="h-5 w-5 opacity-70" /> {totalEmployees}
+          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[9px] sm:text-[10px] truncate">Empleados</CardDescription>
+            <CardTitle className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 opacity-70 shrink-0" /> {totalEmployees}
             </CardTitle>
           </CardHeader>
         </Card>
 
         <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-amber-500 dark:border-b-amber-400">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[10px]">Cosechas Registradas</CardDescription>
-            <CardTitle className="text-xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-2 mt-1">
-              <Activity className="h-5 w-5 opacity-70" /> {harvests.length}
+          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[9px] sm:text-[10px] truncate">Cosechas</CardDescription>
+            <CardTitle className="text-base sm:text-xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 opacity-70 shrink-0" /> {harvests.length}
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-purple-600 dark:border-b-purple-400">
-          <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[10px]">Usuarios</CardDescription>
-            <CardTitle className="text-xl font-bold text-purple-600 dark:text-purple-400 flex items-center gap-2 mt-1">
-              <Tractor className="h-5 w-5 opacity-70" /> {users.length}
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-purple-600 dark:border-b-purple-400 col-span-2 md:col-span-1">
+          <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-[9px] sm:text-[10px] truncate">Usuarios</CardDescription>
+            <CardTitle className="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+              <Tractor className="h-4 w-4 sm:h-5 sm:w-5 opacity-70 shrink-0" /> {users.length}
             </CardTitle>
           </CardHeader>
         </Card>
