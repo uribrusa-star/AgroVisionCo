@@ -367,31 +367,7 @@ export default function AdminDashboardPage() {
         </TabsContent>
 
         <TabsContent value="requests" className="mt-0 space-y-6">
-          <Card className="border-0 shadow-lg shadow-black/5 overflow-hidden">
-            <CardHeader className="bg-stone-50 border-b border-stone-100 pb-4 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-xl text-[#2d4a22]">
-                  <Mail className="h-6 w-6 text-green-600" /> Solicitudes de Clientes y Demos
-                </CardTitle>
-                <CardDescription>Gestión en tiempo real de prospectos y productores interesados.</CardDescription>
-              </div>
-              <Button onClick={() => router.push('/contact-requests')} className="bg-green-600 hover:bg-green-500 text-white font-bold gap-2">
-                <Mail className="w-4 h-4" /> Abrir Módulo Completo
-              </Button>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="p-8 text-center bg-stone-50 rounded-2xl border border-dashed border-stone-300">
-                <Mail className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-stone-900">Bandeja de Solicitudes de Contacto</h3>
-                <p className="text-stone-500 text-sm max-w-md mx-auto mt-1 mb-4">
-                  Todas las consultas y solicitudes enviadas desde &quot;Comenzar Ahora&quot; se sincronizan automáticamente en tu plataforma.
-                </p>
-                <Button onClick={() => router.push('/contact-requests')} className="bg-green-600 hover:bg-green-500 text-white font-bold gap-2">
-                  Ver Solicitudes de Contacto
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <ContactRequestsAdminView />
         </TabsContent>
 
         <TabsContent value="map" className="mt-0 space-y-6">
@@ -916,6 +892,193 @@ export default function AdminDashboardPage() {
             </Form>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function ContactRequestsAdminView() {
+  const { contactRequests, updateContactRequestStatus, deleteContactRequest } = useContext(AppDataContext);
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+
+  const filteredRequests = contactRequests.filter(req => {
+    const matchesSearch =
+      req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      req.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (req.phone && req.phone.includes(searchTerm)) ||
+      (req.location && req.location.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
+    const matchesRole = roleFilter === 'all' || req.role === roleFilter;
+
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pendiente</Badge>;
+      case 'contacted':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">En Gestión</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Completado</Badge>;
+      default:
+        return <Badge variant="outline">Pendiente</Badge>;
+    }
+  };
+
+  const handleStatusChange = async (requestId: string, newStatus: any) => {
+    try {
+      await updateContactRequestStatus(requestId, newStatus);
+      toast({ title: 'Estado actualizado', description: 'La solicitud ha sido modificada.' });
+      if (selectedRequest && selectedRequest.id === requestId) {
+        setSelectedRequest({ ...selectedRequest, status: newStatus });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el estado.', variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async (requestId: string) => {
+    try {
+      await deleteContactRequest(requestId);
+      toast({ title: 'Solicitud eliminada', description: 'Registro eliminado correctamente.' });
+      if (selectedRequest?.id === requestId) setSelectedRequest(null);
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo eliminar el registro.', variant: 'destructive' });
+    }
+  };
+
+  const openWhatsApp = (phone?: string, name?: string) => {
+    if (!phone) return;
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    const message = encodeURIComponent(`Hola ${name || ''}, te escribimos desde el equipo de AgroVista sobre tu solicitud de información.`);
+    window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className="bg-white border-stone-200 shadow-sm">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-stone-500 font-medium">Total Solicitudes</p>
+              <p className="text-2xl font-bold text-stone-900">{contactRequests.length}</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-green-100 text-green-700"><Mail className="w-5 h-5" /></div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-stone-200 shadow-sm">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-stone-500 font-medium">Pendientes</p>
+              <p className="text-2xl font-bold text-amber-600">
+                {contactRequests.filter(r => r.status === 'pending').length}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700"><Clock className="w-5 h-5" /></div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-stone-200 shadow-sm">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-stone-500 font-medium">En Gestión</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {contactRequests.filter(r => r.status === 'contacted').length}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700"><MessageSquare className="w-5 h-5" /></div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-stone-200 shadow-sm">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-stone-500 font-medium">Productores</p>
+              <p className="text-2xl font-bold text-emerald-600">
+                {contactRequests.filter(r => r.role === 'Productor de Frutillas').length}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700"><CheckCircle2 className="w-5 h-5" /></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter and Search */}
+      <Card className="bg-white border-stone-200">
+        <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
+          <Input
+            placeholder="Buscar por nombre, email, teléfono o ciudad..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="rounded-xl border-stone-200"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px] rounded-xl"><SelectValue placeholder="Estado" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="pending">Pendientes</SelectItem>
+              <SelectItem value="contacted">En Gestión</SelectItem>
+              <SelectItem value="completed">Completados</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* List / Cards */}
+      {filteredRequests.length === 0 ? (
+        <Card className="bg-white border-stone-200 text-center py-12">
+          <CardContent className="space-y-2">
+            <Mail className="w-10 h-10 text-stone-300 mx-auto" />
+            <h3 className="text-base font-bold text-stone-700">No hay solicitudes registradas</h3>
+            <p className="text-xs text-stone-500">Las solicitudes ingresadas desde la página web aparecerán aquí en tiempo real.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRequests.map((req) => (
+            <Card key={req.id} className="bg-white border-stone-200 hover:border-green-400 transition-all p-4 space-y-3 shadow-sm">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-bold text-stone-900">{req.name}</h4>
+                  <p className="text-xs text-stone-500">{req.location || 'Coronda, Santa Fe'}</p>
+                </div>
+                {getStatusBadge(req.status)}
+              </div>
+
+              <div className="inline-block px-2.5 py-0.5 rounded bg-green-50 text-green-800 text-xs font-semibold">
+                {req.role}
+              </div>
+
+              <div className="text-xs text-stone-600 space-y-1">
+                <p>✉️ {req.email}</p>
+                {req.phone && <p>📱 {req.phone}</p>}
+                {req.message && <p className="italic text-stone-500 mt-2 bg-stone-50 p-2 rounded">&quot;{req.message}&quot;</p>}
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-stone-100">
+                <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => window.open(`mailto:${req.email}?subject=Respuesta a tu consulta en AgroVista`, '_blank')}>
+                  <Mail className="w-3.5 h-3.5 mr-1" /> Email
+                </Button>
+                {req.phone && (
+                  <Button size="sm" variant="outline" className="flex-1 text-xs text-emerald-700 bg-emerald-50" onClick={() => openWhatsApp(req.phone, req.name)}>
+                    <MessageSquare className="w-3.5 h-3.5 mr-1" /> WhatsApp
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" className="text-red-500 p-2" onClick={() => handleDelete(req.id)}>
+                  🗑️
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
