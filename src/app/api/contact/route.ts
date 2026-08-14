@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
+import { adminDb } from '@/lib/firebase-admin';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'El nombre es obligatorio'),
@@ -15,6 +16,24 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = contactSchema.parse(body);
+
+    // 1. Guardar solicitud en la colección contactRequests de Firestore mediante adminDb (servidor)
+    try {
+      if (adminDb) {
+        await adminDb.collection('contactRequests').add({
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: validatedData.phone || '',
+          role: validatedData.role,
+          location: validatedData.location || 'Coronda, Santa Fe',
+          message: validatedData.message || '',
+          createdAt: new Date().toISOString(),
+          status: 'pending',
+        });
+      }
+    } catch (dbErr) {
+      console.warn("Could not save contact request to Firestore adminDb:", dbErr);
+    }
 
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpPort = parseInt(process.env.SMTP_PORT || '587');

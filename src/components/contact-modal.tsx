@@ -67,24 +67,16 @@ export function ContactModal({
 
     setLoading(true);
     try {
-      // 1. Guardar directamente en la base de datos de la plataforma (Firestore)
-      if (addContactRequest) {
-        await addContactRequest({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || '',
-          role: formData.role,
-          location: formData.location || 'Coronda, Santa Fe',
-          message: formData.message || '',
-        });
-      }
-
-      // 2. Intentar también enviar correo por API de respaldo si se requiere
-      fetch('/api/contact', {
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
-      }).catch(() => {});
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Error al procesar la solicitud');
+      }
 
       setSubmitted(true);
       toast({
