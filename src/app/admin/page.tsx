@@ -463,7 +463,7 @@ export default function AdminDashboardPage() {
                </CardTitle>
                <CardDescription className="dark:text-stone-400">Visualización geográfica y operativa de todos los clientes.</CardDescription>
             </CardHeader>
-            <div className="h-[600px] w-full p-2 bg-stone-100 dark:bg-stone-950">
+            <div className="h-auto sm:h-[600px] w-full p-2 bg-stone-100 dark:bg-stone-950">
                <AdminMap establishments={establishments} pestLogs={[...diagnosisPestLogs, ...agroPestLogs]} />
             </div>
           </Card>

@@ -407,9 +407,9 @@ export function AdminMap({ establishments, pestLogs = [] }: AdminMapProps) {
             </div>
 
             {/* MOBILE ONLY: Well-Spaced, Larger Pin Legend Card */}
-            <div className="sm:hidden bg-white dark:bg-stone-900 p-3 rounded-xl border border-stone-200 dark:border-stone-800 shadow-sm mt-3 space-y-2">
+            <div className="sm:hidden bg-white dark:bg-stone-900 p-3.5 rounded-xl border border-stone-200 dark:border-stone-800 shadow-sm mt-3 mb-6 space-y-2">
                 <p className="font-bold text-[11px] uppercase tracking-wider text-stone-500 dark:text-stone-400">Leyenda de Pines</p>
-                <div className="flex items-center justify-between text-xs font-semibold text-stone-800 dark:text-stone-200 gap-2">
+                <div className="flex flex-wrap items-center justify-between text-xs font-semibold text-stone-800 dark:text-stone-200 gap-2">
                     <div className="flex items-center gap-1.5 bg-stone-50 dark:bg-stone-800/80 px-2.5 py-1.5 rounded-lg border border-stone-100 dark:border-stone-700/60">
                         <span className="w-3 h-3 rounded-full bg-[#16a34a] inline-block shadow-sm" />
                         <span>Activo + BPA</span>
