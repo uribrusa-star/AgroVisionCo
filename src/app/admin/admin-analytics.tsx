@@ -105,30 +105,30 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
       
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm border-b-4 border-b-[#2d4a22]">
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-[#2d4a22] dark:border-b-emerald-500">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Producción Global Total</CardDescription>
-            <CardTitle className="text-3xl font-bold text-[#2d4a22] flex items-center gap-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Producción Global Total</CardDescription>
+            <CardTitle className="text-3xl font-bold text-[#2d4a22] dark:text-emerald-400 flex items-center gap-2">
               <Sprout className="h-6 w-6 opacity-70" /> 
               {totalKg.toLocaleString()} kg
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card className="border-0 shadow-sm border-b-4 border-b-blue-600">
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-blue-600 dark:border-b-blue-500">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Usuarios Registrados</CardDescription>
-            <CardTitle className="text-3xl font-bold text-blue-600 flex items-center gap-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Usuarios Registrados</CardDescription>
+            <CardTitle className="text-3xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
               <Users className="h-6 w-6 opacity-70" /> 
               {users.length}
             </CardTitle>
           </CardHeader>
         </Card>
 
-        <Card className="border-0 shadow-sm border-b-4 border-b-amber-500">
+        <Card className="bg-white dark:bg-stone-900 border-0 shadow-sm border-b-4 border-b-amber-500 dark:border-b-amber-400">
           <CardHeader className="pb-2">
-            <CardDescription className="font-semibold text-stone-500 uppercase tracking-wider text-xs">Establecimientos Activos</CardDescription>
-            <CardTitle className="text-3xl font-bold text-amber-500 flex items-center gap-2">
+            <CardDescription className="font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-wider text-xs">Establecimientos Activos</CardDescription>
+            <CardTitle className="text-3xl font-bold text-amber-500 dark:text-amber-400 flex items-center gap-2">
               <Building className="h-6 w-6 opacity-70" /> 
               {establishments.length}
             </CardTitle>
@@ -140,19 +140,19 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* User Growth Chart */}
-        <Card className="border-0 shadow-lg shadow-black/5 bg-white">
+        <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-stone-500" />
+            <CardTitle className="flex items-center gap-2 dark:text-stone-100">
+              <Activity className="h-5 w-5 text-stone-500 dark:text-stone-400" />
               Crecimiento de Usuarios
             </CardTitle>
-            <CardDescription>Altas de usuarios por mes histórico</CardDescription>
+            <CardDescription className="dark:text-stone-400">Altas de usuarios por mes histórico</CardDescription>
           </CardHeader>
           <CardContent>
             {userGrowthData.length > 0 ? (
               <ChartContainer config={userGrowthConfig} className="h-[300px] w-full">
                 <BarChart data={userGrowthData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.5} />
+                  <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                   <XAxis 
                     dataKey="month" 
                     tickLine={false} 
@@ -166,11 +166,11 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
                     allowDecimals={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ChartContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-stone-500 text-sm">
+              <div className="h-[300px] flex items-center justify-center text-stone-500 dark:text-stone-400 text-sm">
                 No hay datos suficientes
               </div>
             )}
@@ -178,13 +178,13 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
         </Card>
 
         {/* Role Distribution Chart */}
-        <Card className="border-0 shadow-lg shadow-black/5 bg-white">
+        <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-stone-500" />
+            <CardTitle className="flex items-center gap-2 dark:text-stone-100">
+              <Users className="h-5 w-5 text-stone-500 dark:text-stone-400" />
               Distribución de Roles
             </CardTitle>
-            <CardDescription>Proporción de tipos de usuarios en la plataforma</CardDescription>
+            <CardDescription className="dark:text-stone-400">Proporción de tipos de usuarios en la plataforma</CardDescription>
           </CardHeader>
           <CardContent>
             {roleDistributionData.length > 0 ? (
@@ -207,11 +207,11 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
                     <Tooltip content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           return (
-                            <div className="bg-white rounded-lg shadow-lg border border-stone-100 p-3 text-sm">
+                            <div className="bg-white dark:bg-stone-800 rounded-lg shadow-lg border border-stone-100 dark:border-stone-700 p-3 text-sm">
                               <span className="font-semibold" style={{color: payload[0].payload.color}}>
                                 {payload[0].name}
                               </span>
-                              <div className="mt-1 text-stone-600">
+                              <div className="mt-1 text-stone-600 dark:text-stone-300">
                                 {payload[0].value} {(payload[0].value as number) === 1 ? 'usuario' : 'usuarios'}
                               </div>
                             </div>
@@ -225,7 +225,7 @@ export function AdminAnalytics({ establishments }: { establishments: Establishme
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-stone-500 text-sm">
+              <div className="h-[300px] flex items-center justify-center text-stone-500 dark:text-stone-400 text-sm">
                 No hay datos suficientes
               </div>
             )}
