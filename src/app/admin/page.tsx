@@ -334,33 +334,87 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 max-w-[1050px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
-          <TabsTrigger value="analytics" title="Analíticas" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
-            <Activity className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <span className="hidden sm:inline">Analíticas</span>
+      <Tabs defaultValue="analytics" className="w-full pb-20 md:pb-0">
+        {/* Desktop Tabs Bar */}
+        <TabsList className="hidden md:grid w-full grid-cols-6 max-w-[1050px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
+          <TabsTrigger value="analytics" title="Analíticas" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <Activity className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span>Analíticas</span>
           </TabsTrigger>
-          <TabsTrigger value="requests" title="Solicitudes" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
-            <Mail className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-green-600 dark:text-green-400" />
-            <span className="hidden sm:inline">Solicitudes</span>
+          <TabsTrigger value="requests" title="Solicitudes" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <Mail className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+            <span>Solicitudes</span>
           </TabsTrigger>
-          <TabsTrigger value="map" title="Mapa Global" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
-            <MapPin className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">Mapa Global</span>
+          <TabsTrigger value="map" title="Mapa Global" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <MapPin className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+            <span>Mapa Global</span>
           </TabsTrigger>
-          <TabsTrigger value="directory" title="Directorio" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
-            <Building className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <span className="hidden sm:inline">Directorio</span>
+          <TabsTrigger value="directory" title="Directorio" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <Building className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>Directorio</span>
           </TabsTrigger>
-          <TabsTrigger value="finance" title="Finanzas" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
-            <DollarSign className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">Finanzas</span>
+          <TabsTrigger value="finance" title="Finanzas" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <DollarSign className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+            <span>Finanzas</span>
           </TabsTrigger>
-          <TabsTrigger value="comms" title="Comunicaciones" className="flex items-center justify-center gap-2 py-2.5 px-2 sm:px-4 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
-            <BellRing className="h-5 w-5 sm:h-4 sm:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-            <span className="hidden sm:inline">Comunicaciones</span>
+          <TabsTrigger value="comms" title="Comunicaciones" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
+            <BellRing className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+            <span>Comunicaciones</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Mobile Floating Capsule Bottom Dock (Inspired by design) */}
+        <div className="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-[390px] bg-stone-900/90 dark:bg-stone-950/95 backdrop-blur-xl border border-stone-800/80 rounded-full shadow-2xl p-1.5 flex items-center justify-between gap-1 transition-all duration-300">
+          <TabsList className="flex w-full items-center justify-around bg-transparent p-0 border-0 h-auto space-x-0">
+            <TabsTrigger 
+              value="analytics" 
+              title="Analíticas"
+              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-emerald-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+            >
+              <Activity className="h-5 w-5 stroke-[2.2]" />
+            </TabsTrigger>
+
+            <TabsTrigger 
+              value="requests" 
+              title="Solicitudes"
+              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-green-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+            >
+              <Mail className="h-5 w-5 stroke-[2.2]" />
+            </TabsTrigger>
+
+            <TabsTrigger 
+              value="map" 
+              title="Mapa Global"
+              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-blue-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+            >
+              <MapPin className="h-5 w-5 stroke-[2.2]" />
+            </TabsTrigger>
+
+            <TabsTrigger 
+              value="directory" 
+              title="Directorio"
+              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-amber-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+            >
+              <Building className="h-5 w-5 stroke-[2.2]" />
+            </TabsTrigger>
+
+            <TabsTrigger 
+              value="finance" 
+              title="Finanzas"
+              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-blue-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+            >
+              <DollarSign className="h-5 w-5 stroke-[2.2]" />
+            </TabsTrigger>
+
+            <TabsTrigger 
+              value="comms" 
+              title="Comunicaciones"
+              className="relative flex items-center justify-center h-12 w-12 rounded-full p-0 transition-all duration-300 border-0 bg-transparent text-stone-400 data-[state=active]:bg-stone-800/90 data-[state=active]:text-purple-400 data-[state=active]:shadow-lg data-[state=active]:scale-105"
+            >
+              <BellRing className="h-5 w-5 stroke-[2.2]" />
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="analytics" className="mt-0">
           <AdminAnalytics establishments={establishments} />
