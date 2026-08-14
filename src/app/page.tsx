@@ -200,8 +200,8 @@ export default function LandingPage() {
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group bg-muted/20">
-                         <Image src="/dashboard_mockup_v2.png" alt="Panel de Control" width={1200} height={750} quality={95} unoptimized className="object-cover object-top aspect-[16/10] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+                         <Image src="/dashboard_mockup_v2.png" alt="Panel de Control" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -222,8 +222,8 @@ export default function LandingPage() {
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group bg-muted/20">
-                         <Image src="/map_mockup_v2.png" alt="Mapa Interactivo" width={1200} height={750} quality={95} unoptimized className="object-cover object-top aspect-[16/10] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+                         <Image src="/map_mockup_v2.png" alt="Mapa Interactivo" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -244,8 +244,8 @@ export default function LandingPage() {
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group bg-muted/20">
-                         <Image src="/bitacora-agronomo.png" alt="Bitácora del Agrónomo" width={1200} height={750} quality={95} unoptimized className="object-cover object-top aspect-[16/10] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+                         <Image src="/bitacora-agronomo.png" alt="Bitácora del Agrónomo" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -266,8 +266,8 @@ export default function LandingPage() {
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group bg-muted/20">
-                         <Image src="/entrada_datos_mockup.png" alt="Trazabilidad y Cosecha" width={1200} height={750} quality={95} unoptimized className="object-cover object-top aspect-[16/10] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+                         <Image src="/entrada_datos_mockup.png" alt="Trazabilidad y Cosecha" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -288,8 +288,8 @@ export default function LandingPage() {
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group bg-muted/20">
-                         <Image src="/predicciones_mockup.png" alt="Predicciones e Inteligencia" width={1200} height={750} quality={95} unoptimized className="object-cover object-top aspect-[16/10] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+                         <Image src="/predicciones_mockup.png" alt="Predicciones e Inteligencia" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -310,8 +310,8 @@ export default function LandingPage() {
                 <div className="flex flex-col items-start">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group bg-muted/20">
-                         <Image src="/bitacora_productor_mockup.png" alt="Bitácora del Productor" width={1200} height={750} quality={95} unoptimized className="object-cover object-top aspect-[16/10] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+                         <Image src="/bitacora_productor_mockup.png" alt="Bitácora del Productor" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
