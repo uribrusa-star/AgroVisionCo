@@ -373,21 +373,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Call to Action Banner Section */}
-        <section className="py-16 bg-gradient-to-r from-green-900 via-green-850 to-green-950 text-white relative overflow-hidden">
-          <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
-            <h2 className="text-3xl sm:text-4xl font-bold font-headline drop-shadow-md">
-              ¿Listo para transformar la gestión de tus lotes de frutilla?
-            </h2>
-            <p className="mt-4 text-green-100 text-base sm:text-lg max-w-2xl mx-auto">
-              Únete a los productores de Coronda y la región que ya están optimizando el rendimiento, la trazabilidad y las ganancias de sus campos.
-            </p>
-            <div className="mt-8 flex justify-center">
-              <ContactModal buttonText="Solicitar Demostración Gratuita" buttonSize="lg" buttonClassName="bg-green-400 hover:bg-green-300 text-green-950 font-bold px-8 py-6 text-lg rounded-full shadow-xl hover:scale-105 transition-all" />
-            </div>
-          </div>
-        </section>
-
         {/* FAQ Section */}
         <section className="py-24 bg-white dark:bg-green-950 px-6 lg:px-8 max-w-3xl mx-auto">
           <div className="text-center mb-10">
