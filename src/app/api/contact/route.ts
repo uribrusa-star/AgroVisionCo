@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       } : undefined,
     });
 
-    const destinationEmail = 'contactoagrovisionco@gmail.com';
+    const destinationEmail = 'contactoagrovisionco@gmail.com, uribrusa@gmail.com';
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; background-color: #ffffff;">
@@ -121,9 +121,9 @@ export async function POST(request: Request) {
         from: `"AgroVista Web" <${smtpUser}>`,
         to: destinationEmail,
         replyTo: validatedData.email,
-        subject: `[Contacto AgroVista] ${validatedData.name} - ${validatedData.role}`,
+        subject: `🚨 [Nuevo Cliente AgroVista] ${validatedData.name} (${validatedData.role})`,
         html: htmlContent,
-      }).catch(() => {});
+      }).catch((err) => console.error("Error al despachar mail de aviso a Gmail:", err));
     }
 
     return NextResponse.json({
