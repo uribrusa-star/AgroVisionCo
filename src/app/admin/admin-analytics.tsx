@@ -133,28 +133,40 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
       .slice(0, 5);
   }, [harvests, establishments, totalKg]);
 
-  // 3. Curva y Tendencia de Cosecha Mensual en Coronda (Año Actual vs Pasado)
+  // 3. Curva y Tendencia de Cosecha Mensual en Coronda (Sólo Meses Reales hasta el Mes Actual)
   const monthlyHarvestTrend = useMemo(() => {
-    const months = ["May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    const actualMap: { [m: string]: number } = {};
-    
+    const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+    const currentMonthIdx = new Date().getMonth();
+    const actualMap: { [mIdx: number]: number } = {};
+
     harvests.forEach(h => {
       if (h.date) {
         const d = new Date(h.date);
-        const monthName = months[d.getMonth() - 4] || "Sep";
-        actualMap[monthName] = (actualMap[monthName] || 0) + (h.kilograms || 0);
+        const mIdx = d.getMonth();
+        actualMap[mIdx] = (actualMap[mIdx] || 0) + (h.kilograms || 0);
       }
     });
 
-    return months.map(m => {
-      const actualVal = actualMap[m] || 0;
-      const refVal = actualVal > 0 ? Math.round(actualVal * 0.85) : Math.round(Math.random() * 400 + 200);
-      return {
-        month: m,
-        actual: actualVal > 0 ? actualVal : Math.round(refVal * 1.15),
-        anterior: refVal
-      };
+    let maxMonthIdx = currentMonthIdx;
+    Object.keys(actualMap).forEach(mStr => {
+      const mInt = Number(mStr);
+      if (mInt > maxMonthIdx && actualMap[mInt] > 0) {
+        maxMonthIdx = mInt;
+      }
     });
+
+    const startMonthIdx = 4; // Inicio habitual de campaña de frutilla en mayo
+    const result = [];
+
+    const effectiveEnd = Math.max(startMonthIdx, maxMonthIdx);
+    for (let i = startMonthIdx; i <= effectiveEnd; i++) {
+      result.push({
+        month: monthNames[i],
+        kg: actualMap[i] || 0
+      });
+    }
+
+    return result;
   }, [harvests]);
 
   // 4. Eficiencia de Mano de Obra y Recolección
@@ -346,27 +358,23 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
         </Card>
       </div>
 
-      {/* NUEVO BLOQUE: Tendencia de Cosecha Mensual (Área Chart) */}
+      {/* BLOQUE: Evolución de Cosecha de la Temporada Actual */}
       <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg dark:text-stone-100">
             <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            Curva y Tendencia de Cosecha Mensual en Coronda (kg)
+            Curva de Cosecha Mensual - Temporada Actual (kg)
           </CardTitle>
-          <CardDescription className="dark:text-stone-400">Comparativo de producción de la temporada actual vs. temporada anterior</CardDescription>
+          <CardDescription className="dark:text-stone-400">Evolución real acumulada mes a mes hasta la fecha actual</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyHarvestTrend} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="colorKg" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#16a34a" stopOpacity={0.4}/>
                     <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorAnterior" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#94a3b8" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -376,19 +384,16 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white dark:bg-stone-800 rounded-lg shadow-lg border p-2.5 text-xs font-semibold space-y-1">
+                        <div className="bg-white dark:bg-stone-800 rounded-lg shadow-lg border p-2.5 text-xs font-semibold">
                           <p className="font-bold border-b pb-1 text-stone-700 dark:text-stone-200">{payload[0].payload.month}</p>
-                          <p className="text-emerald-600 dark:text-emerald-400">Actual: {payload[0].value?.toLocaleString()} kg</p>
-                          <p className="text-stone-500 dark:text-stone-400">Año Anterior: {payload[1]?.value?.toLocaleString()} kg</p>
+                          <p className="text-emerald-600 dark:text-emerald-400 mt-1">{payload[0].value?.toLocaleString()} kg cosechados</p>
                         </div>
                       );
                     }
                     return null;
                   }}
                 />
-                <Area type="monotone" dataKey="actual" name="Temporada Actual" stroke="#16a34a" strokeWidth={2.5} fillOpacity={1} fill="url(#colorActual)" />
-                <Area type="monotone" dataKey="anterior" name="Año Anterior" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" fillOpacity={1} fill="url(#colorAnterior)" />
-                <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: '11px' }} />
+                <Area type="monotone" dataKey="kg" name="Producción Real (kg)" stroke="#16a34a" strokeWidth={2.5} fillOpacity={1} fill="url(#colorKg)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
