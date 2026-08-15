@@ -152,3 +152,56 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    
+    const body = await request.json();
+    const { id } = body;
+    const sessionUserId = session.user.id;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
+    }
+
+    // Verify the caller is a SuperAdmin
+    const callerDoc = await adminDb.collection('users').doc(sessionUserId).get();
+    if (!callerDoc.exists || (callerDoc.data()?.role !== 'SuperAdmin' && callerDoc.data()?.establishmentId !== 'main')) {
+      return NextResponse.json({ error: 'Unauthorized. Only Admins can delete staff users.' }, { status: 403 });
+    }
+
+    // Verify target user's role
+    const targetUserDoc = await adminDb.collection('users').doc(id).get();
+    if (!targetUserDoc.exists) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    const targetRole = targetUserDoc.data()?.role;
+    if (targetRole !== 'Ingeniero Agronomo' && targetRole !== 'Encargado') {
+      return NextResponse.json({ 
+        error: 'No está permitido eliminar al Productor titular ni a usuarios administradores.' 
+      }, { status: 403 });
+    }
+
+    // Delete from Firebase Auth (if user exists in Auth)
+    try {
+      await adminAuth.deleteUser(id);
+    } catch (authError: any) {
+      console.warn("User auth deletion warning (might not exist in Auth):", authError.message);
+    }
+
+    // Delete from Firestore
+    await adminDb.collection('users').doc(id).delete();
+
+    return NextResponse.json({ success: true, message: `Usuario ${targetRole} eliminado correctamente.` });
+
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}

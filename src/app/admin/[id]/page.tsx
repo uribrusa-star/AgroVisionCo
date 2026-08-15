@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Tractor, Sprout, Building, ShieldCheck, MapPin, Pickaxe, Package, Activity, Clock, CreditCard, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Users, Tractor, Sprout, Building, ShieldCheck, MapPin, Pickaxe, Package, Activity, Clock, CreditCard, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import type { EstablishmentData, User, Collector, Packer, Harvest } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AppDataContext } from '@/context/app-data-context';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminEstablishmentDetail() {
   const router = useRouter();
@@ -124,6 +125,49 @@ export default function AdminEstablishmentDetail() {
     setEditName(user.name);
     setEditPassword(''); // No mostramos la vieja por seguridad
     setIsUserDialogOpen(true);
+  };
+
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+
+  const handleDeleteUser = async (userToDelete: User) => {
+    if (userToDelete.role !== 'Ingeniero Agronomo' && userToDelete.role !== 'Encargado') {
+      toast({
+        title: "Acción Restringida",
+        description: "Únicamente se permite eliminar usuarios del Equipo de Gestión (Ingeniero Agrónomo o Encargados). El Productor no puede ser eliminado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDeletingUser(true);
+    try {
+      const response = await fetch('/api/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userToDelete.id })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al eliminar usuario');
+      }
+
+      toast({
+        title: "Usuario Eliminado",
+        description: `El usuario ${userToDelete.name} (${userToDelete.role}) ha sido eliminado del equipo.`,
+      });
+
+      setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
+      setIsUserDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error al eliminar",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeletingUser(false);
+    }
   };
 
   if (loading) {
@@ -284,15 +328,51 @@ export default function AdminEstablishmentDetail() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-stone-100 dark:divide-stone-800">
-                {users.map(u => (
-                  <div key={u.id} onClick={() => openEditUser(u)} className="flex items-center justify-between p-4 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer group">
-                    <div>
-                      <p className="font-semibold text-stone-800 dark:text-stone-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{u.name}</p>
-                      <p className="text-sm text-stone-500 dark:text-stone-400">{u.email}</p>
+                {users.map(u => {
+                  const canDelete = u.role === 'Ingeniero Agronomo' || u.role === 'Encargado';
+                  return (
+                    <div key={u.id} className="flex items-center justify-between p-4 hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors group">
+                      <div onClick={() => openEditUser(u)} className="cursor-pointer flex-1">
+                        <p className="font-semibold text-stone-800 dark:text-stone-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{u.name}</p>
+                        <p className="text-sm text-stone-500 dark:text-stone-400">{u.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700">{u.role}</Badge>
+                        {canDelete && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-stone-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+                                title={`Eliminar ${u.role}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="dark:bg-stone-900 dark:border-stone-800">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="dark:text-stone-100">¿Eliminar usuario del equipo?</AlertDialogTitle>
+                                <AlertDialogDescription className="dark:text-stone-400">
+                                  Esta acción eliminará la cuenta de <strong>{u.name}</strong> ({u.role}) del establecimiento. No podrá volver a iniciar sesión.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="dark:border-stone-700 dark:text-stone-300">Cancelar</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteUser(u)} 
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  Sí, Eliminar Usuario
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </div>
-                    <Badge variant="outline" className="bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700">{u.role}</Badge>
-                  </div>
-                ))}
+                  );
+                })}
                 {users.length === 0 && <div className="p-6 text-center text-stone-500 dark:text-stone-400">No hay usuarios registrados</div>}
               </div>
             </CardContent>
@@ -302,7 +382,9 @@ export default function AdminEstablishmentDetail() {
           <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
             <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl dark:bg-stone-900 dark:border-stone-800 dark:text-stone-100">
               <DialogHeader>
-                <DialogTitle className="dark:text-stone-100">Editar Usuario</DialogTitle>
+                <DialogTitle className="dark:text-stone-100 flex items-center justify-between pr-6">
+                  <span>Editar Usuario ({selectedUser?.role})</span>
+                </DialogTitle>
               </DialogHeader>
               {selectedUser && (
                 <form onSubmit={handleEditUser} className="space-y-4 py-4">
@@ -327,13 +409,45 @@ export default function AdminEstablishmentDetail() {
                       className="dark:bg-stone-800 dark:border-stone-700 dark:text-stone-100"
                     />
                   </div>
-                  <div className="flex justify-end gap-3 mt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsUserDialogOpen(false)} className="dark:border-stone-700 dark:text-stone-300">
-                      Cancelar
-                    </Button>
-                    <Button type="submit" className="bg-[#2d4a22] hover:bg-[#1a2d13] dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white" disabled={isEditingUser}>
-                      {isEditingUser ? "Guardando..." : "Guardar Cambios"}
-                    </Button>
+                  <div className="flex justify-between items-center pt-2">
+                    {(selectedUser.role === 'Ingeniero Agronomo' || selectedUser.role === 'Encargado') ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button type="button" variant="destructive" size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                            <Trash2 className="h-4 w-4 mr-1.5" />
+                            Eliminar Usuario
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="dark:bg-stone-900 dark:border-stone-800">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="dark:text-stone-100">¿Eliminar {selectedUser.role}?</AlertDialogTitle>
+                            <AlertDialogDescription className="dark:text-stone-400">
+                              Se eliminará a <strong>{selectedUser.name}</strong> del sistema.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="dark:border-stone-700 dark:text-stone-300">Cancelar</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteUser(selectedUser)} 
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Confirmar Eliminación
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : (
+                      <span className="text-xs text-stone-400 italic">Productor Titular (no eliminable)</span>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" onClick={() => setIsUserDialogOpen(false)} className="dark:border-stone-700 dark:text-stone-300">
+                        Cancelar
+                      </Button>
+                      <Button type="submit" className="bg-[#2d4a22] hover:bg-[#1a2d13] dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white" disabled={isEditingUser}>
+                        {isEditingUser ? "Guardando..." : "Guardar Cambios"}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               )}
