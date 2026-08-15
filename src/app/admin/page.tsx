@@ -117,6 +117,17 @@ export default function AdminDashboardPage() {
 
         if (alertsFound.length === 0) {
           setWeatherSummaryText(`🟢 Condiciones estables para los próximos 7 días en Coronda (Mínima promedio: ${Math.round(minTempEver)}°C). No se detectan heladas ni tormentas de consideración.`);
+        } else {
+          // Envío automático al correo uribrusa@gmail.com si se detectan alertas
+          try {
+            fetch('/api/alerts/send-weather-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ alerts: alertsFound })
+            }).catch(e => console.error("Error al enviar email automático de clima:", e));
+          } catch (e) {
+            console.error("Error al disparar API de email:", e);
+          }
         }
 
         setLiveWeatherAlerts(alertsFound);
@@ -129,6 +140,27 @@ export default function AdminDashboardPage() {
 
     fetchLiveWeather();
   }, []);
+
+  const handleSendEmailAlertToMe = async (alt: { risk: string; eventDate: string; recommendation: string; urgency: string }) => {
+    try {
+      toast({ title: "Enviando Correo...", description: "Enviando alerta a uribrusa@gmail.com" });
+      const res = await fetch('/api/alerts/send-weather-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alerts: [alt] })
+      });
+      if (res.ok) {
+        toast({
+          title: "✉️ Correo Enviado",
+          description: "La alerta climática ha sido enviada exitosamente a uribrusa@gmail.com",
+        });
+      } else {
+        toast({ title: "Error", description: "No se pudo enviar el correo.", variant: "destructive" });
+      }
+    } catch (e) {
+      toast({ title: "Error", description: "Error de red al enviar el correo.", variant: "destructive" });
+    }
+  };
 
   // Create producer state
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -931,23 +963,35 @@ export default function AdminDashboardPage() {
                             {alt.recommendation}
                           </p>
                         </div>
-                        <Button 
-                          type="button" 
-                          size="sm"
-                          className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
-                          onClick={() => {
-                            setBroadcastTitle(`️ ${alt.risk.toUpperCase()}: Coronda`);
-                            setBroadcastBody(alt.recommendation);
-                            setBroadcastSeverity(alt.urgency === 'Alta' ? 'critical' : 'warning');
-                            toast({
-                              title: "Alerta Climática Cargada",
-                              description: "Se precargó la notificación con el día y temperatura real en el formulario de la derecha.",
-                            });
-                          }}
-                        >
-                          <Send className="h-3.5 w-3.5 mr-1.5" />
-                          <span>Cargar Alerta para Enviar</span>
-                        </Button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <Button 
+                            type="button" 
+                            size="sm"
+                            className="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-sm w-full"
+                            onClick={() => {
+                              setBroadcastTitle(`️ ${alt.risk.toUpperCase()}: Coronda`);
+                              setBroadcastBody(alt.recommendation);
+                              setBroadcastSeverity(alt.urgency === 'Alta' ? 'critical' : 'warning');
+                              toast({
+                                title: "Alerta Climática Cargada",
+                                description: "Se precargó la notificación con el día y temperatura real en el formulario de la derecha.",
+                              });
+                            }}
+                          >
+                            <Send className="h-3.5 w-3.5 mr-1.5" />
+                            <span>Cargar Alerta Push</span>
+                          </Button>
+                          <Button 
+                            type="button" 
+                            size="sm"
+                            variant="outline"
+                            className="border-sky-300 dark:border-sky-700 text-sky-800 dark:text-sky-300 hover:bg-sky-100 font-bold text-xs shadow-sm w-full"
+                            onClick={() => handleSendEmailAlertToMe(alt)}
+                          >
+                            <Mail className="h-3.5 w-3.5 mr-1.5 text-sky-600" />
+                            <span>Enviar a uribrusa@gmail.com</span>
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
