@@ -373,6 +373,11 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Línea divisoria gris */}
+        <div className="max-w-5xl mx-auto px-6">
+          <hr className="border-t border-gray-200 dark:border-green-900/60" />
+        </div>
+
         {/* FAQ Section */}
         <section className="py-24 bg-white dark:bg-green-950 px-6 lg:px-8 max-w-3xl mx-auto">
           <div className="text-center mb-10">
