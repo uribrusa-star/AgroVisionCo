@@ -67,10 +67,26 @@ export function PhenologyHistory() {
     name: "images"
   });
 
+  const formatDateForInput = (dateStr: string | Date | undefined) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return typeof dateStr === 'string' ? dateStr.slice(0, 16) : '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch {
+      return '';
+    }
+  };
+
   useEffect(() => {
     if (selectedLog && isEditDialogOpen) {
       form.reset({
-        date: selectedLog.date.slice(0, 16),
+        date: formatDateForInput(selectedLog.date),
         developmentState: selectedLog.developmentState,
         batchIds: selectedLog.batchIds || (selectedLog.batchId ? [selectedLog.batchId] : []),
         flowerCount: selectedLog.flowerCount,

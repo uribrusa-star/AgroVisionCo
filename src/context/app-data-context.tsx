@@ -597,12 +597,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const editHarvest = async (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string }) => {
+    const editHarvest = async (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string; date?: string }) => {
         const oldLog = collectorPaymentLogs.find(l => l.id === logId);
         const oldHarvest = harvests.find(h => h.id === harvestId);
         const collector = collectors.find(c => c.id === oldLog?.collectorId);
         
-        if (!oldLog || !oldHarvest || !collector) {
+        if (!oldLog || !oldHarvest) {
             toast({ title: "Error", description: "No se encontró la información original.", variant: "destructive"});
             return;
         }
@@ -613,30 +613,40 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const kiloDiff = updatedData.kilograms - oldLog.kilograms;
             const hoursDiff = updatedData.hours - oldLog.hours;
             
-            const newTotalHarvested = collector.totalHarvested + kiloDiff;
-            const newHoursWorked = collector.hoursWorked + hoursDiff;
-            
-            const collectorRef = doc(db, 'collectors', collector.id);
-            batch.update(collectorRef, {
-                totalHarvested: newTotalHarvested,
-                hoursWorked: newHoursWorked,
-                productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
-            });
+            if (collector) {
+                const newTotalHarvested = (collector.totalHarvested || 0) + kiloDiff;
+                const newHoursWorked = (collector.hoursWorked || 0) + hoursDiff;
+                
+                const collectorRef = doc(db, 'collectors', collector.id);
+                batch.set(collectorRef, {
+                    totalHarvested: newTotalHarvested,
+                    hoursWorked: newHoursWorked,
+                    productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
+                }, { merge: true });
+            }
 
             const harvestRef = doc(db, 'harvests', harvestId);
-            batch.update(harvestRef, {
+            const harvestUpdatePayload: any = {
                 kilograms: updatedData.kilograms,
                 batchNumber: updatedData.batchNumber
-            });
+            };
+            if (updatedData.date) {
+                harvestUpdatePayload.date = updatedData.date;
+            }
+            batch.update(harvestRef, harvestUpdatePayload);
 
             const paymentLogRef = doc(db, 'collectorPaymentLogs', logId);
             const calculatedPayment = updatedData.kilograms * updatedData.ratePerKg;
-            batch.update(paymentLogRef, {
+            const paymentUpdatePayload: any = {
                 kilograms: updatedData.kilograms,
                 hours: updatedData.hours,
                 ratePerKg: updatedData.ratePerKg,
                 payment: calculatedPayment
-            });
+            };
+            if (updatedData.date) {
+                paymentUpdatePayload.date = updatedData.date;
+            }
+            batch.update(paymentLogRef, paymentUpdatePayload);
 
             await batch.commit();
             setCollectors(prev => prev.map(c => {

@@ -44,7 +44,7 @@ function ProductionPaymentHistoryComponent() {
   const [isPdfPending, startPdfTransition] = useTransition();
   const [selectedLog, setSelectedLog] = useState<CollectorPaymentLog | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ kilograms: 0, hours: 0, ratePerKg: 0, batchNumber: '' });
+  const [editData, setEditData] = useState({ kilograms: 0, hours: 0, ratePerKg: 0, batchNumber: '', date: '' });
   const [visibleCount, setVisibleCount] = useState(5);
   const [isLabelOpen, setIsLabelOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
@@ -53,6 +53,22 @@ function ProductionPaymentHistoryComponent() {
   const scaleWrapperRef = useRef<HTMLDivElement>(null);
   const [labelScale, setLabelScale] = useState(1);
   const { editHarvest } = useContext(AppDataContext);
+
+  const formatDateForInput = (dateStr: string | Date | undefined) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return typeof dateStr === 'string' ? dateStr.slice(0, 16) : '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch {
+      return '';
+    }
+  };
 
   useEffect(() => {
     const updateScale = () => {
@@ -108,7 +124,8 @@ function ProductionPaymentHistoryComponent() {
           kilograms: selectedLog.kilograms,
           hours: selectedLog.hours,
           ratePerKg: selectedLog.ratePerKg,
-          batchNumber: harvest?.batchNumber || ''
+          batchNumber: harvest?.batchNumber || '',
+          date: formatDateForInput(selectedLog.date)
       });
       setIsEditing(true);
   };
@@ -389,6 +406,10 @@ function ProductionPaymentHistoryComponent() {
 
               {isEditing ? (
                   <div className="grid gap-4 py-4 px-1 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-2">
+                        <Label>Fecha y Hora de Cosecha</Label>
+                        <Input type="datetime-local" value={editData.date} onChange={e => setEditData({...editData, date: e.target.value})} disabled={isPending} />
+                    </div>
                     <div className="space-y-2">
                         <Label>Lote</Label>
                         <Input value={editData.batchNumber} onChange={e => setEditData({...editData, batchNumber: e.target.value})} disabled={isPending} />
