@@ -222,7 +222,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               setUsers(uniqueUsers);
             }
 
-            // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores)
+            // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores con fallback a consulta sin orderBy si falta índice en Firestore)
             const safeFetch = async <T,>(promise: Promise<T>, defaultValue: T): Promise<T> => {
                 try {
                     return await promise;
@@ -231,6 +231,32 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     return defaultValue;
                 }
             };
+
+            const fetchQueryWithFallback = async (colName: string, estId: string, hasOrderBy = true) => {
+              const colRef = collection(db, colName);
+              if (hasOrderBy) {
+                try {
+                  return await getDocs(query(colRef, where('establishmentId', '==', estId), orderBy('date', 'desc')));
+                } catch (err) {
+                  console.warn(`Firestore orderBy index missing for ${colName}, falling back to un-ordered query:`, err);
+                  try {
+                    return await getDocs(query(colRef, where('establishmentId', '==', estId)));
+                  } catch (e2) {
+                    console.error(`Failed fallback query for ${colName}:`, e2);
+                    return { docs: [] } as any;
+                  }
+                }
+              } else {
+                try {
+                  return await getDocs(query(colRef, where('establishmentId', '==', estId)));
+                } catch (err) {
+                  console.error(`Failed query for ${colName}:`, err);
+                  return { docs: [] } as any;
+                }
+              }
+            };
+
+            const estId = currentUser?.establishmentId || 'main';
 
             const [
               establishmentDocSnap,
@@ -251,23 +277,23 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               transactionsSnapshot,
               knowledgeSnapshot,
             ] = await Promise.all([
-              safeFetch(getDoc(doc(db, 'establishment', currentUser?.establishmentId || 'main')), null),
-              safeFetch(getDocs(query(collection(db, 'collectors'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'packers'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'harvests'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'agronomistLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'phenologyLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'predictionLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'diagnosisLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'supplies'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'tasks'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('createdAt', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'batches'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'collectorPaymentLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'packagingLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'culturalPracticeLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'producerLogs'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'transactions'), where('establishmentId', '==', currentUser?.establishmentId || 'main'), orderBy('date', 'desc'))), { docs: [] } as any),
-              safeFetch(getDocs(query(collection(db, 'knowledge'), where('establishmentId', '==', currentUser?.establishmentId || 'main'))), { docs: [] } as any),
+              safeFetch(getDoc(doc(db, 'establishment', estId)), null),
+              fetchQueryWithFallback('collectors', estId, false),
+              fetchQueryWithFallback('packers', estId, false),
+              fetchQueryWithFallback('harvests', estId, true),
+              fetchQueryWithFallback('agronomistLogs', estId, true),
+              fetchQueryWithFallback('phenologyLogs', estId, true),
+              fetchQueryWithFallback('predictionLogs', estId, true),
+              fetchQueryWithFallback('diagnosisLogs', estId, true),
+              fetchQueryWithFallback('supplies', estId, false),
+              fetchQueryWithFallback('tasks', estId, true),
+              fetchQueryWithFallback('batches', estId, false),
+              fetchQueryWithFallback('collectorPaymentLogs', estId, true),
+              fetchQueryWithFallback('packagingLogs', estId, true),
+              fetchQueryWithFallback('culturalPracticeLogs', estId, true),
+              fetchQueryWithFallback('producerLogs', estId, true),
+              fetchQueryWithFallback('transactions', estId, true),
+              fetchQueryWithFallback('knowledge', estId, false),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
@@ -476,10 +502,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
             for (const { harvest: harvestData, hoursWorked, ratePerKg } of harvestsData) {
                 const collector = collectors.find(c => c.id === harvestData.collector.id);
-                if (!collector) {
-                    console.error("Collector not found for id:", harvestData.collector.id);
-                    continue; // skip
-                }
+                const collectorName = collector?.name || harvestData.collector.name || 'Recolector';
 
                 const harvestDate = new Date(harvestData.date);
                 const dateString = `${harvestDate.getFullYear()}${(harvestDate.getMonth() + 1).toString().padStart(2, '0')}${harvestDate.getDate().toString().padStart(2, '0')}`;
@@ -493,24 +516,30 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
                 const harvestWithTraceability: Omit<Harvest, 'id'> = {
                   ...harvestData,
+                  collector: {
+                    id: harvestData.collector.id,
+                    name: collectorName
+                  },
                   traceabilityId,
                 }
 
                 const newHarvestRef = doc(collection(db, 'harvests'));
                 batch.set(newHarvestRef, { ...harvestWithTraceability, establishmentId: currentUser?.establishmentId || 'main' });
 
-                const collectorRef = doc(db, 'collectors', harvestData.collector.id);
-                const prevStats = updatedCollectors.get(harvestData.collector.id) || { totalHarvested: collector.totalHarvested, hoursWorked: collector.hoursWorked };
-                const newTotalHarvested = prevStats.totalHarvested + harvestData.kilograms;
-                const newHoursWorked = prevStats.hoursWorked + hoursWorked;
-                updatedCollectors.set(harvestData.collector.id, { totalHarvested: newTotalHarvested, hoursWorked: newHoursWorked });
+                if (harvestData.collector.id) {
+                    const collectorRef = doc(db, 'collectors', harvestData.collector.id);
+                    const prevStats = updatedCollectors.get(harvestData.collector.id) || { totalHarvested: collector?.totalHarvested || 0, hoursWorked: collector?.hoursWorked || 0 };
+                    const newTotalHarvested = prevStats.totalHarvested + harvestData.kilograms;
+                    const newHoursWorked = prevStats.hoursWorked + hoursWorked;
+                    updatedCollectors.set(harvestData.collector.id, { totalHarvested: newTotalHarvested, hoursWorked: newHoursWorked });
 
-                const updatedCollectorData = {
-                    totalHarvested: newTotalHarvested,
-                    hoursWorked: newHoursWorked,
-                    productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
-                };
-                batch.update(collectorRef, updatedCollectorData);
+                    const updatedCollectorData = {
+                        totalHarvested: newTotalHarvested,
+                        hoursWorked: newHoursWorked,
+                        productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
+                    };
+                    batch.set(collectorRef, updatedCollectorData, { merge: true });
+                }
                 
                 const newPaymentLogRef = doc(collection(db, 'collectorPaymentLogs'));
                 const calculatedPayment = harvestData.kilograms * ratePerKg;
