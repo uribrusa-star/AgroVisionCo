@@ -73,17 +73,22 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
     return batches;
   }, [batches]);
 
+  const selectedHarvestDate = form.watch('date') || new Date();
+
   const batchOptions = useMemo(() => {
     return availableBatches.map(b => {
-      const phiStatus = getBatchPhiStatus(b.id, agronomistLogs);
+      const phiStatus = getBatchPhiStatus(b.id, agronomistLogs, selectedHarvestDate);
+      const isHistoricDate = selectedHarvestDate < new Date(Date.now() - 24 * 60 * 60 * 1000);
+      
       return {
         label: b.id,
         value: b.id,
-        disabled: phiStatus.isBlocked,
-        tag: phiStatus.isBlocked ? `🔒 BLOQUEADO PHI (${phiStatus.remainingDays || 0}d rest.)` : undefined,
+        // En cargas históricas/pasadas no deshabilitamos el lote para permitir registrar la producción antigua
+        disabled: isHistoricDate ? false : phiStatus.isBlocked,
+        tag: phiStatus.isBlocked ? `🔒 PHI (${phiStatus.remainingDays || 0}d rest.)` : undefined,
       };
     });
-  }, [availableBatches, agronomistLogs]);
+  }, [availableBatches, agronomistLogs, selectedHarvestDate]);
 
   const saveHarvestData = (values: ProductionFormValues) => {
     startTransition(async () => {

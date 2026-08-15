@@ -24,6 +24,11 @@ export function getBatchPhiStatus(
     const appDate = new Date(log.date);
     if (isNaN(appDate.getTime())) continue;
 
+    // Una aplicación posterior a la fecha de cosecha consultada NUNCA puede bloquear una cosecha pasada
+    if (appDate.getTime() > checkTimestamp) {
+      continue;
+    }
+
     // Calcular fecha de desbloqueo: fecha de aplicación + phiDays
     const unlockTimestamp = appDate.getTime() + log.phiDays * 24 * 60 * 60 * 1000;
 
