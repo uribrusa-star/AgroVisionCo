@@ -232,13 +232,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 }
             };
 
-            const fetchQueryWithFallback = async (colName: string, estId: string, hasOrderBy = true) => {
+            const fetchQueryWithFallback = async (colName: string, estId: string, orderByField: string | null = 'date') => {
               const colRef = collection(db, colName);
-              if (hasOrderBy) {
+              if (orderByField) {
                 try {
-                  return await getDocs(query(colRef, where('establishmentId', '==', estId), orderBy('date', 'desc')));
+                  return await getDocs(query(colRef, where('establishmentId', '==', estId), orderBy(orderByField, 'desc')));
                 } catch (err) {
-                  console.warn(`Firestore orderBy index missing for ${colName}, falling back to un-ordered query:`, err);
                   try {
                     return await getDocs(query(colRef, where('establishmentId', '==', estId)));
                   } catch (e2) {
@@ -278,22 +277,22 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               knowledgeSnapshot,
             ] = await Promise.all([
               safeFetch(getDoc(doc(db, 'establishment', estId)), null),
-              fetchQueryWithFallback('collectors', estId, false),
-              fetchQueryWithFallback('packers', estId, false),
-              fetchQueryWithFallback('harvests', estId, true),
-              fetchQueryWithFallback('agronomistLogs', estId, true),
-              fetchQueryWithFallback('phenologyLogs', estId, true),
-              fetchQueryWithFallback('predictionLogs', estId, true),
-              fetchQueryWithFallback('diagnosisLogs', estId, true),
-              fetchQueryWithFallback('supplies', estId, false),
-              fetchQueryWithFallback('tasks', estId, true),
-              fetchQueryWithFallback('batches', estId, false),
-              fetchQueryWithFallback('collectorPaymentLogs', estId, true),
-              fetchQueryWithFallback('packagingLogs', estId, true),
-              fetchQueryWithFallback('culturalPracticeLogs', estId, true),
-              fetchQueryWithFallback('producerLogs', estId, true),
-              fetchQueryWithFallback('transactions', estId, true),
-              fetchQueryWithFallback('knowledge', estId, false),
+              fetchQueryWithFallback('collectors', estId, null),
+              fetchQueryWithFallback('packers', estId, null),
+              fetchQueryWithFallback('harvests', estId, 'date'),
+              fetchQueryWithFallback('agronomistLogs', estId, 'date'),
+              fetchQueryWithFallback('phenologyLogs', estId, 'date'),
+              fetchQueryWithFallback('predictionLogs', estId, 'date'),
+              fetchQueryWithFallback('diagnosisLogs', estId, 'date'),
+              fetchQueryWithFallback('supplies', estId, null),
+              fetchQueryWithFallback('tasks', estId, 'createdAt'),
+              fetchQueryWithFallback('batches', estId, null),
+              fetchQueryWithFallback('collectorPaymentLogs', estId, 'date'),
+              fetchQueryWithFallback('packagingLogs', estId, 'date'),
+              fetchQueryWithFallback('culturalPracticeLogs', estId, 'date'),
+              fetchQueryWithFallback('producerLogs', estId, 'date'),
+              fetchQueryWithFallback('transactions', estId, 'date'),
+              fetchQueryWithFallback('knowledge', estId, null),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
@@ -613,9 +612,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const kiloDiff = updatedData.kilograms - oldLog.kilograms;
             const hoursDiff = updatedData.hours - oldLog.hours;
             
+            let newTotalHarvested = collector?.totalHarvested || 0;
+            let newHoursWorked = collector?.hoursWorked || 0;
+
             if (collector) {
-                const newTotalHarvested = (collector.totalHarvested || 0) + kiloDiff;
-                const newHoursWorked = (collector.hoursWorked || 0) + hoursDiff;
+                newTotalHarvested = (collector.totalHarvested || 0) + kiloDiff;
+                newHoursWorked = (collector.hoursWorked || 0) + hoursDiff;
                 
                 const collectorRef = doc(db, 'collectors', collector.id);
                 batch.set(collectorRef, {
@@ -649,17 +651,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             batch.update(paymentLogRef, paymentUpdatePayload);
 
             await batch.commit();
-            setCollectors(prev => prev.map(c => {
-                if (c.id === collector.id) {
-                    return {
-                        ...c,
-                        totalHarvested: newTotalHarvested,
-                        hoursWorked: newHoursWorked,
-                        productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0
-                    };
-                }
-                return c;
-            }));
+            if (collector) {
+                setCollectors(prev => prev.map(c => {
+                    if (c.id === collector.id) {
+                        return {
+                            ...c,
+                            totalHarvested: newTotalHarvested,
+                            hoursWorked: newHoursWorked,
+                            productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0
+                        };
+                    }
+                    return c;
+                }));
+            }
             await fetchAllData();
             toast({ title: "Éxito", description: "Registro modificado exitosamente."});
         } catch(error) {
