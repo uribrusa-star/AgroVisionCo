@@ -393,10 +393,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
     const addHarvest = async (harvestData: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number): Promise<string | undefined> => {
         const collector = collectors.find(c => c.id === harvestData.collector.id);
-        if (!collector) {
-            toast({ title: "Error", description: "Recolector no encontrado.", variant: "destructive"});
-            return undefined;
-        }
+        const collectorName = collector?.name || harvestData.collector.name || 'Recolector';
 
         const phiStatus = getBatchPhiStatus(harvestData.batchNumber, agronomistLogs, new Date(harvestData.date));
         if (phiStatus.isBlocked) {
@@ -415,7 +412,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const harvestDate = new Date(harvestData.date);
             const dateString = `${harvestDate.getFullYear()}${(harvestDate.getMonth() + 1).toString().padStart(2, '0')}${harvestDate.getDate().toString().padStart(2, '0')}`;
             
-            // Correctly filter harvests for the same day to get the sequential number
             const todayStart = new Date(harvestDate.getFullYear(), harvestDate.getMonth(), harvestDate.getDate()).toISOString();
             const todayEnd = new Date(harvestDate.getFullYear(), harvestDate.getMonth(), harvestDate.getDate(), 23, 59, 59, 999).toISOString();
 
@@ -425,21 +421,28 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
             const harvestWithTraceability: Omit<Harvest, 'id'> = {
               ...harvestData,
+              collector: {
+                id: harvestData.collector.id,
+                name: collectorName
+              },
               traceabilityId,
             }
 
             const newHarvestRef = doc(collection(db, 'harvests'));
             batch.set(newHarvestRef, { ...harvestWithTraceability, establishmentId: currentUser?.establishmentId || 'main' });
 
-            const collectorRef = doc(db, 'collectors', harvestData.collector.id);
-            const newTotalHarvested = collector.totalHarvested + harvestData.kilograms;
-            const newHoursWorked = collector.hoursWorked + hoursWorked;
+            const newTotalHarvested = (collector?.totalHarvested || 0) + harvestData.kilograms;
+            const newHoursWorked = (collector?.hoursWorked || 0) + hoursWorked;
             const updatedCollectorData = {
                 totalHarvested: newTotalHarvested,
                 hoursWorked: newHoursWorked,
                 productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0,
             };
-            batch.update(collectorRef, updatedCollectorData);
+
+            if (harvestData.collector.id) {
+                const collectorRef = doc(db, 'collectors', harvestData.collector.id);
+                batch.set(collectorRef, updatedCollectorData, { merge: true });
+            }
             
             // Create and set the payment log in the same batch
             const newPaymentLogRef = doc(collection(db, 'collectorPaymentLogs'));
@@ -448,27 +451,29 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               harvestId: newHarvestRef.id, 
               date: harvestData.date,
               collectorId: harvestData.collector.id,
-              collectorName: collector.name,
+              collectorName: collectorName,
               kilograms: harvestData.kilograms,
               hours: hoursWorked,
               ratePerKg: ratePerKg,
               payment: calculatedPayment,
-              traceabilityId: traceabilityId, // Ensure traceabilityId is included
+              traceabilityId: traceabilityId,
             };
             batch.set(newPaymentLogRef, { ...paymentLog, establishmentId: currentUser?.establishmentId || 'main' });
 
             await batch.commit();
-            setCollectors(prev => prev.map(c => {
-                if (c.id === harvestData.collector.id) {
-                    return {
-                        ...c,
-                        totalHarvested: newTotalHarvested,
-                        hoursWorked: newHoursWorked,
-                        productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0
-                    };
-                }
-                return c;
-            }));
+            if (harvestData.collector.id) {
+                setCollectors(prev => prev.map(c => {
+                    if (c.id === harvestData.collector.id) {
+                        return {
+                            ...c,
+                            totalHarvested: newTotalHarvested,
+                            hoursWorked: newHoursWorked,
+                            productivity: newHoursWorked > 0 ? newTotalHarvested / newHoursWorked : 0
+                        };
+                    }
+                    return c;
+                }));
+            }
             await fetchAllData();
             return newHarvestRef.id;
 
