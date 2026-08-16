@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'),
-  title: 'AgroVista | Trazabilidad y Gestión Agrícola Inteligente',
+  title: 'AgroVista',
   description: 'Plataforma integral para el control de cosechas, sanidad y análisis de rendimiento de cultivos de frutilla en tiempo real.',
   applicationName: 'AgroVista',
   authors: [{ name: 'AgroVista Team' }],
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     'software agrícola'
   ],
   openGraph: {
-    title: 'AgroVista | Trazabilidad y Gestión Agrícola Inteligente',
+    title: 'AgroVista',
     description: 'Plataforma integral para el control de cosechas, sanidad y análisis de rendimiento de cultivos de frutilla en tiempo real.',
     url: 'https://agrovista.com.ar',
     siteName: 'AgroVista',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AgroVista | Trazabilidad y Gestión Agrícola Inteligente',
+    title: 'AgroVista',
     description: 'Plataforma integral para la gestión de cosechas y análisis inteligente de frutillas.',
     images: ['/og-banner.png'],
   },
