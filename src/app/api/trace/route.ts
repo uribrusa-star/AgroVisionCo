@@ -3,7 +3,7 @@ import { adminDb } from '@/lib/firebase-admin';
 
 // Fallback main producer dataset for DEMO-2026 or missing test records
 const DEMO_TRACEABILITY_DATA = {
-  establishmentName: 'Quinta Las Fresas - Coronda, Santa Fe',
+  establishmentName: 'Quinta Las Fresas',
   harvestDate: '2026-08-15',
   batchId: 'Lote 1: Camino Real',
   collectorName: 'Productor',
@@ -90,7 +90,10 @@ export async function GET(request: Request) {
     
     const estRef = adminDb.collection('establishment').doc(estId);
     const estSnap = await estRef.get();
-    const establishmentName = estSnap.exists ? estSnap.data()?.producer : 'Finca Las Fresas';
+    let establishmentName = estSnap.exists && estSnap.data()?.producer ? estSnap.data()?.producer : 'Quinta Las Fresas';
+    if (establishmentName.includes('-')) {
+      establishmentName = establishmentName.split('-')[0].trim();
+    }
 
     // Fetch agronomist logs for PHI calculation
     const agSnapshots = await agronomistLogsRef.get();
