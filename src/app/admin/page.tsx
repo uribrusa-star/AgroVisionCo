@@ -119,15 +119,24 @@ export default function AdminDashboardPage() {
         if (alertsFound.length === 0) {
           setWeatherSummaryText(`🟢 Condiciones estables para los próximos 7 días en Coronda (Mínima promedio: ${Math.round(minTempEver)}°C). No se detectan heladas ni tormentas de consideración.`);
         } else {
-          // Envío automático al correo uribrusa@gmail.com si se detectan alertas
-          try {
-            fetch('/api/alerts/send-weather-email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ alerts: alertsFound })
-            }).catch(e => console.error("Error al enviar email automático de clima:", e));
-          } catch (e) {
-            console.error("Error al disparar API de email:", e);
+          // Envío automático al correo sólo 1 vez al día para no spamear en cada inicio de sesión
+          const todayDateStr = new Date().toISOString().split('T')[0];
+          const lastSentDate = localStorage.getItem('last_weather_alert_sent_date');
+
+          if (lastSentDate !== todayDateStr) {
+            try {
+              fetch('/api/alerts/send-weather-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alerts: alertsFound })
+              }).then(res => {
+                if (res.ok) {
+                  localStorage.setItem('last_weather_alert_sent_date', todayDateStr);
+                }
+              }).catch(e => console.error("Error al enviar email automático de clima:", e));
+            } catch (e) {
+              console.error("Error al disparar API de email:", e);
+            }
           }
         }
 
