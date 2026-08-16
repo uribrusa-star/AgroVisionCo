@@ -4,9 +4,9 @@
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
-  "name": "AgroVista Coronda",
+  "name": "AgroVista",
   "short_name": "AgroVista",
-  "description": "Plataforma de gestión agrícola y trazabilidad de frutillas nacida en Coronda, Santa Fe.",
+  "description": "Plataforma de gestión agrícola y trazabilidad de frutillas.",
   "icons": [
       {
           "src": "/logo.png",
