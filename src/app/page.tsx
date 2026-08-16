@@ -5,9 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2, Music } from 'lucide-react';
+import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2, Music, QrCode, ShieldCheck, Award, Sparkles, ExternalLink, CheckCircle, Calendar, Sprout } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { ContactModal } from '@/components/contact-modal';
 import { WebAnalyticsTracker, trackUserInteraction } from '@/components/web-analytics-tracker';
@@ -372,6 +373,105 @@ export default function LandingPage() {
 
               </dl>
             </div>
+          </div>
+        </section>
+
+        {/* Public Traceability Passport Showcase Section */}
+        <section className="py-20 bg-emerald-950 text-white relative overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+            <div className="mx-auto max-w-3xl text-center space-y-4">
+              <Badge className="bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border-emerald-500/30 px-3 py-1 font-semibold text-xs rounded-full inline-flex items-center gap-1.5">
+                <QrCode className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Valor Agregado para tu Cosecha</span>
+              </Badge>
+              
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white font-headline leading-tight">
+                Pasaporte Digital de Trazabilidad para cada Bandeja
+              </h2>
+              
+              <p className="text-base sm:text-lg text-emerald-100/90 leading-relaxed">
+                AgroVista genera códigos QR únicos para cada lote cosechado. Tus compradores, verdulerías y supermercados escanean la bandeja y acceden al pasaporte digital de inocuidad y origen de tu frutilla.
+              </p>
+            </div>
+
+            {/* Interactive Mockup / Live Preview Card */}
+            <div className="mt-14 max-w-4xl mx-auto">
+              <div className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 rounded-3xl p-6 sm:p-10 shadow-2xl border border-emerald-500/20 space-y-6">
+                
+                {/* Header Badge & Title */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 shrink-0">
+                      <ShieldCheck className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-lg sm:text-xl text-stone-900 dark:text-stone-100">Establecimiento Don Pedro</span>
+                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 text-[10px] font-bold">
+                          100% Inocuo BPA
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-stone-500 dark:text-stone-400">Lote 3 - Variedad San Andreas • Código: TR-2026-LOT3-89B</p>
+                    </div>
+                  </div>
+
+                  <Badge className="bg-emerald-700 text-white font-bold text-xs px-3 py-1 shrink-0">
+                    <Award className="h-3.5 w-3.5 mr-1" /> Certificado de Calidad
+                  </Badge>
+                </div>
+
+                {/* Timeline Grid Demo */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-2">
+                  <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-stone-500">
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Etapa 1: Floración</span>
+                      <Calendar className="h-3.5 w-3.5" />
+                    </div>
+                    <p className="text-xs font-bold text-stone-800 dark:text-stone-200">12 de Mayo</p>
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-snug">Monitoreo fenológico registrado con fotometría y control biológico de plagas (MIP).</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-stone-500">
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Etapa 2: Carencia PHI</span>
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    </div>
+                    <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Período Cumplido</p>
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-snug">Cero residuos químicos. Aplicación fitosanitaria respetando los días libres de carencia.</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-stone-500">
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Etapa 3: Cosecha</span>
+                      <Sprout className="h-3.5 w-3.5" />
+                    </div>
+                    <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Fruto Fresco Cosechado</p>
+                    <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-snug">Empacado en origen con trazabilidad completa directo al consumidor final.</p>
+                  </div>
+                </div>
+
+                {/* Footer CTA Demo Link */}
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center gap-2 text-xs text-stone-500">
+                    <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>Tus clientes ven la historia de tu fruta sin descargar ninguna aplicación.</span>
+                  </div>
+
+                  <Link href="/trace/DEMO-2026" target="_blank" onClick={() => trackUserInteraction('Ver_Pasaporte_Trazabilidad_Demo')}>
+                    <Button variant="outline" size="sm" className="border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-bold text-xs gap-1.5 rounded-xl">
+                      <span>Ver Pasaporte Ejemplo en Vivo</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         </section>
 
