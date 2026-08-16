@@ -122,7 +122,10 @@ export function ContactModal({
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-w-[92%] sm:max-w-[460px] max-h-[88vh] overflow-y-auto border-none bg-white dark:bg-stone-900 shadow-2xl p-4 sm:p-6 rounded-2xl">
+      <DialogContent 
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="max-w-[92%] sm:max-w-[460px] max-h-[88vh] overflow-y-auto border-none bg-white dark:bg-stone-900 shadow-2xl p-4 sm:p-6 rounded-2xl"
+      >
         {!submitted ? (
           <>
             <DialogHeader className="space-y-1 text-left sm:text-center">
@@ -149,7 +152,7 @@ export function ContactModal({
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
+                  className="h-10 sm:h-9 text-base sm:text-xs rounded-lg border-stone-200 dark:border-stone-800"
                 />
               </div>
 
@@ -165,7 +168,7 @@ export function ContactModal({
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
-                    className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
+                    className="h-10 sm:h-9 text-base sm:text-xs rounded-lg border-stone-200 dark:border-stone-800"
                   />
                 </div>
 
@@ -179,7 +182,7 @@ export function ContactModal({
                     placeholder="+54 9 342 ..."
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
+                    className="h-10 sm:h-9 text-base sm:text-xs rounded-lg border-stone-200 dark:border-stone-800"
                   />
                 </div>
               </div>
@@ -193,7 +196,7 @@ export function ContactModal({
                     value={formData.role}
                     onValueChange={(val) => setFormData({ ...formData, role: val })}
                   >
-                    <SelectTrigger className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800">
+                    <SelectTrigger className="h-10 sm:h-9 text-base sm:text-xs rounded-lg border-stone-200 dark:border-stone-800">
                       <SelectValue placeholder="Perfil" />
                     </SelectTrigger>
                     <SelectContent>
@@ -215,7 +218,7 @@ export function ContactModal({
                     placeholder="Ej. Coronda, Santa Fe"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="h-9 text-xs rounded-lg border-stone-200 dark:border-stone-800"
+                    className="h-10 sm:h-9 text-base sm:text-xs rounded-lg border-stone-200 dark:border-stone-800"
                   />
                 </div>
               </div>
@@ -230,7 +233,7 @@ export function ContactModal({
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   rows={2}
-                  className="rounded-lg border-stone-200 dark:border-stone-800 resize-none text-xs p-2"
+                  className="rounded-lg border-stone-200 dark:border-stone-800 resize-none text-base sm:text-xs p-2"
                 />
               </div>
 
