@@ -51,7 +51,16 @@ export async function GET(request: Request) {
 
   try {
     const harvestsRef = adminDb.collection('harvests');
+    const phenologyLogsRef = adminDb.collection('phenologyLogs');
+    const agronomistLogsRef = adminDb.collection('agronomistLogs');
+    
     let harvest: any = null;
+
+    // Fetch all real phenology logs to ensure real photos of producer@agrovision.co are used
+    const allPhenoSnap = await phenologyLogsRef.get();
+    const realPhenoLogs = allPhenoSnap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((a: any, b: any) => new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime());
 
     // If ID is DEMO-2026, try finding the latest real harvest from main producer first
     if (id === 'DEMO-2026' || id.startsWith('DEMO')) {
@@ -69,7 +78,10 @@ export async function GET(request: Request) {
     }
 
     if (!harvest) {
-      return NextResponse.json(DEMO_TRACEABILITY_DATA);
+      return NextResponse.json({
+        ...DEMO_TRACEABILITY_DATA,
+        phenologyLogs: realPhenoLogs.length > 0 ? realPhenoLogs.slice(0, 5) : DEMO_TRACEABILITY_DATA.phenologyLogs
+      });
     }
 
     const batchIdStr = harvest.batchNumber || harvest.batchId || 'Lote 1';
@@ -78,52 +90,14 @@ export async function GET(request: Request) {
     
     const estRef = adminDb.collection('establishment').doc(estId);
     const estSnap = await estRef.get();
-    const establishmentName = estSnap.exists ? estSnap.data()?.producer : 'Establecimiento Don Pedro';
+    const establishmentName = estSnap.exists ? estSnap.data()?.producer : 'Finca Las Fresas';
 
-    const phenologyLogsRef = adminDb.collection('phenologyLogs');
-    const logsPromises = batchIdsToSearch.flatMap((b: string) => [
-      phenologyLogsRef.where('batchIds', 'array-contains', b).where('establishmentId', '==', estId).get(),
-      phenologyLogsRef.where('batchId', '==', b).where('establishmentId', '==', estId).get()
-    ]);
-
-    // Also fetch generic phenology logs if batch specific search yields empty
-    const allPhenoPromise = phenologyLogsRef.where('establishmentId', '==', estId).get();
-
-    const agronomistLogsRef = adminDb.collection('agronomistLogs');
-    const agLogsPromises = batchIdsToSearch.flatMap((b: string) => [
-      agronomistLogsRef.where('batchIds', 'array-contains', b).where('establishmentId', '==', estId).get(),
-      agronomistLogsRef.where('batchId', '==', b).where('establishmentId', '==', estId).get()
-    ]);
-
-    const [phenologySnapshots, agSnapshots, allPhenoSnap] = await Promise.all([
-      Promise.all(logsPromises),
-      Promise.all(agLogsPromises),
-      allPhenoPromise
-    ]);
-
-    const phenologyLogsMap = new Map();
-    phenologySnapshots.forEach(snapshot => {
-      snapshot.docs.forEach(doc => phenologyLogsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-    });
-    
-    // Fallback to all phenology logs for the establishment if specific batch is empty
-    if (phenologyLogsMap.size === 0) {
-      allPhenoSnap.docs.forEach(doc => phenologyLogsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-    }
-
-    const phenologyLogs = Array.from(phenologyLogsMap.values())
-      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 5);
-
-    const agLogsMap = new Map();
-    agSnapshots.forEach(snapshot => {
-      snapshot.docs.forEach(doc => agLogsMap.set(doc.id, { id: doc.id, ...doc.data() }));
-    });
-
-    const agLogs = Array.from(agLogsMap.values());
+    // Fetch agronomist logs for PHI calculation
+    const agSnapshots = await agronomistLogsRef.get();
+    const agLogs = agSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const lastAgLog = agLogs.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
-    const harvestDate = new Date(harvest.date);
+    const harvestDate = new Date(harvest.date || Date.now());
     let phiCompliant = true;
 
     if (lastAgLog && lastAgLog.date && lastAgLog.phiDays) {
@@ -141,17 +115,17 @@ export async function GET(request: Request) {
       phiCompliant,
       zeroResiduesGuaranteed: phiCompliant,
       waterQualityInspected: true,
-      mipPracticesCount: phenologyLogs.length || 3,
+      mipPracticesCount: realPhenoLogs.length || 3,
       sanitaryControlsCount: agLogs.length || 2,
       harvestHygieneVerified: true,
     };
 
     return NextResponse.json({
       establishmentName,
-      harvestDate: harvest.date,
+      harvestDate: harvest.date || new Date().toISOString().split('T')[0],
       batchId: harvest.batchNumber || harvest.batchId || 'Lote 1',
-      collectorName: harvest.collectorName || 'Recolector Principal',
-      phenologyLogs: phenologyLogs.length > 0 ? phenologyLogs : DEMO_TRACEABILITY_DATA.phenologyLogs,
+      collectorName: harvest.collectorName || 'Productor Principal',
+      phenologyLogs: realPhenoLogs.length > 0 ? realPhenoLogs.slice(0, 5) : DEMO_TRACEABILITY_DATA.phenologyLogs,
       bpaCertified,
       bpaDetails
     });
