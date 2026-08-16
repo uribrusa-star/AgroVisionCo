@@ -25,6 +25,7 @@ import {
   SidebarFooter,
   SidebarMenuBadge,
   SidebarInset,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { StrawberryIcon, NotebookPen } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -83,6 +84,60 @@ function UserMenu() {
   )
 }
 
+function AppSidebarNav({ navItems, pathname, pendingTasksCount, handleReset }: { navItems: typeof allNavItems, pathname: string, pendingTasksCount: number, handleReset: () => void }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  return (
+    <Sidebar collapsible='icon' className="bg-background border-r !top-16 !h-[calc(100svh-4rem)]">
+      <SidebarContent className="pt-4">
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={item.label}
+                className="group-data-[collapsible=icon]:mx-auto"
+                onClick={handleNavClick}
+              >
+                <Link href={item.href} className="flex items-center gap-2 w-full font-medium group-data-[collapsible=icon]:!justify-center">
+                  <item.icon className="w-5 h-5 shrink-0 text-primary" strokeWidth={2.5} />
+                  <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+              {item.href === '/tasks' && pendingTasksCount > 0 && (
+                <SidebarMenuBadge>{pendingTasksCount}</SidebarMenuBadge>
+              )}
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Cerrar Sesión" onClick={handleReset} className="group-data-[collapsible=icon]:mx-auto">
+              <button className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 flex items-center gap-2">
+                <LogOut className="w-5 h-5 shrink-0" />
+                <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
+              </button>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <div className="mt-4 pt-2 border-t flex flex-col items-center gap-1 text-center text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
+          <Link href="/terminos" onClick={handleNavClick} className="hover:underline hover:text-foreground">Términos y Condiciones</Link>
+          <Link href="/privacidad" onClick={handleNavClick} className="hover:underline hover:text-foreground">Privacidad (Ley 25.326)</Link>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
+
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { currentUser, isClient, loading, tasks } = React.useContext(AppDataContext);
@@ -116,37 +171,40 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         await fetch('/api/logout', { method: 'POST' });
         await signOut(auth);
         
-        // Terminar Firestore y limpiar todo el caché de IndexedDB para asegurar 100% de aislamiento de datos
         await terminate(db);
         await clearIndexedDbPersistence(db);
-      } catch (error) {
-        console.error('Error logging out and clearing cache:', error);
+
+        sessionStorage.clear();
+        localStorage.clear();
+
+        router.replace('/login');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 300);
+      } catch (e) {
+        console.error("Error signing out completely:", e);
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = '/login';
       }
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-      window.location.href = '/';
     }
   };
 
   const pendingTasksCount = React.useMemo(() => {
-      if (!currentUser || !tasks) return 0;
-      return tasks.filter(task => task.assignedTo?.id === currentUser.id && task.status === 'pending').length;
-  }, [currentUser, tasks]);
+    if (!tasks || !currentUser) return 0;
+    return tasks.filter(t => t.status === 'pendiente').length;
+  }, [tasks, currentUser]);
 
 
-  if (loading || !currentUser) {
+  if (!isClient || loading || !currentUser) {
     return (
-        <div className="flex items-center justify-center h-screen bg-background">
-          <div className="flex flex-col items-center gap-4 text-center p-6 max-w-sm">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <div className="space-y-2">
-              <p className="font-semibold text-lg">Sincronizando con AgroVista...</p>
-              <p className="text-sm text-muted-foreground italic">Verificando sesión y descargando datos del campo.</p>
-            </div>
-            
+        <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">Cargando aplicación...</p>
             {showResetButton && (
-              <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <p className="text-xs text-muted-foreground">
+              <div className="mt-4 p-4 border rounded-lg bg-muted/50 text-xs text-muted-foreground animate-fade-in space-y-3">
+                <p>
                   Si esto tarda demasiado, puede haber un problema de conexión o con el almacenamiento del navegador.
                 </p>
                 <div className="flex flex-col gap-2">
@@ -174,7 +232,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   return (
       <SidebarProvider defaultOpen={true} className="flex-col">
           <ConnectivityBanner />
-          {/* Top Header spans full width */}
           <header className="flex h-16 shrink-0 items-center justify-between border-b bg-sidebar px-4 md:px-6 sticky top-0 z-40">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="shrink-0" />
@@ -190,46 +247,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </header>
 
           <div className="flex flex-1 w-full">
-            <Sidebar collapsible='icon' className="bg-background border-r !top-16 !h-[calc(100svh-4rem)]">
-              <SidebarContent className="pt-4">
-                <SidebarMenu>
-                  {navItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}
-                        tooltip={item.label}
-                        className="group-data-[collapsible=icon]:mx-auto"
-                      >
-                        <Link href={item.href} className="flex items-center gap-2 w-full font-medium group-data-[collapsible=icon]:!justify-center">
-                          <item.icon className="w-5 h-5 shrink-0 text-primary" strokeWidth={2.5} />
-                          <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    {item.href === '/tasks' && pendingTasksCount > 0 && (
-                        <SidebarMenuBadge>{pendingTasksCount}</SidebarMenuBadge>
-                    )}
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarContent>
-            <SidebarFooter className="p-2">
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Cerrar Sesión" onClick={handleReset} className="group-data-[collapsible=icon]:mx-auto">
-                      <button className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 flex items-center gap-2">
-                        <LogOut className="w-5 h-5 shrink-0" />
-                        <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-                <div className="mt-4 pt-2 border-t flex flex-col items-center gap-1 text-center text-[10px] text-muted-foreground group-data-[collapsible=icon]:hidden">
-                  <Link href="/terminos" className="hover:underline hover:text-foreground">Términos y Condiciones</Link>
-                  <Link href="/privacidad" className="hover:underline hover:text-foreground">Privacidad (Ley 25.326)</Link>
-                </div>
-            </SidebarFooter>
-          </Sidebar>
+            <AppSidebarNav 
+              navItems={navItems} 
+              pathname={pathname} 
+              pendingTasksCount={pendingTasksCount} 
+              handleReset={handleReset} 
+            />
 
             <SidebarInset className="flex-1 w-full bg-muted/20">
                 <main className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full relative">
