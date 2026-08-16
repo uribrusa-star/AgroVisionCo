@@ -49,30 +49,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Falta el ID de trazabilidad.' }, { status: 400 });
   }
 
-  // Handle DEMO ID gracefully
-  if (id === 'DEMO-2026' || id.startsWith('DEMO')) {
-    return NextResponse.json(DEMO_TRACEABILITY_DATA);
-  }
-
   try {
     const harvestsRef = adminDb.collection('harvests');
-    const querySnapshot = await harvestsRef.where('traceabilityId', '==', id).limit(1).get();
+    let harvest: any = null;
 
-    if (querySnapshot.empty) {
-      // Return DEMO fallback instead of hard 404 to avoid console errors during demos
+    // If ID is DEMO-2026, try finding the latest real harvest from main producer first
+    if (id === 'DEMO-2026' || id.startsWith('DEMO')) {
+      const demoQuery = await harvestsRef.orderBy('createdAt', 'desc').limit(1).get();
+      if (!demoQuery.empty) {
+        const doc = demoQuery.docs[0];
+        harvest = { id: doc.id, ...doc.data() };
+      }
+    } else {
+      const querySnapshot = await harvestsRef.where('traceabilityId', '==', id).limit(1).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        harvest = { id: doc.id, ...doc.data() };
+      }
+    }
+
+    if (!harvest) {
       return NextResponse.json(DEMO_TRACEABILITY_DATA);
     }
 
-    const harvestDoc = querySnapshot.docs[0];
-    const harvest = { id: harvestDoc.id, ...harvestDoc.data() } as any;
-
-    const batchIdStr = harvest.batchNumber;
-    const batchIdsToSearch = batchIdStr ? batchIdStr.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    const batchIdStr = harvest.batchNumber || harvest.batchId || 'Lote 1';
+    const batchIdsToSearch = batchIdStr ? String(batchIdStr).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
     const estId = harvest.establishmentId || 'main';
     
     const estRef = adminDb.collection('establishment').doc(estId);
     const estSnap = await estRef.get();
-    const establishmentName = estSnap.exists ? estSnap.data()?.producer : 'AgroVista';
+    const establishmentName = estSnap.exists ? estSnap.data()?.producer : 'Establecimiento Don Pedro';
 
     const phenologyLogsRef = adminDb.collection('phenologyLogs');
     const logsPromises = batchIdsToSearch.flatMap((b: string) => [
@@ -80,21 +86,30 @@ export async function GET(request: Request) {
       phenologyLogsRef.where('batchId', '==', b).where('establishmentId', '==', estId).get()
     ]);
 
+    // Also fetch generic phenology logs if batch specific search yields empty
+    const allPhenoPromise = phenologyLogsRef.where('establishmentId', '==', estId).get();
+
     const agronomistLogsRef = adminDb.collection('agronomistLogs');
     const agLogsPromises = batchIdsToSearch.flatMap((b: string) => [
       agronomistLogsRef.where('batchIds', 'array-contains', b).where('establishmentId', '==', estId).get(),
       agronomistLogsRef.where('batchId', '==', b).where('establishmentId', '==', estId).get()
     ]);
 
-    const [phenologySnapshots, agSnapshots] = await Promise.all([
+    const [phenologySnapshots, agSnapshots, allPhenoSnap] = await Promise.all([
       Promise.all(logsPromises),
-      Promise.all(agLogsPromises)
+      Promise.all(agLogsPromises),
+      allPhenoPromise
     ]);
 
     const phenologyLogsMap = new Map();
     phenologySnapshots.forEach(snapshot => {
       snapshot.docs.forEach(doc => phenologyLogsMap.set(doc.id, { id: doc.id, ...doc.data() }));
     });
+    
+    // Fallback to all phenology logs for the establishment if specific batch is empty
+    if (phenologyLogsMap.size === 0) {
+      allPhenoSnap.docs.forEach(doc => phenologyLogsMap.set(doc.id, { id: doc.id, ...doc.data() }));
+    }
 
     const phenologyLogs = Array.from(phenologyLogsMap.values())
       .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -134,9 +149,9 @@ export async function GET(request: Request) {
     return NextResponse.json({
       establishmentName,
       harvestDate: harvest.date,
-      batchId: harvest.batchNumber,
-      collectorName: harvest.collectorName,
-      phenologyLogs,
+      batchId: harvest.batchNumber || harvest.batchId || 'Lote 1',
+      collectorName: harvest.collectorName || 'Recolector Principal',
+      phenologyLogs: phenologyLogs.length > 0 ? phenologyLogs : DEMO_TRACEABILITY_DATA.phenologyLogs,
       bpaCertified,
       bpaDetails
     });
