@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,18 +12,12 @@ import {
   Monitor, 
   Globe, 
   Search, 
-  Share2, 
   RefreshCw,
-  TrendingUp,
   Activity,
   ArrowUpRight
 } from 'lucide-react';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -55,24 +49,30 @@ type DailyAnalyticsDoc = {
 export function WebAnalyticsView() {
   const [analyticsData, setAnalyticsData] = useState<DailyAnalyticsDoc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchAnalytics = useCallback(async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    try {
+      const res = await fetch('/api/analytics/data');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          // Reverse for chronological chart display (past -> today)
+          setAnalyticsData([...json.data].reverse());
+        }
+      }
+    } catch (e) {
+      console.error("Error loading web analytics API:", e);
+    } finally {
+      setLoading(false);
+      if (isManual) setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Subscribe to webAnalytics collection ordered by date
-    const q = query(collection(db, 'webAnalytics'), orderBy('date', 'desc'), limit(30));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs: DailyAnalyticsDoc[] = [];
-      snapshot.forEach(docSnap => {
-        docs.push({ id: docSnap.id, ...docSnap.data() } as DailyAnalyticsDoc);
-      });
-      setAnalyticsData(docs.reverse()); // Reverse for chronological chart display
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching web analytics:", error);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   // Compute metrics
   const totalViews = analyticsData.reduce((acc, curr) => acc + (curr.totalViews || 0), 0);
@@ -117,7 +117,6 @@ export function WebAnalyticsView() {
   });
 
   const chartData = analyticsData.map(d => {
-    // Format YYYY-MM-DD to DD/MM
     const parts = d.date.split('-');
     const dateFormatted = parts.length === 3 ? `${parts[2]}/${parts[1]}` : d.date;
     return {
@@ -143,12 +142,24 @@ export function WebAnalyticsView() {
             Tráfico Web & Interacciones
           </h2>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-            Monitoreo en tiempo real de visitas, fuentes y clics en la landing page de AgroVista.
+            Monitoreo de visitas, fuentes y clics en la landing page de AgroVista.
           </p>
         </div>
-        <Badge className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold border-0 px-3 py-1 text-xs">
-          🟢 Tracking Activo (Asíncrono)
-        </Badge>
+        <div className="flex items-center gap-3">
+          <Badge className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold border-0 px-3 py-1 text-xs">
+            🟢 Tracking Activo
+          </Badge>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => fetchAnalytics(true)}
+            disabled={refreshing}
+            className="h-8 text-xs gap-1.5 font-medium"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       {/* KPI Cards */}
