@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { ContactModal } from '@/components/contact-modal';
+import { WebAnalyticsTracker, trackUserInteraction } from '@/components/web-analytics-tracker';
 
 export default function LandingPage() {
   const { currentUser } = useContext(AppDataContext);
@@ -56,13 +57,14 @@ export default function LandingPage() {
   }, [currentUser, router]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background dark:bg-green-950">
-      {/* Navbar */}
-      <header className="px-6 py-4 flex items-center justify-between border-b dark:border-green-800 bg-background/95 dark:bg-green-950/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex items-center gap-2 relative">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-green-950">
+      <WebAnalyticsTracker />
+      {/* Header */}
+      <header className="px-6 lg:px-8 py-6 flex items-center justify-between border-b dark:border-green-900">
+        <div className="flex items-center gap-3">
           {!isPlaying ? (
             <Image 
-              src="/logo.png" 
+              src="/frutilla-vector.svg" 
               alt="AgroVista Logo" 
               width={32} 
               height={32} 
@@ -138,7 +140,7 @@ export default function LandingPage() {
         </div>
 
         <nav>
-          <Link href="/login">
+          <Link href="/login" onClick={() => trackUserInteraction('Boton_Iniciar_Sesion')}>
             <Button variant="outline" className="text-green-700 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/50">
               Iniciar Sesión
             </Button>
@@ -173,7 +175,7 @@ export default function LandingPage() {
               controlar la sanidad y maximizar las ganancias de tus lotes de frutillas. Con inteligencia artificial, 
               reportes agronómicos y mapas interactivos en tiempo real.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+            <div className="mt-10 flex items-center justify-center gap-x-6" onClick={() => trackUserInteraction('Boton_Comenzar_Ahora_Hero')}>
               <ContactModal buttonText="Comenzar Ahora" buttonSize="lg" buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold" />
             </div>
           </div>
