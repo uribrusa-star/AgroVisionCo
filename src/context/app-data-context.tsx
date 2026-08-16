@@ -1621,6 +1621,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const deleteNotification = async (notificationId: string) => {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        try {
+            const notifRef = doc(db, 'notifications', notificationId);
+            await deleteDoc(notifRef);
+        } catch (error) {
+            console.error("Failed to delete notification:", error);
+        }
+    };
+
     const saveFcmToken = async (token: string) => {
         if (!currentUser) return;
         const currentTokens = currentUser.fcmTokens || [];
@@ -1750,6 +1760,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         notifications,
         markNotificationAsRead,
         markAllNotificationsAsRead,
+        deleteNotification,
         saveFcmToken,
         isClient
     };

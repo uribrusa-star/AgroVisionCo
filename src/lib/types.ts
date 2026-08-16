@@ -402,6 +402,7 @@ export type AppData = {
   notifications: PushNotification[];
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
+  deleteNotification: (notificationId: string) => Promise<void>;
   saveFcmToken: (token: string) => Promise<void>;
   isClient: boolean;
 };
