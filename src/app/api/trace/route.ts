@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 
-// Fallback demo dataset for DEMO-2026 or missing test records
+// Fallback main producer dataset for DEMO-2026 or missing test records
 const DEMO_TRACEABILITY_DATA = {
-  establishmentName: 'Establecimiento Don Pedro - Coronda, Santa Fe',
+  establishmentName: 'Finca Las Fresas - Coronda, Santa Fe',
   harvestDate: '2026-08-15',
-  batchId: 'Lote 3 (Variedad San Andreas)',
-  collectorName: 'Juan Carlos Fernández',
+  batchId: 'Lote 1 (Camino Real / San Andreas)',
+  collectorName: 'Productor',
   bpaCertified: true,
   bpaDetails: {
     phiCompliant: true,

@@ -410,12 +410,12 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-lg sm:text-xl text-stone-900 dark:text-stone-100">Establecimiento Don Pedro</span>
+                        <span className="font-bold text-lg sm:text-xl text-stone-900 dark:text-stone-100">Finca Las Fresas</span>
                         <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 text-[10px] font-bold">
                           100% Inocuo BPA
                         </Badge>
                       </div>
-                      <p className="text-xs text-stone-500 dark:text-stone-400">Lote 3 - Variedad San Andreas • Código: TR-2026-LOT3-89B</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400">Lote 1 - Variedad Camino Real / San Andreas • Código: TR-2026-LOT1-89B</p>
                     </div>
                   </div>
 
