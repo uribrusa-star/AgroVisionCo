@@ -147,55 +147,55 @@ export default function TracePage() {
                             <Sprout /> Resumen del Cultivo
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
-                            <Calendar className="h-8 w-8 text-green-600 flex-shrink-0" />
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Fecha de Cosecha</p>
-                                <p className="font-bold text-base md:text-lg text-gray-800">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                    <CardContent className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-green-50 rounded-xl border border-green-100">
+                            <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Fecha de Cosecha</p>
+                                <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 truncate">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
-                            <Home className="h-8 w-8 text-purple-600 flex-shrink-0" />
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Establecimiento</p>
-                                <p className="font-bold text-base md:text-lg text-gray-800 break-words" title={data.establishmentName || 'AgroVista'}>{data.establishmentName || 'AgroVista'}</p>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-purple-50 rounded-xl border border-purple-100">
+                            <Home className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Establecimiento</p>
+                                <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 truncate" title={data.establishmentName || 'Quinta Las Fresas'}>{data.establishmentName || 'Quinta Las Fresas'}</p>
                             </div>
                         </div>
-                         <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                            <Leaf className="h-8 w-8 text-blue-600 flex-shrink-0" />
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Lote de Origen</p>
-                                <p className="font-bold text-base md:text-lg text-gray-800">{data.batchId}</p>
+                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
+                            <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Lote de Origen</p>
+                                <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 truncate">{data.batchId}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                            <User className="h-8 w-8 text-yellow-600 flex-shrink-0" />
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Recolector</p>
-                                <p className="font-bold text-base md:text-lg text-gray-800 truncate max-w-[120px] sm:max-w-full" title={data.collectorName}>{data.collectorName}</p>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+                            <User className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Recolector</p>
+                                <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 truncate" title={data.collectorName}>{data.collectorName}</p>
                             </div>
                         </div>
                         {data.bpaCertified && (
                             <motion.div 
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.97 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={() => setShowBpaModal(true)}
-                                className="flex items-center gap-3.5 p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden"
+                                className="col-span-2 sm:col-span-2 lg:col-span-4 flex items-center gap-3.5 p-3.5 sm:p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden mt-1"
                             >
                                 <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-400/10 rounded-full blur-md pointer-events-none" />
-                                <div className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 group-hover:scale-110 transition-transform">
-                                    <ShieldCheck className="h-7 w-7 text-emerald-400 animate-pulse" />
+                                <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400 animate-pulse" />
                                 </div>
                                 <div className="flex-grow min-w-0">
-                                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                    <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-300">
                                         <Award className="h-3 w-3 text-amber-400" /> Sello Oficial BPA
                                     </div>
-                                    <p className="font-extrabold text-sm sm:text-base mt-0.5 group-hover:text-emerald-200 transition-colors flex items-center justify-between">
+                                    <p className="font-extrabold text-xs sm:text-base mt-0.5 group-hover:text-emerald-200 transition-colors flex items-center justify-between">
                                         <span>Verificado G.A.P.</span>
                                     </p>
                                     <p className="text-[10px] text-emerald-100/90 underline decoration-dotted underline-offset-2 mt-0.5">
-                                        Presiona para ver garantía
+                                        Presiona para ver garantía de inocuidad
                                     </p>
                                 </div>
                             </motion.div>
