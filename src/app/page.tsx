@@ -410,12 +410,12 @@ export default function LandingPage() {
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-base sm:text-lg md:text-xl text-stone-900 dark:text-stone-100 truncate">Finca Las Fresas</span>
+                        <span className="font-bold text-base sm:text-lg md:text-xl text-stone-900 dark:text-stone-100 truncate">Quinta Las Fresas</span>
                         <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 text-[10px] font-bold shrink-0">
                           100% Inocuo BPA
                         </Badge>
                       </div>
-                      <p className="text-xs text-stone-500 dark:text-stone-400 break-words">Lote 1 - Variedad Camino Real / San Andreas • Código: TR-2026-LOT1-89B</p>
+                      <p className="text-xs text-stone-500 dark:text-stone-400 break-words">Lote 1: Camino Real • Código: TR-2026-LOT1-89B</p>
                     </div>
                   </div>
 

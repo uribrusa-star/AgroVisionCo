@@ -3,9 +3,9 @@ import { adminDb } from '@/lib/firebase-admin';
 
 // Fallback main producer dataset for DEMO-2026 or missing test records
 const DEMO_TRACEABILITY_DATA = {
-  establishmentName: 'Finca Las Fresas - Coronda, Santa Fe',
+  establishmentName: 'Quinta Las Fresas - Coronda, Santa Fe',
   harvestDate: '2026-08-15',
-  batchId: 'Lote 1 (Camino Real / San Andreas)',
+  batchId: 'Lote 1: Camino Real',
   collectorName: 'Productor',
   bpaCertified: true,
   bpaDetails: {
