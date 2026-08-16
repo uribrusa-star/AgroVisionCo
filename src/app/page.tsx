@@ -175,8 +175,8 @@ export default function LandingPage() {
               controlar la sanidad y maximizar las ganancias de tus lotes de frutillas. Con inteligencia artificial, 
               reportes agronómicos y mapas interactivos en tiempo real.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6" onClick={() => trackUserInteraction('Boton_Comenzar_Ahora_Hero')}>
-              <ContactModal buttonText="Comenzar Ahora" buttonSize="lg" buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold" />
+            <div className="mt-10 flex items-center justify-center gap-x-6" onClick={() => trackUserInteraction('Boton_Probar_Demo_Gratis_Hero')}>
+              <ContactModal buttonText="Probar Demo Gratis 🚀" buttonSize="lg" buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold" />
             </div>
           </div>
         </section>
