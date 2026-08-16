@@ -64,10 +64,10 @@ export default function LandingPage() {
         <div className="flex items-center gap-3">
           {!isPlaying ? (
             <Image 
-              src="/frutilla-vector.svg" 
+              src="/logo.png" 
               alt="AgroVista Logo" 
-              width={32} 
-              height={32} 
+              width={36} 
+              height={36} 
               className="cursor-pointer transition-transform hover:scale-105"
               onClick={() => {
                 setIsPlaying(true);

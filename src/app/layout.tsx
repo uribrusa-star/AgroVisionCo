@@ -6,32 +6,29 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'),
-  title: 'AgroVista',
-  description: 'Nacido en Coronda, Santa Fe (Capital Nacional de la Frutilla). AgroVista es la plataforma líder para la gestión, trazabilidad, control fenológico y análisis con IA de cultivos de frutilla.',
-  applicationName: 'AgroVista Coronda',
-  authors: [{ name: 'AgroVista Team - Coronda, Santa Fe' }],
+  title: 'AgroVista | Trazabilidad y Gestión Agrícola Inteligente',
+  description: 'Plataforma integral para el control de cosechas, sanidad y análisis de rendimiento de cultivos de frutilla en tiempo real.',
+  applicationName: 'AgroVista',
+  authors: [{ name: 'AgroVista Team' }],
   keywords: [
-    'Coronda', 
-    'frutillas Coronda', 
-    'frutilla Coronda Santa Fe', 
-    'Capital Nacional de la Frutilla', 
-    'agricultura Coronda', 
-    'trazabilidad frutilla', 
-    'gestión agrícola Coronda', 
-    'software agrícola Santa Fe',
-    'agronomía Coronda'
+    'AgroVista',
+    'trazabilidad agrícola',
+    'gestión de cosechas',
+    'frutillas',
+    'análisis agrícola',
+    'software agrícola'
   ],
   openGraph: {
-    title: 'AgroVista | Tecnología Agrícola desde Coronda, Capital Nacional de la Frutilla',
-    description: 'Plataforma integral de trazabilidad y análisis inteligente desarrollada en Coronda, Santa Fe para la producción de frutillas.',
+    title: 'AgroVista | Trazabilidad y Gestión Agrícola Inteligente',
+    description: 'Plataforma integral para el control de cosechas, sanidad y análisis de rendimiento de cultivos de frutilla en tiempo real.',
     url: 'https://agrovista.com.ar',
-    siteName: 'AgroVista Coronda',
+    siteName: 'AgroVista',
     images: [
       {
         url: '/og-banner.png',
         width: 1200,
         height: 630,
-        alt: 'AgroVista Coronda - Gestión Agrícola'
+        alt: 'AgroVista - Gestión Agrícola Inteligente'
       }
     ],
     locale: 'es_AR',
@@ -39,8 +36,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AgroVista | Tecnología Agrícola desde Coronda, Santa Fe',
-    description: 'Plataforma integral de trazabilidad y análisis inteligente desarrollada en Coronda para productores de frutillas.',
+    title: 'AgroVista | Trazabilidad y Gestión Agrícola Inteligente',
+    description: 'Plataforma integral para la gestión de cosechas y análisis inteligente de frutillas.',
     images: ['/og-banner.png'],
   },
   manifest: '/manifest.json',
