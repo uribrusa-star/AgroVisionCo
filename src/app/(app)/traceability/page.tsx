@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
@@ -15,7 +15,8 @@ import {
   Filter,
   ArrowRight,
   ShieldCheck,
-  Award
+  Award,
+  Loader2
 } from 'lucide-react';
 
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -97,13 +98,16 @@ export default function TraceabilityPage() {
     return events.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [selectedBatchId, harvests, agronomistLogs, phenologyLogs]);
 
-  const handleExportTraceability = async () => {
+  const [isExportPending, startExportTransition] = useTransition();
+
+  const handleExportTraceability = () => {
     if (!selectedBatch) return;
     
-    toast({
-      title: 'Generando Reporte y Síntesis IA...',
-      description: 'Por favor espere, estamos analizando la cronología de eventos...',
-    });
+    startExportTransition(async () => {
+      toast({
+        title: 'Generando Reporte y Síntesis IA...',
+        description: 'Por favor espere, estamos analizando la cronología de eventos...',
+      });
 
     try {
       let logoPngDataUri = '';
@@ -158,6 +162,7 @@ export default function TraceabilityPage() {
         variant: 'destructive',
       });
     }
+    });
   };
 
   const handleExportMonthly = async () => {
@@ -310,8 +315,22 @@ export default function TraceabilityPage() {
                     );
                   })()}
 
-                  <Button className="w-full" onClick={handleExportTraceability}>
-                    <FileText className="mr-2 h-4 w-4" /> Generar PDF Lote {selectedBatch.id}
+                  <Button 
+                    className="w-full bg-[#2d4a22] hover:bg-[#1a2d13] text-white font-bold transition-all shadow-md" 
+                    onClick={handleExportTraceability}
+                    disabled={isExportPending}
+                  >
+                    {isExportPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin text-emerald-400" />
+                        <span className="animate-pulse">Generando PDF Lote {selectedBatch.id}...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="mr-2 h-4 w-4" /> 
+                        <span>Generar PDF Lote {selectedBatch.id}</span>
+                      </>
+                    )}
                   </Button>
                 </div>
               )}

@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar, Info, Trash2, FileDown, QrCode, Edit2, Banknote } from 'lucide-react';
+import { Calendar, Info, Trash2, FileDown, QrCode, Edit2, Banknote, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
@@ -498,10 +498,19 @@ function ProductionPaymentHistoryComponent() {
                             variant="outline" 
                             onClick={handleGenerateReceipt} 
                             disabled={isPdfPending || !canManage}
-                            className="w-full text-[10px] sm:text-xs h-10 px-1 font-medium"
+                            className="w-full text-[10px] sm:text-xs h-10 px-1 font-medium border-primary/30"
                         >
-                            <FileDown className="h-3.5 w-3.5 mr-1 shrink-0" />
-                            {isPdfPending ? "..." : "Recibo"}
+                            {isPdfPending ? (
+                                <>
+                                    <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin text-primary shrink-0" />
+                                    <span className="animate-pulse">Generando PDF...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <FileDown className="h-3.5 w-3.5 mr-1 shrink-0" />
+                                    <span>Recibo PDF</span>
+                                </>
+                            )}
                         </Button>
                         <Button 
                             variant="outline" 

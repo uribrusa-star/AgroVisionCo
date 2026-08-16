@@ -213,13 +213,13 @@ export function A4LabelsGenerator() {
                 >
                   {downloadingId === log.id ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generando PDF...
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin text-emerald-300" />
+                      <span className="animate-pulse">Generando Pliego A4...</span>
                     </>
                   ) : (
                     <>
                       <QrCode className="h-4 w-4 mr-2" />
-                      Descargar Planilla A4 (8x)
+                      Descargar Pliego A4 (8x)
                     </>
                   )}
                 </Button>

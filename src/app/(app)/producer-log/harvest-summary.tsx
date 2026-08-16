@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { summarizeHarvestData } from '@/ai/flows/summarize-harvest-data';
 import { useToast } from '@/hooks/use-toast';
+import { FileDown, Loader2 } from 'lucide-react';
 import { MonthlyHarvestChart } from '@/app/(app)/monthly-harvest-chart';
 import { BatchYieldChart } from '@/app/(app)/engineer-log/batch-yield-chart';
 import { CostDistributionChart } from '../dashboard/cost-distribution-chart';
@@ -205,8 +206,22 @@ export function HarvestSummary() {
             </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleGeneratePdf} disabled={isPending || !canManage}>
-            {isPending ? 'Generando PDF...' : 'Generar Informe PDF'}
+          <Button 
+            onClick={handleGeneratePdf} 
+            disabled={isPending || !canManage}
+            className="bg-[#2d4a22] hover:bg-[#1a2d13] text-white font-bold transition-all duration-300 shadow-md"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-emerald-400" />
+                <span className="animate-pulse">Analizando Finanzas y Generando PDF...</span>
+              </>
+            ) : (
+              <>
+                <FileDown className="mr-2 h-4 w-4" />
+                <span>Generar Informe PDF</span>
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>
