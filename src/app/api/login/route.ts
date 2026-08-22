@@ -8,41 +8,13 @@ import type { User } from '@/lib/types';
 import { getRoleAvatar } from '@/lib/utils';
 import { users as mockUsers } from '@/lib/data';
 
-function parseFirestoreDoc(doc: any): User | null {
-  if (!doc || !doc.document || !doc.document.fields) return null;
-  const fields = doc.document.fields;
-  const id = doc.document.name.split('/').pop() || '';
-  const parseVal = (v: any) => {
-    if (!v) return undefined;
-    if (v.stringValue !== undefined) return v.stringValue;
-    if (v.booleanValue !== undefined) return v.booleanValue;
-    if (v.integerValue !== undefined) return Number(v.integerValue);
-    if (v.doubleValue !== undefined) return Number(v.doubleValue);
-    return undefined;
-  };
-  const role = (parseVal(fields.role) || 'Productor') as any;
-  return {
-    id,
-    name: parseVal(fields.name) || '',
-    email: parseVal(fields.email) || '',
-    role,
-    password: parseVal(fields.password) || '',
-    notificationEmail: parseVal(fields.notificationEmail) || '',
-    avatar: getRoleAvatar(role),
-    phone: parseVal(fields.phone),
-    specialty: parseVal(fields.specialty),
-    producerId: parseVal(fields.producerId),
-    lastLoginAt: parseVal(fields.lastLoginAt)
-  } as User;
-}
-
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const session = await getIronSession(cookieStore, sessionOptions);
 
-    let { email, password, clientUser } = await request.json();
-    email = email?.toLowerCase();
+    let { email, password } = await request.json();
+    email = email?.toLowerCase()?.trim();
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Faltan credenciales.' }, { status: 400 });
@@ -50,14 +22,14 @@ export async function POST(request: Request) {
 
     let user: User | null = null;
 
-    // 1. Resolver posibles alias de correo (ej. agrovision.co / agrovista.co)
+    // 1. Alias de correos soportados para el productor
     const emailAliases = [email];
     if (email === 'productor@agrovision.co' || email === 'productor@agrovista.co') {
       if (!emailAliases.includes('productor@agrovision.co')) emailAliases.push('productor@agrovision.co');
       if (!emailAliases.includes('productor@agrovista.co')) emailAliases.push('productor@agrovista.co');
     }
 
-    // 2. Consultar Firestore buscando por los alias de correo de forma segura
+    // 2. Intentar buscar usuario en Firestore de forma segura
     try {
       if (adminDb) {
         for (const targetEmail of emailAliases) {
@@ -70,10 +42,10 @@ export async function POST(request: Request) {
         }
       }
     } catch (error) {
-      console.error('Error fetching user with adminDb:', error);
+      console.warn('Warning querying user from adminDb:', error);
     }
 
-    // 3. Si no se encuentra documento en Firestore aún, verificar usuarios mock locales como fallback
+    // 3. Fallback a mockUsers locales si no está en Firestore
     if (!user) {
       const localMock = mockUsers.find(u => emailAliases.includes(u.email?.toLowerCase() || ''));
       if (localMock) {
@@ -81,10 +53,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Special fallback sync for main producer account
-    const isMainProducerAccount = emailAliases.some(e => e === 'productor@agrovision.co' || e === 'productor@agrovista.co');
+    // Manejo especial resiliente para la cuenta principal del productor
+    const isMainProducer = emailAliases.some(e => e === 'productor@agrovision.co' || e === 'productor@agrovista.co');
     
-    if (isMainProducerAccount) {
+    if (isMainProducer) {
       if (password === 'uribrusa' || password === 'UriBrusa22' || (user && user.password === password)) {
         if (!user) {
           user = {
@@ -100,7 +72,7 @@ export async function POST(request: Request) {
           user.password = password;
         }
 
-        // Sync to Firestore so future queries use this password
+        // Sincronizar contraseña en Firestore sin romper si falla
         try {
           if (adminDb) {
             await adminDb.collection('users').doc(user.id || 'user-productor').set({
@@ -112,7 +84,7 @@ export async function POST(request: Request) {
             }, { merge: true });
           }
         } catch (syncErr) {
-          console.warn('Firestore password sync warning:', syncErr);
+          console.warn('Warning syncing producer password to Firestore:', syncErr);
         }
       } else {
         return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
@@ -123,41 +95,45 @@ export async function POST(request: Request) {
       }
     }
 
-    // Verificar si el establecimiento está suspendido
+    // Verificar si el establecimiento está suspendido (seguro)
     if (user.role !== 'SuperAdmin' && user.establishmentId) {
       try {
-        const estDoc = await adminDb.collection('establishment').doc(user.establishmentId).get();
-        if (estDoc.exists) {
-          const estData = estDoc.data();
-          if (estData?.isActive === false) {
-            return NextResponse.json({ 
-              error: 'Tu cuenta se encuentra suspendida temporalmente. Por favor comunícate con administración para regularizarla.' 
-            }, { status: 403 });
+        if (adminDb) {
+          const estDoc = await adminDb.collection('establishment').doc(user.establishmentId).get();
+          if (estDoc.exists) {
+            const estData = estDoc.data();
+            if (estData?.isActive === false) {
+              return NextResponse.json({ 
+                error: 'Tu cuenta se encuentra suspendida temporalmente. Por favor comunícate con administración para regularizarla.' 
+              }, { status: 403 });
+            }
           }
         }
       } catch (error) {
-        console.error('Error verificando estado del establecimiento:', error);
+        console.warn('Warning checking establishment status:', error);
       }
     }
     
-    // Update lastLoginAt
+    // Actualizar lastLoginAt usando merge: true para EVITAR errores NOT_FOUND
     const lastLoginAt = new Date().toISOString();
     try {
-      await adminDb.collection('users').doc(user.id).update({
-        lastLoginAt
-      });
+      if (adminDb && user.id) {
+        await adminDb.collection('users').doc(user.id).set({
+          lastLoginAt
+        }, { merge: true });
+      }
       user.lastLoginAt = lastLoginAt;
     } catch (e) {
-      console.error('Error updating lastLoginAt:', e);
+      console.warn('Warning updating lastLoginAt:', e);
     }
     
-    // Omitimos el password antes de guardar en la sesión por seguridad
+    // Omitir la contraseña antes de guardar en la sesión por seguridad
     const { password: _, ...userToSave } = user;
 
-    // Generar un token personalizado para que el cliente (Navegador) pueda iniciar sesión en Firebase Auth
+    // Generar un token personalizado para Firebase Auth (seguro)
     let customToken: string | null = null;
     try {
-      if (adminAuth) {
+      if (adminAuth && user.id) {
         customToken = await adminAuth.createCustomToken(user.id);
       }
     } catch (tokenErr) {
@@ -171,7 +147,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ user: userToSave, firebaseToken: customToken });
 
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Fatal Login Error:', error);
     return NextResponse.json(
       { error: 'Ocurrió un error en el servidor al intentar iniciar sesión.' }, 
       { status: 500 }
