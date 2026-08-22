@@ -50,20 +50,24 @@ export async function POST(request: Request) {
 
     let user: User | null = null;
 
-    // 1. Verificar usuarios mock locales (ej. SuperAdmin o cuentas de demo)
-    const localMock = mockUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
-    if (localMock && localMock.password === password) {
-      user = localMock;
-    } else {
-      // 2. Usar Admin SDK para consultar Firestore de forma segura en el servidor
-      try {
+    // 1. Consultar primero Firestore de forma segura para usar la contraseña actualizada en la base de datos
+    try {
+      if (adminDb) {
         const usersSnapshot = await adminDb.collection('users').where('email', '==', email).get();
         if (!usersSnapshot.empty) {
           const userDoc = usersSnapshot.docs[0];
           user = { id: userDoc.id, ...userDoc.data() } as User;
         }
-      } catch (error) {
-        console.error('Error fetching user with adminDb:', error);
+      }
+    } catch (error) {
+      console.error('Error fetching user with adminDb:', error);
+    }
+
+    // 2. Si no se encuentra en Firestore, verificar usuarios mock locales como fallback
+    if (!user) {
+      const localMock = mockUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      if (localMock) {
+        user = localMock;
       }
     }
 
