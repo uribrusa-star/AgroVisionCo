@@ -96,22 +96,34 @@ export async function GET(request: Request) {
       establishmentName = establishmentName.split('-')[0].trim();
     }
 
-    // Resolve Collector real name
-    let collectorName = harvest.collectorName || '';
-    if (harvest.collectorId) {
+    // Resolve Collector real name from harvest object or collectors collection
+    let collectorName = harvest.collector?.name || harvest.collectorName || '';
+    
+    const collectorIdToSearch = harvest.collector?.id || harvest.collectorId;
+    if (!collectorName && collectorIdToSearch) {
       try {
-        const collectorDoc = await collectorsRef.doc(harvest.collectorId).get();
+        const collectorDoc = await collectorsRef.doc(collectorIdToSearch).get();
         if (collectorDoc.exists && collectorDoc.data()?.name) {
           collectorName = collectorDoc.data()?.name;
         }
       } catch (e) {
-        console.error('Error resolving collector name:', e);
+        console.error('Error resolving collector name from ID:', e);
       }
     }
 
-    // Fallback collector name if empty or generic "Productor"
+    // If still empty, fetch the most recent collector registered in the establishment
     if (!collectorName || collectorName.toLowerCase() === 'productor' || collectorName.toLowerCase() === 'productor principal') {
-      collectorName = 'Juan Carlos Fernández';
+      try {
+        const collectorsSnap = await collectorsRef.get();
+        if (!collectorsSnap.empty) {
+          const firstCollector = collectorsSnap.docs[0].data();
+          if (firstCollector?.name) {
+            collectorName = firstCollector.name;
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching default collector:', e);
+      }
     }
 
     // Fetch agronomist logs for PHI calculation
