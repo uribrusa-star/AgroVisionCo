@@ -103,7 +103,14 @@ export async function POST(request: Request) {
     const { password: _, ...userToSave } = user;
 
     // Generar un token personalizado para que el cliente (Navegador) pueda iniciar sesión en Firebase Auth
-    const customToken = await adminAuth.createCustomToken(user.id);
+    let customToken: string | null = null;
+    try {
+      if (adminAuth) {
+        customToken = await adminAuth.createCustomToken(user.id);
+      }
+    } catch (tokenErr) {
+      console.warn('Could not generate custom Firebase token, proceeding with session cookie only:', tokenErr);
+    }
 
     // Guardar los datos del usuario en la sesión de Iron Session
     session.user = userToSave;
