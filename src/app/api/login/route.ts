@@ -48,6 +48,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan credenciales.' }, { status: 400 });
     }
 
+    let user: User | null = null;
+
     // 1. Resolver posibles alias de correo (ej. agrovision.co / agrovista.co)
     const emailAliases = [email];
     if (email === 'productor@agrovision.co' || email === 'productor@agrovista.co') {
