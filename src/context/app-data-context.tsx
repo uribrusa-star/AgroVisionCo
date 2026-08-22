@@ -1568,8 +1568,18 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, { password: newPassword }, { merge: true });
         
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword } : u));
-        if (currentUser?.id === userId) {
+        // Sync password for producer account aliases if applicable
+        if (userId === 'user-productor' || userId === 'user-productor-alias' || currentUser?.email?.includes('productor@agron') || currentUser?.email?.includes('productor@agrov')) {
+            try {
+                await setDoc(doc(db, 'users', 'user-productor'), { password: newPassword }, { merge: true });
+                await setDoc(doc(db, 'users', 'user-productor-alias'), { password: newPassword }, { merge: true });
+            } catch (e) {
+                console.warn('Sync alias password warning:', e);
+            }
+        }
+
+        setUsers(prev => prev.map(u => (u.id === userId || u.email === currentUser?.email) ? { ...u, password: newPassword } : u));
+        if (currentUser?.id === userId || currentUser?.email === currentUser?.email) {
             setCurrentUser({ ...currentUser, password: newPassword }, true);
         }
     };

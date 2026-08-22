@@ -48,24 +48,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan credenciales.' }, { status: 400 });
     }
 
-    let user: User | null = null;
+    // 1. Resolver posibles alias de correo (ej. agrovision.co / agrovista.co)
+    const emailAliases = [email];
+    if (email === 'productor@agrovision.co' || email === 'productor@agrovista.co') {
+      if (!emailAliases.includes('productor@agrovision.co')) emailAliases.push('productor@agrovision.co');
+      if (!emailAliases.includes('productor@agrovista.co')) emailAliases.push('productor@agrovista.co');
+    }
 
-    // 1. Consultar primero Firestore de forma segura para usar la contraseña actualizada en la base de datos
+    // 2. Consultar Firestore buscando por los alias de correo de forma segura
     try {
       if (adminDb) {
-        const usersSnapshot = await adminDb.collection('users').where('email', '==', email).get();
-        if (!usersSnapshot.empty) {
-          const userDoc = usersSnapshot.docs[0];
-          user = { id: userDoc.id, ...userDoc.data() } as User;
+        for (const targetEmail of emailAliases) {
+          const usersSnapshot = await adminDb.collection('users').where('email', '==', targetEmail).get();
+          if (!usersSnapshot.empty) {
+            const userDoc = usersSnapshot.docs[0];
+            user = { id: userDoc.id, ...userDoc.data() } as User;
+            break;
+          }
         }
       }
     } catch (error) {
       console.error('Error fetching user with adminDb:', error);
     }
 
-    // 2. Si no se encuentra en Firestore, verificar usuarios mock locales como fallback
+    // 3. Si no se encuentra documento en Firestore aún, verificar usuarios mock locales como fallback
     if (!user) {
-      const localMock = mockUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      const localMock = mockUsers.find(u => emailAliases.includes(u.email?.toLowerCase() || ''));
       if (localMock) {
         user = localMock;
       }
