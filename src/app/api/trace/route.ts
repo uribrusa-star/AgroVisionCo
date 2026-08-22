@@ -6,7 +6,7 @@ const DEMO_TRACEABILITY_DATA = {
   establishmentName: 'Quinta Las Fresas',
   harvestDate: '2026-08-15',
   batchId: 'Lote 1: Camino Real',
-  collectorName: 'Productor',
+  collectorName: 'Juan Carlos Fernández',
   bpaCertified: true,
   bpaDetails: {
     phiCompliant: true,
@@ -53,6 +53,7 @@ export async function GET(request: Request) {
     const harvestsRef = adminDb.collection('harvests');
     const phenologyLogsRef = adminDb.collection('phenologyLogs');
     const agronomistLogsRef = adminDb.collection('agronomistLogs');
+    const collectorsRef = adminDb.collection('collectors');
     
     let harvest: any = null;
 
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const batchIdStr = harvest.batchNumber || harvest.batchId || 'Lote 1';
+    const batchIdStr = harvest.batchNumber || harvest.batchId || 'Lote 1: Camino Real';
     const batchIdsToSearch = batchIdStr ? String(batchIdStr).split(',').map((s: string) => s.trim()).filter(Boolean) : [];
     const estId = harvest.establishmentId || 'main';
     
@@ -93,6 +94,24 @@ export async function GET(request: Request) {
     let establishmentName = estSnap.exists && estSnap.data()?.producer ? estSnap.data()?.producer : 'Quinta Las Fresas';
     if (establishmentName.includes('-')) {
       establishmentName = establishmentName.split('-')[0].trim();
+    }
+
+    // Resolve Collector real name
+    let collectorName = harvest.collectorName || '';
+    if (harvest.collectorId) {
+      try {
+        const collectorDoc = await collectorsRef.doc(harvest.collectorId).get();
+        if (collectorDoc.exists && collectorDoc.data()?.name) {
+          collectorName = collectorDoc.data()?.name;
+        }
+      } catch (e) {
+        console.error('Error resolving collector name:', e);
+      }
+    }
+
+    // Fallback collector name if empty or generic "Productor"
+    if (!collectorName || collectorName.toLowerCase() === 'productor' || collectorName.toLowerCase() === 'productor principal') {
+      collectorName = 'Juan Carlos Fernández';
     }
 
     // Fetch agronomist logs for PHI calculation
@@ -126,8 +145,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       establishmentName,
       harvestDate: harvest.date || new Date().toISOString().split('T')[0],
-      batchId: harvest.batchNumber || harvest.batchId || 'Lote 1',
-      collectorName: harvest.collectorName || 'Productor Principal',
+      batchId: harvest.batchNumber || harvest.batchId || 'Lote 1: Camino Real',
+      collectorName,
       phenologyLogs: realPhenoLogs.length > 0 ? realPhenoLogs.slice(0, 5) : DEMO_TRACEABILITY_DATA.phenologyLogs,
       bpaCertified,
       bpaDetails
