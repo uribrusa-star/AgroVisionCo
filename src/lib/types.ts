@@ -294,6 +294,7 @@ export type EstablishmentData = {
     objective: string;
   };
   geoJsonData?: string;
+  images?: string[];
 };
 
 export type ProducerLogType = 'Nota' | 'Actividad Omitida';

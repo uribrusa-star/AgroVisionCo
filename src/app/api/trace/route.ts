@@ -4,6 +4,20 @@ import { adminDb } from '@/lib/firebase-admin';
 // Fallback main producer dataset for DEMO-2026 or missing test records
 const DEMO_TRACEABILITY_DATA = {
   establishmentName: 'Quinta Las Fresas',
+  establishmentData: {
+    producer: 'Quinta Las Fresas',
+    locality: 'Coronda',
+    province: 'Santa Fe',
+    system: 'Bajo túnel / Microtúneles de Precisión',
+    technicalManager: 'Ing. Agr. Juan Pérez',
+    areaTotal: 10,
+    areaStrawberry: 5,
+    images: [
+      'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+    ]
+  },
   harvestDate: '2026-08-15',
   batchId: 'Lote 1: Camino Real',
   collectorName: 'Juan Carlos Fernández',
@@ -154,8 +168,24 @@ export async function GET(request: Request) {
       harvestHygieneVerified: true,
     };
 
+    const establishmentInfo = estSnap.exists ? estSnap.data() : null;
+
     return NextResponse.json({
       establishmentName,
+      establishmentData: {
+        producer: establishmentName,
+        locality: establishmentInfo?.location?.locality || 'Coronda',
+        province: establishmentInfo?.location?.province || 'Santa Fe',
+        system: establishmentInfo?.system || 'Bajo túnel / Microtúneles de Precisión',
+        technicalManager: establishmentInfo?.technicalManager || 'Ing. Agr. Juan Pérez',
+        areaTotal: establishmentInfo?.area?.total || 10,
+        areaStrawberry: establishmentInfo?.area?.strawberry || 5,
+        images: establishmentInfo?.images || [
+          'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+        ]
+      },
       harvestDate: harvest.date || new Date().toISOString().split('T')[0],
       batchId: harvest.batchNumber || harvest.batchId || 'Lote 1: Camino Real',
       collectorName,

@@ -54,6 +54,8 @@ export default function TracePage() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [selectedLogInfo, setSelectedLogInfo] = useState<{ state: string; date: string } | null>(null);
     const [showBpaModal, setShowBpaModal] = useState(false);
+    const [showEstablishmentModal, setShowEstablishmentModal] = useState(false);
+    const [activeEstablishmentImg, setActiveEstablishmentImg] = useState<number>(0);
 
     useEffect(() => {
         if (id) {
@@ -155,13 +157,31 @@ export default function TracePage() {
                                 <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 leading-snug">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                             </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-purple-50 rounded-xl border border-purple-100">
-                            <Home className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                                <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Establecimiento</p>
-                                <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 leading-snug break-words">{data.establishmentName || 'Quinta Las Fresas'}</p>
+                        <motion.div 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowEstablishmentModal(true)}
+                            className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-purple-50 hover:bg-purple-100/80 rounded-xl border border-purple-200/60 shadow-sm hover:shadow-md cursor-pointer transition-all group relative overflow-hidden"
+                        >
+                            <div className="p-2 sm:p-2.5 rounded-lg bg-purple-500/10 text-purple-600 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                <Home className="h-6 w-6 sm:h-7 sm:w-7 text-purple-600" />
                             </div>
-                        </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[11px] sm:text-xs text-purple-700 font-bold uppercase tracking-wider flex items-center gap-1">
+                                        Establecimiento
+                                        <Sparkles className="h-3 w-3 text-purple-500 animate-pulse" />
+                                    </p>
+                                    <span className="text-[9px] font-semibold text-purple-600 bg-purple-200/60 px-1.5 py-0.5 rounded-full">Ver Galería ➔</span>
+                                </div>
+                                <p className="font-extrabold text-xs sm:text-base md:text-lg text-purple-950 leading-snug break-words mt-0.5 group-hover:text-purple-700 transition-colors">
+                                    {data.establishmentName || 'Quinta Las Fresas'}
+                                </p>
+                                <p className="text-[10px] text-purple-600/90 underline decoration-dotted underline-offset-2 mt-0.5">
+                                    Presiona para ver fotos e instalaciones
+                                </p>
+                            </div>
+                        </motion.div>
                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
                             <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
@@ -453,6 +473,142 @@ export default function TracePage() {
                                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl w-full sm:w-auto shadow-md transition-all text-xs sm:text-sm"
                             >
                                 Entendido
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            {/* MODAL PERFIL E INSTALACIONES DEL ESTABLECIMIENTO */}
+            <Dialog open={showEstablishmentModal} onOpenChange={setShowEstablishmentModal}>
+                <DialogContent className="max-w-2xl bg-gradient-to-b from-stone-900 via-stone-900 to-purple-950 text-white border-purple-800/40 p-0 overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col">
+                    <DialogHeader className="p-5 sm:p-6 pb-3 relative z-10 border-b border-purple-800/30 bg-purple-950/60 backdrop-blur-md">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                <Home className="h-7 w-7 text-purple-400" />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+                                    {data?.establishmentName || 'Quinta Las Fresas'}
+                                    <Sparkles className="h-4 w-4 text-amber-400" />
+                                </DialogTitle>
+                                <p className="text-xs sm:text-sm text-purple-200/80 mt-0.5">
+                                    Coronda, Santa Fe · Producción Sustentable Certificada
+                                </p>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="p-4 sm:p-6 pt-3 relative z-10 space-y-4 overflow-y-auto flex-1">
+                        {/* GALERÍA / CARRUSEL DE IMÁGENES DE LA QUINTA */}
+                        {((data as any)?.establishmentData?.images || [
+                          'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+                          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+                          'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+                        ]).length > 0 && (
+                            <div className="space-y-2">
+                                <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border border-purple-500/30 bg-black/40 shadow-inner group">
+                                    <Image 
+                                        src={((data as any)?.establishmentData?.images || [
+                                          'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+                                          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+                                          'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+                                        ])[activeEstablishmentImg] || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80'}
+                                        alt="Instalaciones del Establecimiento"
+                                        fill
+                                        className="object-cover transition-all duration-500 group-hover:scale-105"
+                                        unoptimized
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+                                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-purple-200">
+                                        <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full font-medium border border-white/10">
+                                            Imagen {activeEstablishmentImg + 1} de {((data as any)?.establishmentData?.images || [1,2,3]).length}
+                                        </span>
+                                        <span className="bg-purple-900/80 backdrop-blur-md px-2.5 py-1 rounded-full font-semibold border border-purple-400/30 text-purple-300">
+                                            Instalaciones & Microtúneles
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* THUMBNAILS DE GALERÍA */}
+                                <div className="flex gap-2 overflow-x-auto pb-1">
+                                    {((data as any)?.establishmentData?.images || [
+                                      'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+                                      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+                                      'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+                                    ]).map((imgUrl: string, idx: number) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveEstablishmentImg(idx)}
+                                            className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                                                activeEstablishmentImg === idx ? 'border-purple-400 scale-105 shadow-md' : 'border-white/10 opacity-60 hover:opacity-100'
+                                            }`}
+                                        >
+                                            <Image src={imgUrl} alt={`Thumb ${idx}`} fill className="object-cover" unoptimized />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* FICHA TÉCNICA INSTITUCIONAL DEL ESTABLECIMIENTO */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300 flex-shrink-0 mt-0.5">
+                                    <Home className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[11px] text-purple-300 font-semibold uppercase tracking-wider">Sistema Productivo</p>
+                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                                        {(data as any)?.establishmentData?.system || 'Bajo túnel / Microtúneles de Precisión'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-green-500/20 text-green-300 flex-shrink-0 mt-0.5">
+                                    <Sprout className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[11px] text-green-300 font-semibold uppercase tracking-wider">Variedades Cultivadas</p>
+                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                                        Camino Real, San Andreas
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300 flex-shrink-0 mt-0.5">
+                                    <Droplet className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[11px] text-blue-300 font-semibold uppercase tracking-wider">Sistema de Riego</p>
+                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                                        Riego localizado por goteo automatizado
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
+                                    <User className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[11px] text-amber-300 font-semibold uppercase tracking-wider">Gestión Técnica</p>
+                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                                        {(data as any)?.establishmentData?.technicalManager || 'Ing. Agr. Juan Pérez'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <p className="text-[10px] sm:text-xs text-purple-200/80 flex items-center gap-1 font-mono">
+                                <Award className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" /> CERTIFICADO DE ORIGEN & INOCUIDAD AGROVISION
+                            </p>
+                            <Button 
+                                onClick={() => setShowEstablishmentModal(false)}
+                                className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-2 rounded-xl w-full sm:w-auto text-xs sm:text-sm shadow-md transition-all"
+                            >
+                                Cerrar Galería
                             </Button>
                         </div>
                     </div>
