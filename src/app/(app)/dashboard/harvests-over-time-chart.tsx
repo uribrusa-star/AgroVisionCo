@@ -63,13 +63,8 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
     const batchesPresent = Array.from(batchesSet).sort();
 
     const chartData = sortedDates.map((dateKey) => {
-      const row = { ...dateMap[dateKey] };
-      batchesPresent.forEach((b) => {
-        if (row[b] === undefined) {
-          row[b] = 0;
-        }
-      });
-      return row;
+      // Leave unharvested batches as undefined so lines connect smoothly without dropping to 0
+      return { ...dateMap[dateKey] };
     });
 
     return { chartData, batchesPresent };
@@ -128,11 +123,12 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
               />
               <Tooltip
                 formatter={(value: number, name: string) => [
-                  `${value.toLocaleString("es-ES")} kg`,
+                  `${value ? value.toLocaleString("es-ES") : 0} kg`,
                   name.startsWith("Lote") ? name : `Lote ${name}`,
                 ]}
                 labelStyle={{ fontWeight: "bold" }}
                 contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)" }}
+                filterNull={true}
               />
               <Legend
                 iconType="circle"
@@ -147,6 +143,7 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
                   name={batchId}
                   stroke={colors[index % colors.length]}
                   strokeWidth={2.5}
+                  connectNulls={true}
                   dot={{ r: 4, strokeWidth: 1, fill: colors[index % colors.length] }}
                   activeDot={{ r: 6 }}
                 />
