@@ -52,6 +52,7 @@ const SummarizeAgronomistReportOutputSchema = z.object({
     phenology: z.string(),
     monthlyHarvest: z.string(),
     batchYield: z.string(),
+    harvestsOverTime: z.string().optional(),
   }),
   aiInsight: z.string(),
 });
@@ -95,7 +96,7 @@ const prompt = ai.definePrompt({
        - **Technical Analysis:** Desglosa Clima, Fenología, Manejo, Sanidad. Justifica con datos directos.
        - **Alertas:** Identifica riesgos fitosanitarios o quiebres de inventario (cruzando bitácora vs suppliesData).
        - **Recommendations:** Acciones directas y planificadas (Nutrición, Sanidad).
-       - **Graphical Analysis:** Describe analíticamente la curva fenológica, mensual y por lotes asumiendo que el gráfico ya está dibujado al lado del texto. Explica las diferencias de rendimiento entre variedades.
+       - **Graphical Analysis:** Describe analíticamente la curva fenológica, mensual, por lotes y la tendencia/evolución temporal de cosecha por lote (\`harvestsOverTime\`), asumiendo que los gráficos ya están dibujados al lado del texto. Explica las diferencias de aceleración y rendimiento entre lotes.
        - **AI Insight:** Una conclusión de valor agronómico gerencial de 3 a 5 líneas que integre todo el escenario.
 
     Genera el JSON estructurado solicitado.`,

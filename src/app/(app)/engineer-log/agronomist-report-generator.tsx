@@ -15,10 +15,7 @@ import { FileDown, Sparkles, Loader2 } from 'lucide-react';
 import { PhenologyEvolutionChart } from './phenology-evolution-chart';
 import { MonthlyHarvestChart } from '@/app/(app)/monthly-harvest-chart';
 import { BatchYieldChart } from '@/app/(app)/engineer-log/batch-yield-chart';
-
-
-
-
+import { HarvestsOverTimeChart } from '@/app/(app)/dashboard/harvests-over-time-chart';
 
 import dynamic from 'next/dynamic';
 const MapComponent = dynamic(() => import('@/components/map'), { ssr: false });
@@ -31,6 +28,7 @@ export function AgronomistReportGenerator() {
   const phenologyRef = useRef<HTMLDivElement>(null);
   const monthlyRef = useRef<HTMLDivElement>(null);
   const batchRef = useRef<HTMLDivElement>(null);
+  const harvestsOverTimeRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
   if (!currentUser) return null; // Guard clause
@@ -125,10 +123,11 @@ export function AgronomistReportGenerator() {
             return canvas.toDataURL('image/png');
         };
 
-        const [phenologyImg, monthlyHarvestImg, batchYieldImg, capturedMapImg] = await Promise.all([
+        const [phenologyImg, monthlyHarvestImg, batchYieldImg, harvestsOverTimeImg, capturedMapImg] = await Promise.all([
             captureChart(phenologyRef),
             captureChart(monthlyRef),
             captureChart(batchRef),
+            captureChart(harvestsOverTimeRef),
             captureChart(mapRef)
         ]);
 
@@ -153,7 +152,8 @@ export function AgronomistReportGenerator() {
             {
                 phenology: phenologyImg,
                 monthlyHarvest: monthlyHarvestImg,
-                batchYield: batchYieldImg
+                batchYield: batchYieldImg,
+                harvestsOverTime: harvestsOverTimeImg
             },
             logoPngDataUri,
             batches,
@@ -201,6 +201,9 @@ export function AgronomistReportGenerator() {
               </div>
               <div ref={batchRef} className="p-4 bg-card w-[600px]">
                   <BatchYieldChart />
+              </div>
+              <div ref={harvestsOverTimeRef} className="p-4 bg-card w-[600px]">
+                  <HarvestsOverTimeChart harvests={harvests} />
               </div>
               <div ref={mapRef} className="w-[700px] h-[400px] bg-card p-2" data-map-container="true">
                   <MapComponent center={mapCenter} geoJsonData={parsedGeoJson} />

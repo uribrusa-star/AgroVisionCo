@@ -381,6 +381,7 @@ export const generateAgronomistReportPDF = (
     phenology: string;
     monthlyHarvest: string;
     batchYield: string;
+    harvestsOverTime?: string;
   },
   logoDataUri?: string,
   batches?: Batch[],
@@ -970,6 +971,7 @@ export const generateAgronomistReportPDF = (
   renderGraphSideBySide('Evolución Fenológica', chartImages?.phenology, 'Interpretación Fenológica', reportData.graphicalAnalysis?.phenology);
   renderGraphSideBySide('Cosecha Mensual', chartImages?.monthlyHarvest, 'Análisis de Cosecha', reportData.graphicalAnalysis?.monthlyHarvest);
   renderGraphSideBySide('Rendimiento por Lote', chartImages?.batchYield, 'Análisis por Lote', reportData.graphicalAnalysis?.batchYield);
+  renderGraphSideBySide('Evolución de Cosechas por Lote', chartImages?.harvestsOverTime, 'Tendencia Cosechas por Lote', reportData.graphicalAnalysis?.harvestsOverTime);
 
   // ═══════════════════════════════════════════════════════════════════════
   // PÁG 6 — PLAN DE ACCIÓN RECOMENDADO
