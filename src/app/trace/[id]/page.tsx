@@ -477,6 +477,8 @@ export default function TracePage() {
                         </div>
                     </div>
                 </DialogContent>
+            </Dialog>
+
             {/* MODAL PERFIL E INSTALACIONES DEL ESTABLECIMIENTO */}
             <Dialog open={showEstablishmentModal} onOpenChange={setShowEstablishmentModal}>
                 <DialogContent className="max-w-2xl bg-gradient-to-b from-stone-900 via-stone-900 to-purple-950 text-white border-purple-800/40 p-0 overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col">
