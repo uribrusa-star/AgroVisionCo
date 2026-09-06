@@ -157,6 +157,7 @@ export default function TracePage() {
                                 <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 leading-snug">{new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                             </div>
                         </div>
+
                         <motion.div 
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -182,13 +183,15 @@ export default function TracePage() {
                                 </p>
                             </div>
                         </motion.div>
-                         <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
+
+                        <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
                             <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Lote de Origen</p>
                                 <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 leading-snug break-words">{data.batchId}</p>
                             </div>
                         </div>
+
                         <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-100">
                             <User className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
@@ -196,12 +199,13 @@ export default function TracePage() {
                                 <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 leading-snug break-words">{data.collectorName}</p>
                             </div>
                         </div>
+
                         {data.bpaCertified && (
                             <motion.div 
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                                 onClick={() => setShowBpaModal(true)}
-                                className="col-span-2 lg:col-span-2 flex items-center gap-3.5 p-3.5 sm:p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden mt-1"
+                                className="sm:col-span-2 flex items-center gap-3.5 p-3.5 sm:p-4 bg-gradient-to-br from-emerald-800 via-emerald-900 to-green-950 rounded-xl text-white shadow-md cursor-pointer border border-emerald-500/40 group relative overflow-hidden mt-1"
                             >
                                 <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-400/10 rounded-full blur-md pointer-events-none" />
                                 <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 group-hover:scale-110 transition-transform">
