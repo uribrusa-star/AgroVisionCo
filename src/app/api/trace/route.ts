@@ -10,6 +10,8 @@ const DEMO_TRACEABILITY_DATA = {
     province: 'Santa Fe',
     system: 'Bajo túnel / Microtúneles de Precisión',
     technicalManager: 'Ing. Agr. Juan Pérez',
+    variety: 'San Andreas, Camarosa',
+    irrigationSystem: 'Riego localizado por goteo automatizado',
     areaTotal: 10,
     areaStrawberry: 5,
     images: [
@@ -178,6 +180,8 @@ export async function GET(request: Request) {
         province: establishmentInfo?.location?.province || 'Santa Fe',
         system: establishmentInfo?.system || 'Bajo túnel / Microtúneles de Precisión',
         technicalManager: establishmentInfo?.technicalManager || 'Ing. Agr. Juan Pérez',
+        variety: establishmentInfo?.planting?.variety || 'San Andreas, Camarosa',
+        irrigationSystem: establishmentInfo?.irrigation?.system || 'Riego localizado por goteo automatizado',
         areaTotal: establishmentInfo?.area?.total || 10,
         areaStrawberry: establishmentInfo?.area?.strawberry || 5,
         images: establishmentInfo?.images || [

@@ -481,33 +481,33 @@ export default function TracePage() {
 
             {/* MODAL PERFIL E INSTALACIONES DEL ESTABLECIMIENTO */}
             <Dialog open={showEstablishmentModal} onOpenChange={setShowEstablishmentModal}>
-                <DialogContent className="max-w-2xl bg-gradient-to-b from-stone-900 via-stone-900 to-purple-950 text-white border-purple-800/40 p-0 overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col">
-                    <DialogHeader className="p-5 sm:p-6 pb-3 relative z-10 border-b border-purple-800/30 bg-purple-950/60 backdrop-blur-md">
+                <DialogContent className="max-w-2xl bg-background text-foreground border border-border p-0 overflow-hidden rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
+                    <DialogHeader className="p-5 sm:p-6 pb-4 relative z-10 border-b bg-muted/30">
                         <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                <Home className="h-7 w-7 text-purple-400" />
+                            <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                                <Home className="h-6 w-6" />
                             </div>
                             <div>
-                                <DialogTitle className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+                                <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
                                     {data?.establishmentName || 'Quinta Las Fresas'}
-                                    <Sparkles className="h-4 w-4 text-amber-400" />
+                                    <CheckCircle className="h-4 w-4 text-emerald-600" />
                                 </DialogTitle>
-                                <p className="text-xs sm:text-sm text-purple-200/80 mt-0.5">
-                                    Coronda, Santa Fe · Producción Sustentable Certificada
+                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                    {(data as any)?.establishmentData?.locality || 'Coronda'}, {(data as any)?.establishmentData?.province || 'Santa Fe'} · Producción Sustentable Certificada
                                 </p>
                             </div>
                         </div>
                     </DialogHeader>
 
-                    <div className="p-4 sm:p-6 pt-3 relative z-10 space-y-4 overflow-y-auto flex-1">
+                    <div className="p-4 sm:p-6 pt-4 relative z-10 space-y-5 overflow-y-auto flex-1">
                         {/* GALERÍA / CARRUSEL DE IMÁGENES DE LA QUINTA */}
                         {((data as any)?.establishmentData?.images || [
                           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
                           'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
                           'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
                         ]).length > 0 && (
-                            <div className="space-y-2">
-                                <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border border-purple-500/30 bg-black/40 shadow-inner group">
+                            <div className="space-y-2.5">
+                                <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border bg-muted shadow-sm group">
                                     <Image 
                                         src={((data as any)?.establishmentData?.images || [
                                           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
@@ -516,16 +516,16 @@ export default function TracePage() {
                                         ])[activeEstablishmentImg] || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80'}
                                         alt="Instalaciones del Establecimiento"
                                         fill
-                                        className="object-cover transition-all duration-500 group-hover:scale-105"
+                                        className="object-cover transition-all duration-300"
                                         unoptimized
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
-                                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-purple-200">
-                                        <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full font-medium border border-white/10">
-                                            Imagen {activeEstablishmentImg + 1} de {((data as any)?.establishmentData?.images || [1,2,3]).length}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
+                                        <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full font-mono text-[11px]">
+                                            {activeEstablishmentImg + 1} / {((data as any)?.establishmentData?.images || [1,2,3]).length}
                                         </span>
-                                        <span className="bg-purple-900/80 backdrop-blur-md px-2.5 py-1 rounded-full font-semibold border border-purple-400/30 text-purple-300">
-                                            Instalaciones & Microtúneles
+                                        <span className="bg-primary/80 backdrop-blur-md px-2.5 py-1 rounded-full font-medium text-[11px]">
+                                            Instalaciones & Cultivo
                                         </span>
                                     </div>
                                 </div>
@@ -541,7 +541,7 @@ export default function TracePage() {
                                             key={idx}
                                             onClick={() => setActiveEstablishmentImg(idx)}
                                             className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                                                activeEstablishmentImg === idx ? 'border-purple-400 scale-105 shadow-md' : 'border-white/10 opacity-60 hover:opacity-100'
+                                                activeEstablishmentImg === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                                             }`}
                                         >
                                             <Image src={imgUrl} alt={`Thumb ${idx}`} fill className="object-cover" unoptimized />
@@ -552,63 +552,64 @@ export default function TracePage() {
                         )}
 
                         {/* FICHA TÉCNICA INSTITUCIONAL DEL ESTABLECIMIENTO */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300 flex-shrink-0 mt-0.5">
-                                    <Home className="h-5 w-5" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div className="p-3.5 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-primary/10 text-primary flex-shrink-0 mt-0.5">
+                                    <Home className="h-4 w-4" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[11px] text-purple-300 font-semibold uppercase tracking-wider">Sistema Productivo</p>
-                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                                    <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Sistema Productivo</p>
+                                    <p className="text-xs sm:text-sm font-bold text-foreground mt-0.5">
                                         {(data as any)?.establishmentData?.system || 'Bajo túnel / Microtúneles de Precisión'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-green-500/20 text-green-300 flex-shrink-0 mt-0.5">
-                                    <Sprout className="h-5 w-5" />
+                            <div className="p-3.5 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5">
+                                    <Sprout className="h-4 w-4" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[11px] text-green-300 font-semibold uppercase tracking-wider">Variedades Cultivadas</p>
-                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
-                                        Camino Real, San Andreas
+                                    <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Variedades Cultivadas</p>
+                                    <p className="text-xs sm:text-sm font-bold text-foreground mt-0.5">
+                                        {(data as any)?.establishmentData?.variety || 'San Andreas, Camarosa'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300 flex-shrink-0 mt-0.5">
-                                    <Droplet className="h-5 w-5" />
+                            <div className="p-3.5 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5">
+                                    <Droplet className="h-4 w-4" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[11px] text-blue-300 font-semibold uppercase tracking-wider">Sistema de Riego</p>
-                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
-                                        Riego localizado por goteo automatizado
+                                    <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Sistema de Riego</p>
+                                    <p className="text-xs sm:text-sm font-bold text-foreground mt-0.5">
+                                        {(data as any)?.establishmentData?.irrigationSystem || 'Riego localizado por goteo automatizado'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
-                                <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
-                                    <User className="h-5 w-5" />
+                            <div className="p-3.5 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5">
+                                    <User className="h-4 w-4" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-[11px] text-amber-300 font-semibold uppercase tracking-wider">Gestión Técnica</p>
-                                    <p className="text-xs sm:text-sm font-extrabold text-white mt-0.5">
+                                    <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">Gestión Técnica</p>
+                                    <p className="text-xs sm:text-sm font-bold text-foreground mt-0.5">
                                         {(data as any)?.establishmentData?.technicalManager || 'Ing. Agr. Juan Pérez'}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-                            <p className="text-[10px] sm:text-xs text-purple-200/80 flex items-center gap-1 font-mono">
-                                <Award className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" /> CERTIFICADO DE ORIGEN & INOCUIDAD AGROVISION
+                        <div className="pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" /> Origen & Inocuidad Verificados por AgroVision
                             </p>
                             <Button 
                                 onClick={() => setShowEstablishmentModal(false)}
-                                className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-6 py-2 rounded-xl w-full sm:w-auto text-xs sm:text-sm shadow-md transition-all"
+                                variant="outline"
+                                className="w-full sm:w-auto text-xs font-semibold px-6"
                             >
                                 Cerrar Galería
                             </Button>
