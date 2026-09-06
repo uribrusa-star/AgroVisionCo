@@ -149,8 +149,8 @@ export default function TracePage() {
                             <Sprout /> Resumen del Cultivo
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-green-50 rounded-xl border border-green-100">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-green-50 rounded-xl border border-green-100">
                             <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Fecha de Cosecha</p>
@@ -161,35 +161,35 @@ export default function TracePage() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setShowEstablishmentModal(true)}
-                            className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-purple-50 hover:bg-purple-100/80 rounded-xl border border-purple-200/60 shadow-sm hover:shadow-md cursor-pointer transition-all group relative overflow-hidden"
+                            className="flex items-center gap-3 p-3.5 sm:p-4 bg-purple-50 hover:bg-purple-100/80 rounded-xl border border-purple-200/60 shadow-sm hover:shadow-md cursor-pointer transition-all group relative overflow-hidden"
                         >
                             <div className="p-2 sm:p-2.5 rounded-lg bg-purple-500/10 text-purple-600 flex-shrink-0 group-hover:scale-110 transition-transform">
                                 <Home className="h-6 w-6 sm:h-7 sm:w-7 text-purple-600" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between gap-1">
                                     <p className="text-[11px] sm:text-xs text-purple-700 font-bold uppercase tracking-wider flex items-center gap-1">
                                         Establecimiento
-                                        <Sparkles className="h-3 w-3 text-purple-500 animate-pulse" />
+                                        <Sparkles className="h-3 w-3 text-purple-500 animate-pulse shrink-0" />
                                     </p>
-                                    <span className="text-[9px] font-semibold text-purple-600 bg-purple-200/60 px-1.5 py-0.5 rounded-full">Ver Galería ➔</span>
+                                    <span className="text-[9px] font-semibold text-purple-600 bg-purple-200/60 px-1.5 py-0.5 rounded-full shrink-0">Ver Galería ➔</span>
                                 </div>
                                 <p className="font-extrabold text-xs sm:text-base md:text-lg text-purple-950 leading-snug break-words mt-0.5 group-hover:text-purple-700 transition-colors">
                                     {data.establishmentName || 'Quinta Las Fresas'}
                                 </p>
-                                <p className="text-[10px] text-purple-600/90 underline decoration-dotted underline-offset-2 mt-0.5">
+                                <p className="text-[10px] text-purple-600/90 underline decoration-dotted underline-offset-2 mt-0.5 truncate">
                                     Presiona para ver fotos e instalaciones
                                 </p>
                             </div>
                         </motion.div>
-                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
+                         <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
                             <Leaf className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Lote de Origen</p>
                                 <p className="font-bold text-xs sm:text-base md:text-lg text-gray-800 leading-snug break-words">{data.batchId}</p>
                             </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 p-3.5 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-100">
+                        <div className="flex items-center gap-3 p-3.5 sm:p-4 bg-yellow-50 rounded-xl border border-yellow-100">
                             <User className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-[11px] sm:text-xs text-gray-500 font-medium">Recolector</p>
@@ -387,90 +387,90 @@ export default function TracePage() {
             </Dialog>
 
             <Dialog open={showBpaModal} onOpenChange={setShowBpaModal}>
-                <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-green-950 via-emerald-950 to-green-900 text-white border-2 border-emerald-500/50 shadow-2xl flex flex-col [&>button]:z-[100] [&>button]:text-white [&>button]:bg-emerald-500/30 [&>button]:hover:bg-emerald-500/60 [&>button]:border [&>button]:border-emerald-400/40">
-                    <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-                    <DialogHeader className="p-4 sm:p-6 pb-2 text-center relative z-10 flex-shrink-0 pr-14">
-                         <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3 mx-auto">
-                             <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 animate-pulse flex-shrink-0" /> Certificación Oficial AgroVista G.A.P.
+                <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden rounded-2xl bg-background text-foreground border border-border shadow-xl flex flex-col">
+                    <DialogHeader className="p-5 sm:p-6 pb-4 border-b bg-muted/30 relative z-10 flex-shrink-0">
+                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2">
+                             <Award className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" /> Certificación Oficial AgroVista G.A.P.
                          </div>
-                         <DialogTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl md:text-3xl font-extrabold text-white">
-                             <ShieldCheck className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-400 flex-shrink-0" /> Buenas Prácticas Agrícolas
-                        </DialogTitle>
-                        <p className="text-emerald-100/90 text-xs sm:text-sm md:text-base max-w-lg mx-auto pt-1.5 leading-relaxed">
+                         <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold text-foreground">
+                             <ShieldCheck className="h-6 w-6 text-emerald-600 flex-shrink-0" /> Buenas Prácticas Agrícolas
+                         </DialogTitle>
+                        <p className="text-muted-foreground text-xs sm:text-sm pt-1 leading-relaxed">
                             Garantía oficial de inocuidad, respeto por el medio ambiente, seguridad alimentaria y trazabilidad total de tu lote de frutilla.
                         </p>
                     </DialogHeader>
 
-                    <div className="p-4 sm:p-6 pt-2 relative z-10 space-y-3 sm:space-y-4 overflow-y-auto flex-1">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
-                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
-                                <div className="p-2 sm:p-2.5 rounded-lg bg-emerald-500/20 text-emerald-300 flex-shrink-0 mt-0.5">
-                                    <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="p-4 sm:p-6 pt-4 relative z-10 space-y-4 overflow-y-auto flex-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5">
+                                    <ShieldCheck className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                    <h4 className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
                                         Libre de Residuos (PHI 0)
-                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
                                     </h4>
-                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-relaxed">
                                         Período de carencia fitosanitaria (PHI) 100% verificado y cumplido antes del corte de la fruta. Cero residuos químicos.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
-                                <div className="p-2 sm:p-2.5 rounded-lg bg-blue-500/20 text-blue-300 flex-shrink-0 mt-0.5">
-                                    <Droplet className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5">
+                                    <Droplet className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                    <h4 className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
                                         Riego y Agua Seguro
-                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
                                     </h4>
-                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-relaxed">
                                         Riego localizado por goteo con fuentes de agua analizadas e inspeccionadas periódicamente.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
-                                <div className="p-2 sm:p-2.5 rounded-lg bg-amber-500/20 text-amber-300 flex-shrink-0 mt-0.5">
-                                    <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5">
+                                    <Sparkles className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                    <h4 className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
                                         Manejo Integrado (MIP)
-                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
                                     </h4>
-                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-relaxed">
                                         Prioridad al control biológico y monitoreo fenológico constante por ingenieros agrónomos matriculados.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="p-3.5 sm:p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10 flex items-start gap-3 hover:bg-white/15 transition-all">
-                                <div className="p-2 sm:p-2.5 rounded-lg bg-purple-500/20 text-purple-300 flex-shrink-0 mt-0.5">
-                                    <Package className="h-5 w-5 sm:h-6 sm:w-6" />
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 border flex items-start gap-3">
+                                <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5">
+                                    <Package className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <h4 className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
+                                    <h4 className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
                                         Cosecha e Higiene Total
-                                        <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400 flex-shrink-0" />
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
                                     </h4>
-                                    <p className="text-[11px] sm:text-xs text-emerald-100/80 mt-1 leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-relaxed">
                                         Recolección manual cuidadosa con trazabilidad por cuadrillero, empaque higiénico y cadena de frío ininterrumpida.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-                            <p className="text-[10px] sm:text-xs text-emerald-200/90 flex items-center justify-center gap-1.5 font-mono">
-                                <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400 flex-shrink-0" /> CERTIFICADO DIGITAL AGROVISION — VERIFICADO
+                        <div className="mt-4 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
+                                <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" /> CERTIFICADO DIGITAL AGROVISION — VERIFICADO
                             </p>
                             <Button 
                                 onClick={() => setShowBpaModal(false)}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl w-full sm:w-auto shadow-md transition-all text-xs sm:text-sm"
+                                variant="outline"
+                                className="w-full sm:w-auto text-xs font-semibold px-6"
                             >
                                 Entendido
                             </Button>
@@ -508,16 +508,16 @@ export default function TracePage() {
                         ]).length > 0 && (
                             <div className="space-y-2.5">
                                 <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border bg-muted shadow-sm group">
-                                    <Image 
+                                    <img 
                                         src={((data as any)?.establishmentData?.images || [
                                           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
                                           'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
                                           'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
                                         ])[activeEstablishmentImg] || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80'}
                                         alt="Instalaciones del Establecimiento"
-                                        fill
-                                        className="object-cover transition-all duration-300"
-                                        unoptimized
+                                        className="w-full h-full object-cover transition-all duration-200"
+                                        loading="eager"
+                                        decoding="async"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
@@ -530,7 +530,7 @@ export default function TracePage() {
                                     </div>
                                 </div>
 
-                                {/* THUMBNAILS DE GALERÍA */}
+                                {/* THUMBNAILS DE GALERÍA DE CARGA RÁPIDA */}
                                 <div className="flex gap-2 overflow-x-auto pb-1">
                                     {((data as any)?.establishmentData?.images || [
                                       'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
@@ -540,11 +540,11 @@ export default function TracePage() {
                                         <button
                                             key={idx}
                                             onClick={() => setActiveEstablishmentImg(idx)}
-                                            className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                                            className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-muted ${
                                                 activeEstablishmentImg === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                                             }`}
                                         >
-                                            <Image src={imgUrl} alt={`Thumb ${idx}`} fill className="object-cover" unoptimized />
+                                            <img src={imgUrl} alt={`Thumb ${idx}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                         </button>
                                     ))}
                                 </div>
