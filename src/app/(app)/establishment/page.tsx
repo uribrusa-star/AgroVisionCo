@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Droplet, Map, MapPin, Sprout, User, Wind, Briefcase, ChevronRight, Plus, Mountain, TrendingUp, Sun, Ruler, CheckCircle, Pencil, Trash2 } from 'lucide-react';
+import { Droplet, Map, MapPin, Sprout, User, Wind, Briefcase, ChevronRight, Plus, Mountain, TrendingUp, Sun, Ruler, CheckCircle, Pencil, Trash2, Image as ImageIcon, Eye, ExternalLink, Trash } from 'lucide-react';
 import { BatchBuilder } from '@/components/batch-builder';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppDataContext } from "@/context/app-data-context.tsx";
@@ -494,6 +494,26 @@ export default function EstablishmentPage() {
              <InfoItem label="Objetivo Económico" value={establishmentData.economics.objective} />
         </InfoCard>
 
+        <InfoCard title="Fotos del Establecimiento" icon={ImageIcon} onEdit={() => handleEdit('gallery')} editableBy={producerAccess}>
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">Imágenes cargadas para la ficha técnica y la historia de trazabilidad pública.</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(establishmentData.images && establishmentData.images.length > 0 ? establishmentData.images : [
+                  'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+                  'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+                  'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+                ]).slice(0, 3).map((url, idx) => (
+                  <div key={idx} className="relative aspect-video rounded-md overflow-hidden bg-muted border">
+                    <img src={url} alt={`Establecimiento ${idx + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => handleEdit('gallery')} className="w-full text-xs font-semibold gap-1.5 mt-2">
+                <Pencil className="h-3.5 w-3.5" /> Administrar y Previsualizar ({establishmentData.images?.length || 3})
+              </Button>
+            </div>
+        </InfoCard>
+
       </div>
 
        {/* Edit Modals */}
@@ -694,6 +714,26 @@ export default function EstablishmentPage() {
         </DialogContent>
       </Dialog>
 
+      <GalleryEditModal
+        open={editingSection === 'gallery'}
+        onClose={handleCloseDialog}
+        initialImages={establishmentData?.images || [
+          'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+        ]}
+        onSave={async (newImages) => {
+          try {
+            await updateEstablishmentData({ images: newImages });
+            toast({ title: "¡Galería Actualizada!", description: "Las imágenes del establecimiento han sido guardadas." });
+            handleCloseDialog();
+          } catch (e) {
+            toast({ title: "Error", description: "No se pudieron actualizar las imágenes.", variant: "destructive" });
+          }
+        }}
+        establishmentData={establishmentData}
+      />
+
       <BatchBuilder 
         open={isBatchBuilderOpen}
         onOpenChange={setIsBatchBuilderOpen}
@@ -702,5 +742,247 @@ export default function EstablishmentPage() {
         existingGeoJson={parsedGeoJson}
       />
     </>
+  );
+}
+
+function GalleryEditModal({
+  open,
+  onClose,
+  initialImages,
+  onSave,
+  establishmentData
+}: {
+  open: boolean;
+  onClose: () => void;
+  initialImages: string[];
+  onSave: (images: string[]) => Promise<void>;
+  establishmentData: any;
+}) {
+  const [images, setImages] = useState<string[]>(initialImages);
+  const [newUrlInput, setNewUrlInput] = useState('');
+  const [activePreviewIdx, setActivePreviewIdx] = useState(0);
+
+  React.useEffect(() => {
+    if (open) {
+      setImages(initialImages.length > 0 ? initialImages : []);
+      setNewUrlInput('');
+      setActivePreviewIdx(0);
+    }
+  }, [open, initialImages]);
+
+  const handleAddUrl = () => {
+    const trimmed = newUrlInput.trim();
+    if (!trimmed) return;
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      alert('Por favor ingrese una URL válida que comience con http:// o https://');
+      return;
+    }
+    setImages(prev => [...prev, trimmed]);
+    setNewUrlInput('');
+  };
+
+  const handleRemoveUrl = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    if (activePreviewIdx >= images.length - 1 && activePreviewIdx > 0) {
+      setActivePreviewIdx(activePreviewIdx - 1);
+    }
+  };
+
+  const handleUpdateUrl = (index: number, val: string) => {
+    setImages(prev => {
+      const next = [...prev];
+      next[index] = val;
+      return next;
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+            <ImageIcon className="h-5 w-5 text-primary" />
+            Galería del Establecimiento y Previsualización
+          </DialogTitle>
+          <DialogDescription>
+            Cargue las URLs de las imágenes de su establecimiento (`https://i.imgur.com/example.jpeg`) y previsualice cómo se mostrará a los clientes en la historia de trazabilidad.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-2">
+          {/* Columna Izquierda: Administración de URLs */}
+          <div className="space-y-4">
+            <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Plus className="h-3.5 w-3.5 text-primary" /> Agregar nueva imagen (URL)
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  value={newUrlInput}
+                  onChange={(e) => setNewUrlInput(e.target.value)}
+                  placeholder="https://i.imgur.com/KoI668P.jpeg"
+                  className="text-xs font-mono"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddUrl();
+                    }
+                  }}
+                />
+                <Button size="sm" onClick={handleAddUrl} className="shrink-0 text-xs">
+                  Agregar
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Soporta links de Imgur, Unsplash, Google Drive (directos), o cualquier link de imagen público.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
+                  URLs Cargadas ({images.length})
+                </h4>
+                {images.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={() => setImages([])} className="text-xs text-destructive h-6 px-2">
+                    Limpiar todas
+                  </Button>
+                )}
+              </div>
+
+              {images.length === 0 ? (
+                <div className="text-center p-6 border border-dashed rounded-lg text-muted-foreground text-xs">
+                  No se han ingresado imágenes aún. Agregue una URL arriba.
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+                  {images.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-center gap-2 p-2 rounded-md border transition-all ${
+                        activePreviewIdx === idx ? 'border-primary bg-primary/5 ring-1 ring-primary/30' : 'bg-background hover:bg-muted/40'
+                      }`}
+                    >
+                      <span className="text-xs font-mono font-bold text-muted-foreground w-4 shrink-0">{idx + 1}.</span>
+                      <Input
+                        value={url}
+                        onChange={(e) => handleUpdateUrl(idx, e.target.value)}
+                        className="text-xs font-mono h-8 flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setActivePreviewIdx(idx)}
+                        className={`h-8 w-8 shrink-0 ${activePreviewIdx === idx ? 'text-primary' : 'text-muted-foreground'}`}
+                        title="Ver en previsualizador"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveUrl(idx)}
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
+                        title="Eliminar URL"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Columna Derecha: Previsualizador interactivo de Trazabilidad */}
+          <div className="space-y-3 bg-gradient-to-b from-muted/20 to-muted/60 p-4 rounded-xl border">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold uppercase text-primary tracking-wider flex items-center gap-1.5">
+                <Eye className="h-4 w-4" /> Previsualización en Vivo (Trazabilidad QR)
+              </h4>
+              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                Modo Cliente
+              </span>
+            </div>
+
+            {/* Simulación Modal Trazabilidad */}
+            <div className="bg-background rounded-lg border shadow-sm p-4 space-y-4">
+              <div className="space-y-1 border-b pb-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-base text-foreground">{establishmentData?.producer || 'Quinta Las Fresas'}</h3>
+                  <span className="text-[10px] bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300 font-semibold px-2 py-0.5 rounded-full">
+                    Sello BPA Verificado
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-red-500" />
+                  {establishmentData?.location?.locality || 'Coronda'}, {establishmentData?.location?.province || 'Santa Fe'}
+                </p>
+              </div>
+
+              {/* Visor de Galería estilo trazabilidad */}
+              {images.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted group">
+                    <img
+                      src={images[activePreviewIdx] || images[0]}
+                      alt="Previsualización"
+                      className="w-full h-full object-cover transition-all duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLElement).setAttribute('src', 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80');
+                      }}
+                    />
+                    <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-md font-mono">
+                      {activePreviewIdx + 1} / {images.length}
+                    </div>
+                  </div>
+
+                  {/* Miniaturas de selección */}
+                  {images.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {images.map((img, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setActivePreviewIdx(i)}
+                          className={`relative h-12 w-16 rounded-md overflow-hidden border-2 shrink-0 transition-all ${
+                            activePreviewIdx === i ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <img src={img} alt={`thumb-${i}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="aspect-video rounded-lg border border-dashed flex flex-col items-center justify-center p-4 text-center bg-muted/20">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/50 mb-1" />
+                  <p className="text-xs font-medium text-muted-foreground">Sin fotos cargadas</p>
+                  <p className="text-[10px] text-muted-foreground/80">Se mostrarán las imágenes por defecto del sistema.</p>
+                </div>
+              )}
+
+              {/* Ficha técnica rápida */}
+              <div className="grid grid-cols-2 gap-2 text-[11px] bg-muted/40 p-2.5 rounded-md border text-muted-foreground">
+                <div><span className="font-semibold text-foreground">Sistema:</span> {establishmentData?.system || 'Bajo túnel'}</div>
+                <div><span className="font-semibold text-foreground">Agrónomo:</span> {establishmentData?.technicalManager || 'Ing. Agr. Juan Pérez'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0 mt-4">
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={() => onSave(images.filter(Boolean))}>
+            Guardar Galería de Fotos
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
