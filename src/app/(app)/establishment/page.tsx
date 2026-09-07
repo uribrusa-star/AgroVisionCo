@@ -20,6 +20,7 @@ import { AppDataContext } from "@/context/app-data-context.tsx";
 import type { EstablishmentData, UserRole } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { getOptimizedImageUrl } from "@/lib/image-optimizer";
 
 const MapComponent = dynamic(() => import('@/components/map'), { ssr: false });
 
@@ -504,7 +505,7 @@ export default function EstablishmentPage() {
                   'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
                 ]).slice(0, 3).map((url, idx) => (
                   <div key={idx} className="relative aspect-video rounded-md overflow-hidden bg-muted border">
-                    <img src={url} alt={`Establecimiento ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={getOptimizedImageUrl(url, { width: 250, quality: 60 })} alt={`Establecimiento ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                 ))}
               </div>
@@ -927,9 +928,11 @@ function GalleryEditModal({
                 <div className="space-y-3">
                   <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted group">
                     <img
-                      src={images[activePreviewIdx] || images[0]}
+                      src={getOptimizedImageUrl(images[activePreviewIdx] || images[0], { width: 800, quality: 75 })}
                       alt="Previsualización"
                       className="w-full h-full object-cover transition-all duration-300"
+                      loading="eager"
+                      decoding="async"
                       onError={(e) => {
                         (e.target as HTMLElement).setAttribute('src', 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80');
                       }}
@@ -951,7 +954,7 @@ function GalleryEditModal({
                             activePreviewIdx === i ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-70 hover:opacity-100'
                           }`}
                         >
-                          <img src={img} alt={`thumb-${i}`} className="w-full h-full object-cover" />
+                          <img src={getOptimizedImageUrl(img, { width: 150, quality: 60 })} alt={`thumb-${i}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                         </button>
                       ))}
                     </div>

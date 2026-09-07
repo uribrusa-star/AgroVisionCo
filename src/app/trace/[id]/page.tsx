@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
 type TraceabilityData = {
     establishmentName?: string;
@@ -509,51 +510,63 @@ export default function TracePage() {
                           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
                           'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
                           'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
-                        ]).length > 0 && (
-                            <div className="space-y-2.5">
-                                <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border bg-muted shadow-sm group">
-                                    <img 
-                                        src={((data as any)?.establishmentData?.images || [
-                                          'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
-                                          'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
-                                          'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
-                                        ])[activeEstablishmentImg] || 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80'}
-                                        alt="Instalaciones del Establecimiento"
-                                        className="w-full h-full object-cover transition-all duration-200"
-                                        loading="eager"
-                                        decoding="async"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                                        <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full font-mono text-[11px]">
-                                            {activeEstablishmentImg + 1} / {((data as any)?.establishmentData?.images || [1,2,3]).length}
-                                        </span>
-                                        <span className="bg-primary/80 backdrop-blur-md px-2.5 py-1 rounded-full font-medium text-[11px]">
-                                            Instalaciones & Cultivo
-                                        </span>
+                        ]).length > 0 && (() => {
+                            const rawImages: string[] = (data as any)?.establishmentData?.images || [
+                              'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
+                              'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
+                              'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
+                            ];
+                            const currentRawUrl = rawImages[activeEstablishmentImg] || rawImages[0];
+                            const optimizedMainUrl = getOptimizedImageUrl(currentRawUrl, { width: 800, quality: 75 });
+
+                            return (
+                                <div className="space-y-2.5">
+                                    <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border bg-muted shadow-sm group">
+                                        <img 
+                                            key={optimizedMainUrl}
+                                            src={optimizedMainUrl}
+                                            alt="Instalaciones del Establecimiento"
+                                            className="w-full h-full object-cover transition-opacity duration-300"
+                                            loading="eager"
+                                            decoding="async"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
+                                            <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full font-mono text-[11px]">
+                                                {activeEstablishmentImg + 1} / {rawImages.length}
+                                            </span>
+                                            <span className="bg-primary/80 backdrop-blur-md px-2.5 py-1 rounded-full font-medium text-[11px]">
+                                                Instalaciones & Cultivo
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* THUMBNAILS DE GALERÍA DE CARGA ULTRA RÁPIDA (WEBP 160px) */}
+                                    <div className="flex gap-2 overflow-x-auto pb-1">
+                                        {rawImages.map((imgUrl: string, idx: number) => {
+                                            const thumbUrl = getOptimizedImageUrl(imgUrl, { width: 160, quality: 60 });
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setActiveEstablishmentImg(idx)}
+                                                    className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-muted ${
+                                                        activeEstablishmentImg === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
+                                                    }`}
+                                                >
+                                                    <img 
+                                                        src={thumbUrl} 
+                                                        alt={`Thumb ${idx}`} 
+                                                        className="w-full h-full object-cover" 
+                                                        loading="lazy" 
+                                                        decoding="async" 
+                                                    />
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-
-                                {/* THUMBNAILS DE GALERÍA DE CARGA RÁPIDA */}
-                                <div className="flex gap-2 overflow-x-auto pb-1">
-                                    {((data as any)?.establishmentData?.images || [
-                                      'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
-                                      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
-                                      'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
-                                    ]).map((imgUrl: string, idx: number) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveEstablishmentImg(idx)}
-                                            className={`relative h-14 w-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 bg-muted ${
-                                                activeEstablishmentImg === idx ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
-                                            }`}
-                                        >
-                                            <img src={imgUrl} alt={`Thumb ${idx}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* FICHA TÉCNICA INSTITUCIONAL DEL ESTABLECIMIENTO */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
