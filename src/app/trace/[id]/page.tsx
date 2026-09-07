@@ -24,6 +24,8 @@ type TraceabilityData = {
         flowerCount?: number;
         fruitCount?: number;
         notes: string;
+        batchId?: string;
+        batchIds?: string[];
         images?: { url: string; hint?: string }[];
     }[];
     bpaCertified?: boolean;
@@ -288,7 +290,21 @@ export default function TracePage() {
                                             </div>
                                             <div className="flex-grow space-y-2">
                                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                                    <p className="font-bold text-lg text-primary">{log.developmentState}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-lg text-primary">{log.developmentState}</p>
+                                                        {(() => {
+                                                            const rawBatch = log.batchId || (log.batchIds && log.batchIds.length > 0 ? log.batchIds.join(', ') : null);
+                                                            if (!rawBatch) return null;
+                                                            // Format batch nicely e.g. "Lote 1: Camino Real" -> "L001" or keep short code
+                                                            const match = rawBatch.match(/Lote\s*(\d+)/i) || rawBatch.match(/L(\d+)/i);
+                                                            const displayBatch = match ? `L${match[1].padStart(3, '0')}` : rawBatch.split(':')[0].trim();
+                                                            return (
+                                                                <span className="text-[10px] font-extrabold bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">
+                                                                    {displayBatch}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                     <p className="text-xs text-gray-400">{new Date(log.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                                                 </div>
                                                 
