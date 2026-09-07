@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Calendar, Sprout, User, CheckCircle, Info, Truck, Package, Leaf, TestTube2, Droplet, AlertCircle, Home, Flower, Grape, Sun, ShieldCheck, Award, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedImageUrl } from '@/lib/image-optimizer';
 
@@ -416,9 +416,9 @@ export default function TracePage() {
                          <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl font-bold text-foreground">
                              <ShieldCheck className="h-6 w-6 text-emerald-600 flex-shrink-0" /> Buenas Prácticas Agrícolas
                          </DialogTitle>
-                        <p className="text-muted-foreground text-xs sm:text-sm pt-1 leading-relaxed">
+                        <DialogDescription className="text-muted-foreground text-xs sm:text-sm pt-1 leading-relaxed">
                             Garantía oficial de inocuidad, respeto por el medio ambiente, seguridad alimentaria y trazabilidad total de tu lote de frutilla.
-                        </p>
+                        </DialogDescription>
                     </DialogHeader>
 
                     <div className="p-4 sm:p-6 pt-4 relative z-10 space-y-4 overflow-y-auto flex-1">
@@ -513,9 +513,9 @@ export default function TracePage() {
                                     {data?.establishmentName || 'Quinta Las Fresas'}
                                     <CheckCircle className="h-4 w-4 text-emerald-600" />
                                 </DialogTitle>
-                                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                                     {(data as any)?.establishmentData?.locality || 'Coronda'}, {(data as any)?.establishmentData?.province || 'Santa Fe'} · Producción Sustentable Certificada
-                                </p>
+                                </DialogDescription>
                             </div>
                         </div>
                     </DialogHeader>

@@ -171,22 +171,35 @@ export async function GET(request: Request) {
     };
 
     // Filter phenology logs to ONLY include those matching the harvest's batchIds
-    const harvestBatchIds = batchIdsToSearch.map(b => b.toLowerCase().replace(/lote\s*/i, '').trim());
+    // Clean numbers from batch strings (e.g. "Lote 3: Camino Real" -> "3", "L003" -> "3")
+    const harvestBatchNumbers = batchIdsToSearch.map(b => {
+      const match = b.match(/(\d+)/);
+      return match ? match[1] : b.toLowerCase().replace(/lote\s*/i, '').trim();
+    });
 
-    const filteredPhenoLogs = realPhenoLogs.filter((log: any) => {
+    const mappedPhenoLogs = realPhenoLogs.map((log: any) => {
+      const rawBatch = log.batchId || (log.batchIds && log.batchIds.length > 0 ? log.batchIds[0] : null) || batchIdsToSearch[0] || 'Lote 1';
+      return {
+        ...log,
+        batchId: rawBatch
+      };
+    });
+
+    const filteredPhenoLogs = mappedPhenoLogs.filter((log: any) => {
       const logBatches: string[] = [];
       if (log.batchId) logBatches.push(String(log.batchId));
       if (Array.isArray(log.batchIds)) logBatches.push(...log.batchIds.map(String));
 
-      if (logBatches.length === 0) return true; // Include general logs if no batch specified
+      if (logBatches.length === 0) return true;
 
       return logBatches.some(b => {
-        const cleanB = b.toLowerCase().replace(/lote\s*/i, '').trim();
-        return harvestBatchIds.some(hb => cleanB.includes(hb) || hb.includes(cleanB));
+        const match = b.match(/(\d+)/);
+        const logNum = match ? match[1] : b.toLowerCase().replace(/lote\s*/i, '').trim();
+        return harvestBatchNumbers.some(hn => hn === logNum || b.toLowerCase().includes(hn));
       });
     });
 
-    const finalPhenoLogs = filteredPhenoLogs.length > 0 ? filteredPhenoLogs : realPhenoLogs;
+    const finalPhenoLogs = filteredPhenoLogs.length > 0 ? filteredPhenoLogs : mappedPhenoLogs;
 
     return NextResponse.json({
       establishmentName,
