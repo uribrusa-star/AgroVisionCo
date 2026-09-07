@@ -170,7 +170,23 @@ export async function GET(request: Request) {
       harvestHygieneVerified: true,
     };
 
-    const establishmentInfo = estSnap.exists ? estSnap.data() : null;
+    // Filter phenology logs to ONLY include those matching the harvest's batchIds
+    const harvestBatchIds = batchIdsToSearch.map(b => b.toLowerCase().replace(/lote\s*/i, '').trim());
+
+    const filteredPhenoLogs = realPhenoLogs.filter((log: any) => {
+      const logBatches: string[] = [];
+      if (log.batchId) logBatches.push(String(log.batchId));
+      if (Array.isArray(log.batchIds)) logBatches.push(...log.batchIds.map(String));
+
+      if (logBatches.length === 0) return true; // Include general logs if no batch specified
+
+      return logBatches.some(b => {
+        const cleanB = b.toLowerCase().replace(/lote\s*/i, '').trim();
+        return harvestBatchIds.some(hb => cleanB.includes(hb) || hb.includes(cleanB));
+      });
+    });
+
+    const finalPhenoLogs = filteredPhenoLogs.length > 0 ? filteredPhenoLogs : realPhenoLogs;
 
     return NextResponse.json({
       establishmentName,
@@ -193,7 +209,7 @@ export async function GET(request: Request) {
       harvestDate: harvest.date || new Date().toISOString().split('T')[0],
       batchId: harvest.batchNumber || harvest.batchId || 'Lote 1: Camino Real',
       collectorName,
-      phenologyLogs: realPhenoLogs.length > 0 ? realPhenoLogs.slice(0, 5) : DEMO_TRACEABILITY_DATA.phenologyLogs,
+      phenologyLogs: finalPhenoLogs.slice(0, 5),
       bpaCertified,
       bpaDetails
     });
