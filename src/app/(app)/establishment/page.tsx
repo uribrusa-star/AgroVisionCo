@@ -934,7 +934,13 @@ function GalleryEditModal({
                       loading="eager"
                       decoding="async"
                       onError={(e) => {
-                        (e.target as HTMLElement).setAttribute('src', 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80');
+                        const target = e.target as HTMLImageElement;
+                        const rawUrl = images[activePreviewIdx] || images[0];
+                        if (target.src !== rawUrl) {
+                          target.src = rawUrl;
+                        } else {
+                          target.src = 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80';
+                        }
                       }}
                     />
                     <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-md font-mono">
@@ -954,7 +960,19 @@ function GalleryEditModal({
                             activePreviewIdx === i ? 'border-primary ring-2 ring-primary/20 scale-105' : 'border-transparent opacity-70 hover:opacity-100'
                           }`}
                         >
-                          <img src={getOptimizedImageUrl(img, { width: 150, quality: 60 })} alt={`thumb-${i}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                          <img 
+                            src={getOptimizedImageUrl(img, { width: 150, quality: 60 })} 
+                            alt={`thumb-${i}`} 
+                            className="w-full h-full object-cover" 
+                            loading="lazy" 
+                            decoding="async" 
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== img) {
+                                target.src = img;
+                              }
+                            }}
+                          />
                         </button>
                       ))}
                     </div>

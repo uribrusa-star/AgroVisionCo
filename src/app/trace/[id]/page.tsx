@@ -529,6 +529,12 @@ export default function TracePage() {
                                             className="w-full h-full object-cover transition-opacity duration-300"
                                             loading="eager"
                                             decoding="async"
+                                            onError={(e) => {
+                                              const target = e.target as HTMLImageElement;
+                                              if (target.src !== currentRawUrl) {
+                                                target.src = currentRawUrl;
+                                              }
+                                            }}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                                         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
@@ -559,6 +565,12 @@ export default function TracePage() {
                                                         className="w-full h-full object-cover" 
                                                         loading="lazy" 
                                                         decoding="async" 
+                                                        onError={(e) => {
+                                                          const target = e.target as HTMLImageElement;
+                                                          if (target.src !== imgUrl) {
+                                                            target.src = imgUrl;
+                                                          }
+                                                        }}
                                                     />
                                                 </button>
                                             );
