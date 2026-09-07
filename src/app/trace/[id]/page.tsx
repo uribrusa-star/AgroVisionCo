@@ -470,7 +470,7 @@ export default function TracePage() {
 
                         <div className="mt-4 pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
                             <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1.5">
-                                <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" /> CERTIFICADO DIGITAL AGROVISION — VERIFICADO
+                                <ShieldCheck className="h-4 w-4 text-emerald-600 flex-shrink-0" /> CERTIFICADO DIGITAL AGROVISTA — VERIFICADO
                             </p>
                             <Button 
                                 onClick={() => setShowBpaModal(false)}
@@ -521,12 +521,18 @@ export default function TracePage() {
 
                             return (
                                 <div className="space-y-2.5">
-                                    <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden border bg-muted shadow-sm group">
+                                    <div 
+                                        className="relative h-48 sm:h-64 rounded-xl overflow-hidden border bg-muted shadow-sm group cursor-pointer"
+                                        onClick={() => {
+                                            setSelectedImage(currentRawUrl);
+                                            setSelectedLogInfo({ state: 'Instalaciones del Establecimiento', date: (data as any)?.establishmentData?.producer || 'Quinta Las Fresas' });
+                                        }}
+                                    >
                                         <img 
                                             key={optimizedMainUrl}
                                             src={optimizedMainUrl}
                                             alt="Instalaciones del Establecimiento"
-                                            className="w-full h-full object-cover transition-opacity duration-300"
+                                            className="w-full h-full object-cover transition-opacity duration-300 group-hover:scale-105"
                                             loading="eager"
                                             decoding="async"
                                             onError={(e) => {
@@ -541,8 +547,8 @@ export default function TracePage() {
                                             <span className="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full font-mono text-[11px]">
                                                 {activeEstablishmentImg + 1} / {rawImages.length}
                                             </span>
-                                            <span className="bg-primary/80 backdrop-blur-md px-2.5 py-1 rounded-full font-medium text-[11px]">
-                                                Instalaciones & Cultivo
+                                            <span className="bg-primary/80 backdrop-blur-md px-2.5 py-1 rounded-full font-medium text-[11px] flex items-center gap-1">
+                                                🔍 Presiona para ampliar
                                             </span>
                                         </div>
                                     </div>
@@ -633,7 +639,7 @@ export default function TracePage() {
 
                         <div className="pt-3 border-t flex flex-col sm:flex-row items-center justify-between gap-3">
                             <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1">
-                                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" /> Origen & Inocuidad Verificados por AgroVision
+                                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" /> Origen & Inocuidad Verificados por AgroVista
                             </p>
                             <Button 
                                 onClick={() => setShowEstablishmentModal(false)}
