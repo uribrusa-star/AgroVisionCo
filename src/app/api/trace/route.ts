@@ -66,6 +66,13 @@ export async function GET(request: Request) {
   }
 
   try {
+    let decodedId = id;
+    try {
+      decodedId = decodeURIComponent(id);
+    } catch (e) {
+      console.error('Error decoding URI component:', e);
+    }
+
     const harvestsRef = adminDb.collection('harvests');
     const phenologyLogsRef = adminDb.collection('phenologyLogs');
     const agronomistLogsRef = adminDb.collection('agronomistLogs');
@@ -80,17 +87,32 @@ export async function GET(request: Request) {
       .sort((a: any, b: any) => new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime());
 
     // If ID is DEMO-2026, try finding the latest real harvest from main producer first
-    if (id === 'DEMO-2026' || id.startsWith('DEMO')) {
+    if (decodedId === 'DEMO-2026' || decodedId.startsWith('DEMO')) {
       const demoQuery = await harvestsRef.orderBy('createdAt', 'desc').limit(1).get();
       if (!demoQuery.empty) {
         const doc = demoQuery.docs[0];
         harvest = { id: doc.id, ...doc.data() };
       }
     } else {
-      const querySnapshot = await harvestsRef.where('traceabilityId', '==', id).limit(1).get();
+      // Search by exact decodedId, raw id, or document ID
+      const querySnapshot = await harvestsRef.where('traceabilityId', '==', decodedId).limit(1).get();
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
         harvest = { id: doc.id, ...doc.data() };
+      } else {
+        const queryRawSnapshot = await harvestsRef.where('traceabilityId', '==', id).limit(1).get();
+        if (!queryRawSnapshot.empty) {
+          const doc = queryRawSnapshot.docs[0];
+          harvest = { id: doc.id, ...doc.data() };
+        } else {
+          // Fallback: search by document ID or partial match
+          try {
+            const docById = await harvestsRef.doc(decodedId).get();
+            if (docById.exists) {
+              harvest = { id: docById.id, ...docById.data() };
+            }
+          } catch (e) {}
+        }
       }
     }
 
@@ -107,7 +129,9 @@ export async function GET(request: Request) {
     
     const estRef = adminDb.collection('establishment').doc(estId);
     const estSnap = await estRef.get();
-    let establishmentName = estSnap.exists && estSnap.data()?.producer ? estSnap.data()?.producer : 'Quinta Las Fresas';
+    const establishmentInfo = estSnap.exists ? estSnap.data() : null;
+
+    let establishmentName = establishmentInfo?.producer || 'Quinta Las Fresas';
     if (establishmentName.includes('-')) {
       establishmentName = establishmentName.split('-')[0].trim();
     }
