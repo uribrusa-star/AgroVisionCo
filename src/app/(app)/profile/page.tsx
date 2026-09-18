@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -18,6 +18,10 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { NAV_ITEMS, getDefaultBottomNavItems } from '@/lib/navigation-config';
+import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
@@ -44,6 +48,13 @@ export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
 
+  const [bottomNavEnabled, setBottomNavEnabled] = useState<boolean>(() => currentUser?.bottomNavEnabled !== false);
+  const [selectedNavItems, setSelectedNavItems] = useState<string[]>(() => 
+    currentUser?.bottomNavItems && currentUser.bottomNavItems.length > 0 
+      ? currentUser.bottomNavItems 
+      : getDefaultBottomNavItems(currentUser?.role || 'Productor')
+  );
+
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
@@ -65,6 +76,12 @@ export default function ProfilePage() {
           email: currentUser.email, 
           notificationEmail: currentUser.notificationEmail || ''
         });
+        setBottomNavEnabled(currentUser.bottomNavEnabled !== false);
+        setSelectedNavItems(
+          currentUser.bottomNavItems && currentUser.bottomNavItems.length > 0
+            ? currentUser.bottomNavItems
+            : getDefaultBottomNavItems(currentUser.role)
+        );
     }
 
     const unsubscribe = onSnapshot(doc(db, 'platformSettings', 'finance'), (docSnap) => {
@@ -79,6 +96,64 @@ export default function ProfilePage() {
   if(!currentUser) {
     return null;
   }
+
+  const availableNavItems = NAV_ITEMS.filter(item => item.roles.includes(currentUser.role));
+
+  const handleToggleBottomNav = (enabled: boolean) => {
+    setBottomNavEnabled(enabled);
+    if (!currentUser) return;
+    startTransition(async () => {
+      try {
+        await updateUserProfile(currentUser.id, { bottomNavEnabled: enabled });
+        toast({
+          title: enabled ? "Barra Inferior Activada" : "Barra Inferior Desactivada",
+          description: enabled ? "Se mostrará la barra de navegación en teléfonos." : "Se ha ocultado la barra de navegación en teléfonos.",
+        });
+      } catch (e) {
+        toast({ title: "Error", description: "No se pudo guardar la preferencia.", variant: "destructive" });
+      }
+    });
+  };
+
+  const handleToggleNavItem = (routeHref: string) => {
+    let updated: string[];
+    if (selectedNavItems.includes(routeHref)) {
+      if (selectedNavItems.length <= 4) {
+        toast({
+          title: "Mínimo Alcanzado",
+          description: "Debe seleccionar al menos 4 accesos para la barra inferior.",
+          variant: "destructive"
+        });
+        return;
+      }
+      updated = selectedNavItems.filter(h => h !== routeHref);
+    } else {
+      if (selectedNavItems.length >= 5) {
+        toast({
+          title: "Máximo Alcanzado",
+          description: "Puede seleccionar hasta 5 accesos como máximo para evitar sobrecargar la barra.",
+          variant: "destructive"
+        });
+        return;
+      }
+      updated = [...selectedNavItems, routeHref];
+    }
+
+    setSelectedNavItems(updated);
+    if (!currentUser) return;
+
+    startTransition(async () => {
+      try {
+        await updateUserProfile(currentUser.id, { bottomNavItems: updated });
+        toast({
+          title: "Accesos Actualizados",
+          description: "Los accesos de la barra inferior se guardaron correctamente.",
+        });
+      } catch (e) {
+        toast({ title: "Error", description: "No se pudieron actualizar los accesos.", variant: "destructive" });
+      }
+    });
+  };
 
   const handleLogout = async () => {
     const response = await fetch('/api/logout', { method: 'POST' });
@@ -331,6 +406,62 @@ export default function ProfilePage() {
                             <span>Oscuro</span>
                         </Button>
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center gap-2">
+                    <div className="p-2 bg-emerald-500/10 rounded-full shrink-0"><Smartphone className="h-5 w-5 text-emerald-600 dark:text-emerald-500" /></div>
+                    <div>
+                        <CardTitle>Barra Inferior Móvil</CardTitle>
+                        <CardDescription>Habilita y personaliza tus accesos directos más usados para celulares.</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/20">
+                        <div className="space-y-0.5">
+                            <h4 className="font-semibold text-sm">Habilitar Barra Inferior en Celular</h4>
+                            <p className="text-xs text-muted-foreground">Muestra una barra de navegación rápida fija en la parte inferior cuando estás desde un teléfono.</p>
+                        </div>
+                        <Switch 
+                            checked={bottomNavEnabled} 
+                            onCheckedChange={handleToggleBottomNav} 
+                        />
+                    </div>
+
+                    {bottomNavEnabled && (
+                        <div className="space-y-3 pt-2 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between">
+                                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Secciones Visibles ({selectedNavItems.length}/5)
+                                </label>
+                                <span className="text-xs text-muted-foreground">Seleccione entre 4 y 5 opciones</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {availableNavItems.map((item) => {
+                                    const isChecked = selectedNavItems.includes(item.href);
+                                    const Icon = item.icon;
+                                    return (
+                                        <div 
+                                            key={item.href}
+                                            onClick={() => handleToggleNavItem(item.href)}
+                                            className={cn(
+                                                "flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all select-none",
+                                                isChecked ? "border-primary/50 bg-primary/5 shadow-xs" : "hover:bg-muted/30 opacity-70"
+                                            )}
+                                        >
+                                            <Checkbox 
+                                                checked={isChecked}
+                                                onCheckedChange={() => handleToggleNavItem(item.href)}
+                                            />
+                                            <Icon className="h-4 w-4 text-primary shrink-0" />
+                                            <span className="text-sm font-medium leading-none">{item.label}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

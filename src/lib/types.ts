@@ -41,6 +41,10 @@ export type User = {
   subscriptionExpiryDate?: string;
   mercadoPagoSubscriptionId?: string;
   establishmentId?: string;
+
+  // Customization fields
+  bottomNavEnabled?: boolean;
+  bottomNavItems?: string[];
 };
 
 export type Collector = {

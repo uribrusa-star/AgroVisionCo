@@ -11,6 +11,8 @@ import { NotificationBell } from '@/components/notification-bell';
 import { signOut } from 'firebase/auth';
 import { clearIndexedDbPersistence, terminate } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { MobileBottomNav } from '@/components/mobile-bottom-nav';
+import { cn } from '@/lib/utils';
 
 
 import {
@@ -254,7 +256,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               handleReset={handleReset} 
             />
 
-            <SidebarInset className="flex-1 w-full bg-muted/20">
+            <SidebarInset className={cn("flex-1 w-full bg-muted/20", currentUser.bottomNavEnabled !== false && "pb-16 md:pb-0")}>
                 <main className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full relative">
                   {showPaywallBlocker ? (
                     <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
@@ -275,6 +277,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </main>
             </SidebarInset>
           </div>
+          <MobileBottomNav user={currentUser} />
       </SidebarProvider>
   );
 }
