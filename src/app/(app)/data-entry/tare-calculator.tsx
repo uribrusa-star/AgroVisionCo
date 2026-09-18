@@ -22,31 +22,40 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 type Entry = {
   id: string;
   gross: number;
-  tare: number;
+  tareUnit: number;
+  crateCount: number;
+  totalTare: number;
   net: number;
 }
 
 export function TareCalculator() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [currentGross, setCurrentGross] = useState('');
+  const [crateCount, setCrateCount] = useState('1');
   const [tareMode, setTareMode] = useState<'564' | '954' | 'custom'>('564');
   const [customTare, setCustomTare] = useState('');
   
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const activeTare = tareMode === '564' ? 0.564 : tareMode === '954' ? 0.954 : (parseFloat(customTare) || 0);
+  const activeTareUnit = tareMode === '564' ? 0.564 : tareMode === '954' ? 0.954 : (parseFloat(customTare) || 0);
 
   const handleAdd = (e?: React.FormEvent) => {
     e?.preventDefault();
     const gross = parseFloat(currentGross);
-    if (isNaN(gross) || gross <= 0) return;
+    const count = parseInt(crateCount, 10) || 1;
+    if (isNaN(gross) || gross <= 0 || count <= 0) return;
+
+    const totalTare = parseFloat((activeTareUnit * count).toFixed(3));
+    const net = parseFloat((gross - totalTare).toFixed(3));
 
     const newEntry: Entry = {
       id: Math.random().toString(36).substring(7),
       gross,
-      tare: activeTare,
-      net: parseFloat((gross - activeTare).toFixed(3))
+      tareUnit: activeTareUnit,
+      crateCount: count,
+      totalTare,
+      net
     };
 
     setEntries([...entries, newEntry]);
@@ -67,7 +76,7 @@ export function TareCalculator() {
   };
 
   const totalNet = entries.reduce((sum, e) => sum + e.net, 0);
-  const totalCrates = entries.length;
+  const totalCrates = entries.reduce((sum, e) => sum + e.crateCount, 0);
 
   return (
     <Card className="h-full flex flex-col shadow-sm border-primary/20 bg-background">
@@ -78,32 +87,47 @@ export function TareCalculator() {
             </div>
             <div>
                <CardTitle className="text-lg">Calculadora de Taras</CardTitle>
-               <CardDescription>Suma cajones y descuenta tara</CardDescription>
+               <CardDescription>Suma pesajes y descuenta tara por cantidad de cajones</CardDescription>
             </div>
         </div>
       </CardHeader>
       
       <CardContent className="p-4 flex-1 flex flex-col gap-4">
-         <div className="space-y-2">
-             <label className="text-xs font-semibold text-muted-foreground uppercase">Seleccionar Tara</label>
-             <Tabs value={tareMode} onValueChange={(v: any) => setTareMode(v)} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                   <TabsTrigger value="564">564 g</TabsTrigger>
-                   <TabsTrigger value="954">954 g</TabsTrigger>
-                   <TabsTrigger value="custom">Otro</TabsTrigger>
-                </TabsList>
-             </Tabs>
-             {tareMode === 'custom' && (
-                  <div className="pt-2 animate-in fade-in zoom-in-95 duration-200">
-                    <Input 
-                      type="number" 
-                      step="0.001" 
-                      placeholder="Ej: 0.850 (Kg)" 
-                      value={customTare}
-                      onChange={(e) => setCustomTare(e.target.value)}
-                    />
-                 </div>
-             )}
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+             <div className="sm:col-span-2 space-y-1.5">
+                 <label className="text-xs font-semibold text-muted-foreground uppercase">Seleccionar Tara Unitaria</label>
+                 <Tabs value={tareMode} onValueChange={(v: any) => setTareMode(v)} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                       <TabsTrigger value="564">564 g</TabsTrigger>
+                       <TabsTrigger value="954">954 g</TabsTrigger>
+                       <TabsTrigger value="custom">Otro</TabsTrigger>
+                    </TabsList>
+                 </Tabs>
+                 {tareMode === 'custom' && (
+                      <div className="pt-1 animate-in fade-in zoom-in-95 duration-200">
+                        <Input 
+                          type="number" 
+                          step="0.001" 
+                          placeholder="Ej: 0.850 (Kg)" 
+                          value={customTare}
+                          onChange={(e) => setCustomTare(e.target.value)}
+                        />
+                     </div>
+                 )}
+             </div>
+
+             <div className="space-y-1.5">
+                 <label className="text-xs font-semibold text-muted-foreground uppercase">Cant. Cajones</label>
+                 <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Ej: 3"
+                    value={crateCount}
+                    onChange={(e) => setCrateCount(e.target.value)}
+                    className="font-semibold text-center"
+                 />
+             </div>
          </div>
 
          <form onSubmit={handleAdd} className="flex gap-2">
@@ -111,12 +135,12 @@ export function TareCalculator() {
                ref={inputRef}
                type="number" 
                step="0.001" 
-               placeholder="Peso bruto del cajón (Kg)" 
+               placeholder="Peso bruto pesaje (Kg)" 
                value={currentGross}
                onChange={(e) => setCurrentGross(e.target.value)}
                className="font-semibold text-lg"
             />
-            <Button type="submit" disabled={!currentGross || parseFloat(currentGross) <= 0}>
+            <Button type="submit" disabled={!currentGross || parseFloat(currentGross) <= 0 || !crateCount || parseInt(crateCount, 10) <= 0}>
                <Plus className="h-5 w-5" />
             </Button>
          </form>
@@ -125,7 +149,7 @@ export function TareCalculator() {
             {entries.length === 0 ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground opacity-50 p-4 text-center">
                     <Calculator className="h-8 w-8 mb-2" />
-                    <p className="text-sm">Ingrese el peso del primer cajón para comenzar.</p>
+                    <p className="text-sm">Ingrese el peso bruto y cantidad de cajones para comenzar.</p>
                 </div>
             ) : (
                 <ScrollArea className="h-full p-2">
@@ -133,9 +157,11 @@ export function TareCalculator() {
                       {entries.map((entry, idx) => (
                           <div key={entry.id} className="flex items-center justify-between bg-background border p-2 rounded-lg text-sm shadow-sm animate-in slide-in-from-left-2">
                               <div className="flex flex-col">
-                                 <span className="font-bold text-foreground">Cajón #{idx + 1}</span>
+                                 <span className="font-bold text-foreground">
+                                    Pesaje #{idx + 1} ({entry.crateCount} {entry.crateCount === 1 ? 'cajón' : 'cajones'})
+                                 </span>
                                  <span className="text-xs text-muted-foreground">
-                                    Bruto: {entry.gross}kg - Tara: {entry.tare}kg
+                                    Bruto: {entry.gross}kg - Tara ({entry.crateCount}x{entry.tareUnit}kg): {entry.totalTare}kg
                                  </span>
                               </div>
                               <div className="flex items-center gap-3">
