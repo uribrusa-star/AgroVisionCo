@@ -148,6 +148,7 @@ export function ContactModal({
                 </Label>
                 <Input
                   id="name"
+                  autoComplete="name"
                   placeholder="Ej. Juan Pérez"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -164,6 +165,7 @@ export function ContactModal({
                   <Input
                     id="email"
                     type="email"
+                    autoComplete="email"
                     placeholder="ejemplo@correo.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -179,6 +181,7 @@ export function ContactModal({
                   <Input
                     id="phone"
                     type="tel"
+                    autoComplete="tel"
                     placeholder="+54 9 342 ..."
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}

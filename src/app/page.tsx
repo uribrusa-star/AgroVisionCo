@@ -64,12 +64,8 @@ export default function LandingPage() {
       <header className="px-6 lg:px-8 py-6 flex items-center justify-between border-b dark:border-green-900">
         <div className="flex items-center gap-3">
           {!isPlaying ? (
-            <Image 
-              src="/logo.png" 
-              alt="AgroVista Logo" 
-              width={36} 
-              height={36} 
-              className="cursor-pointer transition-transform hover:scale-105"
+            <button
+              type="button"
               onClick={() => {
                 setIsPlaying(true);
                 setShowMenu(true);
@@ -77,16 +73,27 @@ export default function LandingPage() {
                   audioRef.current.play();
                 }
               }}
-              title="Reproducir música"
-            />
+              aria-label="Reproducir música de bienvenida"
+              className="bg-transparent border-0 p-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full flex items-center justify-center"
+            >
+              <Image 
+                src="/logo.png" 
+                alt="AgroVista Logo" 
+                width={36} 
+                height={36} 
+                className="cursor-pointer transition-transform hover:scale-105"
+                priority
+              />
+            </button>
           ) : (
             <div 
               className="relative group"
               onMouseMove={showMenu ? resetTimeout : undefined}
               onMouseEnter={showMenu ? resetTimeout : undefined}
             >
-              <div 
-                className="cursor-pointer transition-transform flex items-center justify-center w-8 h-8 animate-float text-green-600 dark:text-green-400"
+              <button
+                type="button"
+                className="cursor-pointer transition-transform flex items-center justify-center w-8 h-8 animate-float text-green-600 dark:text-green-400 bg-transparent border-0 p-0 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full"
                 onClick={() => {
                   setIsPlaying(false);
                   setShowMenu(false);
@@ -94,10 +101,10 @@ export default function LandingPage() {
                     audioRef.current.pause();
                   }
                 }}
-                title="Pausar música"
+                aria-label="Pausar música"
               >
                 <Music className="w-8 h-8 drop-shadow-sm" />
-              </div>
+              </button>
               
               {/* Music Player Popover (Minimalist) */}
               <div 
@@ -159,6 +166,8 @@ export default function LandingPage() {
               loop
               muted
               playsInline
+              preload="metadata"
+              poster="/dashboard_mockup_v2.jpeg"
               className="object-cover w-full h-full opacity-30"
             >
               <source src="/hero_background.mp4" type="video/mp4" />
@@ -202,18 +211,18 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de Control" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de control de cosechas y costos de frutilla en AgroVista" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Panel de Control</DialogTitle>
                       {/* Vista para celulares: captura nativa móvil en alta resolución */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/dashboard_mobile.jpeg" alt="Panel de Control Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/dashboard_mobile.jpeg" alt="Panel de control móvil de cosechas de frutilla en AgroVista" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para pantallas de PC / Escritorio */}
                       <div className="hidden sm:block">
-                        <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de Control" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                        <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de control de cosechas y costos de frutilla en AgroVista" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -231,18 +240,18 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/map_mockup_v2.jpeg" alt="Mapa Interactivo" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/map_mockup_v2.jpeg" alt="Mapa satelital de lotes de frutilla con alertas sanitarias" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Mapa Interactivo de Lotes</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/map_mobile.jpeg" alt="Mapa Interactivo Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/map_mobile.jpeg" alt="Mapa satelital móvil de lotes de frutilla con alertas sanitarias" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
-                        <Image src="/map_mockup_v2.jpeg" alt="Mapa Interactivo" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                        <Image src="/map_mockup_v2.jpeg" alt="Mapa satelital de lotes de frutilla con alertas sanitarias" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -260,18 +269,18 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del Agrónomo" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del agrónomo con recetas fitosanitarias y control de carencia" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Bitácora del Agrónomo</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/bitacora-agronomo_mobile.jpeg" alt="Bitácora del Agrónomo Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/bitacora-agronomo_mobile.jpeg" alt="Bitácora del agrónomo móvil con recetas fitosanitarias" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
-                        <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del Agrónomo" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                        <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del agrónomo con recetas fitosanitarias y control de carencia" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -289,18 +298,18 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/entrada_datos_mockup_v2.jpeg" alt="Trazabilidad y Cosecha" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/entrada_datos_mockup_v2.jpeg" alt="Registro de cosecha de frutilla con código QR por lote" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Trazabilidad Agrícola</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/entrada_datos_mobile.jpeg" alt="Trazabilidad Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/entrada_datos_mobile.jpeg" alt="Registro de cosecha móvil de frutilla con código QR" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
-                        <Image src="/entrada_datos_mockup_v2.jpeg" alt="Trazabilidad y Cosecha" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                        <Image src="/entrada_datos_mockup_v2.jpeg" alt="Registro de cosecha de frutilla con código QR por lote" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -318,18 +327,18 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/predicciones_mockup_v2.jpeg" alt="Predicciones e Inteligencia" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/predicciones_mockup_v2.jpeg" alt="Pronóstico agroclimático y alertas de heladas para frutilla" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Predicciones e Inteligencia</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/predicciones_mobile.jpeg" alt="Predicciones Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/predicciones_mobile.jpeg" alt="Pronóstico agroclimático móvil y alertas de heladas para frutilla" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
-                        <Image src="/predicciones_mockup_v2.jpeg" alt="Predicciones e Inteligencia" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                        <Image src="/predicciones_mockup_v2.jpeg" alt="Pronóstico agroclimático y alertas de heladas para frutilla" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -347,18 +356,18 @@ export default function LandingPage() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Bitácora del Productor" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
+                         <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Costos, ingresos y costo por kilo de frutilla en AgroVista" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
                       </div>
                     </DialogTrigger>
                     <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
                       <DialogTitle className="sr-only">Bitácora del Productor</DialogTitle>
                       {/* Vista para celulares */}
                       <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/bitacora_productor_mobile.jpeg" alt="Bitácora del Productor Móvil" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
+                        <Image src="/bitacora_productor_mobile.jpeg" alt="Costos, ingresos y liquidaciones móviles de frutilla en AgroVista" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
                       </div>
                       {/* Vista para PC */}
                       <div className="hidden sm:block">
-                        <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Bitácora del Productor" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
+                        <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Costos, ingresos y costo por kilo de frutilla en AgroVista" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
                       </div>
                     </DialogContent>
                   </Dialog>

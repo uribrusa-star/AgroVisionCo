@@ -1,13 +1,30 @@
 import type {Metadata} from 'next';
+import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
 import { ThemeProvider } from "@/components/theme-provider";
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://agrovista.com.ar'),
-  title: 'AgroVista',
-  description: 'Plataforma integral para el control de cosechas, sanidad y análisis de rendimiento de cultivos de frutilla en tiempo real.',
+  title: {
+    default: 'Software para productores de frutilla | AgroVista',
+    template: '%s | AgroVista',
+  },
+  description:
+    'Controlá cosechas, sanidad y costos de tus lotes de frutilla. Trazabilidad con QR, bitácora agronómica y mapa satelital. Probá la demo gratis.',
   applicationName: 'AgroVista',
   authors: [{ name: 'AgroVista Team' }],
   keywords: [
@@ -15,12 +32,14 @@ export const metadata: Metadata = {
     'trazabilidad agrícola',
     'gestión de cosechas',
     'frutillas',
+    'Coronda',
     'análisis agrícola',
     'software agrícola'
   ],
   openGraph: {
-    title: 'AgroVista',
-    description: 'Plataforma integral para el control de cosechas, sanidad y análisis de rendimiento de cultivos de frutilla en tiempo real.',
+    title: 'AgroVista: software para productores de frutilla',
+    description:
+      'Cosechas, sanidad, costos y trazabilidad con QR para tus lotes de frutilla.',
     url: 'https://agrovista.com.ar',
     siteName: 'AgroVista',
     images: [
@@ -28,7 +47,7 @@ export const metadata: Metadata = {
         url: '/og-banner.png',
         width: 1200,
         height: 630,
-        alt: 'AgroVista - Gestión Agrícola Inteligente'
+        alt: 'AgroVista: gestión agrícola inteligente para frutilla'
       }
     ],
     locale: 'es_AR',
@@ -36,8 +55,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AgroVista',
-    description: 'Plataforma integral para la gestión de cosechas y análisis inteligente de frutillas.',
+    title: 'AgroVista: software para productores de frutilla',
+    description:
+      'Cosechas, sanidad, costos y trazabilidad con QR para tus lotes de frutilla.',
     images: ['/og-banner.png'],
   },
   manifest: '/manifest.json',
@@ -49,11 +69,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es-AR" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='hsl(120 25% 35%)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z' /%3e%3cpath d='M12.5 15a6.2 6.2 0 0 0 4-10' /%3e%3cpath d='M11.5 9a6.2 6.2 0 0 1-4 10' /%3e%3c/svg%3e" />
         <script
           type="application/ld+json"

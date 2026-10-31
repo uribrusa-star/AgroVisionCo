@@ -4,7 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | AgroVista",
+  title: "Política de Privacidad",
+  alternates: { canonical: '/privacidad' },
 };
 
 export default function PrivacidadPage() {

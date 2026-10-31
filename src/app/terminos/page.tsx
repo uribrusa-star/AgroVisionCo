@@ -4,7 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones | AgroVista",
+  title: "Términos y Condiciones",
+  alternates: { canonical: '/terminos' },
 };
 
 export default function TerminosPage() {
