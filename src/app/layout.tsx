@@ -60,6 +60,9 @@ export const metadata: Metadata = {
       'Cosechas, sanidad, costos y trazabilidad con QR para tus lotes de frutilla.',
     images: ['/og-banner.png'],
   },
+  verification: {
+    google: '9fVymkKNPnIwlFEHpMcb4ks8lH8J0ByU9uc165H2EMs',
+  },
   manifest: '/manifest.json',
 };
 
