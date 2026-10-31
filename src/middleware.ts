@@ -20,7 +20,9 @@ export async function middleware(request: NextRequest) {
 
   if (user && (pathname === '/' || pathname === '/login')) {
     // Redirect to dashboard if authenticated and trying to access the landing page or login page
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const response = NextResponse.redirect(new URL('/dashboard', request.url));
+    response.headers.set('Cache-Control', 'private, no-store');
+    return response;
   }
 
   return NextResponse.next();
