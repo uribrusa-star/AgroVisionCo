@@ -1,8 +1,35 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getIronSession } from 'iron-session';
+import { sessionOptions } from '@/lib/session';
 import { adminDb } from '@/lib/firebase-admin';
+
+// Server-side internal accounts to exclude from public analytics
+const INTERNAL_EMAILS = [
+  'productor@agrovision.co',
+  'productor@agrovista.co',
+  'admin@agrovista.ubrs',
+];
 
 export async function POST(request: Request) {
   try {
+    // 1. Verify session on the server to exclude internal or test accounts
+    try {
+      const cookieStore = await cookies();
+      const session = await getIronSession(cookieStore, sessionOptions);
+      const user = session.user as any;
+
+      if (
+        user &&
+        (user.role === 'SuperAdmin' ||
+          (user.email && INTERNAL_EMAILS.includes(String(user.email).toLowerCase())))
+      ) {
+        return NextResponse.json({ success: true, ignored: true });
+      }
+    } catch (sessionError) {
+      // If session check fails, proceed with normal public tracking
+    }
+
     const body = await request.json();
     const { eventType, visitorId, referrer, device, target } = body as {
       eventType: 'pageview' | 'click';

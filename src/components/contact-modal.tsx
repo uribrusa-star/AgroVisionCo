@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useContext } from 'react';
-import { AppDataContext } from '@/context/app-data-context.tsx';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -43,7 +42,6 @@ export function ContactModal({
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const { toast } = useToast();
-  const { addContactRequest } = useContext(AppDataContext);
 
   const [formData, setFormData] = useState({
     name: '',

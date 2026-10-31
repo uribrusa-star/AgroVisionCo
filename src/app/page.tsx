@@ -1,155 +1,51 @@
-"use client";
-
-import React, { useContext, useEffect } from 'react';
-import Link from 'next/link';
+import React from 'react';
+import type { Metadata } from 'next';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Leaf, BarChart3, MapPin, Play, Pause, Volume2, Music, QrCode, ShieldCheck, Award, Sparkles, ExternalLink, CheckCircle, Calendar, Sprout } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { AppDataContext } from '@/context/app-data-context.tsx';
+import {
+  BarChart3,
+  MapPin,
+  Leaf,
+  CheckCircle2,
+  QrCode,
+  ShieldCheck,
+  Calendar,
+  Sprout,
+  CheckCircle,
+  ExternalLink,
+  Award,
+} from 'lucide-react';
 import { ContactModal } from '@/components/contact-modal';
-import { WebAnalyticsTracker, trackUserInteraction } from '@/components/web-analytics-tracker';
+import { WebAnalyticsTracker } from '@/components/web-analytics-tracker';
+import { HeroMusicPlayer } from '@/components/home/hero-music-player';
+import { FeatureMockupDialog } from '@/components/home/feature-mockup-dialog';
+import { FaqSection } from '@/components/home/faq-section';
+import { HomeJsonLd } from '@/components/home/json-ld';
 
-export default function LandingPage() {
-  const { currentUser } = useContext(AppDataContext);
-  const router = useRouter();
-  
-  // Easter egg state
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [showMenu, setShowMenu] = React.useState(false);
-  const [volume, setVolume] = React.useState(0.15); // 15% default volume
-  const audioRef = React.useRef<HTMLAudioElement>(null);
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+};
 
-  // Set initial volume when audio mounts
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [audioRef.current]);
-
-  const resetTimeout = React.useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      setShowMenu(false);
-    }, 10000);
-  }, []);
-
-  useEffect(() => {
-    if (showMenu) {
-      resetTimeout();
-    } else {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [showMenu, resetTimeout]);
-
-  useEffect(() => {
-    if (currentUser) {
-      router.push('/dashboard');
-    }
-  }, [currentUser, router]);
-
+export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-green-950">
+    <div className="flex flex-col min-h-screen bg-stone-50 dark:bg-stone-900">
       <WebAnalyticsTracker />
+      <HomeJsonLd />
+
       {/* Header */}
-      <header className="px-6 lg:px-8 py-6 flex items-center justify-between border-b dark:border-green-900">
-        <div className="flex items-center gap-3">
-          {!isPlaying ? (
-            <button
-              type="button"
-              onClick={() => {
-                setIsPlaying(true);
-                setShowMenu(true);
-                if (audioRef.current) {
-                  audioRef.current.play();
-                }
-              }}
-              aria-label="Reproducir música de bienvenida"
-              className="bg-transparent border-0 p-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full flex items-center justify-center"
-            >
-              <Image 
-                src="/logo.png" 
-                alt="AgroVista Logo" 
-                width={36} 
-                height={36} 
-                className="cursor-pointer transition-transform hover:scale-105"
-                priority
-              />
-            </button>
-          ) : (
-            <div 
-              className="relative group"
-              onMouseMove={showMenu ? resetTimeout : undefined}
-              onMouseEnter={showMenu ? resetTimeout : undefined}
-            >
-              <button
-                type="button"
-                className="cursor-pointer transition-transform flex items-center justify-center w-8 h-8 animate-float text-green-600 dark:text-green-400 bg-transparent border-0 p-0 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-full"
-                onClick={() => {
-                  setIsPlaying(false);
-                  setShowMenu(false);
-                  if (audioRef.current) {
-                    audioRef.current.pause();
-                  }
-                }}
-                aria-label="Pausar música"
-              >
-                <Music className="w-8 h-8 drop-shadow-sm" />
-              </button>
-              
-              {/* Music Player Popover (Minimalist) */}
-              <div 
-                className={`absolute top-full left-0 mt-3 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border border-stone-200 dark:border-stone-800 shadow-sm rounded-md p-3 flex flex-col gap-4 min-w-[140px] z-50 transition-all duration-500 ease-in-out ${
-                  showMenu ? 'opacity-100 translate-y-0 visible' : 'opacity-0 -translate-y-2 invisible pointer-events-none'
-                }`}
-              >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-medium tracking-wider text-stone-500 uppercase">Volumen</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Volume2 className="h-3 w-3 text-stone-400" />
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="1" 
-                      step="0.01" 
-                      value={volume}
-                      onChange={(e) => {
-                        const newVol = parseFloat(e.target.value);
-                        setVolume(newVol);
-                        if (audioRef.current) {
-                          audioRef.current.volume = newVol;
-                        }
-                        resetTimeout();
-                      }}
-                      className="w-full accent-stone-700 dark:accent-stone-400 h-1 bg-stone-200 dark:bg-stone-800 rounded-lg appearance-none cursor-pointer"
-                    />
-                  </div>
-                </div>
-            </div>
-          )}
-          <audio 
-            ref={audioRef} 
-            src="/huevo-de-pascua.mp3" 
-            preload="none" 
-            loop
-          />
-          <span className="text-xl font-bold text-green-800 dark:text-green-400 font-headline">AgroVista</span>
-        </div>
+      <header className="px-6 lg:px-8 h-20 flex items-center justify-between border-b border-gray-100 dark:border-green-900/40 bg-white/80 dark:bg-green-950/80 backdrop-blur-md sticky top-0 z-50">
+        <HeroMusicPlayer />
 
         <nav>
-          <Link href="/login" onClick={() => trackUserInteraction('Boton_Iniciar_Sesion')}>
-            <Button variant="outline" className="text-green-700 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/50">
+          <Link href="/login">
+            <Button
+              variant="outline"
+              className="text-green-700 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/50"
+            >
               Iniciar Sesión
             </Button>
           </Link>
@@ -175,7 +71,7 @@ export default function LandingPage() {
             {/* Gradient overlay for better text readability */}
             <div className="absolute inset-0 bg-gradient-to-t from-green-950 via-transparent to-green-900/50"></div>
           </div>
-          
+
           <div className="relative z-10 mx-auto max-w-5xl text-center">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md">
               Trazabilidad Agrícola Inteligente para la Producción de Frutillas
@@ -185,8 +81,12 @@ export default function LandingPage() {
               controlar la sanidad y maximizar las ganancias de tus lotes de frutillas. Con inteligencia artificial, 
               reportes agronómicos y mapas interactivos en tiempo real.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6" onClick={() => trackUserInteraction('Boton_Probar_Demo_Gratis_Hero')}>
-              <ContactModal buttonText="Probar Demo Gratis 🚀" buttonSize="lg" buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold" />
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <ContactModal
+                buttonText="Probar Demo Gratis 🚀"
+                buttonSize="lg"
+                buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold"
+              />
             </div>
           </div>
         </section>
@@ -202,30 +102,19 @@ export default function LandingPage() {
                 Lleva el control exacto de tus cosechas, monitorea la fenología de las plantas, controla tus finanzas y toma decisiones informadas en tiempo real.
               </p>
             </div>
-            
+
             <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
               <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
                 
                 {/* 1. Panel de Control */}
                 <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de control de cosechas y costos de frutilla en AgroVista" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Panel de Control</DialogTitle>
-                      {/* Vista para celulares: captura nativa móvil en alta resolución */}
-                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/dashboard_mobile.jpeg" alt="Panel de control móvil de cosechas de frutilla en AgroVista" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
-                      </div>
-                      {/* Vista para pantallas de PC / Escritorio */}
-                      <div className="hidden sm:block">
-                        <Image src="/dashboard_mockup_v2.jpeg" alt="Panel de control de cosechas y costos de frutilla en AgroVista" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <FeatureMockupDialog
+                    title="Panel de Control"
+                    previewSrc="/dashboard_mockup_v2.jpeg"
+                    mobileSrc="/dashboard_mobile.jpeg"
+                    desktopSrc="/dashboard_mockup_v2.jpeg"
+                    altText="Panel de control de cosechas y costos de frutilla en AgroVista"
+                  />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Panel de Control
@@ -237,24 +126,13 @@ export default function LandingPage() {
 
                 {/* 2. Mapa Interactivo */}
                 <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/map_mockup_v2.jpeg" alt="Mapa satelital de lotes de frutilla con alertas sanitarias" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Mapa Interactivo de Lotes</DialogTitle>
-                      {/* Vista para celulares */}
-                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/map_mobile.jpeg" alt="Mapa satelital móvil de lotes de frutilla con alertas sanitarias" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
-                      </div>
-                      {/* Vista para PC */}
-                      <div className="hidden sm:block">
-                        <Image src="/map_mockup_v2.jpeg" alt="Mapa satelital de lotes de frutilla con alertas sanitarias" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <FeatureMockupDialog
+                    title="Mapa Interactivo de Lotes"
+                    previewSrc="/map_mockup_v2.jpeg"
+                    mobileSrc="/map_mobile.jpeg"
+                    desktopSrc="/map_mockup_v2.jpeg"
+                    altText="Mapa satelital de lotes de frutilla con alertas sanitarias"
+                  />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <MapPin className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Mapa Interactivo
@@ -266,24 +144,13 @@ export default function LandingPage() {
 
                 {/* 3. Bitácora del Agrónomo */}
                 <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del agrónomo con recetas fitosanitarias y control de carencia" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Bitácora del Agrónomo</DialogTitle>
-                      {/* Vista para celulares */}
-                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/bitacora-agronomo_mobile.jpeg" alt="Bitácora del agrónomo móvil con recetas fitosanitarias" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
-                      </div>
-                      {/* Vista para PC */}
-                      <div className="hidden sm:block">
-                        <Image src="/bitacora-agronomo_v2.jpeg" alt="Bitácora del agrónomo con recetas fitosanitarias y control de carencia" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <FeatureMockupDialog
+                    title="Bitácora del Agrónomo"
+                    previewSrc="/bitacora-agronomo_v2.jpeg"
+                    mobileSrc="/bitacora-agronomo_mobile.jpeg"
+                    desktopSrc="/bitacora-agronomo_v2.jpeg"
+                    altText="Bitácora del agrónomo con recetas fitosanitarias y control de carencia"
+                  />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <Leaf className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Bitácora del Agrónomo
@@ -295,24 +162,13 @@ export default function LandingPage() {
 
                 {/* 4. Trazabilidad */}
                 <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/entrada_datos_mockup_v2.jpeg" alt="Registro de cosecha de frutilla con código QR por lote" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Trazabilidad Agrícola</DialogTitle>
-                      {/* Vista para celulares */}
-                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/entrada_datos_mobile.jpeg" alt="Registro de cosecha móvil de frutilla con código QR" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
-                      </div>
-                      {/* Vista para PC */}
-                      <div className="hidden sm:block">
-                        <Image src="/entrada_datos_mockup_v2.jpeg" alt="Registro de cosecha de frutilla con código QR por lote" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <FeatureMockupDialog
+                    title="Trazabilidad Agrícola"
+                    previewSrc="/entrada_datos_mockup_v2.jpeg"
+                    mobileSrc="/entrada_datos_mobile.jpeg"
+                    desktopSrc="/entrada_datos_mockup_v2.jpeg"
+                    altText="Registro de cosecha de frutilla con código QR por lote"
+                  />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Trazabilidad de Cosecha
@@ -324,24 +180,13 @@ export default function LandingPage() {
 
                 {/* 5. Predicciones */}
                 <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/predicciones_mockup_v2.jpeg" alt="Pronóstico agroclimático y alertas de heladas para frutilla" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Predicciones e Inteligencia</DialogTitle>
-                      {/* Vista para celulares */}
-                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/predicciones_mobile.jpeg" alt="Pronóstico agroclimático móvil y alertas de heladas para frutilla" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
-                      </div>
-                      {/* Vista para PC */}
-                      <div className="hidden sm:block">
-                        <Image src="/predicciones_mockup_v2.jpeg" alt="Pronóstico agroclimático y alertas de heladas para frutilla" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <FeatureMockupDialog
+                    title="Predicciones e Inteligencia"
+                    previewSrc="/predicciones_mockup_v2.jpeg"
+                    mobileSrc="/predicciones_mobile.jpeg"
+                    desktopSrc="/predicciones_mockup_v2.jpeg"
+                    altText="Pronóstico agroclimático y alertas de heladas para frutilla"
+                  />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Predicciones Climáticas e IA
@@ -353,24 +198,13 @@ export default function LandingPage() {
 
                 {/* 6. Bitácora del Productor */}
                 <div className="flex flex-col items-start">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
-                         <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Costos, ingresos y costo por kilo de frutilla en AgroVista" width={800} height={500} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500" />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
-                      <DialogTitle className="sr-only">Bitácora del Productor</DialogTitle>
-                      {/* Vista para celulares */}
-                      <div className="sm:hidden max-h-[85vh] overflow-y-auto rounded-2xl bg-black/80 backdrop-blur-md p-1.5 scrollbar-hide">
-                        <Image src="/bitacora_productor_mobile.jpeg" alt="Costos, ingresos y liquidaciones móviles de frutilla en AgroVista" width={750} height={1334} quality={100} unoptimized className="w-full h-auto rounded-xl object-contain" />
-                      </div>
-                      {/* Vista para PC */}
-                      <div className="hidden sm:block">
-                        <Image src="/bitacora_productor_mockup_v2.jpeg" alt="Costos, ingresos y costo por kilo de frutilla en AgroVista" width={1920} height={1080} quality={100} unoptimized className="w-full h-auto rounded-lg object-contain max-h-[90vh]" />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <FeatureMockupDialog
+                    title="Bitácora del Productor"
+                    previewSrc="/bitacora_productor_mockup_v2.jpeg"
+                    mobileSrc="/bitacora_productor_mobile.jpeg"
+                    desktopSrc="/bitacora_productor_mockup_v2.jpeg"
+                    altText="Costos, ingresos y costo por kilo de frutilla en AgroVista"
+                  />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
                     Bitácora del Productor
@@ -470,7 +304,7 @@ export default function LandingPage() {
                     <span>Tus clientes ven la historia de tu fruta sin descargar ninguna aplicación.</span>
                   </div>
 
-                  <Link href="/trace/DEMO-2026" target="_blank" className="w-full sm:w-auto" onClick={() => trackUserInteraction('Ver_Pasaporte_Trazabilidad_Demo')}>
+                  <Link href="/trace/DEMO-2026" target="_blank" className="w-full sm:w-auto">
                     <Button variant="outline" size="sm" className="w-full sm:w-auto border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-bold text-xs gap-1.5 rounded-xl h-10 px-4">
                       <span>Ver ejemplo de Historial</span>
                       <ExternalLink className="h-3.5 w-3.5" />
@@ -490,42 +324,7 @@ export default function LandingPage() {
         </div>
 
         {/* FAQ Section */}
-        <section className="py-24 bg-white dark:bg-green-950 px-6 lg:px-8 max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl">Preguntas Frecuentes</h2>
-            <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-green-200/80">
-              Resolvemos tus dudas principales para que puedas empezar a transformar tu campo hoy mismo.
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-green-900/20 rounded-3xl p-6 md:p-10 border border-gray-100 dark:border-green-800/50 shadow-sm">
-            <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Es difícil de usar AgroVista?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                Para nada. Diseñamos AgroVista para que sea tan fácil e intuitivo como usar tus redes sociales o WhatsApp. Los botones son grandes, claros y todo está en español. No necesitas conocimientos avanzados de tecnología para sacarle todo el provecho.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-2">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Necesito internet en el campo para que funcione?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                La aplicación está optimizada para cargar súper rápido incluso con muy mala señal (2G/3G). Si te quedas totalmente sin cobertura en medio de un lote, siempre puedes guardar tus registros en la libreta de tu celular y subirlos a AgroVista fácilmente ni bien regreses a un lugar con WiFi o mejor señal.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-3">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Mis datos de producción y mapas son privados?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                Totalmente. La privacidad de tu establecimiento es nuestra prioridad absoluta. Toda tu información agrícola, mapas de rendimiento y datos financieros están encriptados y solo tú (y a quienes decidas invitar a tu espacio de trabajo) tienen acceso a ellos.
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="item-4">
-              <AccordionTrigger className="text-lg font-semibold text-gray-800 dark:text-green-100">¿Puedo crear cuentas para mis empleados o mi ingeniero?</AccordionTrigger>
-              <AccordionContent className="text-base text-gray-600 dark:text-green-200/80">
-                ¡Sí! AgroVista es multi-usuario. Puedes invitar a tu ingeniero agrónomo con permisos especiales para que pueda ver la fenología y emitir diagnósticos, o crear cuentas limitadas para que tus encargados solo registren las cosechas diarias sin ver tus reportes financieros.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-          </div>
-        </section>
+        <FaqSection />
       </main>
 
       {/* Footer */}
