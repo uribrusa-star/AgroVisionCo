@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useContext } from 'react';
-import { AppDataContext } from '@/context/app-data-context.tsx';
+import { useEffect } from 'react';
 
 export function isInternalUser(): boolean {
   if (typeof window === 'undefined') return false;
-  
+
   // Check explicit ignore flag in storage
   if (
     localStorage.getItem('agrovista_ignore_analytics') === 'true' ||
@@ -14,18 +13,12 @@ export function isInternalUser(): boolean {
     return true;
   }
 
-  // Check stored user data
+  // Check stored user data if any
   try {
     const rawUser = localStorage.getItem('agrovista_user') || sessionStorage.getItem('agrovista_user');
     if (rawUser) {
       const user = JSON.parse(rawUser);
-      const email = user.email ? user.email.toLowerCase() : '';
-      if (
-        user.role === 'SuperAdmin' ||
-        email === 'productor@agrovision.co' ||
-        email === 'productor@agrovista.co' ||
-        email === 'admin@agrovista.ubrs'
-      ) {
+      if (user.role === 'SuperAdmin') {
         localStorage.setItem('agrovista_ignore_analytics', 'true');
         return true;
       }
@@ -39,7 +32,7 @@ export function isInternalUser(): boolean {
 
 export function trackUserInteraction(target: string) {
   if (typeof window === 'undefined') return;
-  if (isInternalUser()) return; // Exclude internal Admin and Main Producer clicks
+  if (isInternalUser()) return; // Exclude internal Admin clicks
 
   try {
     const payload = JSON.stringify({
@@ -63,25 +56,9 @@ export function trackUserInteraction(target: string) {
 }
 
 export function WebAnalyticsTracker() {
-  const { currentUser } = useContext(AppDataContext);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    // Check logged in user from context and flag if admin or main producer
-    if (currentUser) {
-      const email = currentUser.email ? currentUser.email.toLowerCase() : '';
-      if (
-        currentUser.role === 'SuperAdmin' ||
-        email === 'productor@agrovision.co' ||
-        email === 'productor@agrovista.co' ||
-        email === 'admin@agrovista.ubrs'
-      ) {
-        localStorage.setItem('agrovista_ignore_analytics', 'true');
-      }
-    }
-
-    if (isInternalUser()) return; // Exclude internal Admin and Main Producer pageviews
+    if (isInternalUser()) return; // Exclude internal Admin pageviews
 
     // Get or create anonymous visitor ID in sessionStorage
     let visitorId = sessionStorage.getItem('agrovista_visitor_id');
@@ -111,7 +88,7 @@ export function WebAnalyticsTracker() {
         keepalive: true
       }).catch(() => {});
     }
-  }, [currentUser]);
+  }, []);
 
   return null;
 }

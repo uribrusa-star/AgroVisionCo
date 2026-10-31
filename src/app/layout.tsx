@@ -3,6 +3,7 @@ import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
+import { InternalUserFlag } from '@/components/internal-user-flag';
 import { ThemeProvider } from "@/components/theme-provider";
 
 const inter = Inter({
@@ -108,6 +109,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AppContextProvider>
+            <InternalUserFlag />
             {children}
             <Toaster />
           </AppContextProvider>
