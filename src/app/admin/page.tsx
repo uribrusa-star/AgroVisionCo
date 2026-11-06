@@ -378,7 +378,7 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         toast({
           title: "Notificación Enviada",
-          description: `El mensaje fue enviado masivamente a ${data.count} usuarios.`,
+          description: `El mensaje fue enviado masivamente a ${data.count ?? data.usersCount ?? 0} usuarios.`,
         });
         setBroadcastTitle('');
         setBroadcastBody('');
@@ -1401,3 +1401,4 @@ function ContactRequestsAdminView() {
     </div>
   );
 }
+

@@ -64,6 +64,8 @@ export async function POST(req: Request) {
         usersSnapshot.forEach((doc) => targetUserIdsList.push(doc.id));
     }
 
+    targetUserIdsList = Array.from(new Set(targetUserIdsList));
+
     const batch = adminDb.batch();
     const createdAt = new Date().toISOString();
     
@@ -84,7 +86,14 @@ export async function POST(req: Request) {
     // allTokens populated above
 
     if (allTokens.length === 0) {
-      return NextResponse.json({ message: 'No devices registered for push notifications.' }, { status: 200 });
+      return NextResponse.json({
+        success: true,
+        count: targetUserIdsList.length,
+        usersCount: targetUserIdsList.length,
+        successCount: 0,
+        failureCount: 0,
+        message: 'No devices registered for push notifications.'
+      }, { status: 200 });
     }
 
     // Firebase Messaging requires batches of 500, but realistically here we just send.
@@ -103,6 +112,8 @@ export async function POST(req: Request) {
     
     return NextResponse.json({
         success: true,
+        count: targetUserIdsList.length,
+        usersCount: targetUserIdsList.length,
         successCount: response.successCount,
         failureCount: response.failureCount,
         responses: response.responses
