@@ -383,6 +383,7 @@ export default function EstablishmentPage() {
   
   const producerAccess: UserRole[] = ['Productor'];
   const agronomistAccess: UserRole[] = ['Productor', 'Ingeniero Agronomo'];
+  const isProducer = currentUser?.role === 'Productor' || currentUser?.role === 'SuperAdmin';
 
   return (
     <>
@@ -510,7 +511,15 @@ export default function EstablishmentPage() {
                 ))}
               </div>
               <Button variant="outline" size="sm" onClick={() => handleEdit('gallery')} className="w-full text-xs font-semibold gap-1.5 mt-2">
-                <Pencil className="h-3.5 w-3.5" /> Administrar y Previsualizar ({establishmentData.images?.length || 3})
+                {isProducer ? (
+                  <>
+                    <Pencil className="h-3.5 w-3.5" /> Administrar y Previsualizar ({establishmentData.images?.length || 3})
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3.5 w-3.5" /> Ver Galería de Fotos ({establishmentData.images?.length || 3})
+                  </>
+                )}
               </Button>
             </div>
         </InfoCard>
@@ -718,12 +727,17 @@ export default function EstablishmentPage() {
       <GalleryEditModal
         open={editingSection === 'gallery'}
         onClose={handleCloseDialog}
+        isReadOnly={!isProducer}
         initialImages={establishmentData?.images || [
           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
           'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
           'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
         ]}
         onSave={async (newImages) => {
+          if (!isProducer) {
+            toast({ title: "Acceso denegado", description: "Solo el productor puede modificar las fotos.", variant: "destructive" });
+            return;
+          }
           try {
             await updateEstablishmentData({ images: newImages });
             toast({ title: "¡Galería Actualizada!", description: "Las imágenes del establecimiento han sido guardadas." });
@@ -751,13 +765,15 @@ function GalleryEditModal({
   onClose,
   initialImages,
   onSave,
-  establishmentData
+  establishmentData,
+  isReadOnly = false
 }: {
   open: boolean;
   onClose: () => void;
   initialImages: string[];
   onSave: (images: string[]) => Promise<void>;
   establishmentData: any;
+  isReadOnly?: boolean;
 }) {
   const [images, setImages] = useState<string[]>(initialImages);
   const [newUrlInput, setNewUrlInput] = useState('');
@@ -803,48 +819,52 @@ function GalleryEditModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-bold">
             <ImageIcon className="h-5 w-5 text-primary" />
-            Galería del Establecimiento y Previsualización
+            {isReadOnly ? 'Galería del Establecimiento' : 'Administrar Galería del Establecimiento'}
           </DialogTitle>
           <DialogDescription>
-            Cargue las URLs de las imágenes de su establecimiento (`https://i.imgur.com/example.jpeg`) y previsualice cómo se mostrará a los clientes en la historia de trazabilidad.
+            {isReadOnly 
+              ? 'Visualización de las imágenes del establecimiento cargadas para la historia de trazabilidad pública.'
+              : 'Cargue las URLs de las imágenes de su establecimiento (`https://i.imgur.com/example.jpeg`) y previsualice cómo se mostrará a los clientes en la historia de trazabilidad.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-2">
           {/* Columna Izquierda: Administración de URLs */}
           <div className="space-y-4">
-            <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
-              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <Plus className="h-3.5 w-3.5 text-primary" /> Agregar nueva imagen (URL)
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  value={newUrlInput}
-                  onChange={(e) => setNewUrlInput(e.target.value)}
-                  placeholder="https://i.imgur.com/KoI668P.jpeg"
-                  className="text-xs font-mono"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddUrl();
-                    }
-                  }}
-                />
-                <Button size="sm" onClick={handleAddUrl} className="shrink-0 text-xs">
-                  Agregar
-                </Button>
+            {!isReadOnly && (
+              <div className="bg-muted/30 p-3 rounded-lg border space-y-2">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Plus className="h-3.5 w-3.5 text-primary" /> Agregar nueva imagen (URL)
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    value={newUrlInput}
+                    onChange={(e) => setNewUrlInput(e.target.value)}
+                    placeholder="https://i.imgur.com/KoI668P.jpeg"
+                    className="text-xs font-mono"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddUrl();
+                      }
+                    }}
+                  />
+                  <Button size="sm" onClick={handleAddUrl} className="shrink-0 text-xs">
+                    Agregar
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Soporta links de Imgur, Unsplash, Google Drive (directos), o cualquier link de imagen público.
+                </p>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                Soporta links de Imgur, Unsplash, Google Drive (directos), o cualquier link de imagen público.
-              </p>
-            </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
                   URLs Cargadas ({images.length})
                 </h4>
-                {images.length > 0 && (
+                {!isReadOnly && images.length > 0 && (
                   <Button variant="ghost" size="sm" onClick={() => setImages([])} className="text-xs text-destructive h-6 px-2">
                     Limpiar todas
                   </Button>
@@ -869,6 +889,7 @@ function GalleryEditModal({
                         value={url}
                         onChange={(e) => handleUpdateUrl(idx, e.target.value)}
                         className="text-xs font-mono h-8 flex-1"
+                        disabled={isReadOnly}
                       />
                       <Button
                         type="button"
@@ -880,16 +901,18 @@ function GalleryEditModal({
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveUrl(idx)}
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
-                        title="Eliminar URL"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isReadOnly && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveUrl(idx)}
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
+                          title="Eliminar URL"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -999,11 +1022,13 @@ function GalleryEditModal({
 
         <DialogFooter className="gap-2 sm:gap-0 mt-4">
           <Button variant="secondary" onClick={onClose}>
-            Cancelar
+            {isReadOnly ? 'Cerrar' : 'Cancelar'}
           </Button>
-          <Button onClick={() => onSave(images.filter(Boolean))}>
-            Guardar Galería de Fotos
-          </Button>
+          {!isReadOnly && (
+            <Button onClick={() => onSave(images.filter(Boolean))}>
+              Guardar Galería de Fotos
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
