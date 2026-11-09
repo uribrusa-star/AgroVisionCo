@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useContext, useMemo } from 'react';
@@ -50,7 +49,9 @@ const costChartConfig = {
 const FALLBACK_PALETTE = ['#16a34a', '#f59e0b', '#e11d48', '#0284c7', '#9333ea', '#0d9488', '#eab308', '#78716c'];
 
 function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boolean}) {
-  const { loading, transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs } = useContext(AppDataContext);
+  const { loading, transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, currentUser } = useContext(AppDataContext);
+
+  const isProducer = currentUser?.role === 'Productor' || currentUser?.role === 'SuperAdmin';
 
   const totalHarvestLaborCost = useMemo(() => (collectorPaymentLogs || []).reduce((acc, p) => acc + p.payment, 0), [collectorPaymentLogs]);
   const totalPackagingLaborCost = useMemo(() => (packagingLogs || []).reduce((acc, p) => acc + p.payment, 0), [packagingLogs]);
@@ -67,6 +68,10 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
     
     otherExpenses.forEach(transaction => {
         const { category, amount } = transaction;
+        // La categoría 'Insumos' solo debe ser visible si el usuario es el Productor
+        if (category === 'Insumos' && !isProducer) {
+            return;
+        }
         if (!costs[category]) {
             costs[category] = 0;
         }
@@ -74,7 +79,7 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
     });
 
     return costs;
-  }, [otherExpenses, totalHarvestLaborCost, totalPackagingLaborCost, totalCulturalPracticeCost]);
+  }, [otherExpenses, totalHarvestLaborCost, totalPackagingLaborCost, totalCulturalPracticeCost, isProducer]);
 
   const costDistributionData = useMemo(() => 
       Object.entries(costByCategory).map(([category, value], idx) => ({
