@@ -74,5 +74,8 @@ service cloud.firestore {
     match /platformSettings/{document} {
       allow read, write: if isAuthenticated();
     }
+    match /auditLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }

@@ -357,7 +357,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const logUserAction = useCallback(async (action: string, description: string, category: AuditLogCategory = 'general') => {
         if (!currentUser) return;
-        const newLog: Omit<AuditLog, 'id'> = {
+        const newLog: AuditLog = {
+            id: `audit_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
             userId: currentUser.id,
             userName: currentUser.name || 'Usuario',
             userRole: currentUser.role || 'Colaborador',
@@ -368,11 +369,42 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             establishmentId: currentUser.establishmentId || 'main'
         };
 
+        // Actualizar estado local inmediatamente
+        setAuditLogs(prev => {
+            const updated = [newLog, ...prev.filter(l => l.id !== newLog.id)].slice(0, 100);
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.setItem(`agrovista_audit_logs_${currentUser.establishmentId || 'main'}`, JSON.stringify(updated));
+                } catch (err) {
+                    console.warn('Error saving audit logs to cache:', err);
+                }
+            }
+            return updated;
+        });
+
         try {
-            const docRef = await addDoc(collection(db, 'auditLogs'), newLog);
-            setAuditLogs(prev => [{ id: docRef.id, ...newLog }, ...prev.slice(0, 99)]);
+            const { id: _, ...firestorePayload } = newLog;
+            const docRef = await addDoc(collection(db, 'auditLogs'), firestorePayload);
+            setAuditLogs(prev => prev.map(l => l.id === newLog.id ? { ...l, id: docRef.id } : l));
         } catch (e) {
-            console.warn('Warning logging user action:', e);
+            console.warn('Warning logging user action to Firestore (kept locally in cache):', e);
+        }
+    }, [currentUser]);
+
+    // Inicializar auditLogs desde localStorage si existe caché
+    useEffect(() => {
+        if (typeof window !== 'undefined' && currentUser) {
+            try {
+                const cached = localStorage.getItem(`agrovista_audit_logs_${currentUser.establishmentId || 'main'}`);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        setAuditLogs(prev => prev.length === 0 ? parsed : prev);
+                    }
+                }
+            } catch (err) {
+                console.warn('Error loading audit logs cache:', err);
+            }
         }
     }, [currentUser]);
 
@@ -656,6 +688,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 setHarvests(prev => [...newHarvests, ...prev]);
                 setCollectorPaymentLogs(prev => [...newPayments, ...prev]);
                 
+                const totalKilos = harvestsData.reduce((acc, curr) => acc + (curr.harvest.kilograms || 0), 0);
+                logUserAction(
+                    'Registro de Cosechas',
+                    `Registró cosechas (${harvestsAdded} pesadas, ${totalKilos.toFixed(1)} kg total)`,
+                    'harvest'
+                );
+
                 // Fire and forget refresh so history updates eventually (from cache or net)
                 fetchAllData().catch(e => console.error(e));
             }
@@ -811,6 +850,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         
         addDoc(collection(db, 'collectors'), payload).then(ref => {
             setCollectors(prev => prev.map(c => c.id === tempId ? { ...c, id: ref.id } : c));
+            logUserAction('Alta de Recolector', `Registró al recolector ${collector.name}`, 'staff');
         }).catch(error => {
             console.error("Failed to add collector:", error);
             setCollectors(prev => prev.filter(c => c.id !== tempId));
@@ -829,6 +869,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
           });
           const ref = await addDoc(collection(db, 'packers'), payload);
           setPackers(prev => prev.map(p => p.id === tempId ? { ...p, id: ref.id } : p));
+          logUserAction('Alta de Embalador', `Registró al embalador ${packer.name}`, 'staff');
       } catch (error) {
           console.error("Failed to add packer:", error);
           setPackers(prev => prev.filter(p => p.id !== tempId));

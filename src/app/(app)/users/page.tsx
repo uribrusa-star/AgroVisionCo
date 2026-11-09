@@ -306,7 +306,14 @@ export default function UsersPage() {
               </DialogHeader>
               {detailsUser && (() => {
                 const userActions = (auditLogs || [])
-                  .filter(log => log.userId === detailsUser.id || log.userName.toLowerCase() === detailsUser.name.toLowerCase())
+                  .filter(log => {
+                    if (!log) return false;
+                    if (log.userId && detailsUser.id && log.userId === detailsUser.id) return true;
+                    if (log.userName && detailsUser.name && log.userName.trim().toLowerCase() === detailsUser.name.trim().toLowerCase()) return true;
+                    // Coincidencia si el nombre del log contiene el rol o el email
+                    if (detailsUser.email && log.userName && log.userName.toLowerCase() === detailsUser.email.toLowerCase()) return true;
+                    return false;
+                  })
                   .slice(0, 10);
 
                 return (
