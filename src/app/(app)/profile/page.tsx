@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { exportAllProducerDataToExcel, exportAllProducerDataToPDF, exportAllProducerDataToJSON } from '@/lib/export-full-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
@@ -40,13 +41,18 @@ const ProfileSchema = z.object({
 });
 
 export default function ProfilePage() {
-  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile, saveFcmToken } = React.useContext(AppDataContext);
+  const appData = React.useContext(AppDataContext);
+  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile, saveFcmToken } = appData;
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
   const { theme, setTheme } = useTheme();
   const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
+
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isExportingJSON, setIsExportingJSON] = useState(false);
 
   const [bottomNavEnabled, setBottomNavEnabled] = useState<boolean>(() => currentUser?.bottomNavEnabled !== false);
   const [selectedNavItems, setSelectedNavItems] = useState<string[]>(() => 
@@ -153,6 +159,66 @@ export default function ProfilePage() {
         toast({ title: "Error", description: "No se pudieron actualizar los accesos.", variant: "destructive" });
       }
     });
+  };
+
+  const handleExportExcel = () => {
+    try {
+      setIsExportingExcel(true);
+      exportAllProducerDataToExcel(appData);
+      toast({
+        title: "Planilla Excel Generada",
+        description: "Se ha descargado el archivo con todos los datos y registros de tu establecimiento.",
+      });
+    } catch (error: any) {
+      console.error("Error exportando a Excel:", error);
+      toast({
+        title: "Error al exportar",
+        description: "Ocurrió un problema al generar la planilla Excel.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPDF = () => {
+    try {
+      setIsExportingPDF(true);
+      exportAllProducerDataToPDF(appData);
+      toast({
+        title: "Informe PDF Generado",
+        description: "Se ha descargado el informe general ordenado por secciones.",
+      });
+    } catch (error: any) {
+      console.error("Error exportando a PDF:", error);
+      toast({
+        title: "Error al exportar",
+        description: "Ocurrió un problema al generar el informe PDF.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    try {
+      setIsExportingJSON(true);
+      exportAllProducerDataToJSON(appData);
+      toast({
+        title: "Copia Digital JSON Generada",
+        description: "Se ha descargado el archivo de respaldo técnico.",
+      });
+    } catch (error: any) {
+      console.error("Error exportando a JSON:", error);
+      toast({
+        title: "Error al exportar",
+        description: "Ocurrió un problema al generar la copia digital.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExportingJSON(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -499,6 +565,97 @@ export default function ProfilePage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {(currentUser.role === 'Productor' || currentUser.role === 'SuperAdmin') && (
+                <Card className="shadow-sm hover:shadow-md transition-shadow border-emerald-500/30 bg-gradient-to-br from-card via-card to-emerald-500/[0.03]">
+                    <CardHeader className="flex flex-row items-center gap-3 pb-3">
+                        <div className="p-2.5 bg-emerald-500/15 rounded-xl shrink-0 text-emerald-600 dark:text-emerald-400">
+                            <Download className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-base sm:text-lg">Extracción de Datos y Copia de Seguridad</CardTitle>
+                            <CardDescription>
+                                Descarga todos los registros de tu quinta: cosechas, cuadrillas, bitácora del agrónomo, labores e insumos.
+                            </CardDescription>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                            Como productor, eres dueño absoluto de tu información. Puedes extraer todo el historial cargado por ti, tus encargados y tu ingeniero agrónomo en una planilla Excel con pestañas o en un informe PDF oficial listo para imprimir o presentar.
+                        </p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+                            {/* Tarjeta Excel */}
+                            <div className="p-4 border rounded-xl bg-background/60 hover:bg-background transition-colors flex flex-col justify-between gap-3 shadow-xs">
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 font-semibold text-sm text-emerald-700 dark:text-emerald-400">
+                                        <FileSpreadsheet className="h-4 w-4" />
+                                        <span>Planilla Excel (.xlsx)</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-snug">
+                                        Libro completo con pestañas de Cosechas, Personal, Bitácora Agronómica, Insumos y Finanzas.
+                                    </p>
+                                </div>
+                                <Button 
+                                    type="button" 
+                                    onClick={handleExportExcel} 
+                                    disabled={isExportingExcel}
+                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs text-xs font-medium"
+                                >
+                                    <Download className="h-3.5 w-3.5" />
+                                    {isExportingExcel ? "Generando Excel..." : "Descargar Excel"}
+                                </Button>
+                            </div>
+
+                            {/* Tarjeta PDF */}
+                            <div className="p-4 border rounded-xl bg-background/60 hover:bg-background transition-colors flex flex-col justify-between gap-3 shadow-xs">
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 font-semibold text-sm text-blue-700 dark:text-blue-400">
+                                        <FileText className="h-4 w-4" />
+                                        <span>Informe General en PDF</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-snug">
+                                        Documento prolijo y ordenado por secciones, con tablas claras y totales de producción para imprimir o archivar.
+                                    </p>
+                                </div>
+                                <Button 
+                                    type="button" 
+                                    onClick={handleExportPDF} 
+                                    disabled={isExportingPDF}
+                                    variant="outline"
+                                    className="w-full border-blue-500/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 gap-2 shadow-xs text-xs font-medium"
+                                >
+                                    <Download className="h-3.5 w-3.5" />
+                                    {isExportingPDF ? "Generando PDF..." : "Descargar PDF"}
+                                </Button>
+                            </div>
+
+                            {/* Tarjeta JSON */}
+                            <div className="p-4 border rounded-xl bg-background/60 hover:bg-background transition-colors flex flex-col justify-between gap-3 shadow-xs">
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 font-semibold text-sm text-slate-700 dark:text-slate-300">
+                                        <Database className="h-4 w-4" />
+                                        <span>Copia Digital (.json)</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground leading-snug">
+                                        Respaldo técnico de seguridad con los datos puros de la base de datos para custodia digital o portabilidad.
+                                    </p>
+                                </div>
+                                <Button 
+                                    type="button" 
+                                    onClick={handleExportJSON} 
+                                    disabled={isExportingJSON}
+                                    variant="ghost"
+                                    className="w-full border gap-2 text-xs text-muted-foreground hover:text-foreground font-medium"
+                                >
+                                    <Download className="h-3.5 w-3.5" />
+                                    {isExportingJSON ? "Generando JSON..." : "Descargar JSON"}
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             <Card className="shadow-sm hover:shadow-md transition-shadow mb-8">
                 <CardHeader className="flex flex-row items-center gap-2">
