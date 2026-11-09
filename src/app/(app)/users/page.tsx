@@ -4,7 +4,8 @@ import React, { useState, useContext, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -36,6 +37,8 @@ const CreateUserSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
   role: z.enum(['Ingeniero Agronomo', 'Encargado']),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+  dni: z.string().optional(),
+  phone: z.string().optional(),
 });
 
 export default function UsersPage() {
@@ -51,6 +54,19 @@ export default function UsersPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   const [isPending, startTransition] = useTransition();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUsers = React.useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return users;
+    return users.filter(u => 
+      u.name.toLowerCase().includes(q) || 
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.dni && u.dni.includes(q)) ||
+      (u.phone && u.phone.includes(q))
+    );
+  }, [users, searchQuery]);
+
 
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
@@ -125,6 +141,8 @@ export default function UsersPage() {
             name: values.name,
             role: values.role,
             password: values.password,
+            dni: values.dni,
+            phone: values.phone,
             producerId: currentUser.id,
             establishmentId: targetEstablishmentId,
           }),
@@ -169,6 +187,17 @@ export default function UsersPage() {
           <CardTitle>Todos los Usuarios</CardTitle>
           <CardDescription>Una lista de todas las cuentas de usuario en su organización.</CardDescription>
         </CardHeader>
+                <div className="p-4 border-b">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar usuario por nombre o correo..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-card shadow-xs"
+            />
+          </div>
+        </div>
         <CardContent className="p-0 sm:p-6">
           
           {/* Vista en tarjetas (Móvil y Escritorio) */}
@@ -176,7 +205,7 @@ export default function UsersPage() {
               {loading && Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={`mob-skel-${i}`} className="h-20 w-full rounded-xl" />
               ))}
-              {!loading && users.map((user) => (
+              {!loading && filteredUsers.map((user) => (
                   <div 
                       key={`mob-${user.id}`} 
                       onClick={() => handleOpenDetails(user)} 
@@ -235,6 +264,15 @@ export default function UsersPage() {
                           <h3 className="font-bold text-2xl text-foreground">{detailsUser.name}</h3>
                           <p className="text-muted-foreground text-sm">{detailsUser.email || 'Sin correo registrado'}</p>
                       </div>
+                                            <div className="bg-white p-3 rounded-xl border border-border shadow-xs my-1">
+                          <QRCode
+                            value={JSON.stringify({ agroVistaUser: true, id: detailsUser.id, name: detailsUser.name, role: detailsUser.role, email: detailsUser.email })}
+                            size={110}
+                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                            viewBox="0 0 256 256"
+                          />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Credencial digital de acceso</p>
                       <div className="grid grid-cols-2 gap-4 w-full mt-4">
                           <div className="bg-primary/5 p-4 rounded-xl text-center border border-primary/10">
                               <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Rol Asignado</p>

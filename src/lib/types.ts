@@ -55,6 +55,13 @@ export type Collector = {
   hoursWorked: number;
   productivity: number; // kg per hour
   joinDate: string;
+  dni?: string;
+  phone?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  address?: string;
+  status?: 'active' | 'inactive';
+  notes?: string;
 };
 
 export type Packer = {
@@ -65,6 +72,13 @@ export type Packer = {
   hoursWorked: number;
   packagingRate: number; // kg per hour
   joinDate: string;
+  dni?: string;
+  phone?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  address?: string;
+  status?: 'active' | 'inactive';
+  notes?: string;
 };
 
 export type Harvest = {
@@ -384,6 +398,7 @@ export type AppData = {
   deleteTask: (taskId: string) => void;
   addCollector: (collector: Omit<Collector, 'id'>) => void;
   addPacker: (packer: Omit<Packer, 'id'>) => Promise<void>;
+  editPacker: (packer: Packer) => Promise<void>;
   deletePacker: (packerId: string) => void;
   addPackagingLog: (log: Omit<PackagingLog, 'id'>) => void;
   deletePackagingLog: (logId: string) => Promise<void>;

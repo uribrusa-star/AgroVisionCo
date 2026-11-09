@@ -8,7 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Plus, Trash2, Calculator } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Calculator, QrCode } from 'lucide-react';
+import { QRScannerDialog } from '@/components/qr-scanner-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,45 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
   const { collectors, batches, addMultipleHarvests, harvests, currentUser, agronomistLogs } = useContext(AppDataContext);
   const [isPending, startTransition] = useTransition();
   const [validationAlert, setValidationAlert] = useState<{ open: boolean; reason: string; data: ProductionFormValues | null }>({ open: false, reason: '', data: null });
+  const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+
+  const handleScanSuccess = (decodedText: string) => {
+    let workerId = '';
+    let workerName = '';
+
+    try {
+      const parsed = JSON.parse(decodedText);
+      if (parsed.id) workerId = parsed.id;
+      if (parsed.name) workerName = parsed.name;
+    } catch {
+      workerId = decodedText.trim();
+    }
+
+    const matched = collectors.find(c => c.id === workerId || (workerName && c.name.toLowerCase() === workerName.toLowerCase()));
+
+    if (matched) {
+      const currentList = form.getValues('collectors');
+      const emptyIndex = currentList.findIndex(c => !c.collectorId);
+
+      if (emptyIndex !== -1) {
+        form.setValue(`collectors.${emptyIndex}.collectorId`, matched.id);
+      } else {
+        appendCollector({ collectorId: matched.id, kilosPerBatch: 0, hoursWorked: 8, ratePerKg: 0.45 });
+      }
+
+      toast({
+        title: "Recolector Reconocido",
+        description: `Se asignó a ${matched.name}. Ingrese los kilos cosechados.`,
+      });
+    } else {
+      toast({
+        title: "Código no reconocido",
+        description: "El código escaneado no corresponde a un recolector registrado.",
+        variant: "destructive"
+      });
+    }
+  };
+
   
   const canManage = currentUser?.role === 'Productor' || currentUser?.role === 'Encargado';
 
@@ -233,19 +273,32 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <FormLabel className="text-base font-semibold">Recolectores</FormLabel>
                   {canManage && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => appendCollector({ collectorId: '', kilosPerBatch: 0, hoursWorked: 8, ratePerKg: 0.45 })}
-                      disabled={isPending}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Añadir Recolector
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsQRScannerOpen(true)}
+                        disabled={isPending}
+                        className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                      >
+                        <QrCode className="h-4 w-4" />
+                        Escanear QR de Cosechero
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => appendCollector({ collectorId: '', kilosPerBatch: 0, hoursWorked: 8, ratePerKg: 0.45 })}
+                        disabled={isPending}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Añadir
+                      </Button>
+                    </div>
                   )}
                 </div>
                 
@@ -348,6 +401,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
             )}
           </form>
         </Form>
+
+        <QRScannerDialog isOpen={isQRScannerOpen} onOpenChange={setIsQRScannerOpen} onScanSuccess={handleScanSuccess} title="Escanear QR de Cosechero" description="Apunte la cámara a la credencial del recolector para asignarlo automáticamente a la pesada." />
       </Card>
 
       <AlertDialog open={validationAlert.open} onOpenChange={(open) => setValidationAlert(prev => ({...prev, open}))}>
