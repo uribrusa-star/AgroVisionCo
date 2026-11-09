@@ -384,11 +384,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
        }
     }, [fetchAllData, currentUser]);
     
-    // Helper function to remove undefined values before saving to Firestore
-    const sanitizeForFirestore = (data: any) => {
-        return Object.fromEntries(
-            Object.entries(data).filter(([_, v]) => v !== undefined)
-        );
+    // Helper function to remove undefined values before saving to Firestore (deep)
+    const sanitizeForFirestore = (data: any): any => {
+        if (data === null || typeof data !== 'object') return data;
+        if (Array.isArray(data)) return data.map(sanitizeForFirestore);
+        const result: Record<string, any> = {};
+        for (const [k, v] of Object.entries(data)) {
+            if (v !== undefined) {
+                result[k] = sanitizeForFirestore(v);
+            }
+        }
+        return result;
     };
     
     const addHarvest = async (harvestData: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number): Promise<string | undefined> => {
@@ -679,7 +685,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         const collectorRef = doc(db, 'collectors', updatedCollector.id);
         const { id, ...collectorData } = updatedCollector;
-        batch.set(collectorRef, collectorData, { merge: true });
+        batch.set(collectorRef, sanitizeForFirestore(collectorData), { merge: true });
 
         const harvestsQuery = query(collection(db, 'harvests'), where('collector.id', '==', updatedCollector.id));
         const harvestsSnapshot = await getDocs(harvestsQuery);
@@ -733,7 +739,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const tempId = `collector_${Date.now()}`;
         setCollectors(prev => [...prev, { id: tempId, ...collector }]);
         
-        addDoc(collection(db, 'collectors'), { ...(collector), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
+        const payload = sanitizeForFirestore({
+            ...collector,
+            establishmentId: currentUser?.establishmentId || 'main'
+        });
+        
+        addDoc(collection(db, 'collectors'), payload).then(ref => {
             setCollectors(prev => prev.map(c => c.id === tempId ? { ...c, id: ref.id } : c));
         }).catch(error => {
             console.error("Failed to add collector:", error);
@@ -747,7 +758,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       setPackers(prev => [...prev, { id: tempId, ...packer }]);
 
       try {
-          const ref = await addDoc(collection(db, 'packers'), { ...(packer), establishmentId: currentUser?.establishmentId || 'main' });
+          const payload = sanitizeForFirestore({
+              ...packer,
+              establishmentId: currentUser?.establishmentId || 'main'
+          });
+          const ref = await addDoc(collection(db, 'packers'), payload);
           setPackers(prev => prev.map(p => p.id === tempId ? { ...p, id: ref.id } : p));
       } catch (error) {
           console.error("Failed to add packer:", error);
@@ -761,7 +776,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const batch = writeBatch(db);
         const packerRef = doc(db, 'packers', updatedPacker.id);
         const { id, ...packerData } = updatedPacker;
-        batch.set(packerRef, packerData, { merge: true });
+        batch.set(packerRef, sanitizeForFirestore(packerData), { merge: true });
 
         const packagingQuery = query(collection(db, 'packagingLogs'), where('packerId', '==', updatedPacker.id));
         const packagingSnapshot = await getDocs(packagingQuery);
@@ -1610,6 +1625,27 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const updateUserProfile = async (userId: string, profileData: { name: string; notificationEmail?: string; avatar?: string }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, profileData, { merge: true });
+
+        // Sincronizar en aliases si aplica
+        if (userId === 'user-productor' || userId === 'user-productor-alias' || currentUser?.email?.includes('productor@')) {
+            try {
+                await setDoc(doc(db, 'users', 'user-productor'), profileData, { merge: true });
+                await setDoc(doc(db, 'users', 'user-productor-alias'), profileData, { merge: true });
+            } catch (e) {
+                console.warn('Sync producer alias profile warning:', e);
+            }
+        }
+
+        // Sincronizar con la sesión del servidor (iron-session) para que persista al reloguear
+        try {
+            await fetch('/api/user', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(profileData)
+            });
+        } catch (e) {
+            console.warn('Warning syncing profile to server session:', e);
+        }
         
         const updatedUser = users.find(u => u.id === userId);
         if(updatedUser) {
@@ -1619,6 +1655,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 const updatedCurrentUser = { ...currentUser, ...profileData };
                 setCurrentUser(updatedCurrentUser, true); // Assume rememberMe
             }
+        } else if (currentUser?.id === userId || currentUser?.email === users.find(u => u.id === userId)?.email) {
+            const updatedCurrentUser = { ...currentUser, ...profileData };
+            setCurrentUser(updatedCurrentUser, true);
         }
     };
 

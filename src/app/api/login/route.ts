@@ -32,12 +32,23 @@ export async function POST(request: Request) {
     // 2. Intentar buscar usuario en Firestore de forma segura
     try {
       if (adminDb) {
-        for (const targetEmail of emailAliases) {
-          const usersSnapshot = await adminDb.collection('users').where('email', '==', targetEmail).get();
-          if (!usersSnapshot.empty) {
-            const userDoc = usersSnapshot.docs[0];
-            user = { id: userDoc.id, ...userDoc.data() } as User;
-            break;
+        // Primero buscar por ID conocido para el productor si aplica
+        if (emailAliases.some(e => e === 'productor@agrovision.co' || e === 'productor@agrovista.co')) {
+          const directDoc = await adminDb.collection('users').doc('user-productor').get();
+          if (directDoc.exists) {
+            user = { id: directDoc.id, ...directDoc.data() } as User;
+          }
+        }
+
+        // Si no se encontró por ID directo, buscar por email en la colección
+        if (!user) {
+          for (const targetEmail of emailAliases) {
+            const usersSnapshot = await adminDb.collection('users').where('email', '==', targetEmail).get();
+            if (!usersSnapshot.empty) {
+              const userDoc = usersSnapshot.docs[0];
+              user = { id: userDoc.id, ...userDoc.data() } as User;
+              break;
+            }
           }
         }
       }
@@ -72,16 +83,20 @@ export async function POST(request: Request) {
           user.password = password;
         }
 
-        // Sincronizar contraseña en Firestore sin romper si falla
+        // Sincronizar credenciales en Firestore sin pisar el nombre personalizado si ya existe
         try {
           if (adminDb) {
-            await adminDb.collection('users').doc(user.id || 'user-productor').set({
-              name: user.name || 'Productor',
-              email: 'productor@agrovision.co',
+            const updatePayload: Record<string, any> = {
+              email: user.email || 'productor@agrovision.co',
               role: 'Productor',
               password: password,
               updatedAt: new Date().toISOString()
-            }, { merge: true });
+            };
+            // Solo establecer nombre si el usuario en BD no tiene uno cargado
+            if (user.name) {
+              updatePayload.name = user.name;
+            }
+            await adminDb.collection('users').doc(user.id || 'user-productor').set(updatePayload, { merge: true });
           }
         } catch (syncErr) {
           console.warn('Warning syncing producer password to Firestore:', syncErr);
