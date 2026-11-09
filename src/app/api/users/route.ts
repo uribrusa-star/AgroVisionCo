@@ -13,31 +13,52 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json();
-    const { name, password, role, establishmentId, email } = body;
+    let { name, password, role, establishmentId, email } = body;
     const sessionUserId = session.user.id;
 
-    if (!name || !password || !role || !establishmentId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // Normalizar establishmentId si viene vacío o undefined (por defecto a 'main')
+    if (!establishmentId) {
+      establishmentId = session.user.establishmentId || 'main';
+    }
+
+    if (!name || !password || !role) {
+      return NextResponse.json({ error: 'Faltan campos obligatorios (nombre, rol o contraseña)' }, { status: 400 });
     }
 
     if (role !== 'Ingeniero Agronomo' && role !== 'Encargado' && role !== 'Productor') {
-      return NextResponse.json({ error: 'Invalid role for self-service creation' }, { status: 400 });
+      return NextResponse.json({ error: 'Rol no válido para creación de usuario' }, { status: 400 });
     }
 
     // Verify the user making the request is a Productor or SuperAdmin
-    const producerDoc = await adminDb.collection('users').doc(sessionUserId).get();
-    if (!producerDoc.exists || (producerDoc.data()?.role !== 'Productor' && producerDoc.data()?.role !== 'SuperAdmin')) {
-      return NextResponse.json({ error: 'Unauthorized. Only Producers and Admins can create users.' }, { status: 403 });
+    let callerRole = session.user.role;
+    let callerEstId = session.user.establishmentId || 'main';
+
+    if (adminDb) {
+      try {
+        const producerDoc = await adminDb.collection('users').doc(sessionUserId).get();
+        if (producerDoc.exists) {
+          callerRole = producerDoc.data()?.role || callerRole;
+          callerEstId = producerDoc.data()?.establishmentId || callerEstId;
+        } else if (sessionUserId === 'user-productor' || sessionUserId === 'user-productor-alias') {
+          callerRole = 'Productor';
+        }
+      } catch (err) {
+        console.warn('Warning reading caller doc in adminDb:', err);
+      }
     }
 
-    const isSuperAdmin = producerDoc.data()?.role === 'SuperAdmin' || producerDoc.data()?.establishmentId === 'main';
+    if (callerRole !== 'Productor' && callerRole !== 'SuperAdmin') {
+      return NextResponse.json({ error: 'No autorizado. Solo los Productores y Administradores pueden crear usuarios.' }, { status: 403 });
+    }
+
+    const isSuperAdmin = callerRole === 'SuperAdmin' || callerEstId === 'main';
 
     if (role === 'Productor' && !isSuperAdmin) {
-      return NextResponse.json({ error: 'Unauthorized. Only the Super Admin can create Producers.' }, { status: 403 });
+      return NextResponse.json({ error: 'No autorizado. Solo el Administrador puede crear cuentas de Productor.' }, { status: 403 });
     }
 
-    if (role !== 'Productor' && producerDoc.data()?.establishmentId !== establishmentId) {
-      return NextResponse.json({ error: 'Establishment ID mismatch' }, { status: 403 });
+    if (role !== 'Productor' && callerRole !== 'SuperAdmin' && callerEstId && callerEstId !== establishmentId) {
+      establishmentId = callerEstId; // Alinear al establecimiento del productor que crea
     }
 
     // Check limits
@@ -92,6 +113,8 @@ export async function POST(request: Request) {
       avatar: '',
       establishmentId,
       password, // Save password for mock login to work
+      dni: body.dni || '',
+      phone: body.phone || '',
       createdAt: new Date().toISOString(),
     });
 

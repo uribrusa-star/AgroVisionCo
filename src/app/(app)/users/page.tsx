@@ -43,7 +43,7 @@ const CreateUserSchema = z.object({
 });
 
 export default function UsersPage() {
-  const { users, currentUser, loading, updateUserPassword, auditLogs } = useContext(AppDataContext);
+  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction } = useContext(AppDataContext);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const { toast } = useToast();
   
@@ -195,6 +195,14 @@ export default function UsersPage() {
           title: "Usuario Creado",
           description: `${values.name} ha sido agregado exitosamente. Su correo de acceso es: ${data.email}`,
         });
+
+        if (logUserAction) {
+          logUserAction(
+            'Creación de Usuario',
+            `Creó al usuario ${values.name} con rol de ${values.role}`,
+            'staff'
+          );
+        }
         
         setIsCreateDialogOpen(false);
         createForm.reset();
