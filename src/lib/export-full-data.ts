@@ -357,11 +357,28 @@ export const exportAllProducerDataToExcel = (data: AppData) => {
 };
 
 
+async function getLogoDataUri(): Promise<string | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    const res = await fetch('/logo.png');
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Exporta todos los datos del establecimiento a un informe PDF completo, prolijo y ordenado por secciones.
  * Incluye el 100% de los datos históricos sin cortes artificiales.
  */
-export const exportAllProducerDataToPDF = (data: AppData) => {
+export const exportAllProducerDataToPDF = async (data: AppData) => {
   const {
     establishmentData,
     batches = [],
@@ -377,6 +394,8 @@ export const exportAllProducerDataToPDF = (data: AppData) => {
     producerLogs = [],
     tasks = []
   } = data;
+
+  const logoDataUri = await getLogoDataUri();
 
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.width;
@@ -409,14 +428,24 @@ export const exportAllProducerDataToPDF = (data: AppData) => {
       doc.setFillColor(emeraldDark[0], emeraldDark[1], emeraldDark[2]);
       doc.rect(0, 0, pageWidth, 24, 'F');
 
+      let textStartX = 14;
+      if (logoDataUri) {
+        try {
+          doc.addImage(logoDataUri, 'PNG', 12, 3.5, 17, 17);
+          textStartX = 32;
+        } catch (e) {
+          console.warn('No se pudo insertar logo en PDF:', e);
+        }
+      }
+
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(13);
-      doc.text('AGROVISTA - REPORTE Y EXTRACCIÓN GENERAL DE DATOS', 14, 11);
+      doc.setFontSize(12.5);
+      doc.text('AGROVISTA - REPORTE Y EXTRACCIÓN GENERAL DE DATOS', textStartX, 11);
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      doc.text(`Establecimiento: ${estName} | Productor: ${producerName} | Generado el: ${dateStr}`, 14, 18);
+      doc.setFontSize(8);
+      doc.text(`Establecimiento: ${estName} | Productor: ${producerName} | Generado el: ${dateStr}`, textStartX, 18);
       currentY = 32;
     } else {
       doc.setFillColor(bgLight[0], bgLight[1], bgLight[2]);
@@ -424,10 +453,20 @@ export const exportAllProducerDataToPDF = (data: AppData) => {
       doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
       doc.line(0, 12, pageWidth, 12);
 
+      let textStartX = 14;
+      if (logoDataUri) {
+        try {
+          doc.addImage(logoDataUri, 'PNG', 12, 2, 8, 8);
+          textStartX = 23;
+        } catch {
+          // ignore
+        }
+      }
+
       doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.text(`AGROVISTA | ${estName} - Informe General`, 14, 8);
+      doc.text(`AGROVISTA | ${estName} - Informe General`, textStartX, 8);
       doc.setFont('helvetica', 'normal');
       doc.text(dateStr, pageWidth - 14, 8, { align: 'right' });
       currentY = 20;

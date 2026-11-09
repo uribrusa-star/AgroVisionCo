@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -161,9 +161,10 @@ export default function ProfilePage() {
     });
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     try {
       setIsExportingExcel(true);
+      await new Promise(resolve => setTimeout(resolve, 60));
       exportAllProducerDataToExcel(appData);
       toast({
         title: "Planilla Excel Generada",
@@ -181,10 +182,11 @@ export default function ProfilePage() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
       setIsExportingPDF(true);
-      exportAllProducerDataToPDF(appData);
+      await new Promise(resolve => setTimeout(resolve, 60));
+      await exportAllProducerDataToPDF(appData);
       toast({
         title: "Informe PDF Generado",
         description: "Se ha descargado el informe general ordenado por secciones.",
@@ -602,8 +604,17 @@ export default function ProfilePage() {
                                     disabled={isExportingExcel}
                                     className="w-full bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs text-xs font-medium"
                                 >
-                                    <Download className="h-3.5 w-3.5" />
-                                    {isExportingExcel ? "Generando Excel..." : "Descargar Excel"}
+                                    {isExportingExcel ? (
+                                        <>
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            <span>Generando Excel...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-3.5 w-3.5" />
+                                            <span>Descargar Excel</span>
+                                        </>
+                                    )}
                                 </Button>
                             </div>
 
@@ -625,8 +636,17 @@ export default function ProfilePage() {
                                     variant="outline"
                                     className="w-full border-blue-500/40 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 gap-2 shadow-xs text-xs font-medium"
                                 >
-                                    <Download className="h-3.5 w-3.5" />
-                                    {isExportingPDF ? "Generando PDF..." : "Descargar PDF"}
+                                    {isExportingPDF ? (
+                                        <>
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600 dark:text-blue-400" />
+                                            <span>Generando PDF...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-3.5 w-3.5" />
+                                            <span>Descargar PDF</span>
+                                        </>
+                                    )}
                                 </Button>
                             </div>
 
@@ -648,8 +668,17 @@ export default function ProfilePage() {
                                     variant="ghost"
                                     className="w-full border gap-2 text-xs text-muted-foreground hover:text-foreground font-medium"
                                 >
-                                    <Download className="h-3.5 w-3.5" />
-                                    {isExportingJSON ? "Generando JSON..." : "Descargar JSON"}
+                                    {isExportingJSON ? (
+                                        <>
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            <span>Generando JSON...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-3.5 w-3.5" />
+                                            <span>Descargar JSON</span>
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </div>
