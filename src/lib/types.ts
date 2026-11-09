@@ -420,6 +420,8 @@ export type AppData = {
   updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
   updateUserProfile: (userId: string, profileData: { name: string; notificationEmail?: string; avatar?: string }) => Promise<void>;
   notifications: PushNotification[];
+    auditLogs: AuditLog[];
+    logUserAction: (action: string, description: string, category: AuditLogCategory) => Promise<void>;
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
@@ -438,3 +440,17 @@ export type BatchPhiStatus = {
   remainingHours?: number;
 };
 
+
+export type AuditLogCategory = 'harvest' | 'staff' | 'agronomy' | 'packaging' | 'cultural' | 'task' | 'general';
+
+export type AuditLog = {
+  id: string;
+  userId: string;
+  userName: string;
+  userRole: string;
+  action: string;
+  description: string;
+  category: AuditLogCategory;
+  timestamp: string;
+  establishmentId: string;
+};

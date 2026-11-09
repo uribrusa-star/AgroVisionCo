@@ -4,7 +4,8 @@ import React, { useState, useContext, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone, Activity, History, Sprout, Package, Scissors, UserX, CheckCircle2 } from 'lucide-react';
+import { QRScannerDialog } from '@/components/qr-scanner-dialog';
 import QRCode from 'react-qr-code';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -42,7 +43,8 @@ const CreateUserSchema = z.object({
 });
 
 export default function UsersPage() {
-  const { users, currentUser, loading, updateUserPassword } = useContext(AppDataContext);
+  const { users, currentUser, loading, updateUserPassword, auditLogs } = useContext(AppDataContext);
+  const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const { toast } = useToast();
   
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -107,7 +109,42 @@ export default function UsersPage() {
     setIsDetailsDialogOpen(true);
   };
   
-  const onPasswordSubmit = (values: z.infer<typeof PasswordSchema>) => {
+
+  const handleScanSuccess = (decodedText: string) => {
+    let scannedId = '';
+    let scannedEmail = '';
+
+    try {
+      const parsed = JSON.parse(decodedText);
+      if (parsed.id) scannedId = parsed.id;
+      if (parsed.email) scannedEmail = parsed.email;
+    } catch {
+      scannedId = decodedText.trim();
+    }
+
+    const matched = users.find(u => 
+      u.id === scannedId || 
+      (scannedEmail && u.email?.toLowerCase() === scannedEmail.toLowerCase())
+    );
+
+    if (matched) {
+      setDetailsUser(matched);
+      setIsDetailsDialogOpen(true);
+      setIsQRScannerOpen(false);
+      toast({
+        title: "Usuario Reconocido",
+        description: `Accediendo al perfil y auditoría de ${matched.name}.`,
+      });
+    } else {
+      toast({
+        title: "Código no reconocido",
+        description: "El QR escaneado no corresponde a ningún usuario del establecimiento.",
+        variant: "destructive"
+      });
+    }
+  };
+
+    const onPasswordSubmit = (values: z.infer<typeof PasswordSchema>) => {
     if(!selectedUser) return;
 
     startTransition(async () => {
@@ -176,10 +213,20 @@ export default function UsersPage() {
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <PageHeader title="Usuarios" description="Vea y gestione los usuarios del sistema." />
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Agregar Empleado
-          </Button>
+          <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsQRScannerOpen(true)}
+                className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              >
+                <QrCode className="h-4 w-4" />
+                Escanear Credencial
+              </Button>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Empleado
+              </Button>
+          </div>
       </div>
 
       <Card>
@@ -250,56 +297,124 @@ export default function UsersPage() {
       
       {/* Dialog for user details */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-          <DialogContent className="sm:max-w-sm rounded-2xl">
+          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl">
               <DialogHeader>
-                  <DialogTitle className="text-center">Perfil de Usuario</DialogTitle>
+                  <DialogTitle className="text-center font-bold text-lg">Credencial y Ficha de Usuario</DialogTitle>
+                  <DialogDescription className="text-center text-xs">
+                    Detalles de la cuenta y registro auditable de acciones realizadas.
+                  </DialogDescription>
               </DialogHeader>
-              {detailsUser && (
-                  <div className="flex flex-col items-center gap-4 py-6">
-                      <Avatar className="h-28 w-28 border-4 border-muted shadow-lg">
-                          <AvatarImage src={detailsUser.avatar?.startsWith('http') ? detailsUser.avatar : `https://picsum.photos/seed/${detailsUser.avatar}/120/120`} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-bold text-4xl">{detailsUser.name.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="text-center space-y-1">
-                          <h3 className="font-bold text-2xl text-foreground">{detailsUser.name}</h3>
-                          <p className="text-muted-foreground text-sm">{detailsUser.email || 'Sin correo registrado'}</p>
-                      </div>
-                                            <div className="bg-white p-3 rounded-xl border border-border shadow-xs my-1">
-                          <QRCode
-                            value={JSON.stringify({ agroVistaUser: true, id: detailsUser.id, name: detailsUser.name, role: detailsUser.role, email: detailsUser.email })}
-                            size={110}
-                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                            viewBox="0 0 256 256"
-                          />
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">Credencial digital de acceso</p>
-                      <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                          <div className="bg-primary/5 p-4 rounded-xl text-center border border-primary/10">
-                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Rol Asignado</p>
-                              <Badge variant={detailsUser.role === 'Productor' ? 'default' : 'secondary'} className="px-3 py-1">
-                                  {detailsUser.role}
-                              </Badge>
+              {detailsUser && (() => {
+                const userActions = (auditLogs || [])
+                  .filter(log => log.userId === detailsUser.id || log.userName.toLowerCase() === detailsUser.name.toLowerCase())
+                  .slice(0, 10);
+
+                return (
+                  <div className="flex flex-col items-center gap-4 py-2">
+                      <div className="flex flex-col sm:flex-row items-center gap-5 w-full bg-muted/20 p-4 rounded-xl border">
+                          <Avatar className="h-20 w-20 border-2 border-primary/20 shadow-md shrink-0">
+                              <AvatarImage src={detailsUser.avatar?.startsWith('http') ? detailsUser.avatar : `https://picsum.photos/seed/${detailsUser.avatar}/120/120`} />
+                              <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">{detailsUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                          <div className="text-center sm:text-left flex-1 min-w-0">
+                              <div className="flex items-center justify-center sm:justify-start gap-2">
+                                <h3 className="font-bold text-xl text-foreground truncate">{detailsUser.name}</h3>
+                                <Badge variant={detailsUser.role === 'Productor' ? 'default' : 'secondary'} className="text-[10px] px-2 py-0.5">
+                                    {detailsUser.role}
+                                </Badge>
+                              </div>
+                              <p className="text-muted-foreground text-xs truncate mt-0.5">{detailsUser.email || 'Sin correo registrado'}</p>
+                              {detailsUser.dni && (
+                                <p className="text-muted-foreground text-xs">DNI: <span className="font-mono font-medium text-foreground">{detailsUser.dni}</span></p>
+                              )}
+                              {detailsUser.phone && (
+                                <p className="text-muted-foreground text-xs">Teléfono: <span className="font-medium text-foreground">{detailsUser.phone}</span></p>
+                              )}
                           </div>
-                          <div className="bg-green-500/5 p-4 rounded-xl text-center border border-green-500/10">
-                              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-1">Estado</p>
-                              <p className="font-bold text-green-600 flex items-center justify-center gap-1.5">
-                                  <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                                  Activo
-                              </p>
+                          <div className="flex flex-col items-center bg-white p-2 rounded-xl border border-border shadow-xs shrink-0">
+                              <QRCode
+                                value={JSON.stringify({ agroVistaUser: true, id: detailsUser.id, name: detailsUser.name, role: detailsUser.role, email: detailsUser.email })}
+                                size={85}
+                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                viewBox="0 0 256 256"
+                              />
+                              <span className="text-[9px] font-mono text-muted-foreground mt-1">QR DE ACCESO</span>
                           </div>
                       </div>
+
                       {detailsUser.lastLoginAt && (
-                          <div className="bg-muted/30 border border-border/50 p-3 rounded-lg w-full flex items-center justify-center gap-2 mt-2">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground">
-                                  Última conexión: <span className="font-semibold text-foreground">{formatDistanceToNow(new Date(detailsUser.lastLoginAt), { addSuffix: true, locale: es })}</span>
-                              </p>
+                          <div className="bg-muted/40 border p-2.5 rounded-lg w-full flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5 text-primary" />
+                              <span>Última conexión activa: <strong className="text-foreground">{formatDistanceToNow(new Date(detailsUser.lastLoginAt), { addSuffix: true, locale: es })}</strong></span>
                           </div>
                       )}
+
+                      {/* Historial de Auditoría: Últimas 10 acciones realizadas */}
+                      <div className="w-full mt-1 space-y-2.5">
+                          <div className="flex items-center justify-between border-b pb-2">
+                              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                <History className="h-4 w-4 text-primary" /> Últimas 10 Acciones Realizadas
+                              </h4>
+                              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                {userActions.length} registradas
+                              </span>
+                          </div>
+
+                          {userActions.length === 0 ? (
+                              <div className="text-center py-6 px-4 border border-dashed rounded-xl bg-muted/10 text-muted-foreground space-y-1">
+                                  <Activity className="h-6 w-6 mx-auto opacity-40 mb-1" />
+                                  <p className="text-xs font-medium">Sin acciones registradas recientemente</p>
+                                  <p className="text-[11px] text-muted-foreground/80">Cuando el usuario registre cosechas, embalajes, labores o gestione cuadrillas, aparecerán aquí.</p>
+                              </div>
+                          ) : (
+                              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                                  {userActions.map((act) => {
+                                    const getActionBadge = () => {
+                                      switch(act.category) {
+                                        case 'harvest':
+                                          return <span className="p-1 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><Sprout className="h-3.5 w-3.5" /></span>;
+                                        case 'packaging':
+                                          return <span className="p-1 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"><Package className="h-3.5 w-3.5" /></span>;
+                                        case 'cultural':
+                                          return <span className="p-1 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"><Scissors className="h-3.5 w-3.5" /></span>;
+                                        case 'staff':
+                                          return <span className="p-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"><UserX className="h-3.5 w-3.5" /></span>;
+                                        default:
+                                          return <span className="p-1 rounded-md bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"><Activity className="h-3.5 w-3.5" /></span>;
+                                      }
+                                    };
+
+                                    return (
+                                      <div key={act.id} className="flex items-start gap-2.5 p-2 rounded-lg border bg-background hover:bg-muted/30 transition-colors text-xs">
+                                        <div className="shrink-0 mt-0.5">{getActionBadge()}</div>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center justify-between gap-2">
+                                            <span className="font-semibold text-foreground truncate">{act.action}</span>
+                                            <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
+                                              {formatDistanceToNow(new Date(act.timestamp), { addSuffix: true, locale: es })}
+                                            </span>
+                                          </div>
+                                          <p className="text-muted-foreground text-[11px] mt-0.5 leading-snug">{act.description}</p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                          )}
+                      </div>
                   </div>
-              )}
+                );
+              })()}
           </DialogContent>
       </Dialog>
+
+      <QRScannerDialog
+        isOpen={isQRScannerOpen}
+        onOpenChange={setIsQRScannerOpen}
+        onScanSuccess={handleScanSuccess}
+        title="Escanear Credencial de Usuario"
+        description="Apunte la cámara a la credencial digital de un usuario para consultar su perfil y últimas 10 actividades registradas."
+      />
 
       {/* Dialog for password change */}
        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>

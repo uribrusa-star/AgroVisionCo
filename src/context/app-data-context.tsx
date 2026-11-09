@@ -2,7 +2,7 @@
 'use client';
 
 import React, { ReactNode, useState, useCallback, useEffect } from 'react';
-import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem, ContactRequest, ContactRequestStatus } from '@/lib/types';
+import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem, ContactRequest, ContactRequestStatus, AuditLog, AuditLogCategory } from '@/lib/types';
 import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
 import { useToast } from "@/hooks/use-toast";
 import { sendPushNotification } from "@/lib/send-push";
@@ -84,6 +84,8 @@ export const AppDataContext = React.createContext<AppData>({
   deleteKnowledgeItem: async () => { throw new Error('Not implemented') },
   updateUserPassword: async () => { throw new Error('Not implemented') },
   updateUserProfile: async () => { throw new Error('Not implemented') },
+  auditLogs: [],
+  logUserAction: async () => {},
   saveFcmToken: async () => { throw new Error('Not implemented') },
   isClient: false
 });
@@ -156,6 +158,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [diagnosisLogs, setDiagnosisLogs] = useState<DiagnosisLog[]>([]);
     const [supplies, setSupplies] = useState<Supply[]>([]);
     const [notifications, setNotifications] = useState<PushNotification[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
     const [collectorPaymentLogs, setCollectorPaymentLogs] = useState<CollectorPaymentLog[]>([]);
@@ -351,7 +354,29 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }
     }, [toast, isClient, currentUser]);
     
-    // Set up real-time listener for notifications once currentUser is established
+
+    const logUserAction = useCallback(async (action: string, description: string, category: AuditLogCategory = 'general') => {
+        if (!currentUser) return;
+        const newLog: Omit<AuditLog, 'id'> = {
+            userId: currentUser.id,
+            userName: currentUser.name || 'Usuario',
+            userRole: currentUser.role || 'Colaborador',
+            action,
+            description,
+            category,
+            timestamp: new Date().toISOString(),
+            establishmentId: currentUser.establishmentId || 'main'
+        };
+
+        try {
+            const docRef = await addDoc(collection(db, 'auditLogs'), newLog);
+            setAuditLogs(prev => [{ id: docRef.id, ...newLog }, ...prev.slice(0, 99)]);
+        } catch (e) {
+            console.warn('Warning logging user action:', e);
+        }
+    }, [currentUser]);
+
+        // Set up real-time listener for notifications once currentUser is established
     useEffect(() => {
         if (!currentUser) {
             setNotifications([]);
@@ -375,7 +400,40 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             console.error("Error listening to notifications:", error);
         });
 
-        return () => unsubscribe();
+        // Real-time listener for establishment audit logs
+        const auditQuery = query(
+            collection(db, 'auditLogs'),
+            where('establishmentId', '==', currentUser.establishmentId || 'main'),
+            orderBy('timestamp', 'desc'),
+            limit(100)
+        );
+
+        const auditUnsubscribe = onSnapshot(auditQuery, (snapshot) => {
+            const logsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as AuditLog));
+            setAuditLogs(logsData);
+        }, (error) => {
+            // Fallback without orderBy in case index is not built yet
+            const fallbackQuery = query(
+                collection(db, 'auditLogs'),
+                where('establishmentId', '==', currentUser.establishmentId || 'main'),
+                limit(100)
+            );
+            onSnapshot(fallbackQuery, (snapshot) => {
+                const logsData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                } as AuditLog)).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                setAuditLogs(logsData);
+            }, () => {});
+        });
+
+        return () => {
+            unsubscribe();
+            auditUnsubscribe();
+        };
     }, [currentUser]);
 
     useEffect(() => {
@@ -481,6 +539,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 }));
             }
             await fetchAllData();
+            logUserAction(
+                'Registro de Cosecha',
+                `Registró ${harvestData.kilograms} kg de cosecha (${collectorName}, Lote ${harvestData.batchNumber})`,
+                'harvest'
+            );
             return newHarvestRef.id;
 
         } catch(error) {
@@ -724,6 +787,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             harvestsSnapshot.forEach(doc => batchOp.delete(doc.ref));
             paymentsSnapshot.forEach(doc => batchOp.delete(doc.ref));
             await batchOp.commit();
+            const col = originalState.collectors.find(c => c.id === collectorId);
+            logUserAction('Eliminación de Recolector', `Eliminó al recolector ${col?.name || collectorId}`, 'staff');
         }
 
         runDelete().catch(error => {
@@ -806,6 +871,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const logsSnapshot = await getDocs(logsQuery);
             logsSnapshot.forEach(doc => batchOp.delete(doc.ref));
             await batchOp.commit();
+            const pkr = originalState.packers.find(p => p.id === packerId);
+            logUserAction('Eliminación de Embalador', `Eliminó al embalador ${pkr?.name || packerId}`, 'staff');
         }
 
         runDelete().catch(error => {
@@ -822,6 +889,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         
         addDoc(collection(db, 'packagingLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(async (ref) => {
             setPackagingLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
+            logUserAction(
+                'Registro de Embalaje',
+                `Cargó embalaje de ${log.kilogramsPackaged} kg para ${log.packerName} (${log.hoursWorked} hs)`,
+                'packaging'
+            );
             
             const packer = packers.find(p => p.id === log.packerId);
             if (packer) {
@@ -896,6 +968,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         
         addDoc(collection(db, 'culturalPracticeLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setCulturalPracticeLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
+            logUserAction(
+                'Pago de Labor Cultural',
+                `Registró labor de ${log.practiceType} para ${log.personnelName} (${log.personnelType})`,
+                'cultural'
+            );
         }).catch(error => {
             console.error("Failed to add cultural practice log:", error);
             setCulturalPracticeLogs(prev => prev.filter(l => l.id !== tempId));
@@ -1006,6 +1083,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
             await batch.commit();
             await fetchAllData();
+            logUserAction(
+                'Labor Agronómica',
+                `Registró labor técnica de ${log.type}${log.product ? ` (${log.product})` : ''}`,
+                'agronomy'
+            );
             
             for (const item of newTasksToEmail) {
                 fetch('/api/send-task-email', {
@@ -1834,6 +1916,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         markAllNotificationsAsRead,
         deleteNotification,
         saveFcmToken,
+        auditLogs,
+        logUserAction,
         isClient
     };
 
