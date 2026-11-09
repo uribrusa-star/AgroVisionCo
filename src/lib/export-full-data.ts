@@ -72,7 +72,8 @@ export const exportAllProducerDataToExcel = (data: AppData) => {
 
   const workbook = XLSX.utils.book_new();
   const dateStr = format(new Date(), 'yyyy-MM-dd');
-  const estName = establishmentData?.name || 'Mi_Establecimiento';
+  const estName = establishmentData?.producer || establishmentData?.name || 'Don José';
+  const producerName = data.currentUser?.name || establishmentData?.producer || 'Productor Titular';
   const defaultVariety = establishmentData?.planting?.variety || (establishmentData?.varieties || []).join(', ') || '-';
 
   // 1. Resumen del Establecimiento & Auditoría
@@ -87,8 +88,8 @@ export const exportAllProducerDataToExcel = (data: AppData) => {
   const totalKg = harvests.reduce((acc, h) => acc + (h.kilograms || 0), 0);
 
   const summaryRows = [
-    { Parámetro: 'Establecimiento', Valor: establishmentData?.name || 'Establecimiento Frutillero' },
-    { Parámetro: 'Productor Titular', Valor: establishmentData?.producer || 'Sin productor' },
+    { Parámetro: 'Establecimiento', Valor: estName },
+    { Parámetro: 'Productor Titular', Valor: producerName },
     { Parámetro: 'Responsable Técnico', Valor: establishmentData?.technicalManager || 'Ing. Agrónomo' },
     { Parámetro: 'Ubicación', Valor: formatLocation(establishmentData?.location) },
     { Parámetro: 'Superficie', Valor: totalAreaStr },
@@ -381,8 +382,8 @@ export const exportAllProducerDataToPDF = (data: AppData) => {
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
   const dateStr = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: es });
-  const estName = establishmentData?.name || 'Establecimiento Frutillero';
-  const producerName = establishmentData?.producer || 'Don José';
+  const estName = establishmentData?.producer || establishmentData?.name || 'Don José';
+  const producerName = data.currentUser?.name || establishmentData?.producer || 'Productor Titular';
   const defaultVariety = establishmentData?.planting?.variety || (establishmentData?.varieties || []).join(', ') || 'Frutilla';
 
   // Paleta de colores AgroVista
@@ -825,7 +826,7 @@ export const exportAllProducerDataToPDF = (data: AppData) => {
  * Exporta el JSON completo de respaldo técnico.
  */
 export const exportAllProducerDataToJSON = (data: AppData) => {
-  const estName = data.establishmentData?.name || 'Mi_Establecimiento';
+  const estName = data.establishmentData?.producer || data.establishmentData?.name || 'Don_Jose';
   const cleanData = {
     exportDate: new Date().toISOString(),
     establishment: data.establishmentData,
