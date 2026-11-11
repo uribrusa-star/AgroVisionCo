@@ -56,81 +56,49 @@ export const generateTraceabilityPDF = (
     }
   };
 
-  // --- PORTADA (Estética limpia, formal y minimalista en blanco y verde institucional) ---
+  // --- PORTADA (Fondo blanco puro, estética limpia con distribución clásica) ---
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical lateral institucional delgada a la izquierda
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.rect(14, 25, 2, pageHeight - 50, 'F');
+  // Línea vertical institucional delgada a la izquierda
+  doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  doc.setLineWidth(2);
+  doc.line(20, 40, 20, 250);
   
-  // Logotipo / Isotipo oficial en la parte superior ajustado hacia arriba
+  // Logo centrado en la parte superior
   if (logoDataUri) {
     try {
-      doc.addImage(logoDataUri, 'PNG', 26, 32, 28, 28);
+      doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 25, 45, 50, 50);
     } catch {
       // ignore
     }
   }
 
-  // Título principal en color oscuro contrastante
-  doc.setTextColor(24, 24, 27); // Negro carbón / gris muy oscuro (#18181B)
-  doc.setFontSize(28);
+  // Título principal en color oscuro contrastante (#18181B)
+  doc.setTextColor(24, 24, 27);
+  doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('REPORTE DE', 26, 76);
-  doc.text('TRAZABILIDAD', 26, 88);
+  doc.text('REPORTE DE', 30, 140);
+  doc.text('TRAZABILIDAD', 30, 155);
 
-  // Subtítulo y categoría en verde institucional
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'bold');
+  // Subtítulo en verde institucional
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('LOTE IDENTIFICADO', 26, 108);
+  doc.text('LOTE IDENTIFICADO', 30, 180);
 
-  doc.setFontSize(18);
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(`LOTE #${batch.id}`, 26, 117);
+  doc.text(`LOTE #${batch.id}`, 30, 192);
 
-  // Línea divisoria suave y sutil
-  doc.setDrawColor(228, 231, 236);
-  doc.setLineWidth(0.4);
-  doc.line(26, 126, pageWidth - 30, 126);
-
-  // Datos secundarios dinámicos organizados debajo del título
-  doc.setFontSize(10.5);
+  // Datos secundarios
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Variedad:', 26, 137);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${batch.varieties?.map(v => v.name).join(', ') || 'N/A'}`, 60, 137);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Establecimiento:', 26, 146);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment?.producer || 'N/A'}`, 60, 146);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Fecha de Inicio:', 26, 155);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${format(new Date(batch.preloadedDate), "dd 'de' MMMM, yyyy", { locale: es })}`, 60, 155);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Fecha de Emisión:', 26, 164);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 60, 164);
-
-  // Pie institucional discreto en portada
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text('AgroVista \u2022 Gestión y Certificación de Precisión \u2022 Documento Oficial de Trazabilidad', 26, pageHeight - 25);
+  doc.setTextColor(80, 85, 95);
+  doc.text(`Variedad: ${batch.varieties?.map(v => v.name).join(', ') || 'N/A'}`, 30, 202);
+  doc.text(`Establecimiento: ${establishment?.producer || 'N/A'}`, 30, 208);
+  doc.text(`Fecha de Inicio: ${format(new Date(batch.preloadedDate), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
 
   // --- DETALLES ---
   doc.addPage();
@@ -331,82 +299,49 @@ export const generateMonthlyProductionPDF = (
     }
   };
 
-  // --- PORTADA (Estética limpia, formal y minimalista en blanco y verde institucional) ---
+  // --- PORTADA (Fondo blanco puro, estética limpia con distribución clásica) ---
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical lateral institucional delgada a la izquierda en verde institucional
-  const institutionalGreen: [number, number, number] = [20, 83, 45]; // #14532D
-  doc.setFillColor(institutionalGreen[0], institutionalGreen[1], institutionalGreen[2]);
-  doc.rect(14, 25, 2, pageHeight - 50, 'F');
+  // Línea vertical institucional delgada a la izquierda
+  doc.setDrawColor(34, 197, 94); // Verde institucional
+  doc.setLineWidth(2);
+  doc.line(20, 40, 20, 250);
   
-  // Logotipo / Isotipo oficial en la parte superior ajustado hacia arriba
+  // Logo centrado en la parte superior
   if (logoDataUri) {
     try {
-      doc.addImage(logoDataUri, 'PNG', 26, 32, 28, 28);
+      doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 25, 45, 50, 50);
     } catch {
       // ignore
     }
   }
 
-  // Título principal en gris muy oscuro / negro carbón
+  // Título principal en color oscuro contrastante (#18181B)
   doc.setTextColor(24, 24, 27);
-  doc.setFontSize(28);
+  doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('REPORTE DE', 26, 76);
-  doc.text('PRODUCCIÓN', 26, 88);
+  doc.text('REPORTE DE', 30, 140);
+  doc.text('PRODUCCIÓN', 30, 155);
 
   // Subtítulo en verde institucional
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(institutionalGreen[0], institutionalGreen[1], institutionalGreen[2]);
-  doc.text('PERÍODO MENSUAL', 26, 108);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(20, 83, 45); // darkGreen institucional
+  doc.text('PERIODO MENSUAL', 30, 180);
 
-  doc.setFontSize(18);
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(monthName.toUpperCase(), 26, 117);
+  doc.text(monthName.toUpperCase(), 30, 192);
 
-  // Línea divisoria suave y sutil
-  doc.setDrawColor(228, 231, 236);
-  doc.setLineWidth(0.4);
-  doc.line(26, 126, pageWidth - 30, 126);
-
-  // Datos secundarios dinámicos organizados debajo del título
-  doc.setFontSize(10.5);
+  // Datos secundarios
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Establecimiento:', 26, 137);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment?.producer || 'N/A'}`, 62, 137);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Total Cosechado:', 26, 146);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${harvests.reduce((acc, h) => acc + h.kilograms, 0).toFixed(2)} kg`, 62, 146);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Cantidad Cargas:', 26, 155);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${harvests.length} ingresos registrados`, 62, 155);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Fecha de Emisión:', 26, 164);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 62, 164);
-
-  // Pie institucional discreto en portada
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text('AgroVista \u2022 Gestión y Certificación de Precisión \u2022 Producción Certificada', 26, pageHeight - 25);
+  doc.setTextColor(80, 85, 95);
+  doc.text(`Establecimiento: ${establishment?.producer || 'N/A'}`, 30, 202);
+  doc.text(`Total Cosechado: ${harvests.reduce((acc, h) => acc + h.kilograms, 0).toFixed(2)} kg`, 30, 208);
+  doc.text(`Fecha de Emisión: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
 
   // --- DETALLE ---
   doc.addPage();
@@ -576,86 +511,60 @@ export const generateAgronomistReportPDF = (
   };
 
   // ═══════════════════════════════════════════════════════════════════════
-  // PÁG 1 — PORTADA (Estética limpia, formal y minimalista en blanco y verde institucional)
+  // PÁG 1 — PORTADA (Fondo blanco puro, estética limpia con distribución clásica)
   // ═══════════════════════════════════════════════════════════════════════
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical lateral institucional delgada a la izquierda
-  doc.setFillColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.rect(14, 25, 2, pageHeight - 50, 'F');
+  // Línea vertical institucional delgada a la izquierda
+  doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
+  doc.setLineWidth(2);
+  doc.line(20, 40, 20, 250);
   
-  // Logotipo / Isotipo oficial en la parte superior ajustado hacia arriba
+  // Logo centrado en la parte superior
   if (logoDataUri) {
     try {
-      doc.addImage(logoDataUri, 'PNG', 26, 32, 28, 28);
+      doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 25, 45, 50, 50);
     } catch {
       // ignore
     }
   }
 
-  // Título principal en color gris muy oscuro / carbón
+  // Título principal en color oscuro contrastante (#18181B)
   doc.setTextColor(24, 24, 27);
-  doc.setFontSize(28);
+  doc.setFontSize(34);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME TÉCNICO', 26, 76);
-  doc.text('AGRONÓMICO', 26, 88);
+  doc.text('INFORME TÉCNICO', 30, 135);
+  doc.text('AGRONÓMICO', 30, 150);
 
-  // Subtítulo en verde corporativo
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'bold');
+  // Subtítulo en verde institucional
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('ESTABLECIMIENTO', 26, 108);
+  doc.text('ESTABLECIMIENTO', 30, 175);
+
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(24, 24, 27);
+  doc.text(establishment.producer.toUpperCase(), 30, 187);
+
+  // Datos secundarios
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 85, 95);
+  doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province}`, 30, 198);
+  doc.text(`Sistema Productivo: ${establishment.system}`, 30, 205);
+  doc.text(`Fecha: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 212);
+
+  // Profesional Responsable
+  doc.setFontSize(14);
+  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.text('PROFESIONAL RESPONSABLE', 30, 238);
 
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(establishment.producer.toUpperCase(), 26, 117);
-
-  // Línea divisoria suave y sutil
-  doc.setDrawColor(228, 231, 236);
-  doc.setLineWidth(0.4);
-  doc.line(26, 126, pageWidth - 30, 126);
-
-  // Datos secundarios dinámicos del informe técnico
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Ubicación:', 26, 137);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment.location.locality}, ${establishment.location.province}`, 65, 137);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Sistema Productivo:', 26, 146);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment.system}`, 65, 146);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Fecha de Emisión:', 26, 155);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 65, 155);
-
-  // Profesional Responsable destacado
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('PROFESIONAL RESPONSABLE', 26, 175);
-
-  doc.setFontSize(15);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(24, 24, 27);
-  doc.text(agronomistName.toUpperCase(), 26, 184);
-
-  // Pie institucional discreto en portada
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text('AgroVista \u2022 Gestión y Certificación de Precisión \u2022 Informe Técnico Oficial', 26, pageHeight - 25);
+  doc.text(agronomistName.toUpperCase(), 30, 248);
 
   // ═══════════════════════════════════════════════════════════════════════
   // PÁG 2 — FICHA, DISTRIBUCIÓN, MAPA INTERACTIVO Y RENDIMIENTO POR LOTE
@@ -1289,93 +1198,57 @@ export const generateProducerHarvestReportPDF = (
     return currentY;
   };
 
-  // --- PORTADA (Estética limpia, formal y minimalista en blanco y verde institucional) ---
+  // --- PORTADA (Fondo blanco puro, estética limpia con distribución clásica) ---
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical lateral institucional delgada a la izquierda en verde corporativo
-  const institutionalGreen: [number, number, number] = [20, 83, 45]; // #14532D
-  doc.setFillColor(institutionalGreen[0], institutionalGreen[1], institutionalGreen[2]);
-  doc.rect(14, 25, 2, pageHeight - 50, 'F');
+  // Línea vertical institucional delgada a la izquierda en verde institucional
+  doc.setDrawColor(34, 197, 94); // #22C55E
+  doc.setLineWidth(2);
+  doc.line(20, 40, 20, 250);
   
-  // Logotipo / Isotipo oficial en la parte superior ajustado hacia arriba
+  // Logo centrado en la parte superior
   if (logoDataUri) {
     try {
-      doc.addImage(logoDataUri, 'PNG', 26, 32, 28, 28);
+      doc.addImage(logoDataUri, 'PNG', pageWidth / 2 - 25, 45, 50, 50);
     } catch {
       // ignore
     }
   }
 
-  // Título principal en color gris muy oscuro / carbón
+  // Título principal en color oscuro contrastante (#18181B)
   doc.setTextColor(24, 24, 27);
-  doc.setFontSize(28);
+  doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME DE', 26, 76);
-  doc.text('PRODUCCIÓN Y COSTOS', 26, 88);
+  doc.text('INFORME DE', 30, 140);
+  doc.text('PRODUCCIÓN', 30, 155);
 
   // Subtítulo en verde institucional
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(institutionalGreen[0], institutionalGreen[1], institutionalGreen[2]);
-  doc.text('ESTABLECIMIENTO', 26, 108);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(20, 83, 45); // #14532D
+  doc.text('ESTABLECIMIENTO', 30, 180);
 
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(24, 24, 27);
+  doc.text(establishment.producer.toUpperCase(), 30, 192);
+
+  // Datos secundarios
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 85, 95);
+  doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province}`, 30, 202);
+  doc.text(`Sistema: ${establishment.system}`, 30, 208);
+  doc.text(`Fecha de Emisión: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
+
+  doc.setFontSize(14);
+  doc.setTextColor(20, 83, 45); // #14532D
+  doc.text('ANÁLISIS DE CAMPAÑA', 30, 240);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(establishment.producer.toUpperCase(), 26, 117);
-
-  // Línea divisoria suave y sutil
-  doc.setDrawColor(228, 231, 236);
-  doc.setLineWidth(0.4);
-  doc.line(26, 126, pageWidth - 30, 126);
-
-  // Datos secundarios dinámicos del informe organizados debajo del título
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Ubicación:', 26, 137);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment.location.locality}, ${establishment.location.province}`, 65, 137);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Sistema:', 26, 146);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment.system}`, 65, 146);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Superficie:', 26, 155);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${establishment.area.strawberry} ha (Frutilla)`, 65, 155);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(85, 95, 110);
-  doc.text('Fecha de Emisión:', 26, 164);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 41, 59);
-  doc.text(`${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 65, 164);
-
-  // Bloque adicional de análisis
-  doc.setFontSize(10.5);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(institutionalGreen[0], institutionalGreen[1], institutionalGreen[2]);
-  doc.text('ALCANCE DEL DOCUMENTO', 26, 184);
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(24, 24, 27);
-  doc.text('ANÁLISIS INTEGRAL DE CAMPAÑA Y RENDIMIENTO', 26, 193);
-
-  // Pie institucional discreto en portada
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text('AgroVista \u2022 Gestión y Certificación de Precisión \u2022 Documento Confidencial', 26, pageHeight - 25);
+  doc.text('PRODUCCIÓN Y RENDIMIENTO', 30, 250);
 
   // --- RESUMEN DE DATOS ---
   doc.addPage();
