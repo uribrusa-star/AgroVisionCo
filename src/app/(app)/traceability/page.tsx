@@ -99,8 +99,13 @@ export default function TraceabilityPage() {
   }, [selectedBatchId, harvests, agronomistLogs, phenologyLogs]);
 
   const [isExportPending, startExportTransition] = useTransition();
+  const isGeneratingRef = React.useRef(false);
 
-  const handleExportTraceability = () => {
+  const handleExportTraceability = (e?: React.MouseEvent) => {
+    if (e) { (e.currentTarget as HTMLElement)?.blur(); }
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
     if (!selectedBatch) return;
     
     startExportTransition(async () => {
@@ -165,7 +170,11 @@ export default function TraceabilityPage() {
     });
   };
 
-  const handleExportMonthly = async () => {
+  const handleExportMonthly = async (e?: React.MouseEvent) => {
+    if (e) { (e.currentTarget as HTMLElement)?.blur(); }
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
     toast({
       title: 'Exportando Mes',
       description: 'Generando reporte de producción mensual...',

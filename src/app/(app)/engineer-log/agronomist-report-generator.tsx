@@ -22,6 +22,7 @@ const MapComponent = dynamic(() => import('@/components/map'), { ssr: false });
 
 export function AgronomistReportGenerator() {
   const [isPending, startTransition] = useTransition();
+  const isGeneratingRef = useRef(false);
   const { agronomistLogs, phenologyLogs, currentUser, establishmentData, harvests, batches, supplies } = useContext(AppDataContext);
   const { toast } = useToast();
 
@@ -50,7 +51,11 @@ export function AgronomistReportGenerator() {
     }
   }, [establishmentData?.geoJsonData]);
   
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = (e?: React.MouseEvent) => {
+    if (e) { (e.currentTarget as HTMLElement)?.blur(); }
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
     startTransition(async () => {
       if (!establishmentData) {
         toast({

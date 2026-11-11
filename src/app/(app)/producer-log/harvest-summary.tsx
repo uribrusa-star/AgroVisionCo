@@ -20,6 +20,7 @@ import { IncomeChart } from './income-chart';
 
 export function HarvestSummary() {
   const [isPending, startTransition] = useTransition();
+  const isGeneratingRef = useRef(false);
   const { harvests, transactions, agronomistLogs, currentUser, establishmentData, collectorPaymentLogs, packagingLogs, culturalPracticeLogs } = useContext(AppDataContext);
   const { toast } = useToast();
 
@@ -65,7 +66,11 @@ export function HarvestSummary() {
   const farmArea = establishmentData?.area.strawberry || 1; // Default to 1ha to avoid division by zero
   
 
-  const handleGeneratePdf = () => {
+  const handleGeneratePdf = (e?: React.MouseEvent) => {
+    if (e) { (e.currentTarget as HTMLElement)?.blur(); }
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
     startTransition(async () => {
       if (!establishmentData) {
         toast({

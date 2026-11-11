@@ -42,6 +42,7 @@ function ProductionPaymentHistoryComponent() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isPdfPending, startPdfTransition] = useTransition();
+  const isGeneratingRef = useRef(false);
   const [selectedLog, setSelectedLog] = useState<CollectorPaymentLog | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ kilograms: 0, hours: 0, ratePerKg: 0, batchNumber: '', date: '' });
@@ -137,7 +138,11 @@ function ProductionPaymentHistoryComponent() {
 
   const getHarvestForLog = (log: CollectorPaymentLog) => harvests.find(h => h.id === log.harvestId);
 
-  const handleGenerateReceipt = () => {
+  const handleGenerateReceipt = (e?: React.MouseEvent) => {
+    if (e) { (e.currentTarget as HTMLElement)?.blur(); }
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
     if (!selectedLog || !establishmentData) return;
 
     startPdfTransition(async () => {
@@ -219,7 +224,11 @@ function ProductionPaymentHistoryComponent() {
     });
   }
 
-  const handleGenerateA4Sheet = async () => {
+  const handleGenerateA4Sheet = async (e?: React.MouseEvent) => {
+    if (e) { (e.currentTarget as HTMLElement)?.blur(); }
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
     if (!selectedLog) return;
     setIsLabelOpen(true);
     setTimeout(() => {
