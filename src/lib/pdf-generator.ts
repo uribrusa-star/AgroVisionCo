@@ -60,10 +60,10 @@ export const generateTraceabilityPDF = (
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical institucional delgada a la izquierda
-  doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
-  doc.setLineWidth(2);
-  doc.line(20, 40, 20, 250);
+  // Línea vertical institucional delgada a la izquierda en verde oscuro oficial (#14532D)
+  doc.setDrawColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.setLineWidth(2.5);
+  doc.line(20, 35, 20, 255);
   
   // Logo centrado en la parte superior
   if (logoDataUri) {
@@ -74,31 +74,31 @@ export const generateTraceabilityPDF = (
     }
   }
 
-  // Título principal en color oscuro contrastante (#18181B)
+  // Título principal un poquitito más arriba (y: 118, 132), más cerca del logo
   doc.setTextColor(24, 24, 27);
   doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('REPORTE DE', 30, 140);
-  doc.text('TRAZABILIDAD', 30, 155);
+  doc.text('REPORTE DE', 30, 118);
+  doc.text('TRAZABILIDAD', 30, 132);
 
-  // Subtítulo en verde institucional
+  // Subtítulo en verde institucional oscuro
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('LOTE IDENTIFICADO', 30, 180);
+  doc.text('LOTE IDENTIFICADO', 30, 160);
 
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(`LOTE #${batch.id}`, 30, 192);
+  doc.text(`LOTE #${batch.id}`, 30, 172);
 
   // Datos secundarios
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 85, 95);
-  doc.text(`Variedad: ${batch.varieties?.map(v => v.name).join(', ') || 'N/A'}`, 30, 202);
-  doc.text(`Establecimiento: ${establishment?.producer || 'N/A'}`, 30, 208);
-  doc.text(`Fecha de Inicio: ${format(new Date(batch.preloadedDate), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
+  doc.text(`Variedad: ${batch.varieties?.map(v => v.name).join(', ') || 'N/A'}`, 30, 185);
+  doc.text(`Establecimiento: ${establishment?.producer || 'N/A'}`, 30, 193);
+  doc.text(`Fecha de Inicio: ${format(new Date(batch.preloadedDate), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 201);
 
   // --- DETALLES ---
   doc.addPage();
@@ -303,10 +303,11 @@ export const generateMonthlyProductionPDF = (
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical institucional delgada a la izquierda
-  doc.setDrawColor(34, 197, 94); // Verde institucional
-  doc.setLineWidth(2);
-  doc.line(20, 40, 20, 250);
+  // Línea vertical institucional delgada a la izquierda en verde oscuro oficial (#14532D)
+  const institutionalDarkGreen: [number, number, number] = [20, 83, 45]; // #14532D
+  doc.setDrawColor(institutionalDarkGreen[0], institutionalDarkGreen[1], institutionalDarkGreen[2]);
+  doc.setLineWidth(2.5);
+  doc.line(20, 35, 20, 255);
   
   // Logo centrado en la parte superior
   if (logoDataUri) {
@@ -317,31 +318,31 @@ export const generateMonthlyProductionPDF = (
     }
   }
 
-  // Título principal en color oscuro contrastante (#18181B)
+  // Título principal un poquitito más arriba (y: 118, 132), más cerca del logo
   doc.setTextColor(24, 24, 27);
   doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('REPORTE DE', 30, 140);
-  doc.text('PRODUCCIÓN', 30, 155);
+  doc.text('REPORTE DE', 30, 118);
+  doc.text('PRODUCCIÓN', 30, 132);
 
-  // Subtítulo en verde institucional
+  // Subtítulo en verde institucional oscuro
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(20, 83, 45); // darkGreen institucional
-  doc.text('PERIODO MENSUAL', 30, 180);
+  doc.setTextColor(institutionalDarkGreen[0], institutionalDarkGreen[1], institutionalDarkGreen[2]);
+  doc.text('PERIODO MENSUAL', 30, 160);
 
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(monthName.toUpperCase(), 30, 192);
+  doc.text(monthName.toUpperCase(), 30, 172);
 
   // Datos secundarios
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 85, 95);
-  doc.text(`Establecimiento: ${establishment?.producer || 'N/A'}`, 30, 202);
-  doc.text(`Total Cosechado: ${harvests.reduce((acc, h) => acc + h.kilograms, 0).toFixed(2)} kg`, 30, 208);
-  doc.text(`Fecha de Emisión: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
+  doc.text(`Establecimiento: ${establishment?.producer || 'N/A'}`, 30, 185);
+  doc.text(`Total Cosechado: ${harvests.reduce((acc, h) => acc + h.kilograms, 0).toFixed(2)} kg`, 30, 193);
+  doc.text(`Fecha de Emisión: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 201);
 
   // --- DETALLE ---
   doc.addPage();
@@ -516,10 +517,10 @@ export const generateAgronomistReportPDF = (
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical institucional delgada a la izquierda
-  doc.setDrawColor(mediumGreen[0], mediumGreen[1], mediumGreen[2]);
-  doc.setLineWidth(2);
-  doc.line(20, 40, 20, 250);
+  // Línea vertical institucional delgada a la izquierda en verde oscuro oficial (#14532D)
+  doc.setDrawColor(darkGreen[0], darkGreen[1], darkGreen[2]);
+  doc.setLineWidth(2.5);
+  doc.line(20, 35, 20, 255);
   
   // Logo centrado en la parte superior
   if (logoDataUri) {
@@ -530,41 +531,41 @@ export const generateAgronomistReportPDF = (
     }
   }
 
-  // Título principal en color oscuro contrastante (#18181B)
+  // Título principal un poquitito más arriba (y: 114, 128), más cerca del logo
   doc.setTextColor(24, 24, 27);
   doc.setFontSize(34);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME TÉCNICO', 30, 135);
-  doc.text('AGRONÓMICO', 30, 150);
+  doc.text('INFORME TÉCNICO', 30, 114);
+  doc.text('AGRONÓMICO', 30, 128);
 
-  // Subtítulo en verde institucional
+  // Subtítulo en verde institucional oscuro
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('ESTABLECIMIENTO', 30, 175);
+  doc.text('ESTABLECIMIENTO', 30, 155);
 
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(establishment.producer.toUpperCase(), 30, 187);
+  doc.text(establishment.producer.toUpperCase(), 30, 167);
 
   // Datos secundarios
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 85, 95);
-  doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province}`, 30, 198);
-  doc.text(`Sistema Productivo: ${establishment.system}`, 30, 205);
-  doc.text(`Fecha: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 212);
+  doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province}`, 30, 180);
+  doc.text(`Sistema Productivo: ${establishment.system}`, 30, 187);
+  doc.text(`Fecha: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 194);
 
   // Profesional Responsable
   doc.setFontSize(14);
   doc.setTextColor(darkGreen[0], darkGreen[1], darkGreen[2]);
-  doc.text('PROFESIONAL RESPONSABLE', 30, 238);
+  doc.text('PROFESIONAL RESPONSABLE', 30, 222);
 
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(agronomistName.toUpperCase(), 30, 248);
+  doc.text(agronomistName.toUpperCase(), 30, 232);
 
   // ═══════════════════════════════════════════════════════════════════════
   // PÁG 2 — FICHA, DISTRIBUCIÓN, MAPA INTERACTIVO Y RENDIMIENTO POR LOTE
@@ -1202,10 +1203,11 @@ export const generateProducerHarvestReportPDF = (
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, 'F');
   
-  // Línea vertical institucional delgada a la izquierda en verde institucional
-  doc.setDrawColor(34, 197, 94); // #22C55E
-  doc.setLineWidth(2);
-  doc.line(20, 40, 20, 250);
+  // Línea vertical institucional delgada a la izquierda en verde oscuro oficial (#14532D)
+  const institutionalDarkGreen: [number, number, number] = [20, 83, 45]; // #14532D
+  doc.setDrawColor(institutionalDarkGreen[0], institutionalDarkGreen[1], institutionalDarkGreen[2]);
+  doc.setLineWidth(2.5);
+  doc.line(20, 35, 20, 255);
   
   // Logo centrado en la parte superior
   if (logoDataUri) {
@@ -1216,39 +1218,39 @@ export const generateProducerHarvestReportPDF = (
     }
   }
 
-  // Título principal en color oscuro contrastante (#18181B)
+  // Título principal un poquitito más arriba (y: 118, 132), más cerca del logo
   doc.setTextColor(24, 24, 27);
   doc.setFontSize(36);
   doc.setFont('helvetica', 'bold');
-  doc.text('INFORME DE', 30, 140);
-  doc.text('PRODUCCIÓN', 30, 155);
+  doc.text('INFORME DE', 30, 118);
+  doc.text('PRODUCCIÓN', 30, 132);
 
-  // Subtítulo en verde institucional
+  // Subtítulo en verde institucional oscuro
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(20, 83, 45); // #14532D
-  doc.text('ESTABLECIMIENTO', 30, 180);
+  doc.setTextColor(institutionalDarkGreen[0], institutionalDarkGreen[1], institutionalDarkGreen[2]);
+  doc.text('ESTABLECIMIENTO', 30, 160);
 
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text(establishment.producer.toUpperCase(), 30, 192);
+  doc.text(establishment.producer.toUpperCase(), 30, 172);
 
   // Datos secundarios
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(80, 85, 95);
-  doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province}`, 30, 202);
-  doc.text(`Sistema: ${establishment.system}`, 30, 208);
-  doc.text(`Fecha de Emisión: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 214);
+  doc.text(`Ubicación: ${establishment.location.locality}, ${establishment.location.province}`, 30, 185);
+  doc.text(`Sistema: ${establishment.system}`, 30, 193);
+  doc.text(`Fecha de Emisión: ${format(new Date(), "dd 'de' MMMM, yyyy", { locale: es })}`, 30, 201);
 
   doc.setFontSize(14);
-  doc.setTextColor(20, 83, 45); // #14532D
-  doc.text('ANÁLISIS DE CAMPAÑA', 30, 240);
+  doc.setTextColor(institutionalDarkGreen[0], institutionalDarkGreen[1], institutionalDarkGreen[2]);
+  doc.text('ANÁLISIS DE CAMPAÑA', 30, 226);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(24, 24, 27);
-  doc.text('PRODUCCIÓN Y RENDIMIENTO', 30, 250);
+  doc.text('PRODUCCIÓN Y RENDIMIENTO', 30, 236);
 
   // --- RESUMEN DE DATOS ---
   doc.addPage();
