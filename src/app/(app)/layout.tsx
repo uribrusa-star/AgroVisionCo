@@ -12,7 +12,7 @@ import { signOut } from 'firebase/auth';
 import { clearIndexedDbPersistence, terminate } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
-import { cn } from '@/lib/utils';
+import { cn, getRoleAvatar } from '@/lib/utils';
 
 
 import {
@@ -73,12 +73,7 @@ function UserMenu() {
                 <p className="text-sm font-medium text-foreground leading-tight">{currentUser?.name || 'Usuario'}</p>
             </div>
             <Avatar className="h-8 w-8">
-                <AvatarImage 
-                    src={currentUser?.avatar?.startsWith('http') 
-                        ? currentUser.avatar 
-                        : `https://picsum.photos/seed/${currentUser?.avatar || 'user'}/40/40`} 
-                    alt="" 
-                />
+                <AvatarImage src={getRoleAvatar(currentUser?.role)} alt="" />
                 <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
           </Link>

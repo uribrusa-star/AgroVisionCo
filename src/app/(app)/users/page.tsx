@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { User } from '@/lib/types';
+import { getRoleAvatar } from '@/lib/utils';
 
 const PasswordSchema = z.object({
   newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
@@ -268,7 +269,7 @@ export default function UsersPage() {
                   >
                       <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12 border-2 border-background shadow-sm">
-                              <AvatarImage src={user.avatar?.startsWith('http') ? user.avatar : `https://picsum.photos/seed/${user.avatar}/40/40`} />
+                              <AvatarImage src={getRoleAvatar(user.role)} />
                               <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div>
@@ -328,7 +329,7 @@ export default function UsersPage() {
                   <div className="flex flex-col items-center gap-4 py-2">
                       <div className="flex flex-col sm:flex-row items-center gap-5 w-full bg-muted/20 p-4 rounded-xl border">
                           <Avatar className="h-20 w-20 border-2 border-primary/20 shadow-md shrink-0">
-                              <AvatarImage src={detailsUser.avatar?.startsWith('http') ? detailsUser.avatar : `https://picsum.photos/seed/${detailsUser.avatar}/120/120`} />
+                              <AvatarImage src={getRoleAvatar(detailsUser.role)} />
                               <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">{detailsUser.name.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <div className="text-center sm:text-left flex-1 min-w-0">

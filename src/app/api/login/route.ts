@@ -75,7 +75,7 @@ export async function POST(request: Request) {
             name: 'Productor',
             email: 'productor@agrovista.co',
             role: 'Productor',
-            avatar: 'user-1',
+            avatar: 'https://i.imgur.com/IwHcGqs.png',
             password,
             notificationEmail: 'productor@agrovista.co'
           };

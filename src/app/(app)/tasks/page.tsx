@@ -23,7 +23,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box, LayoutGrid, List, Search, ChevronsUpDown, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, getRoleAvatar } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -203,7 +203,7 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                          {assignedUser && (
                             <div className="flex items-center gap-1.5">
                                 <Avatar className="h-5 w-5">
-                                    <AvatarImage src={`https://picsum.photos/seed/${assignedUser.avatar}/20/20`} />
+                                    <AvatarImage src={getRoleAvatar(assignedUser.role)} />
                                     <AvatarFallback className="text-[10px]">{assignedUser.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium text-muted-foreground">{assignedUser.name}</span>
