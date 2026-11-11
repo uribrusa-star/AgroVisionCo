@@ -79,6 +79,7 @@ export const AppDataContext = React.createContext<AppData>({
   editProducerLog: () => { throw new Error('Not implemented') },
   deleteProducerLog: () => { throw new Error('Not implemented') },
   addTransaction: () => { throw new Error('Not implemented') },
+  editTransaction: () => { throw new Error('Not implemented') },
   deleteTransaction: async () => { throw new Error('Not implemented') },
   addKnowledgeItem: async () => { throw new Error('Not implemented') },
   deleteKnowledgeItem: async () => { throw new Error('Not implemented') },
@@ -1682,6 +1683,20 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+
+    const editTransaction = (updatedTransaction: Transaction) => {
+        const originalTransactions = transactions;
+        setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+
+        const txRef = doc(db, 'transactions', updatedTransaction.id);
+        const { id, ...data } = updatedTransaction;
+        setDoc(txRef, data, { merge: true }).catch(error => {
+            console.error("Failed to edit transaction:", error);
+            setTransactions(originalTransactions);
+            toast({ title: "Error", description: "No se pudo actualizar la transacción.", variant: "destructive"});
+        });
+    };
+
     const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
         const newRef = doc(collection(db, 'transactions'));
         const tempId = newRef.id;
@@ -1945,6 +1960,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         editProducerLog,
         deleteProducerLog,
         addTransaction,
+        editTransaction,
         deleteTransaction,
         addKnowledgeItem,
         deleteKnowledgeItem,
