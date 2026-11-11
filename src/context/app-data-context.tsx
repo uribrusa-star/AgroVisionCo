@@ -1729,13 +1729,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, { password: newPassword }, { merge: true });
         
-        // Sync password for producer account aliases if applicable
-        if (userId === 'user-productor' || userId === 'user-productor-alias' || currentUser?.email?.includes('productor@agron') || currentUser?.email?.includes('productor@agrov')) {
+        // Sincronizar contraseña en el documento canónico 'user-productor'
+        if (userId === 'user-productor' || currentUser?.role === 'Productor' || currentUser?.email?.includes('productor@')) {
             try {
                 await setDoc(doc(db, 'users', 'user-productor'), { password: newPassword }, { merge: true });
-                await setDoc(doc(db, 'users', 'user-productor-alias'), { password: newPassword }, { merge: true });
             } catch (e) {
-                console.warn('Sync alias password warning:', e);
+                console.warn('Sync producer password warning:', e);
             }
         }
 
@@ -1749,13 +1748,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, profileData, { merge: true });
 
-        // Sincronizar en aliases si aplica
-        if (userId === 'user-productor' || userId === 'user-productor-alias' || currentUser?.email?.includes('productor@')) {
+        // Sincronizar perfil en el documento canónico 'user-productor'
+        if (userId === 'user-productor' || currentUser?.role === 'Productor' || currentUser?.email?.includes('productor@')) {
             try {
                 await setDoc(doc(db, 'users', 'user-productor'), profileData, { merge: true });
-                await setDoc(doc(db, 'users', 'user-productor-alias'), profileData, { merge: true });
             } catch (e) {
-                console.warn('Sync producer alias profile warning:', e);
+                console.warn('Sync producer profile warning:', e);
             }
         }
 

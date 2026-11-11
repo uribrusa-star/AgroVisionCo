@@ -73,13 +73,14 @@ export async function POST(request: Request) {
           user = {
             id: 'user-productor',
             name: 'Productor',
-            email: 'productor@agrovision.co',
+            email: 'productor@agrovista.co',
             role: 'Productor',
             avatar: 'user-1',
             password,
-            notificationEmail: 'productor@agrovision.co'
+            notificationEmail: 'productor@agrovista.co'
           };
         } else {
+          user.id = 'user-productor'; // Consolidar siempre en el ID canónico
           user.password = password;
         }
 
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
         try {
           if (adminDb) {
             const updatePayload: Record<string, any> = {
-              email: user.email || 'productor@agrovision.co',
+              email: user.email || 'productor@agrovista.co',
               role: 'Productor',
               password: password,
               updatedAt: new Date().toISOString()
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
             if (user.name) {
               updatePayload.name = user.name;
             }
-            await adminDb.collection('users').doc(user.id || 'user-productor').set(updatePayload, { merge: true });
+            await adminDb.collection('users').doc('user-productor').set(updatePayload, { merge: true });
           }
         } catch (syncErr) {
           console.warn('Warning syncing producer password to Firestore:', syncErr);

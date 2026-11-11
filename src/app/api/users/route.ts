@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         if (producerDoc.exists) {
           callerRole = producerDoc.data()?.role || callerRole;
           callerEstId = producerDoc.data()?.establishmentId || callerEstId;
-        } else if (sessionUserId === 'user-productor' || sessionUserId === 'user-productor-alias') {
+        } else if (sessionUserId === 'user-productor' || session.user.role === 'Productor') {
           callerRole = 'Productor';
         }
       } catch (err) {

@@ -49,10 +49,9 @@ export async function PATCH(request: Request) {
 
         await adminDb.collection('users').doc(session.user.id).set(firestoreUpdates, { merge: true });
 
-        // Sincronizar aliases de productor si corresponde
-        if (session.user.id === 'user-productor' || session.user.id === 'user-productor-alias') {
+        // Si es el productor, asegurar persistencia en el ID canónico 'user-productor'
+        if (session.user.id === 'user-productor' || session.user.role === 'Productor') {
           await adminDb.collection('users').doc('user-productor').set(firestoreUpdates, { merge: true }).catch(() => {});
-          await adminDb.collection('users').doc('user-productor-alias').set(firestoreUpdates, { merge: true }).catch(() => {});
         }
       } catch (dbErr) {
         console.warn('Warning syncing session user patch to adminDb:', dbErr);
