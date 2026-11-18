@@ -167,10 +167,10 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Trazabilidad Agrícola"
-                    previewSrc="/entrada_datos_mockup_v2.jpeg"
-                    mobileSrc="/entrada_datos_mobile.jpeg"
-                    desktopSrc="/entrada_datos_mockup_v2.jpeg"
-                    altText="Registro de cosecha de frutilla con código QR por lote"
+                    previewSrc="/trazabilidad_mockup.jpeg"
+                    mobileSrc="/trazabilidad_mockup.jpeg"
+                    desktopSrc="/trazabilidad_mockup.jpeg"
+                    altText="Registro de cosecha de frutilla y reporte de trazabilidad oficial"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
                     <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
