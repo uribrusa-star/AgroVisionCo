@@ -167,9 +167,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Trazabilidad Agrícola"
-                    previewSrc="/trazabilidad_mockup.jpeg"
-                    mobileSrc="/trazabilidad_mockup.jpeg"
-                    desktopSrc="/trazabilidad_mockup.jpeg"
+                    previewSrc="/trazabilidad_mockup.jpeg?v=2"
+                    mobileSrc="/trazabilidad_mockup.jpeg?v=2"
+                    desktopSrc="/trazabilidad_mockup.jpeg?v=2"
                     altText="Registro de cosecha de frutilla y reporte de trazabilidad oficial"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -245,9 +245,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Gestión de Recolectores y Credenciales QR"
-                    previewSrc="/recolectores_mockup.jpeg"
-                    mobileSrc="/recolectores_mockup.jpeg"
-                    desktopSrc="/recolectores_mockup.jpeg"
+                    previewSrc="/recolectores_mockup.jpeg?v=2"
+                    mobileSrc="/recolectores_mockup.jpeg?v=2"
+                    desktopSrc="/recolectores_mockup.jpeg?v=2"
                     altText="Gestión de cuadrillas de recolectores con credenciales QR en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -265,9 +265,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Ingeniero Agrónomo y Encargados de Campo"
-                    previewSrc="/equipo_ingeniero_encargado_mockup.jpeg"
-                    mobileSrc="/equipo_ingeniero_encargado_mockup.jpeg"
-                    desktopSrc="/equipo_ingeniero_encargado_mockup.jpeg"
+                    previewSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=2"
+                    mobileSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=2"
+                    desktopSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=2"
                     altText="Roles de ingeniero agrónomo y encargado de campo en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -285,9 +285,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Gestión de Embaladores y Control de Empaque"
-                    previewSrc="/embaladores_mockup.jpeg"
-                    mobileSrc="/embaladores_mockup.jpeg"
-                    desktopSrc="/embaladores_mockup.jpeg"
+                    previewSrc="/embaladores_mockup.jpeg?v=2"
+                    mobileSrc="/embaladores_mockup.jpeg?v=2"
+                    desktopSrc="/embaladores_mockup.jpeg?v=2"
                     altText="Gestión de embaladores y credenciales QR de empaque en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">

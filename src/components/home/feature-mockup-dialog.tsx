@@ -33,7 +33,7 @@ export function FeatureMockupDialog({
             alt={altText}
             width={800}
             height={500}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            unoptimized
             className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500"
           />
         </div>
