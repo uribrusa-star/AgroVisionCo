@@ -221,7 +221,7 @@ export default function TraceabilityPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Trazabilidad y Reportes</h1>
-          <p className="text-muted-foreground italic">Historial completo del cultivo y exportación de datos oficiales.</p>
+          <p className="text-muted-foreground">Historial completo del cultivo y exportación de datos oficiales.</p>
         </div>
         <div className="flex items-center gap-2">
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
