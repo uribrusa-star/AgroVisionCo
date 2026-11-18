@@ -16,6 +16,9 @@ import {
   CheckCircle,
   ExternalLink,
   Award,
+  Users,
+  UserCheck,
+  Package,
 } from 'lucide-react';
 import { ContactModal } from '@/components/contact-modal';
 import { WebAnalyticsTracker } from '@/components/web-analytics-tracker';
@@ -211,6 +214,90 @@ export default function Home() {
                   </dt>
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
                     <p className="flex-auto">Administración financiera integral: ingresos por ventas, costos operativos, margen neto, ROI, costo por kilo y liquidación de mano de obra.</p>
+                  </dd>
+                </div>
+
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        {/* Workforce & Roles Management Section */}
+        <section className="py-24 bg-stone-50 dark:bg-stone-900 border-t border-gray-100 dark:border-green-900/40">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-300 border-green-200 dark:border-green-800 px-3.5 py-1 font-semibold text-xs rounded-full inline-flex items-center gap-1.5 mb-4">
+                <Users className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                <span>Gestión de Cuadrillas y Personal</span>
+              </Badge>
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl font-headline">
+                Control de Personal, Roles y Credenciales QR
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-green-200/80">
+                Digitaliza el trabajo en el lote y en el galpón. Cada miembro del equipo cuenta con herramientas a medida y credenciales QR para agilizar la operación y garantizar la transparencia.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+              <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+
+                {/* 1. Recolectores */}
+                <div className="flex flex-col items-start">
+                  <FeatureMockupDialog
+                    title="Gestión de Recolectores y Credenciales QR"
+                    previewSrc="/recolectores_mockup.jpeg"
+                    mobileSrc="/recolectores_mockup.jpeg"
+                    desktopSrc="/recolectores_mockup.jpeg"
+                    altText="Gestión de cuadrillas de recolectores con credenciales QR en AgroVista"
+                  />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <Users className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Cuadrillas de Recolectores
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">
+                      Emisión e impresión de carnets con código QR personal para cada cosechero. Registro ágil de kilos pesados en el surco escaneando la credencial, historial de rendimiento por trabajador y liquidación transparente por kilo cosechado.
+                    </p>
+                  </dd>
+                </div>
+
+                {/* 2. Ingeniero y Encargados */}
+                <div className="flex flex-col items-start">
+                  <FeatureMockupDialog
+                    title="Ingeniero Agrónomo y Encargados de Campo"
+                    previewSrc="/equipo_ingeniero_encargado_mockup.jpeg"
+                    mobileSrc="/equipo_ingeniero_encargado_mockup.jpeg"
+                    desktopSrc="/equipo_ingeniero_encargado_mockup.jpeg"
+                    altText="Roles de ingeniero agrónomo y encargado de campo en AgroVista"
+                  />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Ingeniero y Encargados
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">
+                      Accesos diferenciados por función técnica y operativa. El <strong>Ingeniero</strong> gestiona recetas fitosanitarias, monitoreo fenológico y control de carencia (PHI). El <strong>Encargado</strong> coordina tareas culturales diarias (deshoje, riego, microtúneles) y control de personal en lote.
+                    </p>
+                  </dd>
+                </div>
+
+                {/* 3. Embaladores */}
+                <div className="flex flex-col items-start">
+                  <FeatureMockupDialog
+                    title="Gestión de Embaladores y Control de Empaque"
+                    previewSrc="/embaladores_mockup.jpeg"
+                    mobileSrc="/embaladores_mockup.jpeg"
+                    desktopSrc="/embaladores_mockup.jpeg"
+                    altText="Gestión de embaladores y credenciales QR de empaque en AgroVista"
+                  />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <Package className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Cuadrillas de Embaladores
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">
+                      Control del sector de galpón y empaque con credenciales QR personalizadas. Trazabilidad de cajas y bandejas preparadas por embalador, control de calidad por categoría y cálculo automático de jornales o pago por bulto procesado.
+                    </p>
                   </dd>
                 </div>
 
