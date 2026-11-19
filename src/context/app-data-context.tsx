@@ -1532,7 +1532,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         const batchDocId = `${currentUser?.establishmentId || 'main'}_${newBatch.id}`;
         const batchRef = doc(db, 'batches', batchDocId);
-        setDoc(batchRef, newBatch).catch(error => {
+        setDoc(batchRef, sanitizeForFirestore(newBatch)).catch(error => {
             console.error("Failed to add batch:", error);
             setBatches(prev => prev.filter(b => b.id !== newBatch.id));
             toast({ title: "Error", description: "No se pudo agregar el lote.", variant: "destructive"});
@@ -1546,7 +1546,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             const batchDocId = `${currentUser?.establishmentId || 'main'}_${updatedBatch.id}`;
             const batchRef = doc(db, 'batches', batchDocId);
-            await setDoc(batchRef, updatedBatch, { merge: true });
+            await setDoc(batchRef, sanitizeForFirestore(updatedBatch), { merge: true });
         } catch (error) {
             console.error("Failed to edit batch:", error);
             setBatches(originalBatches);

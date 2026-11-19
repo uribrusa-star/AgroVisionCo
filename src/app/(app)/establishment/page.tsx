@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Droplet, Map, MapPin, Sprout, User, Wind, Briefcase, ChevronRight, Plus, Mountain, TrendingUp, Sun, Ruler, CheckCircle, Pencil, Trash2, Image as ImageIcon, Eye, ExternalLink, Trash } from 'lucide-react';
-import { BatchBuilder } from '@/components/batch-builder';
+import { BatchBuilder, type BatchBuilderData } from '@/components/batch-builder';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppDataContext } from "@/context/app-data-context.tsx";
 import type { EstablishmentData, UserRole } from "@/lib/types";
@@ -301,13 +301,18 @@ export default function EstablishmentPage() {
       }
   };
   
-  const handleBatchBuilderSave = async (points: {lat: number, lng: number}[], batchName: string) => {
+  const handleBatchBuilderSave = async (points: {lat: number, lng: number}[], batchData: BatchBuilderData) => {
       if (!establishmentData) return;
       try {
           const currentGeoJson = parsedGeoJson || { type: "FeatureCollection", features: [] };
           const newFeature = {
               type: "Feature",
-              properties: { [batchName]: `Lote ${batchName}` },
+              properties: { 
+                [batchData.name]: `Lote ${batchData.name}`,
+                variety: batchData.variety || undefined,
+                area: batchData.area || undefined,
+                plantCount: batchData.plantCount || undefined,
+              },
               geometry: {
                   type: "Polygon",
                   coordinates: [ points.map(p => [p.lng, p.lat]) ]
@@ -321,23 +326,36 @@ export default function EstablishmentPage() {
           
           await updateEstablishmentData({ geoJsonData: JSON.stringify(updatedGeoJson) });
           
-          // Calcular el area automaticamente usando Google Maps Geometry Library
-          let calculatedArea: number | undefined = undefined;
-          if (window.google?.maps?.geometry?.spherical) {
-              const path = points.map(p => new window.google.maps.LatLng(p.lat, p.lng));
-              const areaSqMeters = window.google.maps.geometry.spherical.computeArea(path);
-              calculatedArea = parseFloat((areaSqMeters / 10000).toFixed(2));
-          }
-          
-          // Add the batch to the data entry list as well
+          // Formatear fecha de plantación si existe
+          const safePlantingDate = batchData.plantingDate 
+            ? (batchData.plantingDate.length === 10 ? `${batchData.plantingDate}T12:00:00.000Z` : batchData.plantingDate)
+            : undefined;
+
+          // Registrar el lote en la base de datos de lotes
+          const hasAnyDetails = Boolean(batchData.variety || batchData.area !== undefined || batchData.plantCount !== undefined || safePlantingDate);
           addBatch({ 
-             id: batchName, 
-             status: 'pending',
-             varieties: calculatedArea ? [{ name: '', area: calculatedArea, plantCount: undefined, plantingDate: '' }] : []
+             id: batchData.name, 
+             status: (batchData.variety && batchData.plantCount) ? 'completed' : 'pending',
+             varieties: hasAnyDetails ? [{ 
+               name: batchData.variety || '', 
+               area: batchData.area, 
+               plantCount: batchData.plantCount, 
+               plantingDate: safePlantingDate 
+             }] : []
           });
           
-          toast({ title: "¡Lote Creado!", description: `El lote ${batchName} ha sido guardado exitosamente con ${calculatedArea ? calculatedArea + ' ha' : 'superficie pendiente'}.`});
+          const detailParts = [];
+          if (batchData.area !== undefined) detailParts.push(`${batchData.area} ha`);
+          if (batchData.variety) detailParts.push(batchData.variety);
+          if (batchData.plantCount !== undefined) detailParts.push(`${batchData.plantCount.toLocaleString('es-AR')} plantas`);
+
+          const desc = detailParts.length > 0
+            ? `El lote ${batchData.name} ha sido guardado exitosamente (${detailParts.join(' • ')}).`
+            : `El lote ${batchData.name} ha sido guardado en el mapa exitosamente.`;
+
+          toast({ title: "¡Lote Creado!", description: desc });
       } catch (error) {
+          console.error("Error al guardar lote desde el constructor:", error);
           toast({ title: "Error", description: "No se pudo guardar el lote.", variant: "destructive"});
       }
   };

@@ -3,7 +3,6 @@
 import { PageHeader } from "@/components/page-header";
 import { ProductionForm } from "./production-form";
 import { BatchHistory } from "../engineer-log/batch-history";
-import { BatchLogForm } from "../engineer-log/batch-log-form";
 import React, { useState } from "react";
 import { AppDataContext } from "@/context/app-data-context.tsx";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -54,9 +53,8 @@ export default function DataEntryPage() {
             </div>
         )}
 
-        {/* Demás Secciones */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {canManageBatches ? <BatchLogForm /> : <Card><CardHeader><CardTitle>Acceso Denegado</CardTitle><CardContent><p>No tiene permisos para pre-cargar lotes.</p></CardContent></CardHeader></Card>}
+        {/* Gestión e Historial de Lotes */}
+        <div>
             <BatchHistory />
         </div>
         <div>

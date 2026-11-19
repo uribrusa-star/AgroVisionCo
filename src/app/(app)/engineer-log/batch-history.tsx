@@ -17,17 +17,38 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import type { Batch } from '@/lib/types';
+
+const safeFormatDate = (dateVal?: string | null): string => {
+  if (!dateVal) return '';
+  try {
+    const d = new Date(dateVal);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-ES');
+  } catch {
+    return '';
+  }
+};
+
+const safeFormatDateForInput = (dateVal?: string | null): string => {
+  if (!dateVal) return '';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+};
 
 const EditBatchSchema = z.object({
   id: z.string(),
-  preloadedDate: z.string().min(1, "La fecha de precarga es obligatoria"),
+  preloadedDate: z.string().optional().default(''),
   varieties: z.array(z.object({
-    name: z.string().min(1, "El nombre de la variedad es obligatorio"),
-    plantCount: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
-    area: z.number().optional().or(z.literal(0)).transform(val => val === 0 ? undefined : val),
-    plantingDate: z.string().optional(),
+    name: z.string().optional().default(''),
+    plantCount: z.number().optional().nullable().or(z.literal(0)).transform(val => (val === 0 || val === null) ? undefined : val),
+    area: z.number().optional().nullable().or(z.literal(0)).transform(val => (val === 0 || val === null) ? undefined : val),
+    plantingDate: z.string().optional().nullable().transform(val => val || undefined),
   })).min(1, "Debe añadir al menos una variedad"),
 });
 
@@ -52,9 +73,14 @@ export function BatchHistory() {
     if (editingBatch) {
       editForm.reset({
         id: editingBatch.id,
-        preloadedDate: editingBatch.preloadedDate.slice(0, 10),
+        preloadedDate: safeFormatDateForInput(editingBatch.preloadedDate) || new Date().toISOString().split('T')[0],
         varieties: editingBatch.varieties && editingBatch.varieties.length > 0 
-          ? editingBatch.varieties 
+          ? editingBatch.varieties.map(v => ({
+              name: v.name || '',
+              plantCount: v.plantCount ?? undefined,
+              area: v.area ?? undefined,
+              plantingDate: safeFormatDateForInput(v.plantingDate),
+            })) 
           : [{ name: '', plantCount: undefined, area: undefined, plantingDate: '' }],
       });
     }
@@ -64,27 +90,31 @@ export function BatchHistory() {
     if (!editingBatch) return;
     
     // Si la fecha solo tiene YYYY-MM-DD (length 10), le agregamos el mediodía UTC 
-    // para que la conversión a hora local en cualquier país no le reste un día.
-    const safePreloadedDate = data.preloadedDate.length === 10 
+    const safePreloadedDate = (data.preloadedDate && data.preloadedDate.length === 10) 
       ? `${data.preloadedDate}T12:00:00.000Z` 
-      : data.preloadedDate;
+      : (data.preloadedDate || editingBatch.preloadedDate || new Date().toISOString());
     
     const safeVarieties = data.varieties.map(v => ({
-      ...v,
+      name: v.name?.trim() || '',
+      plantCount: v.plantCount,
+      area: v.area,
       plantingDate: v.plantingDate && v.plantingDate.length === 10
         ? `${v.plantingDate}T12:00:00.000Z`
-        : v.plantingDate
+        : (v.plantingDate || undefined)
     }));
     
+    const isCompleted = safeVarieties.some(v => Boolean(v.name && v.plantCount));
+
     await editBatch({
       ...editingBatch,
+      status: isCompleted ? 'completed' : 'pending',
       preloadedDate: safePreloadedDate,
       varieties: safeVarieties,
     });
 
     toast({
       title: "Lote Actualizado",
-      description: `Los datos del lote ${data.id} han sido guardados.`,
+      description: `Los datos del lote ${data.id} han sido guardados exitosamente.`,
     });
     setEditingBatch(null);
   };
@@ -100,57 +130,100 @@ export function BatchHistory() {
     });
   };
   
-  const getBatchStatus = (batchId: string) => {
+  const getBatchHarvestStatus = (batchId: string) => {
       return harvests.some(h => h.batchNumber === batchId || h.batchNumber.split(',').map(s => s.trim()).includes(batchId)) ? 'completed' : 'pending';
-  }
+  };
 
-  const sortedBatches = [...batches].sort((a, b) => new Date(b.preloadedDate).getTime() - new Date(a.preloadedDate).getTime());
+  const isBatchIncomplete = (batch: Batch) => {
+      if (!batch.varieties || batch.varieties.length === 0) return true;
+      return batch.varieties.some(v => !v.name?.trim() || !v.plantCount);
+  };
+
+  const sortedBatches = [...batches].sort((a, b) => {
+    const timeA = a.preloadedDate ? new Date(a.preloadedDate).getTime() : 0;
+    const timeB = b.preloadedDate ? new Date(b.preloadedDate).getTime() : 0;
+    return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+  });
 
   return (
-    <Card>
+    <Card className="w-full">
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
                 <Map className="w-5 h-5 text-primary" />
-                Historial de Lotes
+                Lotes del Establecimiento
             </CardTitle>
-            <CardDescription>Registro de todos los lotes pre-cargados para la cosecha.</CardDescription>
+            <CardDescription>
+                Consulte los lotes delimitados en el mapa, su estado agronómico y complete los datos pendientes de siembra o variedades.
+            </CardDescription>
         </CardHeader>
         <CardContent>
-            <div className="flex flex-col gap-2 max-h-[400px] overflow-auto pr-2">
+            <div className="flex flex-col gap-2 max-h-[500px] overflow-auto pr-2">
                 {loading ? (
                     Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
                 ) : sortedBatches.length === 0 ? (
-                    <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">No hay lotes registrados.</div>
+                    <div className="text-center text-muted-foreground p-8 bg-muted/20 rounded-xl border border-dashed">
+                        No hay lotes registrados. Puede delimitar nuevos lotes desde el mapa en la sección Establecimiento.
+                    </div>
                 ) : (
                     sortedBatches.map(batch => {
-                        const status = getBatchStatus(batch.id);
+                        const harvestStatus = getBatchHarvestStatus(batch.id);
+                        const isIncomplete = isBatchIncomplete(batch);
+                        const varietyNames = (batch.varieties || [])
+                            .map(v => v.name?.trim())
+                            .filter(Boolean)
+                            .join(', ');
+                        const totalPlants = (batch.varieties || []).reduce((sum, v) => sum + (v.plantCount || 0), 0);
+                        const totalArea = (batch.varieties || []).reduce((sum, v) => sum + (v.area || 0), 0);
+                        const firstPlantingDate = batch.varieties?.find(v => v.plantingDate)?.plantingDate;
+
                         return (
                             <div 
                                 key={batch.id} 
-                                className="shrink-0 group flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
+                                className="shrink-0 group flex items-center justify-between p-3.5 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer w-full min-w-0 overflow-hidden"
                                 onClick={() => setViewingBatch(batch)}
                             >
                                 <div className="flex items-center gap-3 min-w-0 w-full overflow-hidden">
                                     <div className="shrink-0 flex items-center justify-center">
-                                        <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0">
+                                        <Badge variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center rounded-full shrink-0 bg-primary/10 text-primary">
                                             <Map className="h-5 w-5" />
                                         </Badge>
                                     </div>
                                     <div className="min-w-0 flex flex-col justify-center flex-1">
-                                        <div className="flex items-center gap-2 mb-0.5">
+                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                                             <span className="font-semibold text-sm truncate leading-none">Lote {batch.id}</span>
-                                            <Badge variant={status === 'completed' ? 'default' : 'secondary'} className="text-[10px] px-1 py-0 h-4 leading-tight">
-                                                {status === 'completed' ? 'Cosechado' : 'Pendiente'}
+                                            <Badge variant={harvestStatus === 'completed' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 h-4 leading-tight">
+                                                {harvestStatus === 'completed' ? 'Cosechado' : 'Pendiente de Cosecha'}
                                             </Badge>
+                                            {isIncomplete ? (
+                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 leading-tight bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-300">
+                                                    Datos Pendientes
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 leading-tight bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-300">
+                                                    Completo
+                                                </Badge>
+                                            )}
                                         </div>
-                                        <div className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
-                                            Precarga: <span className="font-medium text-foreground">{new Date(batch.preloadedDate).toLocaleDateString('es-ES')}</span>
-                                            <span className="mx-1.5 opacity-50">•</span>
-                                            {batch.varieties && batch.varieties.length > 0 ? batch.varieties.map(v => v.name).join(', ') : 'Sin variedades'}
-                                            {batch.varieties && batch.varieties.some(v => v.plantingDate) && (
+                                        <div className="text-xs text-muted-foreground truncate leading-tight w-full block">
+                                            <span className="font-medium text-foreground">
+                                                {varietyNames || 'Sin variedad definida'}
+                                            </span>
+                                            {totalArea > 0 && (
                                                 <>
-                                                  <span className="mx-1.5 opacity-50">•</span>
-                                                  Plantación: <span className="font-medium text-foreground">{new Date(batch.varieties.find(v => v.plantingDate)!.plantingDate!).toLocaleDateString('es-ES')}</span>
+                                                    <span className="mx-1.5 opacity-50">•</span>
+                                                    <span>{totalArea} ha</span>
+                                                </>
+                                            )}
+                                            {totalPlants > 0 && (
+                                                <>
+                                                    <span className="mx-1.5 opacity-50">•</span>
+                                                    <span>{totalPlants.toLocaleString('es-AR')} plantas</span>
+                                                </>
+                                            )}
+                                            {firstPlantingDate && (
+                                                <>
+                                                    <span className="mx-1.5 opacity-50">•</span>
+                                                    Plantación: <span>{safeFormatDate(firstPlantingDate)}</span>
                                                 </>
                                             )}
                                         </div>
@@ -168,45 +241,47 @@ export function BatchHistory() {
                 <DialogHeader>
                     <DialogTitle className="text-2xl text-primary">Detalles del Lote {viewingBatch?.id}</DialogTitle>
                     <DialogDescription>
-                        Información completa de las variedades plantadas y el estado actual.
+                        Información completa de las variedades plantadas, superficie y estado.
                     </DialogDescription>
                 </DialogHeader>
                 {viewingBatch && (
                     <div className="space-y-6 mt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-muted/30 rounded-xl border">
-                                <p className="text-sm text-muted-foreground mb-1">Estado</p>
-                                <Badge variant={getBatchStatus(viewingBatch.id) === 'completed' ? 'default' : 'secondary'} className="text-sm px-3 py-1">
-                                    {getBatchStatus(viewingBatch.id) === 'completed' ? 'Cosechado' : 'Pendiente'}
+                                <p className="text-sm text-muted-foreground mb-1">Cosecha</p>
+                                <Badge variant={getBatchHarvestStatus(viewingBatch.id) === 'completed' ? 'default' : 'secondary'} className="text-xs px-2.5 py-0.5">
+                                    {getBatchHarvestStatus(viewingBatch.id) === 'completed' ? 'Cosechado' : 'Pendiente'}
                                 </Badge>
                             </div>
                             <div className="p-4 bg-muted/30 rounded-xl border">
-                                <p className="text-sm text-muted-foreground mb-1">Fecha de Precarga</p>
-                                <p className="font-medium text-lg">{new Date(viewingBatch.preloadedDate).toLocaleDateString('es-ES')}</p>
+                                <p className="text-sm text-muted-foreground mb-1">Fecha de Alta</p>
+                                <p className="font-medium text-base">{safeFormatDate(viewingBatch.preloadedDate) || 'No registrada'}</p>
                             </div>
                         </div>
 
                         <div>
                             <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-primary rounded-full"></span>
-                                Variedades Plantadas
+                                Variedades y Superficie
                             </h4>
                             {viewingBatch.varieties && viewingBatch.varieties.length > 0 ? (
                                 <div className="space-y-3">
                                     {viewingBatch.varieties.map((v, i) => (
                                         <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:shadow-sm transition-shadow bg-card">
-                                            <div className="font-medium text-primary mb-2 sm:mb-0">{v.name}</div>
+                                            <div className="font-medium text-primary mb-2 sm:mb-0">
+                                                {v.name?.trim() || <span className="italic text-muted-foreground font-normal">Variedad no asignada</span>}
+                                            </div>
                                             <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
-                                                {v.plantCount && <span><strong className="text-foreground">{v.plantCount.toLocaleString()}</strong> plantas</span>}
-                                                {v.area && <span><strong className="text-foreground">{v.area}</strong> ha</span>}
-                                                {v.plantingDate && <span><strong className="text-foreground">{new Date(v.plantingDate).toLocaleDateString('es-ES', { timeZone: 'UTC' })}</strong> (Plantación)</span>}
+                                                {v.area !== undefined && <span><strong className="text-foreground">{v.area}</strong> ha</span>}
+                                                {v.plantCount !== undefined && <span><strong className="text-foreground">{v.plantCount.toLocaleString('es-AR')}</strong> plantas</span>}
+                                                {v.plantingDate && <span><strong className="text-foreground">{safeFormatDate(v.plantingDate)}</strong> (Plantación)</span>}
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="text-center p-6 border rounded-lg border-dashed text-muted-foreground">
-                                    No hay variedades registradas en este lote.
+                                    No hay variedades registradas en este lote. Haga clic en Editar Lote para completar sus datos.
                                 </div>
                             )}
                         </div>
@@ -304,7 +379,7 @@ export function BatchHistory() {
                                                     <FormItem>
                                                         <FormLabel className="text-xs">Variedad</FormLabel>
                                                         <FormControl>
-                                                            <Input {...field} />
+                                                            <Input list="history-strawberry-varieties" placeholder="Ej. San Andreas" {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -321,6 +396,7 @@ export function BatchHistory() {
                                                         <FormControl>
                                                             <Input 
                                                                 type="number" 
+                                                                placeholder="Opcional"
                                                                 {...field} 
                                                                 value={field.value ?? ''}
                                                                 onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
@@ -343,6 +419,7 @@ export function BatchHistory() {
                                                             <Input 
                                                                 type="number" 
                                                                 step="0.01"
+                                                                placeholder="Opcional"
                                                                 {...field} 
                                                                 value={field.value ?? ''}
                                                                 onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
@@ -365,7 +442,7 @@ export function BatchHistory() {
                                                             <Input 
                                                                 type="date" 
                                                                 {...field} 
-                                                                value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                                                                value={safeFormatDateForInput(field.value)}
                                                                 onChange={e => field.onChange(e.target.value || undefined)}
                                                                 className="h-8"
                                                             />
@@ -390,6 +467,17 @@ export function BatchHistory() {
                                     </div>
                                 ))}
                             </div>
+                            <datalist id="history-strawberry-varieties">
+                                <option value="San Andreas" />
+                                <option value="Camarosa" />
+                                <option value="Fronteras" />
+                                <option value="Monterey" />
+                                <option value="Albion" />
+                                <option value="Marisma" />
+                                <option value="Portola" />
+                                <option value="Benicia" />
+                                <option value="Petaluma" />
+                            </datalist>
                             <DialogFooter className="pt-4 flex sm:flex-row gap-2">
                                 <Button type="button" variant="secondary" onClick={() => setEditingBatch(null)} className="w-full sm:w-auto">Cancelar</Button>
                                 <Button type="submit" className="w-full sm:w-auto">Guardar Cambios</Button>

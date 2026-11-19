@@ -5,19 +5,28 @@ import { GoogleMap, useJsApiLoader, Polygon, Circle, Polyline, Marker } from '@r
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { MapPin, Navigation, MousePointer2, Save, Trash2, X, Plus, Undo2, LocateFixed, RefreshCw } from 'lucide-react';
+import { MapPin, Navigation, MousePointer2, Save, Trash2, X, Plus, Undo2, LocateFixed, RefreshCw, Sprout } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const libraries: ("drawing" | "geometry")[] = ["drawing", "geometry"];
 
 type LatLng = { lat: number; lng: number };
 
+export type BatchBuilderData = {
+  name: string;
+  area?: number;
+  variety?: string;
+  plantCount?: number;
+  plantingDate?: string;
+};
+
 type BatchBuilderProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (polygonPoints: LatLng[], batchName: string) => void;
+  onSave: (polygonPoints: LatLng[], batchData: BatchBuilderData) => void;
   initialCenter?: LatLng;
   existingGeoJson?: any;
 };
@@ -47,6 +56,11 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
   const watchIdRef = useRef<number | null>(null);
 
   const [batchName, setBatchName] = useState('');
+  const [batchArea, setBatchArea] = useState('');
+  const [batchVariety, setBatchVariety] = useState('');
+  const [batchPlantCount, setBatchPlantCount] = useState('');
+  const [batchPlantingDate, setBatchPlantingDate] = useState('');
+  const [calculatedHa, setCalculatedHa] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -128,6 +142,11 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
       setMode('idle');
       setCurrentPoints([]);
       setDrawnPolygon(null);
+      setBatchArea('');
+      setBatchVariety('');
+      setBatchPlantCount('');
+      setBatchPlantingDate('');
+      setCalculatedHa(null);
       setIsSaving(false);
     }
   }, [open]);
@@ -235,16 +254,34 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
     const finalPoints = [...currentPoints, { ...currentPoints[0] }];
     setDrawnPolygon(finalPoints);
     setMode('idle');
+
+    // Auto-calculate surface area using Google Maps spherical geometry
+    if (typeof window !== 'undefined' && window.google?.maps?.geometry?.spherical) {
+      const path = finalPoints.map(p => new window.google.maps.LatLng(p.lat, p.lng));
+      const areaSqM = window.google.maps.geometry.spherical.computeArea(path);
+      const inHa = parseFloat((areaSqM / 10000).toFixed(2));
+      setBatchArea(inHa.toString());
+      setCalculatedHa(inHa);
+    }
   };
 
   const handleSave = () => {
     if (!drawnPolygon) return;
     if (!batchName.trim()) {
-      toast({ title: 'Falta el nombre', description: 'Por favor ingrese un nombre para el lote (ej. L001).', variant: 'destructive' });
+      toast({ title: 'Falta el identificador', description: 'Por favor ingrese un identificador para el lote (ej. L001).', variant: 'destructive' });
       return;
     }
     setIsSaving(true);
-    onSave(drawnPolygon, batchName);
+    const parsedArea = batchArea ? parseFloat(batchArea) : (calculatedHa ?? undefined);
+    const parsedPlants = batchPlantCount ? parseInt(batchPlantCount, 10) : undefined;
+
+    onSave(drawnPolygon, {
+      name: batchName.trim().toUpperCase(),
+      area: (parsedArea !== undefined && !isNaN(parsedArea)) ? parsedArea : undefined,
+      variety: batchVariety.trim() || undefined,
+      plantCount: (parsedPlants !== undefined && !isNaN(parsedPlants)) ? parsedPlants : undefined,
+      plantingDate: batchPlantingDate || undefined,
+    });
     onOpenChange(false);
   };
 
@@ -252,6 +289,11 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
     setDrawnPolygon(null);
     setCurrentPoints([]);
     setMode('idle');
+    setBatchArea('');
+    setBatchVariety('');
+    setBatchPlantCount('');
+    setBatchPlantingDate('');
+    setCalculatedHa(null);
   };
 
   if (!isLoaded) return null;
@@ -518,27 +560,100 @@ export function BatchBuilder({ open, onOpenChange, onSave, initialCenter = { lat
              </div>
           </div>
           
-          {/* Bottom Dialog for Naming when completed */}
+          {/* Bottom Dialog for Batch Information when completed */}
           {drawnPolygon && (
             <div className="absolute bottom-4 left-4 right-4 flex justify-center pointer-events-none animate-in slide-in-from-bottom-4 z-30">
-               <Card className="p-4 w-full max-w-md pointer-events-auto shadow-xl border-primary">
-                  <h3 className="font-bold text-lg mb-2 text-primary">Lote Definido</h3>
-                  <p className="text-sm text-muted-foreground mb-4">El polígono se ha trazado correctamente ({currentPoints.length} vértices). Asigne un identificador para guardarlo.</p>
+               <Card className="p-4 w-full max-w-xl pointer-events-auto shadow-2xl border-primary bg-background/95 backdrop-blur-md max-h-[80vh] overflow-y-auto">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <h3 className="font-bold text-lg text-primary">Lote Delimitado</h3>
+                    </div>
+                    {calculatedHa !== null && (
+                      <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 border-emerald-300 font-semibold">
+                        {calculatedHa} ha calculadas
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Polígono trazado ({currentPoints.length} vértices). Asigne el identificador y los datos agronómicos que conozca. Los campos vacíos podrán completarse luego en Entrada de Datos.
+                  </p>
                   
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Identificador del Lote</Label>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold">Identificador del Lote <span className="text-destructive">*</span></Label>
+                        <Input 
+                          value={batchName} 
+                          onChange={(e) => setBatchName(e.target.value)} 
+                          placeholder="Ej. L001" 
+                          className="font-bold uppercase h-9"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold">Superficie (ha)</Label>
+                        <Input 
+                          type="number"
+                          step="0.01"
+                          value={batchArea} 
+                          onChange={(e) => setBatchArea(e.target.value)} 
+                          placeholder="Ej. 0.50" 
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold">Variedad Principal</Label>
+                        <Input 
+                          list="strawberry-varieties"
+                          value={batchVariety} 
+                          onChange={(e) => setBatchVariety(e.target.value)} 
+                          placeholder="Ej. San Andreas" 
+                          className="h-9"
+                        />
+                        <datalist id="strawberry-varieties">
+                          <option value="San Andreas" />
+                          <option value="Camarosa" />
+                          <option value="Fronteras" />
+                          <option value="Monterey" />
+                          <option value="Albion" />
+                          <option value="Marisma" />
+                          <option value="Portola" />
+                          <option value="Benicia" />
+                          <option value="Petaluma" />
+                        </datalist>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold">Cantidad de Plantas</Label>
+                        <Input 
+                          type="number"
+                          value={batchPlantCount} 
+                          onChange={(e) => setBatchPlantCount(e.target.value)} 
+                          placeholder="Ej. 25000" 
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold">Fecha de Plantación</Label>
                       <Input 
-                        value={batchName} 
-                        onChange={(e) => setBatchName(e.target.value)} 
-                        placeholder="Ej. L001" 
-                        className="font-bold uppercase"
+                        type="date"
+                        value={batchPlantingDate} 
+                        onChange={(e) => setBatchPlantingDate(e.target.value)} 
+                        className="h-9"
                       />
                     </div>
                     
-                    <div className="flex gap-2 justify-end">
-                       <Button variant="outline" onClick={handleClear}><Trash2 className="h-4 w-4 mr-2" /> Descartar</Button>
-                       <Button onClick={handleSave} disabled={isSaving || !batchName}><Save className="h-4 w-4 mr-2" /> Guardar Lote</Button>
+                    <div className="flex gap-2 justify-end pt-2">
+                       <Button variant="outline" size="sm" onClick={handleClear} disabled={isSaving}>
+                         <Trash2 className="h-4 w-4 mr-1.5" /> Descartar
+                       </Button>
+                       <Button size="sm" onClick={handleSave} disabled={isSaving || !batchName.trim()} className="bg-primary font-semibold">
+                         <Save className="h-4 w-4 mr-1.5" /> Guardar Lote
+                       </Button>
                     </div>
                   </div>
                </Card>
