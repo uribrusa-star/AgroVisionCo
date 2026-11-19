@@ -184,6 +184,50 @@ export default function EstablishmentPage() {
     }
   }, [totalBatchStrawberryArea]);
 
+  // Auto-calculate plant density from total plants in batches and strawberry area
+  const calculatedDensityInfo = React.useMemo(() => {
+    if (!batches || batches.length === 0) return null;
+    const totalPlants = batches.reduce((sum, batch) => {
+      const varietyPlants = (batch.varieties || []).reduce((s, v) => s + (Number(v.plantCount) || 0), 0);
+      const rootPlants = Number((batch as any).plantCount) || 0;
+      return sum + (varietyPlants > 0 ? varietyPlants : rootPlants);
+    }, 0);
+
+    if (totalPlants <= 0) return null;
+
+    const area = totalBatchStrawberryArea !== null ? totalBatchStrawberryArea : (establishmentData?.area?.strawberry || 0);
+
+    if (area > 0) {
+      const density = Math.round(totalPlants / area);
+      return {
+        densityString: `${density.toLocaleString('es-AR')} plantas/ha`,
+        totalPlants,
+        area,
+        density,
+      };
+    }
+
+    return {
+      densityString: `${totalPlants.toLocaleString('es-AR')} plantas`,
+      totalPlants,
+      area: 0,
+      density: totalPlants,
+    };
+  }, [batches, totalBatchStrawberryArea, establishmentData?.area?.strawberry]);
+
+  // Sync auto-calculated density to Firestore when it changes
+  React.useEffect(() => {
+    if (
+      calculatedDensityInfo &&
+      establishmentData &&
+      calculatedDensityInfo.densityString !== establishmentData.planting?.density
+    ) {
+      updateEstablishmentData({
+        planting: { ...establishmentData.planting, density: calculatedDensityInfo.densityString }
+      });
+    }
+  }, [calculatedDensityInfo]);
+
   const geoJsonForm = useForm<z.infer<typeof geoJsonSchema>>({
     resolver: zodResolver(geoJsonSchema),
     defaultValues: {
@@ -457,7 +501,16 @@ export default function EstablishmentPage() {
             <InfoItem label="Variedades" value={establishmentData.planting.variety} />
             <InfoItem label="Fecha de Plantación" value={new Date(establishmentData.planting.date).toLocaleDateString('es-ES', { timeZone: 'UTC' })} />
             <InfoItem label="Origen de Plantas" value={establishmentData.planting.origin} />
-            <InfoItem label="Densidad" value={establishmentData.planting.density} />
+            <InfoItem label="Densidad" value={
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  <span>{calculatedDensityInfo ? calculatedDensityInfo.densityString : establishmentData.planting.density}</span>
+                  {calculatedDensityInfo && (
+                    <span className="text-xs font-normal text-muted-foreground">
+                      ({calculatedDensityInfo.totalPlants.toLocaleString('es-AR')} plantas{calculatedDensityInfo.area > 0 ? ` en ${calculatedDensityInfo.area} ha` : ''})
+                    </span>
+                  )}
+                </span>
+            } />
         </InfoCard>
 
         <InfoCard title="Manejo y Cosecha" icon={Wind} onEdit={() => handleEdit('management')} editableBy={agronomistAccess}>
@@ -599,7 +652,11 @@ export default function EstablishmentPage() {
           title="Implantación del Cultivo"
           description="Detalles sobre la variedad, fecha y densidad de plantación."
           schema={plantingSchema}
-          defaultValues={{ ...establishmentData.planting, date: establishmentData.planting.date.split('T')[0] }}
+          defaultValues={{ 
+            ...establishmentData.planting, 
+            date: establishmentData.planting.date.split('T')[0],
+            density: calculatedDensityInfo ? calculatedDensityInfo.densityString : establishmentData.planting.density,
+          }}
           onSubmit={(values) => handleSubmit('planting', values)}
       >
           {(form: any) => (
@@ -628,7 +685,18 @@ export default function EstablishmentPage() {
                   )} />
                   <FormField control={form.control} name="date" render={({ field }) => ( <FormItem> <FormLabel>Fecha de Plantación</FormLabel> <FormControl><Input type="date" {...field} /></FormControl> <FormMessage /> </FormItem> )} />
                   <FormField control={form.control} name="origin" render={({ field }) => ( <FormItem> <FormLabel>Origen de Plantas</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
-                  <FormField control={form.control} name="density" render={({ field }) => ( <FormItem> <FormLabel>Densidad</FormLabel> <FormControl><Input {...field} /></FormControl> <FormMessage /> </FormItem> )} />
+                  <FormField control={form.control} name="density" render={({ field }) => ( 
+                    <FormItem> 
+                      <FormLabel>Densidad</FormLabel> 
+                      <FormControl><Input {...field} /></FormControl> 
+                      {calculatedDensityInfo && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Calculado según lotes cargados: {calculatedDensityInfo.densityString} ({calculatedDensityInfo.totalPlants.toLocaleString('es-AR')} plantas{calculatedDensityInfo.area > 0 ? ` en ${calculatedDensityInfo.area} ha` : ''}).
+                        </p>
+                      )}
+                      <FormMessage /> 
+                    </FormItem> 
+                  )} />
               </>
           )}
       </EditDialog>
