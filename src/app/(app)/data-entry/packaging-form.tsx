@@ -138,21 +138,22 @@ export function PackagingForm() {
   return (
     <div className="grid lg:grid-cols-2 gap-8">
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between pb-4">
-          <div>
-            <CardTitle>Registrar Costo de Embalaje</CardTitle>
-            <CardDescription>Ingrese los detalles del trabajo de embalaje y calcule el costo.</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
+          <div className="space-y-1 w-full">
+            <CardTitle className="text-xl font-bold">Registrar Costo de Embalaje</CardTitle>
+            <CardDescription className="w-full text-sm">
+              Ingrese los detalles del trabajo de embalaje y calcule el costo.
+            </CardDescription>
           </div>
           {canManage && (
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() => setIsQRScannerOpen(true)}
               disabled={isPending}
-              className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 shrink-0"
+              className="w-full sm:w-auto h-10 gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 shrink-0 font-medium text-sm shadow-xs justify-center"
             >
-              <QrCode className="h-4 w-4" />
+              <QrCode className="h-4 w-4 shrink-0" />
               Escanear QR
             </Button>
           )}

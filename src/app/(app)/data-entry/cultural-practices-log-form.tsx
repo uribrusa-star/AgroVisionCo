@@ -152,21 +152,22 @@ export function CulturalPracticesLogForm() {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-start justify-between pb-4">
-          <div>
-            <CardTitle>Registrar Pago de Labores Culturales</CardTitle>
-            <CardDescription>Registre la labor, el personal, el lote y el costo asociado a la tarea.</CardDescription>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4">
+          <div className="space-y-1 w-full">
+            <CardTitle className="text-xl font-bold">Registrar Pago de Labores Culturales</CardTitle>
+            <CardDescription className="w-full text-sm">
+              Registre la labor, el personal, el lote y el costo asociado a la tarea.
+            </CardDescription>
           </div>
           {canManage && (
             <Button
               type="button"
               variant="outline"
-              size="sm"
               onClick={() => setIsQRScannerOpen(true)}
               disabled={isPending}
-              className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 shrink-0"
+              className="w-full sm:w-auto h-10 gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 shrink-0 font-medium text-sm shadow-xs justify-center"
             >
-              <QrCode className="h-4 w-4" />
+              <QrCode className="h-4 w-4 shrink-0" />
               Escanear QR
             </Button>
           )}
