@@ -228,8 +228,8 @@ ${phenologyLogs.slice(0, 5).map(p => `- ${new Date(p.date).toLocaleDateString()}
   };
 
   return (
-    <Card className="flex flex-col h-[600px] border-primary/20 bg-gradient-to-b from-background to-primary/5">
-      <CardHeader className="border-b bg-card/50 backdrop-blur-sm">
+    <Card className="flex flex-col h-[600px] border-primary/20 bg-gradient-to-b from-background to-primary/5 overflow-hidden rounded-xl shadow-sm">
+      <CardHeader className="border-b bg-card/50 backdrop-blur-sm rounded-t-xl">
         <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
                 <div className="bg-primary/10 p-2 rounded-full">
