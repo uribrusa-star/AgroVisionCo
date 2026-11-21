@@ -1,10 +1,17 @@
-import type {Metadata} from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppContextProvider } from '@/context/app-data-context.tsx';
 import { InternalUserFlag } from '@/components/internal-user-flag';
 import { ThemeProvider } from "@/components/theme-provider";
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 const inter = Inter({
   subsets: ['latin'],

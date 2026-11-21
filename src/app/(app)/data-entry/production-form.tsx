@@ -1,7 +1,7 @@
 'use client';
 
 import { useContext, useMemo, useState, useTransition } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -47,8 +47,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
   const [validationAlert, setValidationAlert] = useState<{ open: boolean; reason: string; data: ProductionFormValues | null }>({ open: false, reason: '', data: null });
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   
-  // Tarifa base del día (editable en un solo lugar)
-  const [baseRate, setBaseRate] = useState<number>(35);
+  // Tarifa base del día (soporta string mientras se tipea para evitar saltos y números raros)
+  const [baseRate, setBaseRate] = useState<string | number>(35);
 
   const canManage = currentUser?.role === 'Productor' || currentUser?.role === 'Encargado';
 
@@ -67,13 +67,27 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
     },
   });
 
-  const paymentType = form.watch('paymentType') || 'kilo';
-  const watchedCollectors = form.watch('collectors');
+  // useWatch garantiza reactividad instantánea en el componente padre con cada tecla ingresada
+  const watchedPaymentType = useWatch({
+    control: form.control,
+    name: 'paymentType',
+  }) || 'kilo';
+
+  const watchedCollectors = useWatch({
+    control: form.control,
+    name: 'collectors',
+  });
 
   const { fields: collectorFields, append: appendCollector, remove: removeCollector } = useFieldArray({
     control: form.control,
     name: "collectors"
   });
+
+  // Tarifa numérica validada
+  const numericBaseRate = useMemo(() => {
+    const parsed = typeof baseRate === 'number' ? baseRate : parseFloat(baseRate);
+    return !isNaN(parsed) && parsed > 0 ? parsed : (watchedPaymentType === 'hour' ? 3500 : 35);
+  }, [baseRate, watchedPaymentType]);
 
   // Cambiar modalidad de pago y sincronizar tarifa predeterminada
   const handleModeChange = (mode: 'kilo' | 'hour') => {
@@ -82,20 +96,23 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
     setBaseRate(newRate);
     const currentCollectors = form.getValues('collectors') || [];
     currentCollectors.forEach((_, idx) => {
-      form.setValue(`collectors.${idx}.ratePerKg`, newRate);
+      form.setValue(`collectors.${idx}.ratePerKg`, newRate, { shouldValidate: true, shouldDirty: true });
       if (mode === 'hour') {
-        form.setValue(`collectors.${idx}.hoursWorked`, 8);
+        form.setValue(`collectors.${idx}.hoursWorked`, 8, { shouldValidate: true, shouldDirty: true });
       }
     });
   };
 
-  // Modificar la tarifa base y actualizar las filas
-  const handleBaseRateChange = (newRate: number) => {
-    setBaseRate(newRate);
-    const currentCollectors = form.getValues('collectors') || [];
-    currentCollectors.forEach((_, idx) => {
-      form.setValue(`collectors.${idx}.ratePerKg`, newRate, { shouldValidate: true, shouldDirty: true });
-    });
+  // Modificar la tarifa base y actualizar todas las filas en tiempo real
+  const handleBaseRateChange = (rawVal: string) => {
+    setBaseRate(rawVal);
+    const num = parseFloat(rawVal);
+    if (!isNaN(num) && num > 0) {
+      const currentCollectors = form.getValues('collectors') || [];
+      currentCollectors.forEach((_, idx) => {
+        form.setValue(`collectors.${idx}.ratePerKg`, num, { shouldValidate: true, shouldDirty: true });
+      });
+    }
   };
 
   const handleScanSuccess = (decodedText: string) => {
@@ -123,7 +140,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
           collectorId: matched.id, 
           kilosPerBatch: 0, 
           hoursWorked: 8, 
-          ratePerKg: baseRate 
+          ratePerKg: numericBaseRate 
         });
       }
 
@@ -160,41 +177,54 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
     });
   }, [availableBatches, agronomistLogs, selectedHarvestDate]);
 
-  // Cálculos de totales
+  // Cálculos de totales reactivos con parseFloat estricto
   const totalKilos = useMemo(() => {
-    return (watchedCollectors || []).reduce((acc, c) => acc + (Number(c?.kilosPerBatch) || 0), 0);
+    if (!watchedCollectors || !Array.isArray(watchedCollectors)) return 0;
+    return watchedCollectors.reduce((acc, c) => {
+      const val = parseFloat(String(c?.kilosPerBatch || 0));
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
   }, [watchedCollectors]);
 
   const totalHours = useMemo(() => {
-    return (watchedCollectors || []).reduce((acc, c) => acc + (Number(c?.hoursWorked) || 0), 0);
+    if (!watchedCollectors || !Array.isArray(watchedCollectors)) return 0;
+    return watchedCollectors.reduce((acc, c) => {
+      const val = parseFloat(String(c?.hoursWorked || 0));
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
   }, [watchedCollectors]);
 
   const totalPayment = useMemo(() => {
-    return (watchedCollectors || []).reduce((acc, c) => {
-      const k = Number(c?.kilosPerBatch) || 0;
-      const h = Number(c?.hoursWorked) || 0;
-      const r = Number(c?.ratePerKg) || baseRate;
-      return acc + (paymentType === 'hour' ? h * r : k * r);
+    if (!watchedCollectors || !Array.isArray(watchedCollectors)) return 0;
+    return watchedCollectors.reduce((acc, c) => {
+      const k = parseFloat(String(c?.kilosPerBatch || 0)) || 0;
+      const h = parseFloat(String(c?.hoursWorked || 0)) || 0;
+      const parsedR = parseFloat(String(c?.ratePerKg));
+      const r = !isNaN(parsedR) && parsedR > 0 ? parsedR : numericBaseRate;
+      return acc + (watchedPaymentType === 'hour' ? h * r : k * r);
     }, 0);
-  }, [watchedCollectors, paymentType, baseRate]);
+  }, [watchedCollectors, watchedPaymentType, numericBaseRate]);
 
   const saveHarvestData = (values: ProductionFormValues) => {
     startTransition(async () => {
       const pType = values.paymentType || 'kilo';
       const harvestsData = values.collectors.map(cEntry => {
          const collector = collectors.find(c => c.id === cEntry.collectorId);
+         const parsedRate = parseFloat(String(cEntry.ratePerKg));
+         const effectiveRate = !isNaN(parsedRate) && parsedRate > 0 ? parsedRate : numericBaseRate;
+
          return {
            harvest: {
              date: values.date.toISOString(),
              batchNumber: values.batchIds.join(', '),
-             kilograms: pType === 'hour' ? (cEntry.kilosPerBatch || 0) : cEntry.kilosPerBatch,
+             kilograms: pType === 'hour' ? (parseFloat(String(cEntry.kilosPerBatch)) || 0) : (parseFloat(String(cEntry.kilosPerBatch)) || 0),
              collector: {
                id: cEntry.collectorId,
                name: collector?.name || 'Unknown'
              }
            },
-           hoursWorked: pType === 'hour' ? cEntry.hoursWorked : (cEntry.hoursWorked || 8),
-           ratePerKg: cEntry.ratePerKg || baseRate,
+           hoursWorked: pType === 'hour' ? (parseFloat(String(cEntry.hoursWorked)) || 8) : (parseFloat(String(cEntry.hoursWorked)) || 8),
+           ratePerKg: effectiveRate,
            paymentType: pType,
          };
       });
@@ -213,7 +243,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
              collectorId: '',
              kilosPerBatch: 0,
              hoursWorked: 8,
-             ratePerKg: baseRate
+             ratePerKg: numericBaseRate
           }]
       });
     });
@@ -271,7 +301,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                             <Button
                               variant={"outline"}
                               className={cn(
-                                "w-full justify-start pl-3 text-left font-normal h-10",
+                                "w-full justify-start pl-3 text-left font-normal h-10 text-base md:text-sm",
                                 !field.value && "text-muted-foreground"
                               )}
                               disabled={!canManage || isPending}
@@ -337,7 +367,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                       onClick={() => handleModeChange('kilo')}
                       className={cn(
                         "px-3 sm:px-4 py-2 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 sm:gap-2",
-                        paymentType === 'kilo' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                        watchedPaymentType === 'kilo' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <Scale className="h-4 w-4" />
@@ -348,7 +378,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                       onClick={() => handleModeChange('hour')}
                       className={cn(
                         "px-3 sm:px-4 py-2 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 sm:gap-2",
-                        paymentType === 'hour' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                        watchedPaymentType === 'hour' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <Clock className="h-4 w-4" />
@@ -361,7 +391,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="space-y-1.5">
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                      Tarifa General ({paymentType === 'hour' ? '$/hora' : '$/kg'})
+                      Tarifa General ({watchedPaymentType === 'hour' ? '$/hora' : '$/kg'})
                     </span>
                     <div className="relative w-36">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">$</span>
@@ -370,8 +400,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                         min="0"
                         step="any"
                         value={baseRate}
-                        onChange={(e) => handleBaseRateChange(Number(e.target.value) || 0)}
-                        className="pl-7 pr-3 h-10 font-bold text-foreground text-sm"
+                        onChange={(e) => handleBaseRateChange(e.target.value)}
+                        className="pl-7 pr-3 h-10 font-bold text-foreground text-base"
                         disabled={!canManage || isPending}
                       />
                     </div>
@@ -402,16 +432,17 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                     Cosecheros Asignados ({collectorFields.length})
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {paymentType === 'hour' ? 'Liquidación según horas trabajadas' : 'Liquidación según kilos cosechados'}
+                    {watchedPaymentType === 'hour' ? 'Liquidación según horas trabajadas' : 'Liquidación según kilos cosechados'}
                   </span>
                 </div>
 
                 {collectorFields.map((field, index) => {
                   const entry = watchedCollectors?.[index];
-                  const rowKilos = Number(entry?.kilosPerBatch) || 0;
-                  const rowHours = Number(entry?.hoursWorked) || 0;
-                  const rowRate = Number(entry?.ratePerKg) || baseRate;
-                  const rowSubtotal = paymentType === 'hour' ? rowHours * rowRate : rowKilos * rowRate;
+                  const rowKilos = parseFloat(String(entry?.kilosPerBatch || 0)) || 0;
+                  const rowHours = parseFloat(String(entry?.hoursWorked || 0)) || 0;
+                  const parsedRate = parseFloat(String(entry?.ratePerKg));
+                  const rowRate = !isNaN(parsedRate) && parsedRate > 0 ? parsedRate : numericBaseRate;
+                  const rowSubtotal = watchedPaymentType === 'hour' ? rowHours * rowRate : rowKilos * rowRate;
 
                   return (
                     <div 
@@ -427,7 +458,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                             <FormItem className="space-y-1">
                               <FormLabel className="text-xs text-muted-foreground font-medium flex items-center justify-between">
                                 <span>Recolector #{index + 1}</span>
-                                {rowRate !== baseRate && (
+                                {parsedRate !== numericBaseRate && !isNaN(parsedRate) && (
                                   <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
                                     Tarifa esp: ${rowRate.toLocaleString('es-AR')}
                                   </span>
@@ -435,7 +466,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                               </FormLabel>
                               <Select onValueChange={colField.onChange} value={colField.value} disabled={!canManage || isPending}>
                                 <FormControl>
-                                  <SelectTrigger className="h-10">
+                                  <SelectTrigger className="h-10 text-base md:text-sm">
                                     <SelectValue placeholder="Seleccione cosechero..." />
                                   </SelectTrigger>
                                 </FormControl>
@@ -453,7 +484,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
 
                       {/* Input Principal según modalidad */}
                       <div className="w-full md:w-44">
-                        {paymentType === 'kilo' ? (
+                        {watchedPaymentType === 'kilo' ? (
                           <FormField
                             control={form.control}
                             name={`collectors.${index}.kilosPerBatch`}
@@ -468,6 +499,9 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                                       min="0"
                                       placeholder="0.0"
                                       {...kgField}
+                                      onChange={(e) => {
+                                        kgField.onChange(e);
+                                      }}
                                       disabled={!canManage || isPending}
                                       className="h-10 pr-9 text-base font-bold"
                                     />
@@ -489,10 +523,13 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                                   <div className="relative">
                                     <Input
                                       type="number"
-                                      step="0.5"
-                                      min="0.5"
+                                      step="any"
+                                      min="0"
                                       placeholder="8"
                                       {...hField}
+                                      onChange={(e) => {
+                                        hField.onChange(e);
+                                      }}
                                       disabled={!canManage || isPending}
                                       className="h-10 pr-9 text-base font-bold"
                                     />
@@ -510,7 +547,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                       <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-4 border-t md:border-t-0">
                         <div className="text-left md:text-right min-w-[110px]">
                           <div className="text-[11px] text-muted-foreground font-medium">
-                            {paymentType === 'hour' 
+                            {watchedPaymentType === 'hour' 
                               ? `${rowHours} hs × $${rowRate.toLocaleString('es-AR')}`
                               : `${rowKilos} kg × $${rowRate.toLocaleString('es-AR')}`
                             }
@@ -529,7 +566,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                               size="icon"
                               className={cn(
                                 "h-9 w-9 shrink-0",
-                                rowRate !== baseRate ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground hover:text-foreground"
+                                parsedRate !== numericBaseRate && !isNaN(parsedRate) ? "text-amber-600 dark:text-amber-400 font-bold" : "text-muted-foreground hover:text-foreground"
                               )}
                               title="Modificar tarifa para este cosechero"
                               disabled={!canManage || isPending}
@@ -540,21 +577,21 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                           <PopoverContent className="w-56 p-3" align="end">
                             <div className="space-y-2">
                               <label className="text-xs font-semibold text-foreground">
-                                Tarifa especial ($/{paymentType === 'hour' ? 'h' : 'kg'}):
+                                Tarifa especial ($/{watchedPaymentType === 'hour' ? 'h' : 'kg'}):
                               </label>
                               <Input
                                 type="number"
                                 min="0"
                                 step="any"
-                                value={entry?.ratePerKg ?? baseRate}
+                                value={entry?.ratePerKg ?? numericBaseRate}
                                 onChange={(e) => {
-                                  const val = Number(e.target.value) || 0;
-                                  form.setValue(`collectors.${index}.ratePerKg`, val, { shouldValidate: true, shouldDirty: true });
+                                  const val = parseFloat(e.target.value) || 0;
+                                  form.setValue(`collectors.${index}.ratePerKg`, val, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                                 }}
-                                className="h-9 font-semibold"
+                                className="h-10 font-semibold text-base"
                               />
                               <p className="text-[11px] text-muted-foreground">
-                                Tarifa general del día: ${baseRate}
+                                Tarifa general del día: ${numericBaseRate}
                               </p>
                             </div>
                           </PopoverContent>
@@ -589,7 +626,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                         collectorId: '', 
                         kilosPerBatch: 0, 
                         hoursWorked: 8, 
-                        ratePerKg: baseRate 
+                        ratePerKg: numericBaseRate 
                       })}
                       disabled={isPending}
                       className="flex-1 h-11 border-dashed border-2 hover:border-primary/50 text-sm font-medium gap-2"
@@ -616,20 +653,22 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
             {canManage && (
               <CardFooter className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-muted/20 border-t pt-4">
                 <div className="flex items-center gap-4 text-sm flex-wrap">
-                  {paymentType === 'kilo' ? (
-                    <div>
-                      <span className="text-muted-foreground">Kilos Totales: </span>
-                      <strong className="text-foreground text-base">
-                        {totalKilos.toLocaleString('es-AR')} kg
-                      </strong>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-muted-foreground">Horas Totales: </span>
-                      <strong className="text-foreground text-base">
-                        {totalHours.toLocaleString('es-AR')} hs
-                      </strong>
-                    </div>
+                  <div>
+                    <span className="text-muted-foreground">Kilos Totales: </span>
+                    <strong className="text-foreground text-base">
+                      {totalKilos.toLocaleString('es-AR')} kg
+                    </strong>
+                  </div>
+                  {watchedPaymentType === 'hour' && (
+                    <>
+                      <span className="opacity-40">•</span>
+                      <div>
+                        <span className="text-muted-foreground">Horas Totales: </span>
+                        <strong className="text-foreground text-base">
+                          {totalHours.toLocaleString('es-AR')} hs
+                        </strong>
+                      </div>
+                    </>
                   )}
                   <span className="opacity-40">•</span>
                   <div>
