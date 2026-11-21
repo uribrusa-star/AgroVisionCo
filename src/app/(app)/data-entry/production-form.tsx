@@ -51,6 +51,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
   const [validationAlert, setValidationAlert] = useState<{ open: boolean; reason: string; data: ProductionFormValues | null }>({ open: false, reason: '', data: null });
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
 
+  const canManage = currentUser?.role === 'Productor' || currentUser?.role === 'Encargado';
+
   const form = useForm<ProductionFormValues>({
     resolver: zodResolver(ProductionSchema),
     defaultValues: {
