@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { useToast } from '@/hooks/use-toast';
 import type { CollectorPaymentLog } from '@/lib/types';
-import { generateA4TraceabilitySheetPDF, generateA4SheetFromImageDataUrl } from '@/lib/pdf-generator';
+import { generateA4TraceabilitySheetPDF, generateA4SheetFromImageDataUrl, saveOrSharePdf } from '@/lib/pdf-generator';
 
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: any) => jsPDF;
@@ -243,8 +243,9 @@ function ProductionPaymentHistoryComponent() {
         doc.setTextColor(150);
         doc.text('Este es un comprobante no válido como factura.', 105, 280, { align: 'center' });
 
-        doc.save(`Recibo_Pago_${selectedLog.collectorName.replace(/\s+/g, '_')}.pdf`);
-        toast({ title: '¡Recibo Generado!', description: 'El archivo PDF se ha descargado.' });
+        const fileName = `Recibo_Pago_${selectedLog.collectorName.replace(/\s+/g, '_')}.pdf`;
+        await saveOrSharePdf(doc, fileName, 'Recibo de Pago');
+        toast({ title: '¡Recibo Listo!', description: 'El comprobante ha sido generado correctamente.' });
 
       } catch (error) {
         console.error("PDF error:", error);
@@ -433,6 +434,11 @@ function ProductionPaymentHistoryComponent() {
           if (!isOpen) {
               setSelectedLog(null);
               setIsEditing(false);
+              if (typeof document !== 'undefined') {
+                setTimeout(() => {
+                  document.body.style.pointerEvents = '';
+                }, 50);
+              }
           }
       }}>
         <DialogContent className="max-w-[95vw] sm:max-w-xl rounded-lg">
@@ -559,7 +565,14 @@ function ProductionPaymentHistoryComponent() {
                     </>
                 ) : (
                     <>
-                        <Button onClick={() => setSelectedLog(null)} variant="secondary" className="w-full order-1 shadow-sm">
+                        <Button onClick={() => {
+                          setSelectedLog(null);
+                          if (typeof document !== 'undefined') {
+                            setTimeout(() => {
+                              document.body.style.pointerEvents = '';
+                            }, 50);
+                          }
+                        }} variant="secondary" className="w-full order-1 shadow-sm">
                         Cerrar
                         </Button>
 

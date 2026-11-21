@@ -183,6 +183,29 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }
     }, [currentUser]);
 
+    // Fix global para iOS: desbloquear interacción táctil si un modal o visor de PDF dejó pointer-events bloqueado
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+
+      const unlockBodyTouch = () => {
+        setTimeout(() => {
+          if (document.body && document.body.style.pointerEvents === 'none') {
+            document.body.style.pointerEvents = '';
+          }
+        }, 50);
+      };
+
+      window.addEventListener('focus', unlockBodyTouch);
+      window.addEventListener('pageshow', unlockBodyTouch);
+      window.addEventListener('visibilitychange', unlockBodyTouch);
+
+      return () => {
+        window.removeEventListener('focus', unlockBodyTouch);
+        window.removeEventListener('pageshow', unlockBodyTouch);
+        window.removeEventListener('visibilitychange', unlockBodyTouch);
+      };
+    }, []);
+
     const fetchAllData = useCallback(async (silent = true) => {
       if (!isClient) return;
       if (!silent) setLoading(true);

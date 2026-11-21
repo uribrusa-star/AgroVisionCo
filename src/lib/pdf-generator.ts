@@ -1729,7 +1729,42 @@ export const generateSubscriptionReceiptPDF = (
   doc.save(`Factura_Suscripcion_${producerName.replace(/\s+/g, "_")}.pdf`);
 };
 
-export const generateA4SheetFromImageDataUrl = (
+export const saveOrSharePdf = async (doc: jsPDF, defaultFileName: string, title: string = 'Documento PDF') => {
+  const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+  if (isIOS && navigator.share && navigator.canShare) {
+    try {
+      const blob = doc.output('blob');
+      const file = new File([blob], defaultFileName, { type: 'application/pdf' });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title,
+        });
+        if (typeof document !== 'undefined') {
+          document.body.style.pointerEvents = '';
+        }
+        return;
+      }
+    } catch (e: any) {
+      if (e.name === 'AbortError') {
+        if (typeof document !== 'undefined') {
+          document.body.style.pointerEvents = '';
+        }
+        return;
+      }
+    }
+  }
+
+  doc.save(defaultFileName);
+  if (typeof document !== 'undefined') {
+    setTimeout(() => {
+      document.body.style.pointerEvents = '';
+    }, 100);
+  }
+};
+
+export const generateA4SheetFromImageDataUrl = async (
   imageDataUrl: string,
   batchNumber: string | number
 ) => {
@@ -1748,7 +1783,7 @@ export const generateA4SheetFromImageDataUrl = (
     }
   }
 
-  doc.save(`Planilla_8_Etiquetas_Lote_${batchNumber}.pdf`);
+  await saveOrSharePdf(doc, `Planilla_8_Etiquetas_Lote_${batchNumber}.pdf`, 'Planilla de Etiquetas');
 };
 
 export const generateA4TraceabilitySheetPDF = async (
@@ -1893,6 +1928,6 @@ export const generateA4TraceabilitySheetPDF = async (
     }
   }
 
-  doc.save(`Planilla_8_Etiquetas_Lote_${batchNumber}.pdf`);
+  await saveOrSharePdf(doc, `Planilla_8_Etiquetas_Lote_${batchNumber}.pdf`, 'Planilla de Etiquetas');
 };
 
