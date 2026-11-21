@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Maximize2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,15 +28,21 @@ export function FeatureMockupDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group">
+        <div className="rounded-2xl mb-6 shadow-md overflow-hidden ring-1 ring-gray-200/80 dark:ring-gray-800 w-full cursor-pointer group relative aspect-video bg-stone-100 dark:bg-stone-800">
           <Image
             src={previewSrc}
             alt={altText}
-            width={800}
-            height={500}
-            unoptimized
-            className="object-cover aspect-[2/1] w-full h-auto group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            quality={95}
+            className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
           />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
+            <span className="bg-white/95 dark:bg-stone-900/95 text-stone-900 dark:text-stone-100 text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-xs">
+              <Maximize2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+              Ampliar captura
+            </span>
+          </div>
         </div>
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 border-none bg-transparent shadow-2xl">
@@ -48,20 +55,18 @@ export function FeatureMockupDialog({
             width={750}
             height={1334}
             quality={100}
-            unoptimized
             className="w-full h-auto rounded-xl object-contain"
           />
         </div>
         {/* Vista para PC */}
-        <div className="hidden sm:block">
+        <div className="hidden sm:block p-1">
           <Image
             src={desktopSrc}
             alt={altText}
             width={1920}
             height={1080}
             quality={100}
-            unoptimized
-            className="w-full h-auto rounded-lg object-contain max-h-[90vh]"
+            className="w-full h-auto rounded-xl object-contain max-h-[88vh] shadow-2xl"
           />
         </div>
       </DialogContent>
