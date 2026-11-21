@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Plus, Trash2, Calculator, QrCode } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Calculator, QrCode, Scale, Clock, Banknote } from 'lucide-react';
 import { QRScannerDialog } from '@/components/qr-scanner-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,15 +28,16 @@ import { getBatchPhiStatus } from '@/lib/phi-utils';
 
 const CollectorEntrySchema = z.object({
   collectorId: z.string().min(1, "El recolector es requerido."),
-  kilosPerBatch: z.coerce.number().min(1, "Los kilos deben ser un número positivo."),
+  kilosPerBatch: z.coerce.number().min(0, "Los kilos deben ser mayores o iguales a 0."),
   hoursWorked: z.coerce.number().min(0.5, "Las horas trabajadas son requeridas."),
-  ratePerKg: z.coerce.number().min(0.01, "La tarifa por kg es requerida."),
+  ratePerKg: z.coerce.number().min(0.01, "La tarifa es requerida."),
 });
 
 const ProductionSchema = z.object({
   date: z.date({
     required_error: "La fecha de cosecha es requerida.",
   }),
+  paymentType: z.enum(['kilo', 'hour']).default('kilo'),
   batchIds: z.array(z.string()).min(1, "Debe seleccionar al menos un lote."),
   collectors: z.array(CollectorEntrySchema).min(1, "Debe agregar al menos un recolector."),
 });
@@ -49,6 +50,24 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
   const [isPending, startTransition] = useTransition();
   const [validationAlert, setValidationAlert] = useState<{ open: boolean; reason: string; data: ProductionFormValues | null }>({ open: false, reason: '', data: null });
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+
+  const form = useForm<ProductionFormValues>({
+    resolver: zodResolver(ProductionSchema),
+    defaultValues: {
+      date: new Date(),
+      paymentType: 'kilo',
+      batchIds: [],
+      collectors: [{
+        collectorId: '',
+        kilosPerBatch: 0,
+        hoursWorked: 8,
+        ratePerKg: 0.45,
+      }],
+    },
+  });
+
+  const paymentType = form.watch('paymentType') || 'kilo';
+  const watchedCollectors = form.watch('collectors');
 
   const handleScanSuccess = (decodedText: string) => {
     let workerId = '';
@@ -71,12 +90,13 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
       if (emptyIndex !== -1) {
         form.setValue(`collectors.${emptyIndex}.collectorId`, matched.id);
       } else {
-        appendCollector({ collectorId: matched.id, kilosPerBatch: 0, hoursWorked: 8, ratePerKg: 0.45 });
+        const defaultRate = paymentType === 'hour' ? 3500 : 0.45;
+        appendCollector({ collectorId: matched.id, kilosPerBatch: 0, hoursWorked: 8, ratePerKg: defaultRate });
       }
 
       toast({
         title: "Recolector Reconocido",
-        description: `Se asignó a ${matched.name}. Ingrese los kilos cosechados.`,
+        description: `Se asignó a ${matched.name}. Ingrese los datos de cosecha.`,
       });
     } else {
       toast({
@@ -86,23 +106,6 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
       });
     }
   };
-
-  
-  const canManage = currentUser?.role === 'Productor' || currentUser?.role === 'Encargado';
-
-  const form = useForm<ProductionFormValues>({
-    resolver: zodResolver(ProductionSchema),
-    defaultValues: {
-      date: new Date(),
-      batchIds: [],
-      collectors: [{
-        collectorId: '',
-        kilosPerBatch: 0,
-        hoursWorked: 8,
-        ratePerKg: 0.45,
-      }],
-    },
-  });
 
   const { fields: collectorFields, append: appendCollector, remove: removeCollector } = useFieldArray({
     control: form.control,
@@ -132,6 +135,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
 
   const saveHarvestData = (values: ProductionFormValues) => {
     startTransition(async () => {
+      const pType = values.paymentType || 'kilo';
       const harvestsData = values.collectors.map(cEntry => {
          const collector = collectors.find(c => c.id === cEntry.collectorId);
          return {
@@ -145,7 +149,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
              }
            },
            hoursWorked: cEntry.hoursWorked,
-           ratePerKg: cEntry.ratePerKg
+           ratePerKg: cEntry.ratePerKg,
+           paymentType: pType,
          };
       });
 
@@ -153,7 +158,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
 
       toast({
           title: '¡Éxito!',
-          description: `Cosecha para los lotes ${values.batchIds.join(', ')} registrada.`,
+          description: `Cosecha para los lotes ${values.batchIds.join(', ')} registrada (${pType === 'hour' ? 'Pago por Hora' : 'Pago por Kilo'}).`,
       });
 
       form.reset({
@@ -163,7 +168,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
              collectorId: '',
              kilosPerBatch: 0,
              hoursWorked: 8,
-             ratePerKg: 0.45
+             ratePerKg: pType === 'hour' ? 3500 : 0.45
           }]
       });
     });
@@ -273,8 +278,45 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
               </div>
 
               <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <FormLabel className="text-base font-semibold">Recolectores</FormLabel>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 bg-muted/40 p-3 rounded-lg border">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">Modalidad de Pago:</span>
+                    <div className="inline-flex rounded-lg bg-background p-0.5 border shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          form.setValue('paymentType', 'kilo');
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5",
+                          paymentType === 'kilo' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Scale className="h-3.5 w-3.5" />
+                        Por Kilo ($/kg)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          form.setValue('paymentType', 'hour');
+                          const currentCollectors = form.getValues('collectors');
+                          if (currentCollectors && currentCollectors.every(c => c.ratePerKg <= 10)) {
+                            currentCollectors.forEach((_, idx) => {
+                              form.setValue(`collectors.${idx}.ratePerKg`, 3500);
+                            });
+                          }
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5",
+                          paymentType === 'hour' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Clock className="h-3.5 w-3.5" />
+                        Por Hora ($/h)
+                      </button>
+                    </div>
+                  </div>
+
                   {canManage && (
                     <div className="flex items-center gap-2">
                       <Button
@@ -283,118 +325,174 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                         size="sm"
                         onClick={() => setIsQRScannerOpen(true)}
                         disabled={isPending}
-                        className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                        className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs"
                       >
                         <QrCode className="h-4 w-4" />
-                        Escanear QR de Cosechero
+                        Escanear QR
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => appendCollector({ collectorId: '', kilosPerBatch: 0, hoursWorked: 8, ratePerKg: 0.45 })}
+                        onClick={() => appendCollector({ 
+                          collectorId: '', 
+                          kilosPerBatch: 0, 
+                          hoursWorked: 8, 
+                          ratePerKg: paymentType === 'hour' ? 3500 : 0.45 
+                        })}
                         disabled={isPending}
+                        className="text-xs"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Añadir
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        Añadir Cosechero
                       </Button>
                     </div>
                   )}
                 </div>
                 
-                {collectorFields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 border rounded-md relative items-start">
-                    <div className="md:col-span-3">
-                      <FormField
-                        control={form.control}
-                        name={`collectors.${index}.collectorId`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Recolector</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
+                {collectorFields.map((field, index) => {
+                  const entry = watchedCollectors?.[index];
+                  const rowKilos = Number(entry?.kilosPerBatch) || 0;
+                  const rowHours = Number(entry?.hoursWorked) || 0;
+                  const rowRate = Number(entry?.ratePerKg) || 0;
+                  const rowSubtotal = paymentType === 'hour' ? rowHours * rowRate : rowKilos * rowRate;
+
+                  return (
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3.5 border rounded-lg bg-card text-card-foreground shadow-xs relative items-start">
+                      <div className="md:col-span-4">
+                        <FormField
+                          control={form.control}
+                          name={`collectors.${index}.collectorId`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Recolector</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value} disabled={!canManage || isPending}>
+                                <FormControl>
+                                  <SelectTrigger className="h-9">
+                                    <SelectValue placeholder="Seleccione..." />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {collectors.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="md:col-span-3">
+                        <FormField
+                          control={form.control}
+                          name={`collectors.${index}.kilosPerBatch`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Kilos Cosechados</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccione..." />
-                                </SelectTrigger>
+                                <Input type="number" step="0.1" placeholder="ej., 125.5" {...field} disabled={!canManage || isPending} className="h-9" />
                               </FormControl>
-                              <SelectContent>
-                                {collectors.map(c => (
-                                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name={`collectors.${index}.hoursWorked`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Horas</FormLabel>
+                              <FormControl>
+                                <Input type="number" step="0.5" {...field} disabled={!canManage || isPending} className="h-9" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name={`collectors.${index}.ratePerKg`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-semibold text-primary">
+                                {paymentType === 'hour' ? 'Tarifa ($/h)' : 'Tarifa ($/kg)'}
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  step={paymentType === 'hour' ? '1' : '0.01'} 
+                                  {...field} 
+                                  disabled={!canManage || isPending} 
+                                  className="h-9" 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="md:col-span-1 pt-6 flex justify-center">
+                        {canManage && collectorFields.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeCollector(index)}
+                            disabled={isPending}
+                            className="text-destructive h-9 w-9"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         )}
-                      />
+                      </div>
+
+                      {/* Barra interactiva de cálculo de subtotal */}
+                      <div className="md:col-span-12 flex flex-wrap items-center justify-between text-xs px-2.5 py-1 bg-muted/40 rounded border border-muted/60 text-muted-foreground mt-1">
+                        <span>
+                          {paymentType === 'hour' ? (
+                            <>Cálculo: <strong className="text-foreground">{rowHours} hs</strong> × <strong className="text-foreground">${rowRate.toLocaleString('es-AR')}/h</strong></>
+                          ) : (
+                            <>Cálculo: <strong className="text-foreground">{rowKilos.toLocaleString('es-AR')} kg</strong> × <strong className="text-foreground">${rowRate.toLocaleString('es-AR')}/kg</strong></>
+                          )}
+                        </span>
+                        <span className="font-semibold text-primary">
+                          Subtotal: ${rowSubtotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
                     </div>
-                    <div className="md:col-span-3">
-                      <FormField
-                        control={form.control}
-                        name={`collectors.${index}.kilosPerBatch`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Kilos</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="ej., 125.5" {...field} disabled={!canManage || isPending} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="md:col-span-3">
-                      <FormField
-                        control={form.control}
-                        name={`collectors.${index}.hoursWorked`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Horas</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.5" {...field} disabled={!canManage || isPending}/>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <FormField
-                        control={form.control}
-                        name={`collectors.${index}.ratePerKg`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tarifa (ARS)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.01" {...field} disabled={!canManage || isPending}/>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="md:col-span-1 pt-8 flex justify-center">
-                      {canManage && collectorFields.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeCollector(index)}
-                          disabled={isPending}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
 
               </div>
             </CardContent>
             {canManage && (
-                <CardFooter>
-                    <Button type="submit" disabled={isPending || !canManage}>
+                <CardFooter className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-muted/20 border-t pt-4">
+                    <div className="flex items-center gap-4 text-sm flex-wrap">
+                      <div>
+                        <span className="text-muted-foreground">Kilos Totales: </span>
+                        <strong className="text-foreground">
+                          {((watchedCollectors || []).reduce((acc, c) => acc + (Number(c?.kilosPerBatch) || 0), 0)).toLocaleString('es-AR')} kg
+                        </strong>
+                      </div>
+                      <span className="opacity-40">•</span>
+                      <div>
+                        <span className="text-muted-foreground">Total Liquidación: </span>
+                        <strong className="text-primary font-bold text-base">
+                          ${((watchedCollectors || []).reduce((acc, c) => {
+                            const k = Number(c?.kilosPerBatch) || 0;
+                            const h = Number(c?.hoursWorked) || 0;
+                            const r = Number(c?.ratePerKg) || 0;
+                            return acc + (paymentType === 'hour' ? h * r : k * r);
+                          }, 0)).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </strong>
+                      </div>
+                    </div>
+                    <Button type="submit" disabled={isPending || !canManage} className="shadow-md">
                         {isPending ? 'Validando y Guardando...' : 'Guardar Producción y Pago'}
                     </Button>
                 </CardFooter>

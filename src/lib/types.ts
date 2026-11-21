@@ -208,6 +208,8 @@ export type DiagnosisLog = {
 };
 
 
+export type PaymentType = 'kilo' | 'hour';
+
 export type CollectorPaymentLog = {
   id: string;
   date: string;
@@ -217,6 +219,8 @@ export type CollectorPaymentLog = {
   kilograms: number;
   hours: number;
   ratePerKg: number;
+  ratePerHour?: number;
+  paymentType?: PaymentType;
   payment: number;
   traceabilityId: string;
 }
@@ -374,9 +378,9 @@ export type AppData = {
   addContactRequest: (request: Omit<ContactRequest, 'id' | 'createdAt' | 'status'>) => Promise<void>;
   updateContactRequestStatus: (requestId: string, status: ContactRequestStatus, notes?: string) => Promise<void>;
   deleteContactRequest: (requestId: string) => Promise<void>;
-  addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number) => Promise<string | undefined>;
-  addMultipleHarvests: (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number }[]) => Promise<void>;
-  editHarvest: (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string }) => Promise<void>;
+  addHarvest: (harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, rate: number, paymentType?: PaymentType) => Promise<string | undefined>;
+  addMultipleHarvests: (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number, paymentType?: PaymentType }[]) => Promise<void>;
+  editHarvest: (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; ratePerHour?: number; paymentType?: PaymentType; batchNumber: string; date?: string }) => Promise<void>;
   editCollector: (collector: Collector) => Promise<void>;
   deleteCollector: (collectorId: string) => void;
   addAgronomistLog: (log: Omit<AgronomistLog, 'id'>) => Promise<void>;

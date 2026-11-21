@@ -45,7 +45,23 @@ function ProductionPaymentHistoryComponent() {
   const isGeneratingRef = useRef(false);
   const [selectedLog, setSelectedLog] = useState<CollectorPaymentLog | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ kilograms: 0, hours: 0, ratePerKg: 0, batchNumber: '', date: '' });
+  const [editData, setEditData] = useState<{
+    kilograms: number;
+    hours: number;
+    ratePerKg: number;
+    ratePerHour?: number;
+    paymentType: 'kilo' | 'hour';
+    batchNumber: string;
+    date: string;
+  }>({
+    kilograms: 0,
+    hours: 0,
+    ratePerKg: 0,
+    ratePerHour: 0,
+    paymentType: 'kilo',
+    batchNumber: '',
+    date: ''
+  });
   const [visibleCount, setVisibleCount] = useState(5);
   const [isLabelOpen, setIsLabelOpen] = useState(false);
   const logoRef = useRef<HTMLDivElement>(null);
@@ -121,10 +137,13 @@ function ProductionPaymentHistoryComponent() {
   const openEdit = () => {
       if (!selectedLog) return;
       const harvest = getHarvestForLog(selectedLog);
+      const pType = selectedLog.paymentType || 'kilo';
       setEditData({
           kilograms: selectedLog.kilograms,
           hours: selectedLog.hours,
           ratePerKg: selectedLog.ratePerKg,
+          ratePerHour: selectedLog.ratePerHour || (pType === 'hour' ? selectedLog.ratePerKg : 0),
+          paymentType: pType,
           batchNumber: harvest?.batchNumber || '',
           date: formatDateForInput(selectedLog.date)
       });
@@ -190,10 +209,20 @@ function ProductionPaymentHistoryComponent() {
         doc.setFontSize(12);
         doc.text(`Por medio del presente, se deja constancia de que ${selectedLog.collectorName} ha recibido el pago por los servicios de cosecha detallados a continuación:`, 15, bodyY, { maxWidth: 180 });
 
-        const tableBody = [
+        const isHourPayment = selectedLog.paymentType === 'hour';
+        const tableBody = isHourPayment ? [
           ['Lote Cosechado', getHarvestForLog(selectedLog)?.batchNumber || 'N/A'],
+          ['Modalidad de Pago', 'Por Hora Trabajada'],
+          ['Horas Trabajadas', `${selectedLog.hours} hs`],
+          ['Tarifa por Hora', `$${(selectedLog.ratePerHour || selectedLog.ratePerKg).toLocaleString('es-AR', { minimumFractionDigits: 2 })}/h`],
+          ['Kilos Cosechados (Referencia)', `${selectedLog.kilograms.toLocaleString('es-AR')} kg`],
+          ['Total Pagado', `$${selectedLog.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
+        ] : [
+          ['Lote Cosechado', getHarvestForLog(selectedLog)?.batchNumber || 'N/A'],
+          ['Modalidad de Pago', 'Por Kilo Cosechado'],
           ['Kilos Cosechados', `${selectedLog.kilograms.toLocaleString('es-AR')} kg`],
-          ['Tarifa por Kg', `$${selectedLog.ratePerKg.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`],
+          ['Tarifa por Kg', `$${selectedLog.ratePerKg.toLocaleString('es-AR', { minimumFractionDigits: 2 })}/kg`],
+          ['Horas Trabajadas (Referencia)', `${selectedLog.hours} hs`],
           ['Total Pagado', `$${selectedLog.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
         ];
 
@@ -376,7 +405,10 @@ function ProductionPaymentHistoryComponent() {
                             <div className="text-xs text-muted-foreground truncate leading-tight mt-1 w-full block">
                                 Lote: <Badge variant="outline" className="text-[10px] px-1 py-0">{getHarvestForLog(log)?.batchNumber || "L???"}</Badge>
                                 <span className="mx-1.5 opacity-50">•</span>
-                                Pago total: <span className="font-bold text-foreground">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 mr-1.5 font-normal">
+                                  {log.paymentType === 'hour' ? 'Por Hora' : 'Por Kilo'}
+                                </Badge>
+                                Pago: <span className="font-bold text-foreground">${log.payment.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
                             </div>
                         </div>
                     </div>
@@ -416,6 +448,29 @@ function ProductionPaymentHistoryComponent() {
               {isEditing ? (
                   <div className="grid gap-4 py-4 px-1 max-h-[60vh] overflow-y-auto">
                     <div className="space-y-2">
+                        <Label>Modalidad de Pago</Label>
+                        <div className="flex gap-2">
+                          <Button 
+                            type="button" 
+                            size="sm" 
+                            variant={editData.paymentType === 'kilo' ? 'default' : 'outline'}
+                            onClick={() => setEditData({...editData, paymentType: 'kilo'})}
+                            className="flex-1 text-xs"
+                          >
+                            Por Kilo ($/kg)
+                          </Button>
+                          <Button 
+                            type="button" 
+                            size="sm" 
+                            variant={editData.paymentType === 'hour' ? 'default' : 'outline'}
+                            onClick={() => setEditData({...editData, paymentType: 'hour'})}
+                            className="flex-1 text-xs"
+                          >
+                            Por Hora ($/h)
+                          </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
                         <Label>Fecha y Hora de Cosecha</Label>
                         <Input type="datetime-local" value={editData.date} onChange={e => setEditData({...editData, date: e.target.value})} disabled={isPending} />
                     </div>
@@ -424,7 +479,7 @@ function ProductionPaymentHistoryComponent() {
                         <Input value={editData.batchNumber} onChange={e => setEditData({...editData, batchNumber: e.target.value})} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <Label>Kilos</Label>
+                        <Label>Kilos Cosechados</Label>
                         <Input type="number" step="0.1" value={editData.kilograms} onChange={e => setEditData({...editData, kilograms: parseFloat(e.target.value) || 0})} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
@@ -432,8 +487,21 @@ function ProductionPaymentHistoryComponent() {
                         <Input type="number" step="0.5" value={editData.hours} onChange={e => setEditData({...editData, hours: parseFloat(e.target.value) || 0})} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <Label>Tarifa por Kg</Label>
-                        <Input type="number" step="0.01" value={editData.ratePerKg} onChange={e => setEditData({...editData, ratePerKg: parseFloat(e.target.value) || 0})} disabled={isPending} />
+                        <Label>{editData.paymentType === 'hour' ? 'Tarifa por Hora ($/h)' : 'Tarifa por Kg ($/kg)'}</Label>
+                        <Input 
+                          type="number" 
+                          step={editData.paymentType === 'hour' ? '1' : '0.01'} 
+                          value={editData.paymentType === 'hour' ? (editData.ratePerHour || editData.ratePerKg) : editData.ratePerKg} 
+                          onChange={e => {
+                            const val = parseFloat(e.target.value) || 0;
+                            if (editData.paymentType === 'hour') {
+                              setEditData({...editData, ratePerHour: val, ratePerKg: val});
+                            } else {
+                              setEditData({...editData, ratePerKg: val});
+                            }
+                          }} 
+                          disabled={isPending} 
+                        />
                     </div>
                   </div>
               ) : (
@@ -444,12 +512,30 @@ function ProductionPaymentHistoryComponent() {
                     </div>
                     <Card className="shadow-none border-muted">
                       <CardContent className="p-4 space-y-3 text-sm">
+                        <div className="flex justify-between items-center">
+                          <span>Modalidad</span>
+                          <Badge variant="outline" className="text-xs font-semibold">
+                            {selectedLog.paymentType === 'hour' ? 'Pago por Hora' : 'Pago por Kilo'}
+                          </Badge>
+                        </div>
                         <div className="flex justify-between"><span>Lote</span><Badge variant="secondary">{getHarvestForLog(selectedLog)?.batchNumber || 'N/A'}</Badge></div>
                         <div className="flex justify-between"><span>Recolector</span><span className="font-semibold">{selectedLog.collectorName}</span></div>
                         <hr />
-                        <div className="flex justify-between"><span>Kilos</span><span className="font-medium">{selectedLog.kilograms.toLocaleString()} kg</span></div>
-                        <div className="flex justify-between"><span>Horas</span><span className="font-medium">{selectedLog.hours} hs</span></div>
-                        <div className="flex justify-between"><span>Tarifa</span><span>${selectedLog.ratePerKg.toLocaleString()}</span></div>
+                        <div className="flex justify-between">
+                          <span>Kilos Cosechados</span>
+                          <span className="font-medium">{selectedLog.kilograms.toLocaleString()} kg</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Horas Trabajadas</span>
+                          <span className="font-medium">{selectedLog.hours} hs</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{selectedLog.paymentType === 'hour' ? 'Tarifa por Hora' : 'Tarifa por Kg'}</span>
+                          <span className="font-medium">
+                            ${(selectedLog.paymentType === 'hour' ? (selectedLog.ratePerHour || selectedLog.ratePerKg) : selectedLog.ratePerKg).toLocaleString('es-AR')}
+                            {selectedLog.paymentType === 'hour' ? ' /h' : ' /kg'}
+                          </span>
+                        </div>
                         <hr />
                         <div className="flex justify-between items-center">
                           <span className="font-medium text-primary">Pago Total</span>

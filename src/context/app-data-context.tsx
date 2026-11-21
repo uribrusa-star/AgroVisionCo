@@ -488,7 +488,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         return result;
     };
     
-    const addHarvest = async (harvestData: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number): Promise<string | undefined> => {
+    const addHarvest = async (harvestData: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, rate: number, paymentType: 'kilo' | 'hour' = 'kilo'): Promise<string | undefined> => {
         const collector = collectors.find(c => c.id === harvestData.collector.id);
         const collectorName = collector?.name || harvestData.collector.name || 'Recolector';
 
@@ -543,7 +543,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             
             // Create and set the payment log in the same batch
             const newPaymentLogRef = doc(collection(db, 'collectorPaymentLogs'));
-            const calculatedPayment = harvestData.kilograms * ratePerKg;
+            const pType = paymentType || 'kilo';
+            const calculatedPayment = pType === 'hour' ? hoursWorked * rate : harvestData.kilograms * rate;
+            const finalRatePerKg = pType === 'hour' ? (harvestData.kilograms > 0 ? parseFloat((calculatedPayment / harvestData.kilograms).toFixed(2)) : 0) : rate;
+            const finalRatePerHour = pType === 'hour' ? rate : (hoursWorked > 0 ? parseFloat((calculatedPayment / hoursWorked).toFixed(2)) : 0);
+
             const paymentLog: Omit<CollectorPaymentLog, 'id'> = {
               harvestId: newHarvestRef.id, 
               date: harvestData.date,
@@ -551,7 +555,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               collectorName: collectorName,
               kilograms: harvestData.kilograms,
               hours: hoursWorked,
-              ratePerKg: ratePerKg,
+              ratePerKg: finalRatePerKg,
+              ratePerHour: finalRatePerHour,
+              paymentType: pType,
               payment: calculatedPayment,
               traceabilityId: traceabilityId,
             };
@@ -586,7 +592,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const addMultipleHarvests = async (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number }[]): Promise<void> => {
+    const addMultipleHarvests = async (harvestsData: { harvest: Omit<Harvest, 'id' | 'traceabilityId'>, hoursWorked: number, ratePerKg: number, paymentType?: PaymentType }[]): Promise<void> => {
         for (const { harvest: hData } of harvestsData) {
             const phiStatus = getBatchPhiStatus(hData.batchNumber, agronomistLogs, new Date(hData.date));
             if (phiStatus.isBlocked) {
@@ -607,7 +613,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const newHarvests: Harvest[] = [];
             const newPayments: CollectorPaymentLog[] = [];
 
-            for (const { harvest: harvestData, hoursWorked, ratePerKg } of harvestsData) {
+            for (const { harvest: harvestData, hoursWorked, ratePerKg, paymentType } of harvestsData) {
                 const collector = collectors.find(c => c.id === harvestData.collector.id);
                 const collectorName = collector?.name || harvestData.collector.name || 'Recolector';
 
@@ -649,15 +655,21 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 }
                 
                 const newPaymentLogRef = doc(collection(db, 'collectorPaymentLogs'));
-                const calculatedPayment = harvestData.kilograms * ratePerKg;
+                const pType = paymentType || 'kilo';
+                const calculatedPayment = pType === 'hour' ? hoursWorked * ratePerKg : harvestData.kilograms * ratePerKg;
+                const finalRatePerKg = pType === 'hour' ? (harvestData.kilograms > 0 ? parseFloat((calculatedPayment / harvestData.kilograms).toFixed(2)) : 0) : ratePerKg;
+                const finalRatePerHour = pType === 'hour' ? ratePerKg : (hoursWorked > 0 ? parseFloat((calculatedPayment / hoursWorked).toFixed(2)) : 0);
+
                 const paymentLog: Omit<CollectorPaymentLog, 'id'> = {
                   harvestId: newHarvestRef.id, 
                   date: harvestData.date,
                   collectorId: harvestData.collector.id,
-                  collectorName: collector.name,
+                  collectorName: collectorName,
                   kilograms: harvestData.kilograms,
                   hours: hoursWorked,
-                  ratePerKg: ratePerKg,
+                  ratePerKg: finalRatePerKg,
+                  ratePerHour: finalRatePerHour,
+                  paymentType: pType,
                   payment: calculatedPayment,
                   traceabilityId,
                 };
@@ -706,7 +718,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const editHarvest = async (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; batchNumber: string; date?: string }) => {
+    const editHarvest = async (logId: string, harvestId: string, updatedData: { kilograms: number; hours: number; ratePerKg: number; ratePerHour?: number; paymentType?: PaymentType; batchNumber: string; date?: string }) => {
         const oldLog = collectorPaymentLogs.find(l => l.id === logId);
         const oldHarvest = harvests.find(h => h.id === harvestId);
         const collector = collectors.find(c => c.id === oldLog?.collectorId);
@@ -748,11 +760,18 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             batch.update(harvestRef, harvestUpdatePayload);
 
             const paymentLogRef = doc(db, 'collectorPaymentLogs', logId);
-            const calculatedPayment = updatedData.kilograms * updatedData.ratePerKg;
+            const pType = updatedData.paymentType || oldLog.paymentType || 'kilo';
+            const rate = pType === 'hour' ? (updatedData.ratePerHour ?? updatedData.ratePerKg) : updatedData.ratePerKg;
+            const calculatedPayment = pType === 'hour' ? updatedData.hours * rate : updatedData.kilograms * rate;
+            const finalRatePerKg = pType === 'hour' ? (updatedData.kilograms > 0 ? parseFloat((calculatedPayment / updatedData.kilograms).toFixed(2)) : 0) : rate;
+            const finalRatePerHour = pType === 'hour' ? rate : (updatedData.hours > 0 ? parseFloat((calculatedPayment / updatedData.hours).toFixed(2)) : 0);
+
             const paymentUpdatePayload: any = {
                 kilograms: updatedData.kilograms,
                 hours: updatedData.hours,
-                ratePerKg: updatedData.ratePerKg,
+                ratePerKg: finalRatePerKg,
+                ratePerHour: finalRatePerHour,
+                paymentType: pType,
                 payment: calculatedPayment
             };
             if (updatedData.date) {
