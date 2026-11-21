@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Calendar as CalendarIcon, Plus, Trash2, Calculator, QrCode, Scale, Clock, Banknote } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Trash2, Calculator, QrCode, Scale, Clock, Banknote, ChevronDown, Check } from 'lucide-react';
 import { QRScannerDialog } from '@/components/qr-scanner-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +46,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
   const [isPending, startTransition] = useTransition();
   const [validationAlert, setValidationAlert] = useState<{ open: boolean; reason: string; data: ProductionFormValues | null }>({ open: false, reason: '', data: null });
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+  const [isModeOpen, setIsModeOpen] = useState(false);
   
   // Tarifa base del día (soporta string mientras se tipea para evitar saltos y números raros)
   const [baseRate, setBaseRate] = useState<string | number>(35);
@@ -168,8 +169,21 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
       const phiStatus = getBatchPhiStatus(b.id, agronomistLogs, selectedHarvestDate);
       const isHistoricDate = selectedHarvestDate < new Date(Date.now() - 24 * 60 * 60 * 1000);
       
+      // Obtener nombre de la variedad si existe
+      let varietyName = '';
+      if (b.varieties && Array.isArray(b.varieties) && b.varieties.length > 0) {
+        const names = b.varieties
+          .map((v: any) => (typeof v === 'string' ? v : v?.name)?.trim())
+          .filter(Boolean);
+        if (names.length > 0) varietyName = names.join(', ');
+      } else if (typeof (b as any).variety === 'string' && (b as any).variety.trim()) {
+        varietyName = (b as any).variety.trim();
+      }
+
+      const displayLabel = varietyName ? `${b.id} - ${varietyName}` : b.id;
+
       return {
-        label: b.id,
+        label: displayLabel,
         value: b.id,
         disabled: isHistoricDate ? false : phiStatus.isBlocked,
         tag: phiStatus.isBlocked ? `🔒 PHI (${phiStatus.remainingDays || 0}d rest.)` : undefined,
@@ -353,72 +367,107 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                 />
               </div>
 
-              {/* Fila 2: Barra de Configuración de Jornada (Modalidad + Tarifa Base + QR) */}
-              <div className="bg-muted/40 p-3 sm:p-4 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Fila 2: Configuración de Jornada (Modalidad Desplegable + Tarifa Base + QR ancho completo) */}
+              <div className="bg-muted/40 p-3.5 sm:p-4 rounded-xl border space-y-3.5">
                 
-                {/* Modalidad de Liquidación */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-                    Modalidad de Liquidación
-                  </span>
-                  <div className="inline-flex rounded-lg bg-background p-1 border shadow-xs">
-                    <button
-                      type="button"
-                      onClick={() => handleModeChange('kilo')}
-                      className={cn(
-                        "px-3 sm:px-4 py-2 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 sm:gap-2",
-                        watchedPaymentType === 'kilo' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Scale className="h-4 w-4" />
-                      Por Kilo ($/kg)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleModeChange('hour')}
-                      className={cn(
-                        "px-3 sm:px-4 py-2 text-xs font-semibold rounded-md transition-all flex items-center gap-1.5 sm:gap-2",
-                        watchedPaymentType === 'hour' ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Clock className="h-4 w-4" />
-                      Por Hora ($/h)
-                    </button>
+                {/* Selector Desplegable de Modalidad a Ancho Completo */}
+                <div className="space-y-1.5 w-full">
+                  <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0.5">
+                    <span>Modalidad de Liquidación</span>
+                    <span className="text-[11px] font-normal lowercase text-muted-foreground">Toque para cambiar</span>
                   </div>
+                  
+                  {/* Botón que despliega las opciones */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsModeOpen(!isModeOpen)}
+                    className="w-full h-11 justify-between px-4 text-base md:text-sm font-semibold border-muted-foreground/20 bg-background shadow-xs hover:bg-muted/40 transition-all"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      {watchedPaymentType === 'kilo' ? (
+                        <Scale className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      )}
+                      <span className="text-foreground">
+                        Modalidad: <strong>{watchedPaymentType === 'kilo' ? 'Por Kilo ($/kg)' : 'Por Hora ($/h)'}</strong>
+                      </span>
+                    </span>
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", isModeOpen && "rotate-180")} />
+                  </Button>
+
+                  {/* Opciones desplegadas que ocupan todo el ancho */}
+                  {isModeOpen && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full pt-1 animate-in fade-in-50 duration-150">
+                      <Button
+                        type="button"
+                        variant={watchedPaymentType === 'kilo' ? 'default' : 'outline'}
+                        onClick={() => {
+                          handleModeChange('kilo');
+                          setIsModeOpen(false);
+                        }}
+                        className={cn(
+                          "w-full h-11 gap-2 font-semibold text-base md:text-sm transition-all",
+                          watchedPaymentType === 'kilo' ? "shadow-sm" : "bg-background"
+                        )}
+                      >
+                        <Scale className="h-4 w-4" />
+                        Por Kilo ($/kg)
+                        {watchedPaymentType === 'kilo' && <Check className="h-4 w-4 ml-auto" />}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={watchedPaymentType === 'hour' ? 'default' : 'outline'}
+                        onClick={() => {
+                          handleModeChange('hour');
+                          setIsModeOpen(false);
+                        }}
+                        className={cn(
+                          "w-full h-11 gap-2 font-semibold text-base md:text-sm transition-all",
+                          watchedPaymentType === 'hour' ? "shadow-sm" : "bg-background"
+                        )}
+                      >
+                        <Clock className="h-4 w-4" />
+                        Por Hora ($/h)
+                        {watchedPaymentType === 'hour' && <Check className="h-4 w-4 ml-auto" />}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Tarifa General del Día y Escaneo QR */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="space-y-1.5">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+                {/* Tarifa General y Escaneo QR (Ambos ocupan todo el ancho) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full items-end">
+                  <div className="space-y-1.5 w-full">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block px-0.5">
                       Tarifa General ({watchedPaymentType === 'hour' ? '$/hora' : '$/kg'})
                     </span>
-                    <div className="relative w-36">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">$</span>
+                    <div className="relative w-full">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground pointer-events-none">$</span>
                       <Input
                         type="number"
                         min="0"
                         step="any"
                         value={baseRate}
                         onChange={(e) => handleBaseRateChange(e.target.value)}
-                        className="pl-7 pr-3 h-10 font-bold text-foreground text-base"
+                        className="pl-7 pr-3 h-11 font-bold text-foreground text-base w-full bg-background shadow-xs"
                         disabled={!canManage || isPending}
                       />
                     </div>
                   </div>
 
                   {canManage && (
-                    <div className="space-y-1.5 pt-4 md:pt-0">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:block">&nbsp;</span>
+                    <div className="space-y-1.5 w-full">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:block px-0.5">&nbsp;</span>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setIsQRScannerOpen(true)}
                         disabled={isPending}
-                        className="h-10 gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-medium shadow-xs"
+                        className="w-full h-11 gap-2 border-emerald-500/50 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-base md:text-sm font-semibold shadow-xs"
                       >
-                        <QrCode className="h-4 w-4" />
-                        Escanear QR
+                        <QrCode className="h-5 w-5" />
+                        Escanear Credencial QR
                       </Button>
                     </div>
                   )}
