@@ -220,19 +220,25 @@ export default function UsersPage() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <PageHeader title="Usuarios" description="Vea y gestione los usuarios del sistema." />
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 w-full">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Usuarios</h1>
+            <p className="text-muted-foreground text-sm">Vea y gestione los usuarios del sistema.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
               <Button 
                 variant="outline" 
                 onClick={() => setIsQRScannerOpen(true)}
-                className="gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                className="w-full sm:w-auto h-10 gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold justify-center text-sm shadow-xs"
               >
-                <QrCode className="h-4 w-4" />
+                <QrCode className="h-4 w-4 shrink-0" />
                 Escanear Credencial
               </Button>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs"
+              >
+                  <Plus className="h-4 w-4 shrink-0" />
                   Agregar Empleado
               </Button>
           </div>
