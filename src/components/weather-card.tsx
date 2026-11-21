@@ -4,6 +4,7 @@ import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { CloudRain, Wind, Thermometer, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type WeatherData = {
   temperature: number;
@@ -11,7 +12,12 @@ type WeatherData = {
   rainProbability: number;
 };
 
-export function WeatherCard() {
+interface WeatherCardProps {
+  compact?: boolean;
+  className?: string;
+}
+
+export function WeatherCard({ compact = false, className }: WeatherCardProps = {}) {
   const { establishmentData } = useContext(AppDataContext);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,33 +74,63 @@ export function WeatherCard() {
   if (error) return null;
 
   return (
-    <Card className="flex items-center gap-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-border/50 shadow-sm px-4 py-2 hover:bg-white/90 dark:hover:bg-slate-900/90 transition-colors">
+    <Card
+      className={cn(
+        "flex items-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-border/50 shadow-xs hover:bg-white/90 dark:hover:bg-slate-900/90 transition-colors shrink-0",
+        compact
+          ? "gap-1.5 sm:gap-3 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs sm:text-sm"
+          : "gap-4 px-4 py-2 shadow-sm",
+        className
+      )}
+    >
       {loading ? (
-        <div className="flex items-center gap-2 text-muted-foreground text-sm py-1 h-[24px]">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Cargando clima...</span>
+        <div className={cn("flex items-center gap-2 text-muted-foreground", compact ? "text-xs py-0.5" : "text-sm py-1 h-[24px]")}>
+          <Loader2 className={cn("animate-spin", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
+          <span>{compact ? "Clima..." : "Cargando clima..."}</span>
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-1.5" title="Temperatura">
-            <div className="bg-orange-500/10 text-orange-600 p-1.5 rounded-md">
-              <Thermometer className="h-4 w-4" />
+          <div className="flex items-center gap-1 sm:gap-1.5" title="Temperatura">
+            <div className={cn("bg-orange-500/10 text-orange-600 rounded-md", compact ? "p-1" : "p-1.5")}>
+              <Thermometer className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
             </div>
-            <span className="font-semibold text-sm">{weather?.temperature}°C</span>
+            <span className={cn("font-semibold", compact ? "text-xs sm:text-sm" : "text-sm")}>
+              {weather?.temperature}°C
+            </span>
           </div>
-          <div className="w-px h-6 bg-border"></div>
-          <div className="flex items-center gap-1.5" title="Velocidad del viento">
-            <div className="bg-blue-500/10 text-blue-600 p-1.5 rounded-md">
-              <Wind className="h-4 w-4" />
+
+          <div className={cn("w-px bg-border", compact ? "h-4 hidden min-[360px]:block" : "h-6")}></div>
+
+          <div
+            className={cn(
+              "items-center gap-1 sm:gap-1.5",
+              compact ? "hidden min-[360px]:flex" : "flex"
+            )}
+            title="Velocidad del viento"
+          >
+            <div className={cn("bg-blue-500/10 text-blue-600 rounded-md", compact ? "p-1" : "p-1.5")}>
+              <Wind className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
             </div>
-            <span className="font-semibold text-sm">{weather?.windSpeed} km/h</span>
+            <span className={cn("font-semibold", compact ? "text-xs sm:text-sm" : "text-sm")}>
+              {weather?.windSpeed} km/h
+            </span>
           </div>
-          <div className="w-px h-6 bg-border"></div>
-          <div className="flex items-center gap-1.5" title="Probabilidad de lluvia">
-            <div className="bg-cyan-500/10 text-cyan-600 p-1.5 rounded-md">
-              <CloudRain className="h-4 w-4" />
+
+          <div className={cn("w-px bg-border", compact ? "h-4 hidden sm:block" : "h-6")}></div>
+
+          <div
+            className={cn(
+              "items-center gap-1 sm:gap-1.5",
+              compact ? "hidden sm:flex" : "flex"
+            )}
+            title="Probabilidad de lluvia"
+          >
+            <div className={cn("bg-cyan-500/10 text-cyan-600 rounded-md", compact ? "p-1" : "p-1.5")}>
+              <CloudRain className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
             </div>
-            <span className="font-semibold text-sm">{weather?.rainProbability}%</span>
+            <span className={cn("font-semibold", compact ? "text-xs sm:text-sm" : "text-sm")}>
+              {weather?.rainProbability}%
+            </span>
           </div>
         </>
       )}
