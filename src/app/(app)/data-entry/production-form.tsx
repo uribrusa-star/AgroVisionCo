@@ -367,8 +367,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">$</span>
                       <Input
                         type="number"
-                        min="0.01"
-                        step={paymentType === 'hour' ? '50' : '0.5'}
+                        min="0"
+                        step="any"
                         value={baseRate}
                         onChange={(e) => handleBaseRateChange(Number(e.target.value) || 0)}
                         className="pl-7 pr-3 h-10 font-bold text-foreground text-sm"
@@ -464,7 +464,7 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                                   <div className="relative">
                                     <Input
                                       type="number"
-                                      step="0.1"
+                                      step="any"
                                       min="0"
                                       placeholder="0.0"
                                       {...kgField}
@@ -544,7 +544,8 @@ export function ProductionForm({ onToggleCalculator, showCalculator }: { onToggl
                               </label>
                               <Input
                                 type="number"
-                                step={paymentType === 'hour' ? '50' : '0.5'}
+                                min="0"
+                                step="any"
                                 value={entry?.ratePerKg ?? baseRate}
                                 onChange={(e) => {
                                   const val = Number(e.target.value) || 0;

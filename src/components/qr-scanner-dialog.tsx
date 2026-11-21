@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Camera, RefreshCw, AlertCircle, QrCode } from 'lucide-react';
+import jsQR from 'jsqr';
 
 interface QRScannerDialogProps {
   isOpen: boolean;
@@ -69,51 +70,68 @@ export function QRScannerDialog({
   };
 
   const startDetectionLoop = () => {
-    // Verificar si el navegador soporta la API nativa de BarcodeDetector (Chrome, Edge, Android)
-    const hasBarcodeDetector = 'BarcodeDetector' in window;
+    // Si el navegador soporta la API nativa BarcodeDetector (Chrome/Android), la instanciamos
+    const hasBarcodeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
+    let barcodeDetector: any = null;
 
     if (hasBarcodeDetector) {
-      // @ts-ignore
-      const barcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
-      
-      const detect = async () => {
-        if (!videoRef.current || videoRef.current.readyState < 2) {
-          animationFrameId.current = requestAnimationFrame(detect);
-          return;
-        }
+      try {
+        // @ts-ignore
+        barcodeDetector = new window.BarcodeDetector({ formats: ['qr_code'] });
+      } catch {
+        barcodeDetector = null;
+      }
+    }
 
+    // Canvas de renderizado para jsQR (indispensable para iOS Safari y navegadores sin BarcodeDetector)
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    const detect = async () => {
+      const video = videoRef.current;
+      if (!video || video.readyState < 2) {
+        animationFrameId.current = requestAnimationFrame(detect);
+        return;
+      }
+
+      // 1. Intento con API nativa de alta velocidad si está disponible
+      if (barcodeDetector) {
         try {
-          const barcodes = await barcodeDetector.detect(videoRef.current);
-          if (barcodes.length > 0) {
-            const rawValue = barcodes[0].rawValue;
-            handleDetectedCode(rawValue);
+          const barcodes = await barcodeDetector.detect(video);
+          if (barcodes.length > 0 && barcodes[0].rawValue) {
+            handleDetectedCode(barcodes[0].rawValue);
             return;
           }
         } catch {
-          // continuar escaneando
+          // Continuar al fallback de jsQR si la API nativa falla
         }
+      }
 
-        animationFrameId.current = requestAnimationFrame(detect);
-      };
+      // 2. Detección universal mediante jsQR (funciona en iOS Safari, iPhone, iPad y desktop)
+      if (video.videoWidth && video.videoHeight && ctx) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'dontInvert',
+          });
+
+          if (code && code.data) {
+            handleDetectedCode(code.data);
+            return;
+          }
+        } catch {
+          // Si el fotograma no está listo o hay error de canvas, reintentar en el próximo frame
+        }
+      }
 
       animationFrameId.current = requestAnimationFrame(detect);
-    } else {
-      // Fallback a canvas si no tiene BarcodeDetector nativo
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+    };
 
-      const detectCanvas = () => {
-        if (!videoRef.current || videoRef.current.readyState < 2) {
-          animationFrameId.current = requestAnimationFrame(detectCanvas);
-          return;
-        }
-
-        // Si no hay BarcodeDetector nativo en navegadores antiguos, mostramos aviso amigable
-        animationFrameId.current = requestAnimationFrame(detectCanvas);
-      };
-
-      animationFrameId.current = requestAnimationFrame(detectCanvas);
-    }
+    animationFrameId.current = requestAnimationFrame(detect);
   };
 
   const handleDetectedCode = (rawValue: string) => {
@@ -150,6 +168,7 @@ export function QRScannerDialog({
         <div className="relative rounded-2xl overflow-hidden bg-black aspect-square flex items-center justify-center border-2 border-emerald-500/40">
           <video
             ref={videoRef}
+            autoPlay
             playsInline
             muted
             className="w-full h-full object-cover"

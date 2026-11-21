@@ -55,6 +55,7 @@
     "iron-session": "^8.0.2",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.475.0",
     "mapbox-gl": "^3.5.1",
     "marked": "^18.0.9",
