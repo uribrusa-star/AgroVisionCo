@@ -427,6 +427,17 @@ export type AppData = {
   notifications: PushNotification[];
     auditLogs: AuditLog[];
     logUserAction: (action: string, description: string, category: AuditLogCategory) => Promise<void>;
+  attendanceLogs: AttendanceLog[];
+  recordAttendanceCheck: (data: {
+    personnelId?: string;
+    personnelName: string;
+    role: string;
+    dni?: string;
+    method?: 'scan_gate' | 'self_check_in' | 'manual';
+    notes?: string;
+    targetDate?: string;
+  }) => Promise<{ type: 'in' | 'out'; log: AttendanceLog; hoursWorked?: number }>;
+  deleteAttendanceLog: (id: string) => Promise<void>;
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
@@ -458,4 +469,27 @@ export type AuditLog = {
   category: AuditLogCategory;
   timestamp: string;
   establishmentId: string;
+};
+
+export type AttendanceStatus = 'in_progress' | 'completed';
+
+export type AttendanceLog = {
+  id: string;
+  establishmentId: string;
+  personnelId?: string;
+  personnelName: string;
+  role: string;
+  dni?: string;
+  date: string; // YYYY-MM-DD
+  checkIn: string; // ISO String
+  checkOut?: string; // ISO String
+  totalHoursWorked?: number;
+  status: AttendanceStatus;
+  registeredBy: {
+    id: string;
+    name: string;
+    role?: string;
+  };
+  method: 'scan_gate' | 'self_check_in' | 'manual';
+  notes?: string;
 };

@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState, useContext, useTransition } from 'react';
+import React, { useState, useContext, useTransition, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone, Activity, History, Sprout, Package, Scissors, UserX, CheckCircle2 } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone, Activity, History, Sprout, Package, Scissors, UserX, CheckCircle2, FileDown, LogIn, ShieldCheck, Share2, Loader2, RefreshCw } from 'lucide-react';
 import { QRScannerDialog } from '@/components/qr-scanner-dialog';
+import { AttendanceScannerDialog } from '@/components/attendance-scanner-dialog';
+import { buildDynamicUserQRPayload } from '@/lib/qr-security';
+import { saveOrSharePdf } from '@/lib/pdf-generator';
 import QRCode from 'react-qr-code';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 import { PageHeader } from "@/components/page-header";
@@ -44,8 +47,11 @@ const CreateUserSchema = z.object({
 });
 
 export default function UsersPage() {
-  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests } = useContext(AppDataContext);
+  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests, attendanceLogs, establishmentData } = useContext(AppDataContext);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+  const [isAttendanceScannerOpen, setIsAttendanceScannerOpen] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const qrCodeSvgRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -53,11 +59,21 @@ export default function UsersPage() {
   
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [detailsUser, setDetailsUser] = useState<User | null>(null);
+  const [qrRefreshTick, setQrRefreshTick] = useState(0);
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   
   const [isPending, startTransition] = useTransition();
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Contador de renovación de QR dinámico cada 60s
+  useEffect(() => {
+    if (!isDetailsDialogOpen) return;
+    const interval = setInterval(() => {
+      setQrRefreshTick(prev => prev + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [isDetailsDialogOpen]);
 
   const filteredUsers = React.useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -70,7 +86,6 @@ export default function UsersPage() {
     );
   }, [users, searchQuery]);
 
-
   const passwordForm = useForm<z.infer<typeof PasswordSchema>>({
     resolver: zodResolver(PasswordSchema),
     defaultValues: { newPassword: '', confirmPassword: '' },
@@ -82,22 +97,162 @@ export default function UsersPage() {
   });
   
   const selectedRole = createForm.watch('role');
+  const canManageUsers = currentUser?.role === 'Productor' || currentUser?.role === 'SuperAdmin';
 
-  if (currentUser?.role !== 'Productor') {
+  if (currentUser?.role !== 'Productor' && currentUser?.role !== 'Encargado' && currentUser?.role !== 'SuperAdmin') {
     return (
         <>
-            <PageHeader title="Usuarios" description="Gestión de usuarios del sistema." />
+            <PageHeader title="Usuarios" description="Gestión de usuarios y personal del sistema." />
             <Card>
                 <CardHeader>
                     <CardTitle>Acceso Denegado</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>Solo el rol de 'Productor' puede gestionar usuarios.</p>
+                    <p>Solo los roles de 'Productor' o 'Encargado' pueden acceder a esta sección.</p>
                 </CardContent>
             </Card>
         </>
     );
   }
+
+  const getQrImageDataUrl = async (): Promise<string> => {
+    const qrSvg = qrCodeSvgRef.current?.querySelector('svg');
+    if (!qrSvg) return '';
+
+    return new Promise((resolve) => {
+      try {
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)));
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 400;
+          canvas.height = 400;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 400, 400);
+            ctx.drawImage(img, 0, 0, 400, 400);
+            resolve(canvas.toDataURL('image/png'));
+          } else {
+            resolve('');
+          }
+        };
+        img.onerror = () => resolve('');
+        img.src = `data:image/svg+xml;base64,${svgDataBase64}`;
+      } catch {
+        resolve('');
+      }
+    });
+  };
+
+  const handleDownloadCredentialPdf = async (user: User) => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    toast({ title: 'Generando Credencial', description: 'Preparando carnet oficial en 1 sola hoja...' });
+
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = 210;
+      const cardWidth = 90;
+      const cardHeight = 135;
+      const x = (pageWidth - cardWidth) / 2; // 60mm
+      const y = 35;
+
+      const establishmentName = establishmentData?.producer || 'AgroVista';
+
+      // 1. Recuadro con línea punteada para recortar
+      doc.setDrawColor(5, 150, 105);
+      doc.setLineDashPattern([2, 2], 0);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'S');
+      doc.setLineDashPattern([], 0);
+
+      // 2. Encabezado de la credencial (barra verde superior)
+      doc.setFillColor(6, 78, 59);
+      doc.roundedRect(x, y, cardWidth, 14, 3, 3, 'F');
+      doc.rect(x, y + 10, cardWidth, 4, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('AGROVISTA', x + 5, y + 8);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.text(establishmentName.substring(0, 24), x + cardWidth - 5, y + 8, { align: 'right' });
+
+      // 3. Sub-barra con rol del usuario
+      doc.setFillColor(240, 253, 244);
+      doc.rect(x, y + 14, cardWidth, 7, 'F');
+      doc.setTextColor(5, 150, 105);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.text(user.role.toUpperCase(), x + cardWidth / 2, y + 18.5, { align: 'center' });
+
+      // 4. Nombre y DNI
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12.5);
+      const displayName = user.name.length > 22 ? user.name.substring(0, 21) + '...' : user.name;
+      doc.text(displayName, x + cardWidth / 2, y + 27, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105);
+      doc.text(user.dni ? `DNI: ${user.dni}` : 'Credencial Digital Oficial', x + cardWidth / 2, y + 32, { align: 'center' });
+
+      // 5. Código QR (obtenido directamente del elemento montado)
+      const qrDataUrl = await getQrImageDataUrl();
+      const qrSize = 48;
+      const qrX = x + (cardWidth - qrSize) / 2;
+      const qrY = y + 36;
+      if (qrDataUrl) {
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 4, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 4, 2, 2, 'S');
+        doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+      }
+
+      // 6. Pie y datos de contacto
+      doc.setFontSize(6.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Escanear en tranquera para registrar ingreso y salida', x + cardWidth / 2, y + 90, { align: 'center' });
+
+      if (user.phone) {
+        doc.setFontSize(7);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Tel: ${user.phone}`, x + cardWidth / 2, y + 96, { align: 'center' });
+      }
+
+      if (user.email) {
+        doc.setFontSize(7);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Email: ${user.email}`, x + cardWidth / 2, y + 101, { align: 'center' });
+      }
+
+      // 7. Pie de seguridad
+      doc.setFillColor(248, 250, 252);
+      doc.rect(x + 1, y + cardHeight - 12, cardWidth - 2, 11, 'F');
+      doc.setFontSize(6);
+      doc.setTextColor(148, 163, 184);
+      doc.text('CREDENCIAL OFICIAL DE ACCESO Y ASISTENCIA', x + cardWidth / 2, y + cardHeight - 7, { align: 'center' });
+      doc.text('AgroVista Co. - Trazabilidad y Gestión de Personal', x + cardWidth / 2, y + cardHeight - 3.5, { align: 'center' });
+
+      const safeName = user.name.replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `Credencial_${safeName}.pdf`;
+      const pdfBlob = doc.output('blob');
+
+      await saveOrSharePdf(pdfBlob, filename, `Credencial de ${user.name}`);
+      toast({ title: 'Credencial Descargada', description: `Se generó el carnet de ${user.name} en 1 hoja.` });
+    } catch (err) {
+      console.error('Error generating user card pdf:', err);
+      toast({ title: 'Error', description: 'No se pudo generar la credencial en PDF.', variant: 'destructive' });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handleOpenPasswordDialog = (user: User) => {
     setSelectedUser(user);
@@ -227,6 +382,18 @@ export default function UsersPage() {
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
               <Button 
+                onClick={() => setIsAttendanceScannerOpen(true)}
+                className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <LogIn className="h-4 w-4 shrink-0" />
+                Control de Asistencia
+                {attendanceLogs.filter(l => l.status === 'in_progress').length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-emerald-900 text-white text-[10px] font-bold rounded-full">
+                    {attendanceLogs.filter(l => l.status === 'in_progress').length}
+                  </span>
+                )}
+              </Button>
+              <Button 
                 variant="outline" 
                 onClick={() => setIsQRScannerOpen(true)}
                 className="w-full sm:w-auto h-10 gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold justify-center text-sm shadow-xs"
@@ -234,13 +401,15 @@ export default function UsersPage() {
                 <QrCode className="h-4 w-4 shrink-0" />
                 Escanear Credencial
               </Button>
-              <Button 
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs"
-              >
-                  <Plus className="h-4 w-4 shrink-0" />
-                  Agregar Empleado
-              </Button>
+              {canManageUsers && (
+                <Button 
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs"
+                >
+                    <Plus className="h-4 w-4 shrink-0" />
+                    Agregar Empleado
+                </Button>
+              )}
           </div>
       </div>
 
@@ -460,16 +629,98 @@ export default function UsersPage() {
                                 <p className="text-muted-foreground text-xs">Teléfono: <span className="font-medium text-foreground">{detailsUser.phone}</span></p>
                               )}
                           </div>
-                          <div className="flex flex-col items-center bg-white p-2 rounded-xl border border-border shadow-xs shrink-0">
+                          <div className="flex flex-col items-center bg-white p-2 rounded-xl border border-border shadow-xs shrink-0" ref={qrCodeSvgRef}>
                               <QRCode
-                                value={JSON.stringify({ agroVistaUser: true, id: detailsUser.id, name: detailsUser.name, role: detailsUser.role, email: detailsUser.email })}
-                                size={85}
+                                value={buildDynamicUserQRPayload(detailsUser)}
+                                size={90}
                                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                                 viewBox="0 0 256 256"
                               />
-                              <span className="text-[9px] font-mono text-muted-foreground mt-1">QR DE ACCESO</span>
+                              <div className="flex items-center gap-1 mt-1 text-[9px] font-mono text-emerald-600 font-semibold">
+                                <ShieldCheck className="h-3 w-3" />
+                                <span>QR DINÁMICO (60s)</span>
+                              </div>
                           </div>
                       </div>
+
+                      {/* Botones de Acción de Credencial */}
+                      <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full">
+                          <Button
+                              type="button"
+                              onClick={() => handleDownloadCredentialPdf(detailsUser)}
+                              disabled={isGeneratingPdf}
+                              className="w-full sm:flex-1 h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
+                          >
+                              {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+                              Descargar Credencial (PDF)
+                          </Button>
+                          <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                  const text = `Hola, aquí tienes los datos de la credencial oficial de AgroVista para ${detailsUser.name} (${detailsUser.role}).`;
+                                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                              }}
+                              className="w-full sm:w-auto h-9 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
+                          >
+                              <Share2 className="h-4 w-4" />
+                              WhatsApp
+                          </Button>
+                      </div>
+
+                      {/* Estado de Asistencia en Tiempo Real */}
+                      {(() => {
+                        const currentAttendance = attendanceLogs.find(l => 
+                          l.status === 'in_progress' && 
+                          ((detailsUser.id && l.personnelId === detailsUser.id) ||
+                           (detailsUser.dni && l.dni && l.dni === detailsUser.dni) ||
+                           (l.personnelName.trim().toLowerCase() === detailsUser.name.trim().toLowerCase()))
+                        );
+
+                        const totalAttendanceLogs = attendanceLogs.filter(l =>
+                          ((detailsUser.id && l.personnelId === detailsUser.id) ||
+                           (detailsUser.dni && l.dni && l.dni === detailsUser.dni) ||
+                           (l.personnelName.trim().toLowerCase() === detailsUser.name.trim().toLowerCase()))
+                        );
+
+                        return (
+                          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                              {currentAttendance ? (
+                                <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5 rounded-xl flex items-center justify-between text-emerald-800 dark:text-emerald-300">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                                        <div>
+                                          <p className="font-bold">Presente en la quinta</p>
+                                          <p className="text-[10px] opacity-80">Ingreso: {format(new Date(currentAttendance.checkIn), 'HH:mm')} hs</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant="outline" className="text-[9px] bg-emerald-100 dark:bg-emerald-900 border-emerald-300">En curso</Badge>
+                                </div>
+                              ) : (
+                                <div className="bg-muted/30 border p-2.5 rounded-xl flex items-center justify-between text-muted-foreground">
+                                    <div className="flex items-center gap-2">
+                                        <span className="h-2 w-2 rounded-full bg-stone-300 shrink-0" />
+                                        <div>
+                                          <p className="font-bold text-foreground">Fuera de la quinta</p>
+                                          <p className="text-[10px]">Sin ingreso activo en la jornada</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant="outline" className="text-[9px]">Inactivo</Badge>
+                                </div>
+                              )}
+
+                              <div className="bg-muted/20 border p-2.5 rounded-xl flex items-center justify-between">
+                                  <div>
+                                    <p className="font-bold text-foreground">Asistencias registradas</p>
+                                    <p className="text-[10px] text-muted-foreground">Total de jornadas en finca</p>
+                                  </div>
+                                  <span className="text-sm font-bold text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-md">
+                                    {totalAttendanceLogs.length}
+                                  </span>
+                              </div>
+                          </div>
+                        );
+                      })()}
 
                       {detailsUser.lastLoginAt && (
                           <div className="bg-muted/40 border p-2.5 rounded-lg w-full flex items-center justify-center gap-2 text-xs text-muted-foreground">
@@ -668,6 +919,11 @@ export default function UsersPage() {
             </Form>
         </DialogContent>
       </Dialog>
+
+      <AttendanceScannerDialog
+        isOpen={isAttendanceScannerOpen}
+        onOpenChange={setIsAttendanceScannerOpen}
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@
 'use client';
 
 import React, { ReactNode, useState, useCallback, useEffect } from 'react';
-import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem, ContactRequest, ContactRequestStatus, AuditLog, AuditLogCategory } from '@/lib/types';
+import type { AppData, User, Harvest, Collector, AgronomistLog, PhenologyLog, Batch, CollectorPaymentLog, EstablishmentData, ProducerLog, Transaction, Packer, PackagingLog, CulturalPracticeLog, Supply, PredictionLog, DiagnosisLog, Task, TaskStatus, KnowledgeItem, ContactRequest, ContactRequestStatus, AuditLog, AuditLogCategory, AttendanceLog } from '@/lib/types';
 import { initialEstablishmentData, users as availableUsers } from '@/lib/data';
 import { useToast } from "@/hooks/use-toast";
 import { sendPushNotification } from "@/lib/send-push";
@@ -87,6 +87,9 @@ export const AppDataContext = React.createContext<AppData>({
   updateUserProfile: async () => { throw new Error('Not implemented') },
   auditLogs: [],
   logUserAction: async () => {},
+  attendanceLogs: [],
+  recordAttendanceCheck: async () => { throw new Error('Not implemented') },
+  deleteAttendanceLog: async () => {},
   saveFcmToken: async () => { throw new Error('Not implemented') },
   isClient: false
 });
@@ -160,6 +163,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [supplies, setSupplies] = useState<Supply[]>([]);
     const [notifications, setNotifications] = useState<PushNotification[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+    const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
     const [collectorPaymentLogs, setCollectorPaymentLogs] = useState<CollectorPaymentLog[]>([]);
@@ -303,6 +307,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               producerLogsSnapshot,
               transactionsSnapshot,
               knowledgeSnapshot,
+              attendanceLogsSnapshot,
             ] = await Promise.all([
               safeFetch(getDoc(doc(db, 'establishment', estId)), null),
               fetchQueryWithFallback('collectors', estId, null),
@@ -321,6 +326,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               fetchQueryWithFallback('producerLogs', estId, 'date'),
               fetchQueryWithFallback('transactions', estId, 'date'),
               fetchQueryWithFallback('knowledge', estId, null),
+              fetchQueryWithFallback('attendanceLogs', estId, 'checkIn'),
             ]);
             
             if (establishmentDocSnap && establishmentDocSnap.exists()) {
@@ -356,14 +362,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setProducerLogs(producerLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
             setTransactions(transactionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
             setKnowledgeBase(knowledgeSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
-            setPackagingLogs(packagingLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as PackagingLog[]);
-            setCulturalPracticeLogs(culturalPracticeLogsSnapshot.docs.map((doc: any) => {
-              const data = doc.data();
-              return { id: doc.id, ...data, batchIds: data.batchIds || (data.batchId ? [data.batchId] : []) };
-            }) as CulturalPracticeLog[]);
-            setProducerLogs(producerLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
-            setTransactions(transactionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
-            setKnowledgeBase(knowledgeSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
+            setAttendanceLogs(attendanceLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AttendanceLog[]);
         
       } catch (error) {
         console.error("Error fetching data from Firestore:", error);
@@ -1962,6 +1961,110 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    const recordAttendanceCheck = async (data: {
+        personnelId?: string;
+        personnelName: string;
+        role: string;
+        dni?: string;
+        method?: 'scan_gate' | 'self_check_in' | 'manual';
+        notes?: string;
+        targetDate?: string;
+    }): Promise<{ type: 'in' | 'out'; log: AttendanceLog; hoursWorked?: number }> => {
+        const estId = currentUser?.establishmentId || 'main';
+        const now = new Date();
+        const dateStr = data.targetDate || now.toISOString().split('T')[0];
+
+        // Buscar si ya tiene un ingreso abierto en la fecha correspondiente
+        const existingOpenLog = attendanceLogs.find(l => 
+            l.status === 'in_progress' &&
+            l.date === dateStr &&
+            ((data.personnelId && l.personnelId && l.personnelId === data.personnelId) ||
+             (data.dni && l.dni && l.dni === data.dni) ||
+             (l.personnelName.trim().toLowerCase() === data.personnelName.trim().toLowerCase()))
+        );
+
+        if (existingOpenLog) {
+            // Registrar SALIDA
+            const checkOutTime = now.toISOString();
+            const checkInDate = new Date(existingOpenLog.checkIn);
+            const diffHours = Math.max(0, (now.getTime() - checkInDate.getTime()) / (1000 * 60 * 60));
+            const totalHoursWorked = Math.round(diffHours * 100) / 100;
+
+            const updatedLog: AttendanceLog = {
+                ...existingOpenLog,
+                checkOut: checkOutTime,
+                totalHoursWorked,
+                status: 'completed',
+                notes: data.notes || existingOpenLog.notes
+            };
+
+            setAttendanceLogs(prev => prev.map(l => l.id === existingOpenLog.id ? updatedLog : l));
+
+            try {
+                const logRef = doc(db, 'attendanceLogs', existingOpenLog.id);
+                await setDoc(logRef, sanitizeForFirestore(updatedLog), { merge: true });
+                logUserAction(
+                    'Salida Registrada',
+                    `${data.personnelName} (${data.role}) registró salida (${totalHoursWorked} hs trabajadas)`,
+                    'staff'
+                );
+            } catch (err) {
+                console.error('Error updating attendance log out:', err);
+            }
+
+            return { type: 'out', log: updatedLog, hoursWorked: totalHoursWorked };
+        } else {
+            // Registrar INGRESO
+            const tempId = `att_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+            const newLog: AttendanceLog = {
+                id: tempId,
+                establishmentId: estId,
+                personnelId: data.personnelId,
+                personnelName: data.personnelName,
+                role: data.role,
+                dni: data.dni,
+                date: dateStr,
+                checkIn: now.toISOString(),
+                status: 'in_progress',
+                registeredBy: {
+                    id: currentUser?.id || 'system',
+                    name: currentUser?.name || 'Sistema',
+                    role: currentUser?.role || 'Encargado'
+                },
+                method: data.method || 'scan_gate',
+                notes: data.notes
+            };
+
+            setAttendanceLogs(prev => [newLog, ...prev]);
+
+            try {
+                const docRef = await addDoc(collection(db, 'attendanceLogs'), sanitizeForFirestore({
+                    ...newLog,
+                    establishmentId: estId
+                }));
+                setAttendanceLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: docRef.id } : l));
+                logUserAction(
+                    'Ingreso Registrado',
+                    `${data.personnelName} (${data.role}) registró ingreso a la quinta`,
+                    'staff'
+                );
+            } catch (err) {
+                console.error('Error creating attendance log in:', err);
+            }
+
+            return { type: 'in', log: newLog };
+        }
+    };
+
+    const deleteAttendanceLog = async (id: string) => {
+        setAttendanceLogs(prev => prev.filter(l => l.id !== id));
+        try {
+            await deleteDoc(doc(db, 'attendanceLogs', id));
+        } catch (err) {
+            console.error('Error deleting attendance log:', err);
+        }
+    };
+
     const value = {
         loading,
         currentUser,
@@ -2042,6 +2145,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         saveFcmToken,
         auditLogs,
         logUserAction,
+        attendanceLogs,
+        recordAttendanceCheck,
+        deleteAttendanceLog,
         isClient
     };
 
