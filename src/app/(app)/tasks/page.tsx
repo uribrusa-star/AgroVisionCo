@@ -199,6 +199,72 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                         </div>
                     )}
                 </CardContent>
+                {canUpdateStatus && !isOverlay && (
+                    <div className="px-4 pb-3 pt-0" onPointerDown={(e) => e.stopPropagation()}>
+                        {task.status === 'pending' && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="w-full h-8 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50/50 hover:bg-blue-100/70 border-blue-200/80 transition-all flex items-center justify-center gap-1.5 shadow-none"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateStatus('in-progress');
+                                }}
+                                disabled={isPending}
+                            >
+                                <span>Iniciar Tarea</span>
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                        {task.status === 'in-progress' && (
+                            <div className="flex items-center gap-1.5">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted border-dashed shrink-0"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateStatus('pending');
+                                    }}
+                                    disabled={isPending}
+                                    title="Regresar a Pendiente"
+                                >
+                                    ←
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    className="flex-1 h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 shadow-sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateStatus('completed');
+                                    }}
+                                    disabled={isPending}
+                                >
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Completar Tarea</span>
+                                </Button>
+                            </div>
+                        )}
+                        {task.status === 'completed' && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="w-full h-7 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/50 flex items-center justify-center gap-1"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateStatus('in-progress');
+                                }}
+                                disabled={isPending}
+                            >
+                                <span>Reabrir tarea</span>
+                            </Button>
+                        )}
+                    </div>
+                )}
                  <CardFooter className="flex justify-between items-center text-[10px] pb-3">
                         <div className="flex items-center gap-1.5">
                             <Avatar className="h-5 w-5">
