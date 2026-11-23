@@ -22,14 +22,26 @@ export async function POST(req: Request) {
     let allTokens: string[] = [];
 
     if (targetUserId) {
-      // Send to a single user
+      // Send to a single user (search by ID or email)
       const userDoc = await adminDb.collection('users').doc(targetUserId).get();
       if (userDoc.exists) {
         const userData = userDoc.data();
         if (userData?.fcmTokens && Array.isArray(userData.fcmTokens)) {
           allTokens = allTokens.concat(userData.fcmTokens);
         }
+        targetUserIdsList.push(userDoc.id);
+      } else {
+        const userByEmail = await adminDb.collection('users').where('email', '==', targetUserId).get();
+        if (!userByEmail.empty) {
+          const docSnap = userByEmail.docs[0];
+          const userData = docSnap.data();
+          if (userData?.fcmTokens && Array.isArray(userData.fcmTokens)) {
+            allTokens = allTokens.concat(userData.fcmTokens);
+          }
+          targetUserIdsList.push(docSnap.id);
+        }
       }
+      targetUserIdsList.push(targetUserId);
     } else if (targetUserIds && Array.isArray(targetUserIds) && targetUserIds.length > 0) {
       // Send to specific multiple users
       const usersSnapshot = await adminDb.collection('users').where('__name__', 'in', targetUserIds).get();
@@ -38,7 +50,9 @@ export async function POST(req: Request) {
         if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
           allTokens = allTokens.concat(userData.fcmTokens);
         }
+        targetUserIdsList.push(doc.id);
       });
+      targetUserIdsList = targetUserIdsList.concat(targetUserIds);
     } else {
       // Broadcast based on roles
       const rolesToTarget = targetRoles || ['Productor', 'Ingeniero Agronomo', 'Encargado'];
@@ -49,19 +63,8 @@ export async function POST(req: Request) {
         if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
           allTokens = allTokens.concat(userData.fcmTokens);
         }
+        targetUserIdsList.push(doc.id);
       });
-    }
-    
-    // Save notifications to database for the targeted users
-    let targetUserIdsList: string[] = [];
-    if (targetUserId) {
-        targetUserIdsList.push(targetUserId);
-    } else if (targetUserIds && Array.isArray(targetUserIds) && targetUserIds.length > 0) {
-        targetUserIdsList = targetUserIds;
-    } else {
-        const rolesToTarget = targetRoles || ['Productor', 'Ingeniero Agronomo', 'Encargado'];
-        const usersSnapshot = await adminDb.collection('users').where('role', 'in', rolesToTarget).get();
-        usersSnapshot.forEach((doc) => targetUserIdsList.push(doc.id));
     }
 
     targetUserIdsList = Array.from(new Set(targetUserIdsList));

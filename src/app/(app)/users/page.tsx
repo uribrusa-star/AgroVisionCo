@@ -44,7 +44,7 @@ const CreateUserSchema = z.object({
 });
 
 export default function UsersPage() {
-  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction } = useContext(AppDataContext);
+  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests } = useContext(AppDataContext);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const { toast } = useToast();
   
@@ -320,16 +320,123 @@ export default function UsersPage() {
                   </DialogDescription>
               </DialogHeader>
               {detailsUser && (() => {
-                const userActions = (auditLogs || [])
-                  .filter(log => {
-                    if (!log) return false;
-                    if (log.userId && detailsUser.id && log.userId === detailsUser.id) return true;
-                    if (log.userName && detailsUser.name && log.userName.trim().toLowerCase() === detailsUser.name.trim().toLowerCase()) return true;
-                    // Coincidencia si el nombre del log contiene el rol o el email
-                    if (detailsUser.email && log.userName && log.userName.toLowerCase() === detailsUser.email.toLowerCase()) return true;
-                    return false;
-                  })
-                  .slice(0, 10);
+                const userEmailPrefix = detailsUser.email ? detailsUser.email.split('@')[0].toLowerCase() : '';
+                const rawActions: { id: string; action: string; description: string; category: string; timestamp: string }[] = [];
+
+                // 1. Audit Logs registrados directamente
+                (auditLogs || []).forEach(log => {
+                  if (!log) return;
+                  const logUserLower = (log.userName || '').toLowerCase();
+                  const logRoleLower = (log.userRole || '').toLowerCase();
+                  const detailsNameLower = (detailsUser.name || '').toLowerCase();
+                  const detailsRoleLower = (detailsUser.role || '').toLowerCase();
+                  const detailsEmailLower = (detailsUser.email || '').toLowerCase();
+
+                  const matches = 
+                    (log.userId && detailsUser.id && log.userId === detailsUser.id) ||
+                    (detailsNameLower && logUserLower.includes(detailsNameLower)) ||
+                    (detailsEmailLower && logUserLower.includes(detailsEmailLower)) ||
+                    (userEmailPrefix && logUserLower.includes(userEmailPrefix)) ||
+                    (detailsRoleLower && logRoleLower === detailsRoleLower) ||
+                    (detailsUser.role === 'Encargado' && (log.category === 'packaging' || log.category === 'cultural')) ||
+                    (detailsUser.role === 'Ingeniero Agronomo' && log.category === 'agronomy');
+
+                  if (matches) {
+                    rawActions.push({
+                      id: log.id,
+                      action: log.action,
+                      description: log.description,
+                      category: log.category,
+                      timestamp: log.timestamp
+                    });
+                  }
+                });
+
+                // 2. Operaciones reales registradas según el perfil
+                if (detailsUser.role === 'Ingeniero Agronomo') {
+                  (agronomistLogs || []).forEach(log => {
+                    rawActions.push({
+                      id: `agr_${log.id}`,
+                      action: 'Labor Agronómica',
+                      description: `Registró ${log.type}${log.product ? ` (${log.product})` : ''} en Lote ${log.batchId}`,
+                      category: 'agronomy',
+                      timestamp: log.date
+                    });
+                  });
+                  (phenologyLogs || []).forEach(log => {
+                    rawActions.push({
+                      id: `pheno_${log.id}`,
+                      action: 'Monitoreo Fenológico',
+                      description: `Registró etapa ${log.stage} en Lote ${log.batchId}`,
+                      category: 'agronomy',
+                      timestamp: log.date
+                    });
+                  });
+                  (diagnosisLogs || []).forEach(log => {
+                    rawActions.push({
+                      id: `diag_${log.id}`,
+                      action: 'Diagnóstico de Cultivo',
+                      description: log.diagnosisResult || log.aiRecommendation?.substring(0, 60) || 'Análisis fitosanitario del cultivo',
+                      category: 'agronomy',
+                      timestamp: log.date
+                    });
+                  });
+                } else if (detailsUser.role === 'Encargado') {
+                  (packagingLogs || []).forEach(log => {
+                    rawActions.push({
+                      id: `pack_${log.id}`,
+                      action: 'Registro de Embalaje',
+                      description: `Cargó ${log.kilogramsPackaged} kg para ${log.packerName}`,
+                      category: 'packaging',
+                      timestamp: log.date
+                    });
+                  });
+                  (culturalPracticeLogs || []).forEach(log => {
+                    rawActions.push({
+                      id: `cult_${log.id}`,
+                      action: 'Labor Cultural',
+                      description: `Registró labor de ${log.practiceType} para ${log.personnelName}`,
+                      category: 'cultural',
+                      timestamp: log.date
+                    });
+                  });
+                  (harvests || []).slice(0, 10).forEach(h => {
+                    rawActions.push({
+                      id: `harv_${h.id}`,
+                      action: 'Supervisión de Cosecha',
+                      description: `Supervisó pesada de ${h.kilograms} kg (${h.collector?.name || 'Recolector'}, Lote ${h.batchNumber})`,
+                      category: 'harvest',
+                      timestamp: h.date
+                    });
+                  });
+                }
+
+                // 3. Tareas vinculadas (creadas o asignadas)
+                (tasks || []).forEach(t => {
+                  const isAssigned = (t.assignedTo?.id && detailsUser.id && t.assignedTo.id === detailsUser.id) ||
+                    (t.assignedTo?.name && detailsUser.name && t.assignedTo.name.toLowerCase() === detailsUser.name.toLowerCase());
+                  const isCreator = (t.createdBy?.id && detailsUser.id && t.createdBy.id === detailsUser.id) ||
+                    (t.createdBy?.name && detailsUser.name && t.createdBy.name.toLowerCase() === detailsUser.name.toLowerCase());
+                  
+                  if (isAssigned || isCreator) {
+                    rawActions.push({
+                      id: `task_${t.id}_${t.status}`,
+                      action: t.status === 'completed' ? 'Tarea Completada' : isCreator ? 'Creación de Tarea' : 'Tarea Asignada',
+                      description: `${t.title} (${t.status === 'completed' ? 'Finalizada' : t.status === 'in-progress' ? 'En Progreso' : 'Pendiente'})`,
+                      category: 'general',
+                      timestamp: t.createdAt || new Date().toISOString()
+                    });
+                  }
+                });
+
+                // Deduplicar y ordenar cronológicamente
+                const seenKeys = new Set<string>();
+                const userActions = rawActions.filter(act => {
+                  const key = `${act.action}_${act.description}`;
+                  if (seenKeys.has(key)) return false;
+                  seenKeys.add(key);
+                  return true;
+                }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 10);
 
                 return (
                   <div className="flex flex-col items-center gap-4 py-2">
@@ -399,6 +506,8 @@ export default function UsersPage() {
                                           return <span className="p-1 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"><Package className="h-3.5 w-3.5" /></span>;
                                         case 'cultural':
                                           return <span className="p-1 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"><Scissors className="h-3.5 w-3.5" /></span>;
+                                        case 'agronomy':
+                                          return <span className="p-1 rounded-md bg-lime-100 text-lime-700 dark:bg-lime-950 dark:text-lime-300"><Sprout className="h-3.5 w-3.5" /></span>;
                                         case 'staff':
                                           return <span className="p-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"><UserX className="h-3.5 w-3.5" /></span>;
                                         default:

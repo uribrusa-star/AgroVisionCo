@@ -1345,6 +1345,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
         addDoc(collection(db, 'phenologyLogs'), { ...sanitizeForFirestore(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setPhenologyLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
+            logUserAction(
+                'Monitoreo Fenológico',
+                `Registró etapa ${log.stage} en Lote ${log.batchId}`,
+                'agronomy'
+            );
         }).catch(error => {
             console.error("Failed to add phenology log:", error);
             setPhenologyLogs(prev => prev.filter(l => l.id !== tempId));
@@ -1421,6 +1426,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         addDoc(collection(db, 'diagnosisLogs'), { ...(log), establishmentId: currentUser?.establishmentId || 'main' }).then(ref => {
             setDiagnosisLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: ref.id } : l));
+            logUserAction(
+                'Diagnóstico de Cultivo',
+                `Registró diagnóstico: ${log.diagnosisResult || log.aiRecommendation?.substring(0, 50) || 'Análisis fitosanitario'}`,
+                'agronomy'
+            );
             
             // Trigger push notification if disease or pest is detected
             if (log.diagnosisResult && (log.diagnosisResult.toLowerCase().includes('enferm') || log.diagnosisResult.toLowerCase().includes('plaga'))) {
@@ -1494,7 +1504,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         addDoc(collection(db, 'tasks'), sanitizeForFirestore({ ...task, establishmentId: currentUser?.establishmentId || 'main' }))
         .then(ref => {
             setTasks(prev => prev.map(t => (t.id === tempId ? { ...t, id: ref.id } : t)));
-            const assignedUser = users.find(u => u.id === task.assignedTo.id);
+            const assignedUser = users.find(u => 
+                u.id === task.assignedTo.id || 
+                (task.assignedTo.name && u.name.toLowerCase() === task.assignedTo.name.toLowerCase())
+            );
             if (assignedUser) {
                 fetch('/api/send-task-email', {
                     method: 'POST',
@@ -1509,6 +1522,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     targetUserId: assignedUser.id,
                 });
             }
+            logUserAction(
+                'Creación de Tarea',
+                `Asignó la tarea "${task.title}" a ${task.assignedTo.name}`,
+                'general'
+            );
         })
         .catch(error => {
             console.error("Failed to add task:", error);
@@ -1527,7 +1545,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         setDoc(taskRef, { status }, { merge: true })
         .then(() => {
             if (status === 'completed' && taskToUpdate) {
-                const creatorUser = users.find(u => u.id === taskToUpdate.createdBy.id);
+                const creatorUser = users.find(u => 
+                    u.id === taskToUpdate.createdBy?.id || 
+                    (taskToUpdate.createdBy?.name && u.name.toLowerCase() === taskToUpdate.createdBy.name.toLowerCase()) ||
+                    (u.role === 'Productor' && (!taskToUpdate.createdBy?.id || taskToUpdate.createdBy?.id === 'user-productor'))
+                );
                 if (creatorUser) {
                     fetch('/api/send-task-completed-email', {
                         method: 'POST',
@@ -1543,6 +1565,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     });
                 }
             }
+            logUserAction(
+                status === 'completed' ? 'Tarea Completada' : 'Actualización de Tarea',
+                `Cambió estado de "${taskToUpdate?.title || 'tarea'}" a ${status === 'completed' ? 'Completado' : status === 'in-progress' ? 'En Progreso' : 'Pendiente'}`,
+                'general'
+            );
         })
         .catch(error => {
             console.error("Failed to update task status:", error);
