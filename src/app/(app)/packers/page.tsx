@@ -12,7 +12,12 @@ import {
   Printer, 
   Plus, 
   Pencil, 
-  AlertCircle 
+  AlertCircle,
+  Calendar,
+  Info,
+  FileDown,
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
@@ -23,14 +28,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import type { Packer } from '@/lib/types';
+import type { Packer, PackagingLog } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { WorkerQRCardDialog } from '@/components/worker-qr-card-dialog';
 import { generateCrewBadgesPDF } from '@/lib/export-crew-badges-pdf';
+import { saveOrSharePdf } from '@/lib/pdf-generator';
 
 const PackerSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -65,6 +72,10 @@ export default function PackersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isPrintingBadges, setIsPrintingBadges] = useState(false);
+
+  const [selectedPackagingDetail, setSelectedPackagingDetail] = useState<PackagingLog | null>(null);
+  const [isPdfPending, startPdfTransition] = useTransition();
+  const isGeneratingRef = React.useRef(false);
 
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -112,7 +123,101 @@ export default function PackersPage() {
   }, [packers, searchQuery]);
 
   const getPackerHistory = (packerId: string) => {
-    return packagingLogs.filter(log => log.packerId === packerId);
+    return [...packagingLogs]
+      .filter(log => log.packerId === packerId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
+
+  const handleGenerateReceiptForPackagingRecord = (log: PackagingLog) => {
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
+    if (!log || !establishmentData) return;
+
+    startPdfTransition(async () => {
+      toast({ title: 'Generando Recibo', description: 'Por favor espere...' });
+      try {
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
+        const doc = new jsPDF() as any;
+
+        try {
+          const res = await fetch('/logo.png');
+          const blob = await res.blob();
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          doc.addImage(base64, 'PNG', 15, 12, 18, 18);
+        } catch (error) {
+          console.error("Error al cargar logo:", error);
+        }
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text('Establecimiento:', 40, 17);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(0);
+        doc.text(establishmentData.producer || establishmentData.name || 'Don José', 40, 24);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150);
+        doc.text(`${establishmentData.location?.locality || ''}, ${establishmentData.location?.province || ''}`, 40, 30);
+
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(100); 
+        doc.text('RECIBO DE PAGO', 105, 50, { align: 'center' });
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80);
+        doc.text(`Fecha: ${new Date(log.date).toLocaleDateString('es-AR')}`, 195, 60, { align: 'right' });
+
+        const bodyY = 80;
+        doc.setFontSize(12);
+        doc.text(`Por medio del presente, se deja constancia de que ${log.packerName} ha recibido el pago por las labores de embalaje detalladas a continuación:`, 15, bodyY, { maxWidth: 180 });
+
+        const tableBody = [
+          ['Labor Realizada', 'Embalaje de Fruta'],
+          ['Modalidad de Pago', 'Por Hora Trabajada'],
+          ['Horas Trabajadas', `${log.hoursWorked} hs`],
+          ['Tarifa por Hora', `$${log.costPerHour.toLocaleString('es-AR', { minimumFractionDigits: 2 })}/h`],
+          ['Kilos Embalados (Referencia)', `${log.kilogramsPackaged.toLocaleString('es-AR')} kg`],
+          ['Rendimiento de Sesión', `${log.hoursWorked > 0 ? (log.kilogramsPackaged / log.hoursWorked).toFixed(1) : '0.0'} kg/h`],
+          ['Total Pagado', `$${log.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
+        ];
+
+        autoTable(doc, {
+          startY: bodyY + 25,
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [38, 70, 83] },
+          styles: { fontSize: 12, cellPadding: 3 },
+          columnStyles: { 0: { fontStyle: 'bold', fillColor: '#f8f9fa' } }
+        });
+
+        const finalY = (doc as any).lastAutoTable?.finalY || 150;
+        doc.text('Firma del Embalador/a: _________________________', 15, finalY + 30);
+        doc.text(`Aclaración: ${log.packerName}`, 15, finalY + 40);
+
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text('Este es un comprobante no válido como factura.', 105, 280, { align: 'center' });
+
+        const fileName = `Recibo_Embalaje_${log.packerName.replace(/\s+/g, '_')}_${new Date(log.date).toISOString().slice(0, 10)}.pdf`;
+        await saveOrSharePdf(doc, fileName, 'Recibo de Pago de Embalaje');
+        toast({ title: '¡Recibo Listo!', description: 'El comprobante ha sido generado correctamente.' });
+      } catch (error) {
+        console.error("Error al generar recibo PDF:", error);
+        toast({ title: "Error", description: "No se pudo generar el comprobante PDF.", variant: "destructive" });
+      }
+    });
   };
 
   const handleDelete = (packerId: string) => {
@@ -636,38 +741,197 @@ export default function PackersPage() {
                     </p>
                  </div>
               </div>
-              <div className="max-h-[50vh] overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Horas</TableHead>
-                      <TableHead className="text-right">Kilos Embalados</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      const history = getPackerHistory(selectedPacker.id);
-                      if (history.length > 0) {
-                        return history.map(log => (
-                          <TableRow key={log.id}>
-                            <TableCell>{new Date(log.date).toLocaleDateString('es-AR')}</TableCell>
-                            <TableCell>{log.hoursWorked} hs</TableCell>
-                            <TableCell className="text-right font-medium">{log.kilogramsPackaged} kg</TableCell>
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-0.5">
+                  <Info className="h-3.5 w-3.5 text-blue-600 shrink-0" /> 
+                  Toque cualquier registro para ver los detalles completos y comprobante.
+                </p>
+                <div className="max-h-[50vh] overflow-auto border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30">
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Horas</TableHead>
+                        <TableHead className="text-right">Kilos Embalados</TableHead>
+                        <TableHead className="text-right">Liquidación</TableHead>
+                        <TableHead className="w-6"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(() => {
+                        const history = getPackerHistory(selectedPacker.id);
+                        if (history.length > 0) {
+                          return history.map(log => (
+                            <TableRow 
+                              key={log.id}
+                              className="cursor-pointer hover:bg-blue-500/10 transition-colors group"
+                              onClick={() => setSelectedPackagingDetail(log)}
+                              title="Presione para ver detalles del registro"
+                            >
+                              <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                                {new Date(log.date).toLocaleDateString('es-AR')}
+                              </TableCell>
+                              <TableCell className="text-xs sm:text-sm whitespace-nowrap">{log.hoursWorked} hs</TableCell>
+                              <TableCell className="text-right font-medium text-xs sm:text-sm whitespace-nowrap">
+                                {log.kilogramsPackaged.toLocaleString('es-AR')} kg
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-xs sm:text-sm text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                                ${log.payment.toLocaleString('es-AR')}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground p-1 text-right">
+                                <ChevronRight className="h-4 w-4 inline-block group-hover:translate-x-0.5 transition-transform text-muted-foreground group-hover:text-blue-600" />
+                              </TableCell>
+                            </TableRow>
+                          ));
+                        }
+                        return (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-6 text-muted-foreground text-xs sm:text-sm">
+                              No se encontró historial de embalaje.
+                            </TableCell>
                           </TableRow>
-                        ));
-                      }
-                      return (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">No se encontró historial de embalaje.</TableCell>
-                        </TableRow>
-                      );
-                    })()}
-                  </TableBody>
-                </Table>
+                        );
+                      })()}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
               <DialogFooter>
                   <Button variant="outline" onClick={() => setIsHistoryOpen(false)}>Cerrar</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalle de Registro de Embalaje */}
+      <Dialog 
+        open={!!selectedPackagingDetail} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedPackagingDetail(null);
+            if (typeof document !== 'undefined') {
+              setTimeout(() => {
+                document.body.style.pointerEvents = '';
+              }, 50);
+            }
+          }
+        }}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-lg rounded-xl z-[70]">
+          {selectedPackagingDetail && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Info className="h-5 w-5 text-blue-600" /> Detalles del Registro de Embalaje
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Información detallada de la labor de embalaje y liquidación.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-3 py-2 max-h-[60vh] overflow-y-auto px-0.5">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>
+                    {new Date(selectedPackagingDetail.date).toLocaleString('es-AR', { 
+                      dateStyle: 'long', 
+                      timeStyle: 'short' 
+                    })}
+                  </span>
+                </div>
+
+                <Card className="shadow-none border-border/80 bg-muted/20">
+                  <CardContent className="p-3.5 sm:p-4 space-y-2.5 text-xs sm:text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Modalidad</span>
+                      <Badge variant="outline" className="text-xs font-semibold">
+                        Labor de Embalaje
+                      </Badge>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Embalador/a</span>
+                      <span className="font-semibold text-foreground">{selectedPackagingDetail.packerName}</span>
+                    </div>
+
+                    <hr className="border-border/60 my-1" />
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Kilos Embalados</span>
+                      <span className="font-semibold text-foreground">
+                        {selectedPackagingDetail.kilogramsPackaged.toLocaleString('es-AR')} kg
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Horas Trabajadas</span>
+                      <span className="font-medium text-foreground">{selectedPackagingDetail.hoursWorked} hs</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Tarifa por Hora</span>
+                      <span className="font-medium text-foreground">
+                        ${selectedPackagingDetail.costPerHour.toLocaleString('es-AR')} /h
+                      </span>
+                    </div>
+
+                    {selectedPackagingDetail.hoursWorked > 0 && selectedPackagingDetail.kilogramsPackaged > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Rendimiento Sesión</span>
+                        <span className="font-medium text-foreground">
+                          {(selectedPackagingDetail.kilogramsPackaged / selectedPackagingDetail.hoursWorked).toFixed(1)} kg/h
+                        </span>
+                      </div>
+                    )}
+
+                    <hr className="border-border/60 my-1" />
+
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="font-bold text-blue-800 dark:text-blue-300 text-sm sm:text-base">
+                        Total Liquidación
+                      </span>
+                      <span className="font-bold text-base sm:text-lg text-blue-700 dark:text-blue-400">
+                        ${selectedPackagingDetail.payment.toLocaleString('es-AR')}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full sm:w-auto flex-1 gap-1.5 text-xs border-blue-600/30 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                  onClick={() => handleGenerateReceiptForPackagingRecord(selectedPackagingDetail)}
+                  disabled={isPdfPending}
+                >
+                  {isPdfPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generando...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown className="h-3.5 w-3.5" /> Descargar Recibo PDF
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    setSelectedPackagingDetail(null);
+                    if (typeof document !== 'undefined') {
+                      setTimeout(() => {
+                        document.body.style.pointerEvents = '';
+                      }, 50);
+                    }
+                  }}
+                >
+                  Cerrar
+                </Button>
               </DialogFooter>
             </>
           )}

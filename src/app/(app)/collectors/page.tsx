@@ -14,7 +14,12 @@ import {
   Pencil, 
   AlertCircle, 
   FileSpreadsheet, 
-  UserCheck 
+  UserCheck,
+  Calendar,
+  Info,
+  FileDown,
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
@@ -34,6 +39,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { WorkerQRCardDialog } from '@/components/worker-qr-card-dialog';
 import { generateCrewBadgesPDF } from '@/lib/export-crew-badges-pdf';
+import { saveOrSharePdf } from '@/lib/pdf-generator';
 
 const CollectorSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
@@ -69,6 +75,22 @@ export default function CollectorsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isPrintingBadges, setIsPrintingBadges] = useState(false);
+  
+  const [selectedRecordDetail, setSelectedRecordDetail] = useState<{
+    id: string;
+    date: string;
+    batchNumber: string;
+    kilograms: number;
+    hours: number;
+    ratePerKg: number;
+    ratePerHour?: number;
+    paymentType: 'kilo' | 'hour';
+    payment: number;
+    traceabilityId: string;
+    collectorName: string;
+  } | null>(null);
+  const [isPdfPending, startPdfTransition] = useTransition();
+  const isGeneratingRef = React.useRef(false);
   
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -140,8 +162,161 @@ export default function CollectorsPage() {
     );
   }, [collectors, searchQuery]);
 
-  const getCollectorHistory = (collectorId: string) => {
-    return harvests.filter(h => h.collector.id === collectorId);
+  const getCollectorRecords = (collectorId: string) => {
+    const collHarvests = harvests.filter(h => h.collector.id === collectorId);
+    const collLogs = (collectorPaymentLogs || []).filter(l => l.collectorId === collectorId);
+
+    const records = collHarvests.map(h => {
+      const matchingLog = collLogs.find(l => l.harvestId === h.id || l.id === h.id);
+      const paymentType: 'kilo' | 'hour' = matchingLog?.paymentType || 'kilo';
+      const hours = matchingLog?.hours || 0;
+      const ratePerKg = matchingLog?.ratePerKg || 0;
+      const ratePerHour = matchingLog?.ratePerHour || 0;
+      const payment = matchingLog?.payment ?? (paymentType === 'hour' ? hours * ratePerHour : h.kilograms * ratePerKg);
+
+      return {
+        id: h.id,
+        date: h.date,
+        batchNumber: h.batchNumber || 'Lote',
+        kilograms: h.kilograms,
+        hours: hours,
+        ratePerKg: ratePerKg,
+        ratePerHour: ratePerHour,
+        paymentType: paymentType,
+        payment: payment,
+        traceabilityId: h.traceabilityId || matchingLog?.traceabilityId || '',
+        collectorName: h.collector?.name || selectedCollector?.name || 'Recolector'
+      };
+    });
+
+    collLogs.forEach(l => {
+      if (!records.some(r => r.id === l.harvestId || r.id === l.id)) {
+        records.push({
+          id: l.id,
+          date: l.date,
+          batchNumber: 'Lote',
+          kilograms: l.kilograms,
+          hours: l.hours,
+          ratePerKg: l.ratePerKg,
+          ratePerHour: l.ratePerHour || 0,
+          paymentType: (l.paymentType as 'kilo' | 'hour') || 'kilo',
+          payment: l.payment,
+          traceabilityId: l.traceabilityId || '',
+          collectorName: l.collectorName || selectedCollector?.name || 'Recolector'
+        });
+      }
+    });
+
+    return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
+
+  const handleGenerateReceiptForCollectorRecord = (record: {
+    collectorName: string;
+    date: string;
+    batchNumber: string;
+    paymentType: 'kilo' | 'hour';
+    hours: number;
+    ratePerHour?: number;
+    ratePerKg: number;
+    kilograms: number;
+    payment: number;
+  }) => {
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
+    setTimeout(() => { isGeneratingRef.current = false; }, 3000);
+    if (!record || !establishmentData) return;
+
+    startPdfTransition(async () => {
+      toast({ title: 'Generando Recibo', description: 'Por favor espere...' });
+      try {
+        const { jsPDF } = await import('jspdf');
+        const autoTable = (await import('jspdf-autotable')).default;
+        const doc = new jsPDF() as any;
+
+        try {
+          const res = await fetch('/logo.png');
+          const blob = await res.blob();
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          doc.addImage(base64, 'PNG', 15, 12, 18, 18);
+        } catch (error) {
+          console.error("Error al cargar logo:", error);
+        }
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text('Establecimiento:', 40, 17);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.setTextColor(0);
+        doc.text(establishmentData.producer || establishmentData.name || 'Don José', 40, 24);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150);
+        doc.text(`${establishmentData.location?.locality || ''}, ${establishmentData.location?.province || ''}`, 40, 30);
+
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(100); 
+        doc.text('RECIBO DE PAGO', 105, 50, { align: 'center' });
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80);
+        doc.text(`Fecha: ${new Date(record.date).toLocaleDateString('es-AR')}`, 195, 60, { align: 'right' });
+
+        const bodyY = 80;
+        doc.setFontSize(12);
+        doc.text(`Por medio del presente, se deja constancia de que ${record.collectorName} ha recibido el pago por los servicios de cosecha detallados a continuación:`, 15, bodyY, { maxWidth: 180 });
+
+        const isHourPayment = record.paymentType === 'hour';
+        const tableBody = isHourPayment ? [
+          ['Lote Cosechado', record.batchNumber || 'N/A'],
+          ['Modalidad de Pago', 'Por Hora Trabajada'],
+          ['Horas Trabajadas', `${record.hours} hs`],
+          ['Tarifa por Hora', `$${(record.ratePerHour || record.ratePerKg).toLocaleString('es-AR', { minimumFractionDigits: 2 })}/h`],
+          ['Kilos Cosechados (Referencia)', `${record.kilograms.toLocaleString('es-AR')} kg`],
+          ['Total Pagado', `$${record.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
+        ] : [
+          ['Lote Cosechado', record.batchNumber || 'N/A'],
+          ['Modalidad de Pago', 'Por Kilo Cosechado'],
+          ['Kilos Cosechados', `${record.kilograms.toLocaleString('es-AR')} kg`],
+          ['Tarifa por Kg', `$${record.ratePerKg.toLocaleString('es-AR', { minimumFractionDigits: 2 })}/kg`],
+          ['Horas Trabajadas (Referencia)', `${record.hours} hs`],
+          ['Total Pagado', `$${record.payment.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`]
+        ];
+
+        autoTable(doc, {
+          startY: bodyY + 25,
+          body: tableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [38, 70, 83] },
+          styles: { fontSize: 12, cellPadding: 3 },
+          columnStyles: { 0: { fontStyle: 'bold', fillColor: '#f8f9fa' } }
+        });
+
+        const finalY = (doc as any).lastAutoTable?.finalY || 150;
+        doc.text('Firma del Recolector: _________________________', 15, finalY + 30);
+        doc.text(`Aclaración: ${record.collectorName}`, 15, finalY + 40);
+
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text('Este es un comprobante no válido como factura.', 105, 280, { align: 'center' });
+
+        const fileName = `Recibo_Pago_${record.collectorName.replace(/\s+/g, '_')}_${new Date(record.date).toISOString().slice(0, 10)}.pdf`;
+        await saveOrSharePdf(doc, fileName, 'Recibo de Pago');
+        toast({ title: '¡Recibo Listo!', description: 'El comprobante ha sido generado correctamente.' });
+      } catch (error) {
+        console.error("Error al generar recibo PDF:", error);
+        toast({ title: "Error", description: "No se pudo generar el comprobante PDF.", variant: "destructive" });
+      }
+    });
   };
   
   const handleDelete = (collectorId: string) => {
@@ -671,38 +846,219 @@ export default function CollectorsPage() {
                     </p>
                  </div>
               </div>
-              <div className="max-h-[50vh] overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Fecha</TableHead>
-                      <TableHead>Lote(s)</TableHead>
-                      <TableHead className="text-right">Kilogramos</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      const history = getCollectorHistory(selectedCollector.id);
-                      if (history.length > 0) {
-                        return history.map(h => (
-                          <TableRow key={h.id}>
-                            <TableCell>{new Date(h.date).toLocaleDateString('es-AR')}</TableCell>
-                            <TableCell><Badge variant="outline">{h.batchNumber}</Badge></TableCell>
-                            <TableCell className="text-right font-medium">{h.kilograms} kg</TableCell>
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-0.5">
+                  <Info className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> 
+                  Toque cualquier registro para ver los detalles completos y comprobante.
+                </p>
+                <div className="max-h-[50vh] overflow-auto border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30">
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Lote</TableHead>
+                        <TableHead className="text-right">Kilogramos</TableHead>
+                        <TableHead className="text-right">Liquidación</TableHead>
+                        <TableHead className="w-6"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(() => {
+                        const history = getCollectorRecords(selectedCollector.id);
+                        if (history.length > 0) {
+                          return history.map(rec => (
+                            <TableRow 
+                              key={rec.id}
+                              className="cursor-pointer hover:bg-emerald-500/10 transition-colors group"
+                              onClick={() => setSelectedRecordDetail(rec)}
+                              title="Presione para ver detalles del registro"
+                            >
+                              <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                                {new Date(rec.date).toLocaleDateString('es-AR')}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs group-hover:border-emerald-500/50">
+                                  {rec.batchNumber}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-medium text-xs sm:text-sm whitespace-nowrap">
+                                {rec.kilograms.toLocaleString('es-AR')} kg
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-xs sm:text-sm text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                                ${rec.payment.toLocaleString('es-AR')}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground p-1 text-right">
+                                <ChevronRight className="h-4 w-4 inline-block group-hover:translate-x-0.5 transition-transform text-muted-foreground group-hover:text-emerald-600" />
+                              </TableCell>
+                            </TableRow>
+                          ));
+                        }
+                        return (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-6 text-muted-foreground text-xs sm:text-sm">
+                              No se encontró historial de cosecha.
+                            </TableCell>
                           </TableRow>
-                        ));
-                      }
-                      return (
-                        <TableRow>
-                          <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">No se encontró historial de cosecha.</TableCell>
-                        </TableRow>
-                      );
-                    })()}
-                  </TableBody>
-                </Table>
+                        );
+                      })()}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
               <DialogFooter>
                   <Button variant="outline" onClick={() => setIsHistoryOpen(false)}>Cerrar</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalle de Registro de Cosecha */}
+      <Dialog 
+        open={!!selectedRecordDetail} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedRecordDetail(null);
+            if (typeof document !== 'undefined') {
+              setTimeout(() => {
+                document.body.style.pointerEvents = '';
+              }, 50);
+            }
+          }
+        }}
+      >
+        <DialogContent className="max-w-[95vw] sm:max-w-lg rounded-xl z-[70]">
+          {selectedRecordDetail && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Info className="h-5 w-5 text-emerald-600" /> Detalles del Registro de Cosecha
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Información detallada del trabajo realizado y liquidación.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-3 py-2 max-h-[60vh] overflow-y-auto px-0.5">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>
+                    {new Date(selectedRecordDetail.date).toLocaleString('es-AR', { 
+                      dateStyle: 'long', 
+                      timeStyle: 'short' 
+                    })}
+                  </span>
+                </div>
+
+                <Card className="shadow-none border-border/80 bg-muted/20">
+                  <CardContent className="p-3.5 sm:p-4 space-y-2.5 text-xs sm:text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Modalidad de Pago</span>
+                      <Badge variant="outline" className="text-xs font-semibold">
+                        {selectedRecordDetail.paymentType === 'hour' ? 'Pago por Hora' : 'Pago por Kilo'}
+                      </Badge>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Lote</span>
+                      <Badge variant="secondary" className="font-semibold">{selectedRecordDetail.batchNumber}</Badge>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Recolector</span>
+                      <span className="font-semibold text-foreground">{selectedRecordDetail.collectorName}</span>
+                    </div>
+
+                    <hr className="border-border/60 my-1" />
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Kilos Cosechados</span>
+                      <span className="font-semibold text-foreground">{selectedRecordDetail.kilograms.toLocaleString('es-AR')} kg</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Horas Trabajadas</span>
+                      <span className="font-medium text-foreground">
+                        {selectedRecordDetail.hours > 0 ? `${selectedRecordDetail.hours} hs` : 'No especificado'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">
+                        {selectedRecordDetail.paymentType === 'hour' ? 'Tarifa por Hora' : 'Tarifa por Kg'}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {selectedRecordDetail.paymentType === 'hour'
+                          ? `$${(selectedRecordDetail.ratePerHour || selectedRecordDetail.ratePerKg).toLocaleString('es-AR')} /h`
+                          : `$${selectedRecordDetail.ratePerKg.toLocaleString('es-AR')} /kg`}
+                      </span>
+                    </div>
+
+                    {selectedRecordDetail.hours > 0 && selectedRecordDetail.kilograms > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Rendimiento Sesión</span>
+                        <span className="font-medium text-foreground">
+                          {(selectedRecordDetail.kilograms / selectedRecordDetail.hours).toFixed(1)} kg/h
+                        </span>
+                      </div>
+                    )}
+
+                    {selectedRecordDetail.traceabilityId && (
+                      <div className="flex justify-between items-center pt-1 text-[11px]">
+                        <span className="text-muted-foreground">Código Trazabilidad</span>
+                        <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground">
+                          {selectedRecordDetail.traceabilityId}
+                        </Badge>
+                      </div>
+                    )}
+
+                    <hr className="border-border/60 my-1" />
+
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="font-bold text-emerald-800 dark:text-emerald-300 text-sm sm:text-base">
+                        Total Liquidación
+                      </span>
+                      <span className="font-bold text-base sm:text-lg text-emerald-700 dark:text-emerald-400">
+                        ${selectedRecordDetail.payment.toLocaleString('es-AR')}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full sm:w-auto flex-1 gap-1.5 text-xs border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                  onClick={() => handleGenerateReceiptForCollectorRecord(selectedRecordDetail)}
+                  disabled={isPdfPending}
+                >
+                  {isPdfPending ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Generando...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown className="h-3.5 w-3.5" /> Descargar Recibo PDF
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  className="w-full sm:w-auto"
+                  onClick={() => {
+                    setSelectedRecordDetail(null);
+                    if (typeof document !== 'undefined') {
+                      setTimeout(() => {
+                        document.body.style.pointerEvents = '';
+                      }, 50);
+                    }
+                  }}
+                >
+                  Cerrar
+                </Button>
               </DialogFooter>
             </>
           )}
