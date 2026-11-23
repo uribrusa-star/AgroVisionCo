@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { HardHat, Leaf, LayoutDashboard, Check, Loader2, PackageSearch, Menu, Building, LogOut, LineChart, Map, KeyRound, Package, BookUser, ClipboardCheck, User as UserIcon, Mail } from 'lucide-react';
+import { HardHat, Leaf, LayoutDashboard, Check, Loader2, PackageSearch, Menu, Building, LogOut, LineChart, Map, KeyRound, Package, BookUser, ClipboardCheck, User as UserIcon, Mail, QrCode } from 'lucide-react';
 import React, { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
@@ -46,6 +46,7 @@ import {
 
 const allNavItems = [
   { href: '/dashboard', label: 'Panel de Control', icon: LayoutDashboard, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
+  { href: '/attendance', label: 'Asistencia y Credencial', icon: QrCode, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/establishment', label: 'Establecimiento', icon: Building, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/map', label: 'Mapa', icon: Map, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/engineer-log', label: 'Bitácora del Agrónomo', icon: Leaf, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
@@ -237,7 +238,18 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   <span className="text-xl font-bold hidden sm:inline-block">AgroVista</span>
                 </Link>
               </div>
-              <div className="flex items-center gap-2 md:gap-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="h-9 px-2.5 sm:px-3 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-full font-medium shadow-2xs"
+                >
+                  <Link href="/attendance">
+                    <QrCode className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="hidden sm:inline">Mi Credencial</span>
+                  </Link>
+                </Button>
                 <NotificationBell />
                 <UserMenu />
               </div>

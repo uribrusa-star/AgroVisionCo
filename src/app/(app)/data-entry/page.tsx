@@ -10,13 +10,27 @@ import { CulturalPracticesHistory } from "./cultural-practices-history";
 import { WeatherCard } from "@/components/weather-card";
 import { TareCalculator } from "./tare-calculator";
 import { ProductionPaymentHistory } from "../production-payment-history";
-import { Scale, Package, Shovel } from "lucide-react";
+import { Scale, Package, Shovel, QrCode, ScanLine } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { UserCredentialDialog } from "@/components/user-credential-dialog";
+import { AttendanceScannerDialog } from "@/components/attendance-scanner-dialog";
 
 export default function DataEntryPage() {
-  const { currentUser } = React.useContext(AppDataContext);
+  const { currentUser, attendanceLogs } = React.useContext(AppDataContext);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   if (!currentUser) return null; // Guard clause
+
+  const currentAttendance = (attendanceLogs || []).find(l => 
+    l.status === 'in_progress' && 
+    ((currentUser.id && l.personnelId === currentUser.id) ||
+     (currentUser.dni && l.dni && l.dni === currentUser.dni) ||
+     (l.personnelName && currentUser.name && l.personnelName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()))
+  );
 
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -76,6 +90,59 @@ export default function DataEntryPage() {
         </div>
       </div>
 
+      {/* Banner de Asistencia y Credencial para el Encargado */}
+      <div className="mb-6 p-3.5 sm:p-4 rounded-2xl border bg-card/80 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+            currentAttendance 
+              ? 'bg-emerald-600 text-white shadow-xs' 
+              : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+          }`}>
+            <QrCode className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-foreground">Control de Asistencia del Encargado</span>
+              {currentAttendance ? (
+                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                  Presente en finca
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-muted-foreground text-[10px]">
+                  Fuera de finca
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {currentAttendance 
+                ? `Ingreso hoy a las ${format(new Date(currentAttendance.checkIn), 'HH:mm')} hs. Muestre su QR al salir o escanee al personal.`
+                : 'Muestre su credencial al entrar o use el escáner de tranquera para registrar al personal.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
+          <Button
+            size="sm"
+            onClick={() => setIsCredentialModalOpen(true)}
+            className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+          >
+            <QrCode className="h-3.5 w-3.5" />
+            Mi Credencial QR
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsScannerOpen(true)}
+            className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+          >
+            <ScanLine className="h-3.5 w-3.5" />
+            Escanear Tranquera
+          </Button>
+        </div>
+      </div>
+
       <div className="w-full max-w-7xl mx-auto space-y-8">
         
         {/* Sección 1: Formulario de Producción y (Calculadora o Historial) */}
@@ -117,6 +184,18 @@ export default function DataEntryPage() {
             <CulturalPracticesHistory />
         </div>
       </div>
+
+      <UserCredentialDialog
+        isOpen={isCredentialModalOpen}
+        onOpenChange={setIsCredentialModalOpen}
+        user={currentUser}
+        onOpenScanner={() => setIsScannerOpen(true)}
+      />
+
+      <AttendanceScannerDialog
+        isOpen={isScannerOpen}
+        onOpenChange={setIsScannerOpen}
+      />
     </>
   );
 }

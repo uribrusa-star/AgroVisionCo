@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2 } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -334,6 +335,26 @@ export default function ProfilePage() {
                     <span className="font-medium bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm inline-block">{currentUser.role}</span>
                     <span className="text-muted-foreground mt-2">{currentUser.email}</span>
                 </CardDescription>
+            </Card>
+
+            <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-950/20 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="p-5 pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                        <QrCode className="h-5 w-5" />
+                        Credencial de Asistencia
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                        Código QR dinámico antifraude para registrar ingreso y salida en tranquera.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="p-5 pt-2">
+                    <Button asChild className="w-full h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs">
+                        <Link href="/attendance">
+                            <QrCode className="h-4 w-4" />
+                            Ver Mi Credencial y Ficha
+                        </Link>
+                    </Button>
+                </CardContent>
             </Card>
 
             <Card className="border-red-200 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/20 shadow-sm hover:shadow-md transition-shadow">

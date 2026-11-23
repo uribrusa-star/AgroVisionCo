@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions } from '@/lib/session';
 
-const protectedRoutes = ['/dashboard', '/establishment', '/map', '/producer-log', '/data-entry', '/engineer-log', '/collectors', '/packers', '/users', '/predictions'];
+const protectedRoutes = ['/dashboard', '/attendance', '/establishment', '/map', '/producer-log', '/data-entry', '/engineer-log', '/collectors', '/packers', '/users', '/predictions', '/tasks', '/traceability', '/profile'];
 const publicRoutes = ['/', '/login'];
 
 export async function middleware(request: NextRequest) {
