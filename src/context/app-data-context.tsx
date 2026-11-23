@@ -1491,7 +1491,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         const newTask = { id: tempId, ...task };
         setTasks(prev => [newTask, ...prev]);
 
-        addDoc(collection(db, 'tasks'), { ...(task), establishmentId: currentUser?.establishmentId || 'main' })
+        addDoc(collection(db, 'tasks'), sanitizeForFirestore({ ...task, establishmentId: currentUser?.establishmentId || 'main' }))
         .then(ref => {
             setTasks(prev => prev.map(t => (t.id === tempId ? { ...t, id: ref.id } : t)));
             const assignedUser = users.find(u => u.id === task.assignedTo.id);

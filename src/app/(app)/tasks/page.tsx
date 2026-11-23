@@ -116,8 +116,8 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
         });
     }
 
-    const canUpdateStatus = currentUser?.id === task.assignedTo.id || currentUser?.role === 'Productor';
-    const canDeleteTask = currentUser?.role === 'Productor' || currentUser?.id === task.createdBy.id;
+    const canUpdateStatus = currentUser?.id === task.assignedTo.id || currentUser?.role === 'Productor' || currentUser?.role === 'Encargado' || currentUser?.role === 'SuperAdmin';
+    const canDeleteTask = currentUser?.role === 'Productor' || currentUser?.role === 'Encargado' || currentUser?.role === 'SuperAdmin' || currentUser?.id === task.createdBy.id;
     
     const priorityInfo = {
         alta: { label: 'Alta', color: 'bg-red-500', iconColor: 'text-red-500', borderColor: 'border-l-red-500' },
@@ -200,21 +200,24 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                     )}
                 </CardContent>
                  <CardFooter className="flex justify-between items-center text-[10px] pb-3">
-                         {assignedUser && (
-                            <div className="flex items-center gap-1.5">
-                                <Avatar className="h-5 w-5">
-                                    <AvatarImage src={getRoleAvatar(assignedUser.role)} />
-                                    <AvatarFallback className="text-[10px]">{assignedUser.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium text-muted-foreground">{assignedUser.name}</span>
+                        <div className="flex items-center gap-1.5">
+                            <Avatar className="h-5 w-5">
+                                <AvatarImage src={assignedUser ? getRoleAvatar(assignedUser.role) : undefined} />
+                                <AvatarFallback className="text-[10px]">{(assignedUser?.name || task.assignedTo?.name || '?').charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium text-muted-foreground">{assignedUser?.name || task.assignedTo?.name}</span>
+                        </div>
+                        {task.status === 'completed' ? (
+                            <div className="flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                <Check className="h-3 w-3" />
+                                <span>Completada</span>
                             </div>
-                        )}
-                        {task.dueDate && (
+                        ) : task.dueDate ? (
                             <div className={cn("flex items-center gap-1", isPast(new Date(task.dueDate)) ? "text-red-500 font-semibold" : "text-muted-foreground")}>
                                 <CalendarIcon className="h-3 w-3" />
                                 <span>{isPast(new Date(task.dueDate)) ? 'Vencida hace ' + formatDistanceToNow(new Date(task.dueDate), { locale: es }) : 'Vence en ' + formatDistanceToNow(new Date(task.dueDate), { locale: es })}</span>
                             </div>
-                        )}
+                        ) : null}
                     </CardFooter>
             </Card>
         </div>
@@ -254,7 +257,7 @@ const KanbanColumn = ({ id, title, tasks }: { id: TaskStatus, title: string, tas
 }
 
 export default function TasksPage() {
-    const { tasks, users, currentUser, addTask, updateTaskStatus, supplies, batches } = useContext(AppDataContext);
+    const { tasks, users, currentUser, addTask, updateTaskStatus, supplies, batches, collectors, packers } = useContext(AppDataContext);
     const { toast } = useToast();
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -291,15 +294,29 @@ export default function TasksPage() {
     });
 
     if (!currentUser) return null;
-    const canCreateTasks = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo';
+    const canCreateTasks = currentUser.role === 'Productor' || currentUser.role === 'Ingeniero Agronomo' || currentUser.role === 'Encargado' || currentUser.role === 'SuperAdmin';
 
-    const assignableUsers = users;
+    const assignablePeople = useMemo(() => {
+        const list: { id: string; name: string; role: string }[] = [];
+        (users || []).forEach(u => list.push({ id: u.id, name: u.name, role: u.role }));
+        (collectors || []).forEach(c => {
+            if (!list.some(item => item.id === c.id)) {
+                list.push({ id: c.id, name: c.name, role: 'Recolector' });
+            }
+        });
+        (packers || []).forEach(p => {
+            if (!list.some(item => item.id === p.id)) {
+                list.push({ id: p.id, name: p.name, role: 'Embalador' });
+            }
+        });
+        return list;
+    }, [users, collectors, packers]);
 
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
             if (filterType === 'my-tasks' && task.assignedTo.id !== currentUser.id) return false;
             if (filterType === 'high-priority' && task.priority !== 'alta') return false;
-            if (filterType === 'overdue' && (!task.dueDate || !isPast(new Date(task.dueDate)))) return false;
+            if (filterType === 'overdue' && (task.status === 'completed' || !task.dueDate || !isPast(new Date(task.dueDate)))) return false;
             if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase()) && !task.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
             return true;
         });
@@ -357,8 +374,8 @@ export default function TasksPage() {
     }
 
     const onAddTask = (values: TaskFormValues) => {
-        const assignedToUser = users.find(u => u.id === values.assignedToId);
-        if (!assignedToUser || !currentUser) return;
+        const assignedPerson = assignablePeople.find(u => u.id === values.assignedToId);
+        if (!assignedPerson || !currentUser) return;
         
         startTransition(() => {
             const validMaterials = values.materials
@@ -372,19 +389,28 @@ export default function TasksPage() {
                     };
                 });
 
-            addTask({
+            const taskPayload: Omit<Task, 'id'> = {
                 title: values.title,
                 description: values.description,
-                assignedTo: { id: assignedToUser.id, name: assignedToUser.name },
+                assignedTo: { id: assignedPerson.id, name: assignedPerson.name },
                 createdBy: { id: currentUser.id, name: currentUser.name },
                 status: 'pending',
                 priority: values.priority,
-                batchIds: values.batchIds && values.batchIds.length > 0 ? values.batchIds : undefined,
-                materials: validMaterials,
                 createdAt: new Date().toISOString(),
-                dueDate: values.dueDate?.toISOString(),
-            });
-            toast({ title: "Tarea Creada", description: `La tarea "${values.title}" ha sido asignada a ${assignedToUser.name}.` });
+            };
+
+            if (values.batchIds && values.batchIds.length > 0) {
+                taskPayload.batchIds = values.batchIds;
+            }
+            if (validMaterials && validMaterials.length > 0) {
+                taskPayload.materials = validMaterials;
+            }
+            if (values.dueDate) {
+                taskPayload.dueDate = values.dueDate.toISOString();
+            }
+
+            addTask(taskPayload);
+            toast({ title: "Tarea Creada", description: `La tarea "${values.title}" ha sido asignada a ${assignedPerson.name}.` });
             setIsAddDialogOpen(false);
             form.reset({ title: '', description: '', assignedToId: '', dueDate: undefined, priority: 'media', batchIds: [], materials: [{supplyId: '', quantity: 0}] });
         });
@@ -416,9 +442,16 @@ export default function TasksPage() {
                                     <FormItem>
                                         <FormLabel>Responsable</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value} disabled={isPending}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Seleccione un usuario" /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Seleccione un responsable" /></SelectTrigger></FormControl>
                                             <SelectContent>
-                                                {assignableUsers.map(user => <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>)}
+                                                {assignablePeople.map(person => (
+                                                    <SelectItem key={person.id} value={person.id}>
+                                                        <div className="flex items-center gap-2">
+                                                            <span>{person.name}</span>
+                                                            <span className="text-[11px] text-muted-foreground">({person.role})</span>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -611,13 +644,18 @@ export default function TasksPage() {
                                     <td className="p-4"><Badge variant="secondary">{task.status === 'in-progress' ? 'En Progreso' : task.status === 'completed' ? 'Completado' : 'Pendiente'}</Badge></td>
                                     <td className="p-4"><Badge variant="outline" className={task.priority === 'alta' ? 'text-red-500 border-red-200' : ''}>{task.priority}</Badge></td>
                                     <td className="p-4 flex items-center gap-2">
-                                        <Avatar className="h-6 w-6"><AvatarFallback className="text-[10px]">{users.find(u => u.id === task.assignedTo.id)?.name.charAt(0) || task.assignedTo.name.charAt(0)}</AvatarFallback></Avatar>
-                                        <span className="truncate max-w-[120px]">{users.find(u => u.id === task.assignedTo.id)?.name || task.assignedTo.name}</span>
+                                        <Avatar className="h-6 w-6"><AvatarFallback className="text-[10px]">{(assignablePeople.find(u => u.id === task.assignedTo.id)?.name || task.assignedTo.name || '?').charAt(0)}</AvatarFallback></Avatar>
+                                        <span className="truncate max-w-[120px]">{assignablePeople.find(u => u.id === task.assignedTo.id)?.name || task.assignedTo.name}</span>
                                     </td>
                                     <td className="p-4">
-                                        {task.dueDate ? (
+                                        {task.status === 'completed' ? (
+                                            <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
+                                                <Check className="h-3.5 w-3.5" /> Completada
+                                            </span>
+                                        ) : task.dueDate ? (
                                             <span className={isPast(new Date(task.dueDate)) ? 'text-red-500 font-medium' : ''}>
                                                 {new Date(task.dueDate).toLocaleDateString()}
+                                                {isPast(new Date(task.dueDate)) && ' (Vencida)'}
                                             </span>
                                         ) : '-'}
                                     </td>
