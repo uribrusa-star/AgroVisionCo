@@ -804,62 +804,66 @@ export default function CollectorsPage() {
       
       {/* Modal de Historial */}
       <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="w-[95vw] sm:max-w-2xl p-4 sm:p-6 max-h-[92vh] flex flex-col overflow-hidden rounded-2xl">
           {selectedCollector && (
             <>
-              <DialogHeader>
-                <div className="flex items-center justify-between pr-6">
-                  <div>
-                    <DialogTitle>Perfil de Recolector: {selectedCollector.name}</DialogTitle>
-                    <DialogDescription>
-                      {selectedCollector.dni ? `DNI: ${selectedCollector.dni} | ` : ''}
+              <DialogHeader className="pr-8 sm:pr-10 space-y-2 text-left shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2.5">
+                  <div className="min-w-0 pr-1">
+                    <DialogTitle className="text-base sm:text-xl font-bold truncate">
+                      Perfil de Recolector: {selectedCollector.name}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                      {selectedCollector.dni ? `DNI: ${selectedCollector.dni} • ` : ''}
                       Estadísticas generales e historial de cosechas registrado.
                     </DialogDescription>
                   </div>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5 border-emerald-600/30 text-emerald-700 dark:text-emerald-400"
+                    className="w-full sm:w-auto shrink-0 gap-1.5 border-emerald-600/30 text-emerald-700 dark:text-emerald-400 text-xs h-8"
                     onClick={() => setQrModalCollector(selectedCollector)}
                   >
                     <QrCode className="h-3.5 w-3.5" /> Credencial QR
                   </Button>
                 </div>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 my-2">
-                 <div className="bg-emerald-500/10 rounded-lg p-3 text-center">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase">Kilos Totales</p>
-                    <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-4 my-1 shrink-0">
+                 <div className="bg-emerald-500/10 rounded-xl p-2.5 sm:p-3 text-center border border-emerald-500/20">
+                    <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">Kilos Totales</p>
+                    <p className="text-lg sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 truncate mt-0.5">
                         {harvests.filter(h => h.collector.id === selectedCollector.id).reduce((sum, h) => sum + h.kilograms, 0).toLocaleString('es-AR')} kg
                     </p>
                  </div>
-                 <div className="bg-muted rounded-lg p-3 text-center">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase">Productividad</p>
-                    <p className="text-2xl font-bold text-foreground">
+                 <div className="bg-muted/60 rounded-xl p-2.5 sm:p-3 text-center border border-border/40">
+                    <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">Productividad</p>
+                    <p className="text-lg sm:text-2xl font-black text-foreground truncate mt-0.5">
                         {(() => {
                            const collHarvests = harvests.filter(h => h.collector.id === selectedCollector.id);
                            const collLogs = (collectorPaymentLogs || []).filter(l => l.collectorId === selectedCollector.id);
                            const totalKg = collHarvests.reduce((sum, h) => sum + h.kilograms, 0);
                            const totalHrs = collLogs.reduce((sum, l) => sum + l.hours, 0);
                            return totalHrs > 0 ? (totalKg / totalHrs).toFixed(1) : selectedCollector.productivity?.toFixed(1) || '0.0';
-                        })()} <span className="text-sm font-normal">kg/hr</span>
+                        })()} <span className="text-xs sm:text-sm font-normal text-muted-foreground">kg/hr</span>
                     </p>
                  </div>
               </div>
-              <div className="space-y-1.5">
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-0.5">
+
+              <div className="space-y-1.5 min-w-0 flex-1 overflow-hidden flex flex-col">
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-0.5 shrink-0">
                   <Info className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> 
                   Toque cualquier registro para ver los detalles completos y comprobante.
                 </p>
-                <div className="max-h-[50vh] overflow-auto border rounded-lg">
-                  <Table>
+                <div className="max-h-[48vh] overflow-y-auto overflow-x-auto border rounded-xl w-full">
+                  <Table className="w-full min-w-[320px]">
                     <TableHeader>
-                      <TableRow className="bg-muted/30">
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Lote</TableHead>
-                        <TableHead className="text-right">Kilogramos</TableHead>
-                        <TableHead className="text-right">Liquidación</TableHead>
-                        <TableHead className="w-6"></TableHead>
+                      <TableRow className="bg-muted/40">
+                        <TableHead className="py-2 px-2.5 sm:px-4 text-xs">Fecha</TableHead>
+                        <TableHead className="py-2 px-2 sm:px-4 text-xs">Lote</TableHead>
+                        <TableHead className="py-2 px-2.5 sm:px-4 text-right text-xs">Kilos</TableHead>
+                        <TableHead className="py-2 px-2.5 sm:px-4 text-right text-xs">Liquidación</TableHead>
+                        <TableHead className="py-2 px-1 w-6"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -873,22 +877,22 @@ export default function CollectorsPage() {
                               onClick={() => setSelectedRecordDetail(rec)}
                               title="Presione para ver detalles del registro"
                             >
-                              <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                              <TableCell className="py-2 px-2.5 sm:px-4 font-medium text-xs sm:text-sm whitespace-nowrap">
                                 {new Date(rec.date).toLocaleDateString('es-AR')}
                               </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs group-hover:border-emerald-500/50">
+                              <TableCell className="py-2 px-2 sm:px-4">
+                                <Badge variant="outline" className="text-[10px] sm:text-xs group-hover:border-emerald-500/50 max-w-[90px] truncate block sm:inline-block">
                                   {rec.batchNumber}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-right font-medium text-xs sm:text-sm whitespace-nowrap">
+                              <TableCell className="py-2 px-2.5 sm:px-4 text-right font-medium text-xs sm:text-sm whitespace-nowrap">
                                 {rec.kilograms.toLocaleString('es-AR')} kg
                               </TableCell>
-                              <TableCell className="text-right font-semibold text-xs sm:text-sm text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                              <TableCell className="py-2 px-2.5 sm:px-4 text-right font-bold text-xs sm:text-sm text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
                                 ${rec.payment.toLocaleString('es-AR')}
                               </TableCell>
-                              <TableCell className="text-muted-foreground p-1 text-right">
-                                <ChevronRight className="h-4 w-4 inline-block group-hover:translate-x-0.5 transition-transform text-muted-foreground group-hover:text-emerald-600" />
+                              <TableCell className="py-2 px-1 text-muted-foreground text-right">
+                                <ChevronRight className="h-3.5 w-3.5 inline-block group-hover:translate-x-0.5 transition-transform text-muted-foreground group-hover:text-emerald-600" />
                               </TableCell>
                             </TableRow>
                           ));
@@ -905,7 +909,7 @@ export default function CollectorsPage() {
                   </Table>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="pt-2 shrink-0">
                   <Button variant="outline" onClick={() => setIsHistoryOpen(false)}>Cerrar</Button>
               </DialogFooter>
             </>
