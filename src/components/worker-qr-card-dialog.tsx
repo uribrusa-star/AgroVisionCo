@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Phone, AlertCircle, Printer, Download, Sparkles, CheckCircle2, User as UserIcon } from 'lucide-react';
+import { Phone, AlertCircle, Printer, Sparkles, CheckCircle2, User as UserIcon, FileDown, Loader2 } from 'lucide-react';
 import type { Collector, Packer } from '@/lib/types';
+import { saveOrSharePdf } from '@/lib/pdf-generator';
+import { useToast } from '@/hooks/use-toast';
 
 interface WorkerQRCardDialogProps {
   isOpen: boolean;
@@ -25,6 +27,9 @@ export function WorkerQRCardDialog({
   establishmentName = 'AgroVista'
 }: WorkerQRCardDialogProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const qrCodeContainerRef = useRef<HTMLDivElement>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const { toast } = useToast();
 
   if (!worker) return null;
 
@@ -42,6 +47,165 @@ export function WorkerQRCardDialog({
     dni: worker.dni || ''
   });
 
+  const getQrSvgHtml = () => {
+    const qrSvg = qrCodeContainerRef.current?.querySelector('svg') || document.getElementById('worker-qr-code-svg');
+    return qrSvg?.outerHTML || '';
+  };
+
+  const getQrImageDataUrl = async (): Promise<string> => {
+    const qrSvg = qrCodeContainerRef.current?.querySelector('svg') || document.getElementById('worker-qr-code-svg');
+    if (!qrSvg) return '';
+
+    return new Promise((resolve) => {
+      try {
+        const svgData = new XMLSerializer().serializeToString(qrSvg);
+        const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)));
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 400;
+          canvas.height = 400;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 400, 400);
+            ctx.drawImage(img, 0, 0, 400, 400);
+            resolve(canvas.toDataURL('image/png'));
+          } else {
+            resolve('');
+          }
+        };
+        img.onerror = () => resolve('');
+        img.src = `data:image/svg+xml;base64,${svgDataBase64}`;
+      } catch {
+        resolve('');
+      }
+    });
+  };
+
+  const handleDownloadPdf = async () => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    toast({ title: 'Generando Credencial', description: 'Preparando carnet oficial en 1 sola hoja...' });
+
+    try {
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageWidth = 210;
+      const cardWidth = 90;
+      const cardHeight = 135;
+      const x = (pageWidth - cardWidth) / 2; // Centrado exacto: 60mm
+      const y = 35; // Posición superior equilibrada
+
+      // 1. Recuadro exterior con línea punteada para recortar
+      doc.setDrawColor(5, 150, 105);
+      doc.setLineDashPattern([2, 2], 0);
+      doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'S');
+      doc.setLineDashPattern([], 0);
+
+      // 2. Encabezado de la credencial (barra verde superior)
+      doc.setFillColor(6, 78, 59);
+      doc.roundedRect(x, y, cardWidth, 14, 3, 3, 'F');
+      doc.rect(x, y + 10, cardWidth, 4, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('AGROVISTA', x + 5, y + 8);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.text(establishmentName.substring(0, 24), x + cardWidth - 5, y + 8, { align: 'right' });
+
+      // 3. Sub-barra con rol del trabajador
+      doc.setFillColor(240, 253, 244);
+      doc.rect(x, y + 14, cardWidth, 7, 'F');
+      doc.setTextColor(5, 150, 105);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.text(roleLabel.toUpperCase(), x + cardWidth / 2, y + 18.5, { align: 'center' });
+
+      // 4. Nombre y DNI
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12.5);
+      const displayName = worker.name.length > 22 ? worker.name.substring(0, 21) + '...' : worker.name;
+      doc.text(displayName, x + cardWidth / 2, y + 27, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105);
+      doc.text(worker.dni ? `DNI: ${worker.dni}` : 'Legajo Digital', x + cardWidth / 2, y + 32, { align: 'center' });
+
+      // 5. Código QR (obtenido directamente del elemento SVG montado)
+      const qrDataUrl = await getQrImageDataUrl();
+      const qrSize = 48;
+      const qrX = x + (cardWidth - qrSize) / 2;
+      const qrY = y + 36;
+      if (qrDataUrl) {
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 4, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(qrX - 2, qrY - 2, qrSize + 4, qrSize + 4, 2, 2, 'S');
+        doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+      }
+
+      // 6. Pie y datos de emergencia
+      doc.setFontSize(6.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Escanear en balanza para registrar cosecha al instante', x + cardWidth / 2, y + 90, { align: 'center' });
+
+      if (worker.phone) {
+        doc.setFontSize(7);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Tel: ${worker.phone}`, x + cardWidth / 2, y + 95.5, { align: 'center' });
+      }
+
+      if (worker.emergencyContactPhone) {
+        doc.setTextColor(185, 28, 28);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6.5);
+        doc.text(`Emergencia: ${worker.emergencyContactName || 'Familiar'} (${worker.emergencyContactPhone})`, x + cardWidth / 2, y + 101, { align: 'center' });
+      }
+
+      // 7. Barra de estadísticas de rendimiento
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(x + 4, y + 107, cardWidth - 8, 16, 2, 2, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x + 4, y + 107, cardWidth - 8, 16, 2, 2, 'S');
+
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139);
+      doc.text('TOTAL', x + 18, y + 112, { align: 'center' });
+      doc.text('HORAS', x + cardWidth / 2, y + 112, { align: 'center' });
+      doc.text('RENDIMIENTO', x + cardWidth - 18, y + 112, { align: 'center' });
+
+      doc.setFontSize(7.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text(`${(totalKg || 0).toLocaleString('es-AR')} kg`, x + 18, y + 118, { align: 'center' });
+      doc.text(`${worker.hoursWorked || 0} hs`, x + cardWidth / 2, y + 118, { align: 'center' });
+      doc.setTextColor(5, 150, 105);
+      doc.text(`${Number((rate || 0).toFixed(1))} kg/h`, x + cardWidth - 18, y + 118, { align: 'center' });
+
+      // Línea de corte
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(148, 163, 184);
+      doc.text('✄ Recorte por la línea punteada para plastificar el carnet', pageWidth / 2, y + cardHeight + 8, { align: 'center' });
+
+      const fileName = `Credencial_${worker.name.replace(/\s+/g, '_')}.pdf`;
+      await saveOrSharePdf(doc, fileName, `Credencial de ${worker.name}`);
+      toast({ title: '¡Credencial Lista!', description: 'El archivo PDF de 1 página ha sido generado correctamente.' });
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      toast({ title: 'Error', description: 'No se pudo generar el carnet PDF.', variant: 'destructive' });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -52,11 +216,43 @@ export function WorkerQRCardDialog({
         <head>
           <title>Credencial - ${worker.name}</title>
           <style>
-            @page { size: A4 portrait; margin: 15mm; }
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #fff; }
+            @page {
+              size: A4 portrait;
+              margin: 0;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              box-sizing: border-box;
+            }
+            html, body {
+              width: 100% !important;
+              height: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #fff !important;
+              overflow: hidden !important;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            }
+            .print-page {
+              width: 210mm;
+              height: 297mm;
+              max-height: 297mm;
+              margin: 0 auto;
+              padding: 25mm 15mm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: flex-start;
+              page-break-inside: avoid !important;
+              page-break-after: avoid !important;
+              break-inside: avoid !important;
+              overflow: hidden;
+            }
             .badge-card {
               width: 85mm;
-              height: 120mm;
+              height: 125mm;
+              max-height: 125mm;
               border: 2px dashed #059669;
               border-radius: 12px;
               padding: 12px;
@@ -66,39 +262,45 @@ export function WorkerQRCardDialog({
               justify-content: space-between;
               text-align: center;
               background: #fafaf9;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
             .header { border-bottom: 2px solid #059669; padding-bottom: 6px; }
             .header h2 { margin: 0; color: #065f46; font-size: 15px; font-weight: 800; letter-spacing: 0.5px; }
             .header p { margin: 2px 0 0; color: #64748b; font-size: 10px; }
             .role-badge { display: inline-block; background: #059669; color: white; padding: 2px 8px; border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; margin: 6px 0; }
             .name { font-size: 16px; font-weight: 800; color: #0f172a; margin: 4px 0; }
-            .dni { font-size: 11px; color: #475569; margin-bottom: 8px; }
+            .dni { font-size: 11px; color: #475569; margin-bottom: 6px; }
             .qr-container { background: white; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; display: inline-block; margin: 0 auto; }
-            .qr-container svg { width: 45mm; height: 45mm; }
-            .footer-info { font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 6px; }
-            .emergency { font-size: 8.5px; color: #b91c1c; font-weight: 600; margin-top: 2px; }
+            .qr-container svg { width: 42mm; height: 42mm; display: block; margin: 0 auto; }
+            .footer-info { font-size: 8.5px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 5px; }
+            .emergency { font-size: 8px; color: #b91c1c; font-weight: 600; margin-top: 2px; }
+            .cut-hint { font-size: 8px; color: #94a3b8; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
           </style>
         </head>
         <body>
-          <div class="badge-card">
-            <div class="header">
-              <h2>AGROVISTA</h2>
-              <p>${establishmentName} &bull; Cuadrilla Oficial</p>
-              <div class="role-badge">${roleLabel}</div>
-            </div>
+          <div class="print-page">
+            <div class="badge-card">
+              <div class="header">
+                <h2>AGROVISTA</h2>
+                <p>${establishmentName} &bull; Cuadrilla Oficial</p>
+                <div class="role-badge">${roleLabel}</div>
+              </div>
 
-            <div>
-              <div class="name">${worker.name}</div>
-              <div class="dni">${worker.dni ? `DNI: ${worker.dni}` : 'Legajo Digital'}</div>
-              <div class="qr-container">
-                ${cardRef.current?.querySelector('svg')?.outerHTML || ''}
+              <div>
+                <div class="name">${worker.name}</div>
+                <div class="dni">${worker.dni ? `DNI: ${worker.dni}` : 'Legajo Digital'}</div>
+                <div class="qr-container">
+                  ${getQrSvgHtml()}
+                </div>
+              </div>
+
+              <div class="footer-info">
+                <div>Escanee este código en la balanza para registrar cosecha al instante.</div>
+                ${worker.emergencyContactPhone ? `<div class="emergency">Emergencias: ${worker.emergencyContactName || 'Familiar'} (${worker.emergencyContactPhone})</div>` : ''}
               </div>
             </div>
-
-            <div class="footer-info">
-              <div>Escanee este código en la balanza para registrar cosecha al instante.</div>
-              ${worker.emergencyContactPhone ? `<div class="emergency">Emergencias: ${worker.emergencyContactName || 'Familiar'} (${worker.emergencyContactPhone})</div>` : ''}
-            </div>
+            <div class="cut-hint">✄ Recorte por la línea punteada para plastificar</div>
           </div>
           <script>
             window.onload = function() { window.print(); window.close(); }
@@ -231,8 +433,9 @@ export function WorkerQRCardDialog({
 
               {/* Columna Derecha: Código QR Central */}
               <div className="sm:col-span-5 flex flex-col items-center justify-center p-3 rounded-xl bg-white/70 dark:bg-stone-900/50 border border-border/50 text-center">
-                <div className="bg-white p-2.5 rounded-xl border border-stone-200 shadow-xs inline-block mx-auto mb-1.5">
+                <div ref={qrCodeContainerRef} className="bg-white p-2.5 rounded-xl border border-stone-200 shadow-xs inline-block mx-auto mb-1.5">
                   <QRCode
+                    id="worker-qr-code-svg"
                     value={qrPayload}
                     size={130}
                     style={{ height: "auto", maxWidth: "100%", width: "100%" }}
@@ -248,19 +451,37 @@ export function WorkerQRCardDialog({
           </div>
 
           {/* Botones de acción */}
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
             <Button 
               type="button" 
-              onClick={handlePrint}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs h-9 sm:h-10 text-xs sm:text-sm"
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs h-9 sm:h-10 text-xs sm:text-sm font-semibold"
             >
-              <Printer className="h-4 w-4" /> Imprimir Carnet
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Generando Carnet...
+                </>
+              ) : (
+                <>
+                  <FileDown className="h-4 w-4" /> Descargar Carnet (PDF)
+                </>
+              )}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={handlePrint}
+              className="w-full sm:w-auto gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 h-9 sm:h-10 text-xs sm:text-sm"
+              title="Imprimir directamente"
+            >
+              <Printer className="h-4 w-4" /> Imprimir
             </Button>
             {cleanPhone && (
               <Button 
                 type="button" 
                 variant="outline"
-                className="gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 h-9 sm:h-10 text-xs sm:text-sm"
+                className="w-full sm:w-auto gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 h-9 sm:h-10 text-xs sm:text-sm"
                 onClick={() => window.open(`https://wa.me/${cleanPhone}`, '_blank')}
               >
                 <Phone className="h-4 w-4" /> WhatsApp
