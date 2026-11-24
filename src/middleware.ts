@@ -19,8 +19,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && (pathname === '/' || pathname === '/login')) {
-    // Redirect to dashboard if authenticated and trying to access the landing page or login page
-    const response = NextResponse.redirect(new URL('/dashboard', request.url));
+    // Redirect to dashboard or admin if authenticated and trying to access the landing page or login page
+    const targetUrl = user.role === 'SuperAdmin' ? '/admin' : '/dashboard';
+    const response = NextResponse.redirect(new URL(targetUrl, request.url));
     response.headers.set('Cache-Control', 'private, no-store');
     return response;
   }

@@ -485,7 +485,7 @@ export default function ProfilePage() {
               </Card>
             )}
 
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-2">
                     <div className="p-2 bg-primary/10 rounded-full shrink-0"><UserIcon className="h-5 w-5 text-primary" /></div>
                     <div>
@@ -557,7 +557,7 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-2">
                     <div className="p-2 bg-indigo-500/10 rounded-full shrink-0"><Moon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /></div>
                     <div>
@@ -587,7 +587,7 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-2">
                     <div className="p-2 bg-emerald-500/10 rounded-full shrink-0"><Smartphone className="h-5 w-5 text-emerald-600 dark:text-emerald-500" /></div>
                     <div>
@@ -648,15 +648,17 @@ export default function ProfilePage() {
                                 type="button"
                                 variant="outline"
                                 onClick={() => setIsCustomizingNav(prev => !prev)}
-                                className="w-full flex items-center justify-between py-2.5 px-4 h-auto text-sm font-medium border-dashed border-primary/30 hover:bg-primary/5 transition-colors"
+                                className="w-full max-w-full flex items-center justify-between p-3 h-auto text-xs sm:text-sm font-medium border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors whitespace-normal rounded-xl overflow-hidden gap-2"
                             >
-                                <div className="flex items-center gap-2">
-                                    <SlidersHorizontal className="h-4 w-4 text-primary" />
-                                    <span>Personalizar accesos y orden ({selectedNavItems.length} activos)</span>
+                                <div className="flex items-center gap-2 min-w-0 flex-1 text-left">
+                                    <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
+                                    <span className="font-semibold text-foreground truncate">
+                                        Personalizar accesos ({selectedNavItems.length})
+                                    </span>
                                 </div>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-normal">
-                                    <span>{isCustomizingNav ? "Ocultar opciones" : "Modificar"}</span>
-                                    {isCustomizingNav ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                <div className="flex items-center gap-1 text-[11px] sm:text-xs text-primary font-medium shrink-0 bg-primary/10 px-2.5 py-1 rounded-full">
+                                    <span>{isCustomizingNav ? "Ocultar" : "Modificar"}</span>
+                                    {isCustomizingNav ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                                 </div>
                             </Button>
 
@@ -774,7 +776,7 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-2">
                     <div className="p-2 bg-amber-500/10 rounded-full shrink-0"><BellRing className="h-5 w-5 text-amber-600 dark:text-amber-500" /></div>
                     <div>

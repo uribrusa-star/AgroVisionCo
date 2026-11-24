@@ -26,6 +26,7 @@ import { HeroMusicPlayer } from '@/components/home/hero-music-player';
 import { FeatureMockupDialog } from '@/components/home/feature-mockup-dialog';
 import { FaqSection } from '@/components/home/faq-section';
 import { HomeJsonLd } from '@/components/home/json-ld';
+import { AuthRedirect } from '@/components/home/auth-redirect';
 
 export const metadata: Metadata = {
   alternates: {
@@ -36,6 +37,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 dark:bg-stone-900">
+      <AuthRedirect />
       <WebAnalyticsTracker />
       <HomeJsonLd />
 
