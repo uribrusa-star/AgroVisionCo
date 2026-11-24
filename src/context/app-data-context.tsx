@@ -363,7 +363,25 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setProducerLogs(producerLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as ProducerLog[]);
             setTransactions(transactionsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as Transaction[]);
             setKnowledgeBase(knowledgeSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as KnowledgeItem[]);
-            setAttendanceLogs(attendanceLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AttendanceLog[]);
+            if (attendanceLogsSnapshot.docs.length > 0) {
+              setAttendanceLogs(attendanceLogsSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() })) as AttendanceLog[]);
+            } else {
+              // Respaldo vía API con credenciales administrativas si el cliente no tiene permisos directos
+              try {
+                const apiRes = await fetch('/api/attendance');
+                if (apiRes.ok) {
+                  const apiData = await apiRes.json();
+                  if (Array.isArray(apiData.logs) && apiData.logs.length > 0) {
+                    setAttendanceLogs(apiData.logs);
+                  } else {
+                    setAttendanceLogs([]);
+                  }
+                }
+              } catch (apiErr) {
+                console.warn('API fallback for attendance error:', apiErr);
+                setAttendanceLogs([]);
+              }
+            }
         
       } catch (error) {
         console.error("Error fetching data from Firestore:", error);
@@ -497,14 +515,31 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         );
 
         let fallbackAttUnsub: (() => void) | null = null;
+        let attendanceInterval: NodeJS.Timeout | null = null;
+
+        const syncAttendanceFromApi = async () => {
+            try {
+                const apiRes = await fetch('/api/attendance');
+                if (apiRes.ok) {
+                    const apiData = await apiRes.json();
+                    if (Array.isArray(apiData.logs)) {
+                        setAttendanceLogs(apiData.logs);
+                    }
+                }
+            } catch {}
+        };
+
         const attendanceUnsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
             const attData = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             } as AttendanceLog));
             setAttendanceLogs(attData);
-        }, (error) => {
-            console.warn("Attendance listener index fallback:", error);
+            if (attendanceInterval) {
+                clearInterval(attendanceInterval);
+                attendanceInterval = null;
+            }
+        }, (error: any) => {
             const fallbackAttQuery = query(
                 collection(db, 'attendanceLogs'),
                 where('establishmentId', '==', estId),
@@ -516,8 +551,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     ...doc.data()
                 } as AttendanceLog)).sort((a, b) => new Date(b.checkIn || b.date).getTime() - new Date(a.checkIn || a.date).getTime());
                 setAttendanceLogs(attData);
+                if (attendanceInterval) {
+                    clearInterval(attendanceInterval);
+                    attendanceInterval = null;
+                }
             }, (fallbackErr) => {
-                console.error("Error in fallback attendance listener:", fallbackErr);
+                // Si Firestore deniega el listener directo por reglas en nube, sincronizamos mediante la API con permisos Admin
+                syncAttendanceFromApi();
+                if (!attendanceInterval) {
+                    attendanceInterval = setInterval(syncAttendanceFromApi, 6000);
+                }
             });
         });
 
@@ -527,6 +570,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             if (fallbackAuditUnsub) fallbackAuditUnsub();
             attendanceUnsubscribe();
             if (fallbackAttUnsub) fallbackAttUnsub();
+            if (attendanceInterval) clearInterval(attendanceInterval);
         };
     }, [currentUser]);
 
@@ -2047,7 +2091,21 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     'staff'
                 );
             } catch (err) {
-                console.error('Error updating attendance log out:', err);
+                console.warn('Direct client update failed, syncing via Admin API:', err);
+                try {
+                    await fetch('/api/attendance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(sanitizeForFirestore(updatedLog))
+                    });
+                    logUserAction(
+                        'Salida Registrada',
+                        `${data.personnelName} (${data.role}) registró salida (${totalHoursWorked} hs trabajadas)`,
+                        'staff'
+                    );
+                } catch (apiErr) {
+                    console.error('Error updating attendance log out:', apiErr);
+                }
             }
 
             return { type: 'out', log: updatedLog, hoursWorked: totalHoursWorked };
@@ -2083,7 +2141,21 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                     'staff'
                 );
             } catch (err) {
-                console.error('Error creating attendance log in:', err);
+                console.warn('Direct client write failed, syncing via Admin API:', err);
+                try {
+                    await fetch('/api/attendance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(sanitizeForFirestore(newLog))
+                    });
+                    logUserAction(
+                        'Ingreso Registrado',
+                        `${data.personnelName} (${data.role}) registró ingreso a la quinta`,
+                        'staff'
+                    );
+                } catch (apiErr) {
+                    console.error('Error creating attendance log in:', apiErr);
+                }
             }
 
             return { type: 'in', log: newLog };
@@ -2095,7 +2167,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         try {
             await deleteDoc(doc(db, 'attendanceLogs', id));
         } catch (err) {
-            console.error('Error deleting attendance log:', err);
+            console.warn('Direct client delete failed, syncing via Admin API:', err);
+            try {
+                await fetch(`/api/attendance?id=${id}`, { method: 'DELETE' });
+            } catch (apiErr) {
+                console.error('Error deleting attendance log:', apiErr);
+            }
         }
     };
 

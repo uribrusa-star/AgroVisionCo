@@ -77,5 +77,11 @@ service cloud.firestore {
     match /auditLogs/{document} {
       allow read, write: if isAuthenticated();
     }
+    match /attendanceLogs/{document} {
+      allow read, write: if isAuthenticated();
+    }
+    match /contactRequests/{document} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }
