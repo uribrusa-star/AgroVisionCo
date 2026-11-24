@@ -285,42 +285,45 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         let usersSnapshot = await getDocs(usersQuery);
 
         if (usersSnapshot.empty) {
-          // Si usersSnapshot vino vacío (ej. usuarios legacy sin el campo establishmentId), revisar documentos base para no pisar datos
-          const existingDocs = await Promise.all(
-            availableUsers.map(async u => {
-              try {
-                const s = await getDoc(doc(db, 'users', u.id));
-                return s.exists() ? { id: s.id, ...s.data() } as User : null;
-              } catch {
-                return null;
-              }
-            })
-          );
-          const foundLegacyUsers = existingDocs.filter(Boolean) as User[];
+          if (estId === 'main') {
+            // Solo para el establecimiento 'main': revisar documentos base legacy
+            const existingDocs = await Promise.all(
+              availableUsers.map(async u => {
+                try {
+                  const s = await getDoc(doc(db, 'users', u.id));
+                  return s.exists() ? { id: s.id, ...s.data() } as User : null;
+                } catch {
+                  return null;
+                }
+              })
+            );
+            const foundLegacyUsers = existingDocs.filter(Boolean) as User[];
 
-          if (foundLegacyUsers.length > 0) {
-            // Documentos existentes encontrados: asegurarles establishmentId con merge: true sin pisar datos
-            const batch = writeBatch(db);
-            foundLegacyUsers.forEach(u => {
-              batch.set(doc(db, 'users', u.id), { establishmentId: estId }, { merge: true });
-            });
-            await batch.commit();
+            if (foundLegacyUsers.length > 0) {
+              const batch = writeBatch(db);
+              foundLegacyUsers.forEach(u => {
+                batch.set(doc(db, 'users', u.id), { establishmentId: 'main' }, { merge: true });
+              });
+              await batch.commit();
 
-            const normalized = foundLegacyUsers.map(u => ({
-              ...u,
-              establishmentId: estId,
-              avatar: getRoleAvatar(u.role || 'Productor')
-            }));
-            setUsers(normalized);
+              const normalized = foundLegacyUsers.map(u => ({
+                ...u,
+                establishmentId: 'main',
+                avatar: getRoleAvatar(u.role || 'Productor')
+              }));
+              setUsers(normalized);
+            } else {
+              const batch = writeBatch(db);
+              availableUsers.forEach(user => {
+                const userRef = doc(db, 'users', user.id);
+                batch.set(userRef, { ...user, establishmentId: 'main' }, { merge: true });
+              });
+              await batch.commit();
+              setUsers(availableUsers.map(u => ({ ...u, establishmentId: 'main' })));
+            }
           } else {
-            // Primera inicialización: sembrar con merge: true
-            const batch = writeBatch(db);
-            availableUsers.forEach(user => {
-              const userRef = doc(db, 'users', user.id);
-              batch.set(userRef, { ...user, establishmentId: estId }, { merge: true });
-            });
-            await batch.commit();
-            setUsers(availableUsers.map(u => ({ ...u, establishmentId: estId })));
+            // Para otros establecimientos (ej. EST-003, Est-004), no heredar ni pisar usuarios base
+            setUsers([]);
           }
         } else {
           const fetchedUsers = usersSnapshot.docs.map(doc => {
@@ -1991,17 +1994,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const updateUserProfile = async (userId: string, profileData: { name?: string; notificationEmail?: string; avatar?: string; phone?: string; dni?: string }) => {
-        const estId = currentUser?.establishmentId || 'main';
+    const updateUserProfile = async (userId: string, profileData: { name?: string; notificationEmail?: string; avatar?: string; phone?: string; dni?: string; bottomNavEnabled?: boolean; bottomNavItems?: string[] }) => {
         const userRef = doc(db, 'users', userId);
-        const dataToSave = { ...profileData, establishmentId: estId };
+        const dataToSave = { ...profileData };
 
         await setDoc(userRef, dataToSave, { merge: true });
 
-        // Sincronizar perfil en el documento canónico 'user-productor'
-        if (userId === 'user-productor' || currentUser?.role === 'Productor' || currentUser?.email?.includes('productor@')) {
+        // Sincronizar en el documento 'user-productor' ÚNICAMENTE si se está editando el productor principal
+        const isMainProducerAccount = userId === 'user-productor' || (currentUser?.id === 'user-productor' && (currentUser?.email === 'productor@agrovista.co' || currentUser?.email === 'productor@agrovision.co'));
+        if (isMainProducerAccount) {
             try {
-                await setDoc(doc(db, 'users', 'user-productor'), dataToSave, { merge: true });
+                await setDoc(doc(db, 'users', 'user-productor'), { ...dataToSave, establishmentId: 'main' }, { merge: true });
             } catch (e) {
                 console.warn('Sync producer profile warning:', e);
             }

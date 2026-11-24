@@ -82,6 +82,7 @@ export async function POST(request: Request) {
           };
         } else {
           user.id = 'user-productor'; // Consolidar siempre en el ID canónico
+          user.establishmentId = 'main'; // El productor principal siempre pertenece al establecimiento 'main'
           user.password = password;
         }
 
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
             const updatePayload: Record<string, any> = {
               email: user.email || 'productor@agrovista.co',
               role: 'Productor',
+              establishmentId: 'main',
               password: password,
               updatedAt: new Date().toISOString()
             };
