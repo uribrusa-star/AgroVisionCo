@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode, Phone, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode, Phone, ChevronUp, ChevronDown, X, Eye, EyeOff } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -54,6 +54,8 @@ export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
   const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
   const [isCredentialOpen, setIsCredentialOpen] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isPresent = (appData.attendanceLogs || []).some(l => 
     l.status === 'in_progress' && currentUser &&
@@ -911,14 +913,52 @@ export default function ProfilePage() {
                                 <FormField control={passwordForm.control} name="newPassword" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Nueva Contraseña</FormLabel>
-                                            <FormControl><Input type="password" placeholder="••••••••" {...field} disabled={isPending} className="bg-muted/30" /></FormControl>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input 
+                                                        type={showNewPassword ? "text" : "password"} 
+                                                        placeholder="••••••••" 
+                                                        {...field} 
+                                                        disabled={isPending} 
+                                                        className="bg-muted/30 pr-10" 
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                                                        tabIndex={-1}
+                                                        title={showNewPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                                                    >
+                                                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    </button>
+                                                </div>
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                 )} />
                                 <FormField control={passwordForm.control} name="confirmPassword" render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Confirmar Contraseña</FormLabel>
-                                            <FormControl><Input type="password" placeholder="••••••••" {...field} disabled={isPending} className="bg-muted/30" /></FormControl>
+                                            <FormControl>
+                                                <div className="relative">
+                                                    <Input 
+                                                        type={showConfirmPassword ? "text" : "password"} 
+                                                        placeholder="••••••••" 
+                                                        {...field} 
+                                                        disabled={isPending} 
+                                                        className="bg-muted/30 pr-10" 
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                                                        tabIndex={-1}
+                                                        title={showConfirmPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                    </button>
+                                                </div>
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                 )} />
