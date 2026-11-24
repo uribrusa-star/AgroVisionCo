@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode, Phone } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -40,6 +40,7 @@ const PasswordSchema = z.object({
 const ProfileSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),
   email: z.string().email("Por favor, ingrese un correo válido.").optional(),
+  phone: z.string().optional(),
   notificationEmail: z.string().email("Por favor, ingrese un correo de notificación válido.").or(z.literal("")).optional(),
 });
 
@@ -82,6 +83,7 @@ export default function ProfilePage() {
     defaultValues: { 
       name: currentUser?.name || '', 
       email: currentUser?.email || '', 
+      phone: currentUser?.phone || '',
       notificationEmail: currentUser?.notificationEmail || ''
     },
   });
@@ -91,6 +93,7 @@ export default function ProfilePage() {
         profileForm.reset({ 
           name: currentUser.name, 
           email: currentUser.email, 
+          phone: currentUser.phone || '',
           notificationEmail: currentUser.notificationEmail || ''
         });
         setBottomNavEnabled(currentUser.bottomNavEnabled !== false);
@@ -274,6 +277,7 @@ export default function ProfilePage() {
         try {
             await updateUserProfile(currentUser.id, { 
               name: values.name, 
+              phone: values.phone?.trim() || '',
               notificationEmail: values.notificationEmail
             });
             toast({
@@ -469,6 +473,28 @@ export default function ProfilePage() {
                                     </FormItem>
                                 )} />
                             </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField control={profileForm.control} name="phone" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="flex items-center gap-1.5">
+                                            <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                                            Número de WhatsApp
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input 
+                                                type="tel" 
+                                                placeholder="Ej. +54 9 11 1234 5678" 
+                                                {...field} 
+                                                disabled={isPending} 
+                                                className="bg-muted/30 font-mono" 
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            Permite enviar y recibir credenciales digitales y coordinar accesos de tranquera.
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
                                 <FormField control={profileForm.control} name="notificationEmail" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Correo de Respaldo para Notificaciones</FormLabel>
@@ -479,6 +505,7 @@ export default function ProfilePage() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
+                            </div>
                                 
                             <div className="flex justify-end pt-2">
                                 <Button type="submit" disabled={isPending} className="gap-2">
