@@ -50,7 +50,7 @@ export default function EngineerLogPage() {
     <>
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-2">
-          <h1 className="text-xl sm:text-3xl font-bold text-foreground shrink-0">
+          <h1 className="text-base sm:text-2xl md:text-3xl font-bold text-foreground min-w-0 leading-tight">
             Bitácora del Agrónomo
           </h1>
           <WeatherCard compact />

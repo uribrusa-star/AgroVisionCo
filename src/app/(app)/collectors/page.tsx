@@ -415,7 +415,7 @@ export default function CollectorsPage() {
               variant="outline" 
               onClick={handlePrintAllBadges}
               disabled={isPrintingBadges}
-              className="gap-2 border-emerald-600/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+              className="gap-2 border-primary/40 text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
             >
               <Printer className="h-4 w-4" />
               {isPrintingBadges ? "Generando Carnets..." : "Imprimir Credenciales QR"}
@@ -425,7 +425,7 @@ export default function CollectorsPage() {
           {canManage && (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
                       <Plus className="h-4 w-4" /> Agregar Recolector
                     </Button>
                 </DialogTrigger>
@@ -527,7 +527,7 @@ export default function CollectorsPage() {
                                 <DialogClose asChild>
                                     <Button type="button" variant="secondary">Cancelar</Button>
                                 </DialogClose>
-                                <Button type="submit" disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                                <Button type="submit" disabled={isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                                   {isPending ? 'Guardando...' : 'Guardar y Generar QR'}
                                 </Button>
                             </DialogFooter>
@@ -793,7 +793,7 @@ export default function CollectorsPage() {
 
               <DialogFooter className="pt-2">
                 <Button type="button" variant="secondary" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={isPending} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button type="submit" disabled={isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   {isPending ? 'Guardando...' : 'Guardar Cambios'}
                 </Button>
               </DialogFooter>
@@ -821,7 +821,7 @@ export default function CollectorsPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="w-full sm:w-auto shrink-0 gap-1.5 border-emerald-600/30 text-emerald-700 dark:text-emerald-400 text-xs h-8"
+                    className="w-full sm:w-auto shrink-0 gap-1.5 border-primary/40 text-primary hover:bg-primary/5 text-xs h-8"
                     onClick={() => setQrModalCollector(selectedCollector)}
                   >
                     <QrCode className="h-3.5 w-3.5" /> Credencial QR
@@ -1034,7 +1034,7 @@ export default function CollectorsPage() {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="w-full sm:w-auto flex-1 gap-1.5 text-xs border-emerald-600/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                  className="w-full sm:w-auto flex-1 gap-1.5 text-xs border-primary/40 text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
                   onClick={() => handleGenerateReceiptForCollectorRecord(selectedRecordDetail)}
                   disabled={isPdfPending}
                 >
