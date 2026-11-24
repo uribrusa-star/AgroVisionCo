@@ -22,6 +22,7 @@ export const DEMO_TRACEABILITY_DATA = {
     irrigationSystem: 'Riego localizado por goteo automatizado',
     areaTotal: 10,
     areaStrawberry: 5,
+    hasGoodPracticesSeal: true,
     images: [
       'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
@@ -33,6 +34,7 @@ export const DEMO_TRACEABILITY_DATA = {
   collectorName: 'Juan Carlos Fernández',
   bpaCertified: true,
   bpaDetails: {
+    hasAdminSeal: true,
     phiCompliant: true,
     zeroResiduesGuaranteed: true,
     waterQualityInspected: true,
@@ -274,8 +276,12 @@ export async function getFullTraceData(id: string): Promise<any> {
       }
     }
 
-    const bpaCertified = phiCompliant;
+    const hasAdminSeal = Boolean(establishmentInfo?.hasGoodPracticesSeal);
+    // Para que un lote tenga el Sello Oficial BPA en la Historia de la Frutilla,
+    // DEBE tener la aprobación final del Administrador (Sello BPA) Y haber cumplido el PHI
+    const bpaCertified = Boolean(hasAdminSeal && phiCompliant);
     const bpaDetails = {
+      hasAdminSeal,
       phiCompliant,
       zeroResiduesGuaranteed: phiCompliant,
       waterQualityInspected: true,
@@ -326,6 +332,7 @@ export async function getFullTraceData(id: string): Promise<any> {
         irrigationSystem: establishmentInfo?.irrigation?.system || 'Riego localizado por goteo automatizado',
         areaTotal: establishmentInfo?.area?.total || 10,
         areaStrawberry: establishmentInfo?.area?.strawberry || 5,
+        hasGoodPracticesSeal: hasAdminSeal,
         images: establishmentInfo?.images || [
           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
           'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',

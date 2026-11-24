@@ -30,6 +30,7 @@ type TraceabilityData = {
     }[];
     bpaCertified?: boolean;
     bpaDetails?: {
+        hasAdminSeal?: boolean;
         phiCompliant?: boolean;
         zeroResiduesGuaranteed?: boolean;
         waterQualityInspected?: boolean;
@@ -176,7 +177,14 @@ export default function TracePage() {
                                         Establecimiento
                                         <Sparkles className="h-3 w-3 text-purple-500 animate-pulse shrink-0" />
                                     </p>
-                                    <span className="text-[9px] font-semibold text-purple-600 bg-purple-200/60 px-1.5 py-0.5 rounded-full shrink-0">Ver Galería ➔</span>
+                                    <div className="flex items-center gap-1.5">
+                                        {data.bpaDetails?.hasAdminSeal && (
+                                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/90 dark:bg-emerald-950 dark:text-emerald-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-2xs">
+                                                <ShieldCheck className="h-3 w-3 text-emerald-600" /> BPA
+                                            </span>
+                                        )}
+                                        <span className="text-[9px] font-semibold text-purple-600 bg-purple-200/60 px-1.5 py-0.5 rounded-full shrink-0">Ver Galería ➔</span>
+                                    </div>
                                 </div>
                                 <p className="font-extrabold text-xs sm:text-base md:text-lg text-purple-950 leading-snug break-words mt-0.5 group-hover:text-purple-700 transition-colors">
                                     {data.establishmentName || 'Quinta Las Fresas'}
@@ -423,6 +431,21 @@ export default function TracePage() {
 
                     <div className="p-4 sm:p-6 pt-4 relative z-10 space-y-4 overflow-y-auto flex-1">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/20 border border-emerald-500/30 flex items-start gap-3 sm:col-span-2">
+                                <div className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5">
+                                    <Award className="h-5 w-5 text-amber-500" />
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
+                                        Auditoría y Aprobación Oficial AgroVista
+                                        <CheckCircle className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+                                    </h4>
+                                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-1 leading-relaxed">
+                                        Establecimiento auditado e inspeccionado favorablemente con el Sello Oficial de Buenas Prácticas Agrícolas otorgado por la dirección técnica.
+                                    </p>
+                                </div>
+                            </div>
+
                             <div className="p-3.5 sm:p-4 rounded-xl bg-muted/40 border flex items-start gap-3">
                                 <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5">
                                     <ShieldCheck className="h-5 w-5" />
