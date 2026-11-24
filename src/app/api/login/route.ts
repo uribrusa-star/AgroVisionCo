@@ -32,9 +32,10 @@ export async function POST(request: Request) {
     // 2. Intentar buscar usuario en Firestore de forma segura
     try {
       if (adminDb) {
-        // Primero buscar por ID conocido para el productor si aplica
-        if (emailAliases.some(e => e === 'productor@agrovision.co' || e === 'productor@agrovista.co')) {
-          const directDoc = await adminDb.collection('users').doc('user-productor').get();
+        // Primero buscar por ID conocido para usuarios base si aplica
+        const knownBaseUser = mockUsers.find(u => emailAliases.includes(u.email?.toLowerCase() || ''));
+        if (knownBaseUser) {
+          const directDoc = await adminDb.collection('users').doc(knownBaseUser.id).get();
           if (directDoc.exists) {
             user = { id: directDoc.id, ...directDoc.data() } as User;
           }
@@ -130,12 +131,18 @@ export async function POST(request: Request) {
       }
     }
     
-    // Actualizar lastLoginAt usando merge: true para EVITAR errores NOT_FOUND
+    // Asegurar establecimiento por defecto si no lo tiene
+    if (!user.establishmentId) {
+      user.establishmentId = 'main';
+    }
+
+    // Actualizar lastLoginAt y establishmentId usando merge: true para EVITAR errores NOT_FOUND
     const lastLoginAt = new Date().toISOString();
     try {
       if (adminDb && user.id) {
         await adminDb.collection('users').doc(user.id).set({
-          lastLoginAt
+          lastLoginAt,
+          establishmentId: user.establishmentId || 'main'
         }, { merge: true });
       }
       user.lastLoginAt = lastLoginAt;

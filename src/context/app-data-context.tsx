@@ -279,27 +279,58 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       }, 12000);
 
       try {
+        const estId = currentUser?.establishmentId || 'main';
         const usersCollectionRef = collection(db, 'users');
-        const usersQuery = query(usersCollectionRef, where('establishmentId', '==', currentUser?.establishmentId || 'main'));
-        const usersSnapshot = await getDocs(usersQuery);
+        const usersQuery = query(usersCollectionRef, where('establishmentId', '==', estId));
+        let usersSnapshot = await getDocs(usersQuery);
 
-            if (usersSnapshot.empty) {
-              const batch = writeBatch(db);
-              availableUsers.forEach(user => {
-                  const userRef = doc(db, 'users', user.id);
-                  batch.set(userRef, user);
-              });
-              await batch.commit();
-              setUsers(availableUsers);
-            } else {
-              const fetchedUsers = usersSnapshot.docs.map(doc => {
-                const data = doc.data();
-                return { id: doc.id, ...data, avatar: getRoleAvatar(data.role || 'Productor') };
-              }) as User[];
-              // Deduplicate by ID to be absolutely sure
-              const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
-              setUsers(uniqueUsers);
-            }
+        if (usersSnapshot.empty) {
+          // Si usersSnapshot vino vacío (ej. usuarios legacy sin el campo establishmentId), revisar documentos base para no pisar datos
+          const existingDocs = await Promise.all(
+            availableUsers.map(async u => {
+              try {
+                const s = await getDoc(doc(db, 'users', u.id));
+                return s.exists() ? { id: s.id, ...s.data() } as User : null;
+              } catch {
+                return null;
+              }
+            })
+          );
+          const foundLegacyUsers = existingDocs.filter(Boolean) as User[];
+
+          if (foundLegacyUsers.length > 0) {
+            // Documentos existentes encontrados: asegurarles establishmentId con merge: true sin pisar datos
+            const batch = writeBatch(db);
+            foundLegacyUsers.forEach(u => {
+              batch.set(doc(db, 'users', u.id), { establishmentId: estId }, { merge: true });
+            });
+            await batch.commit();
+
+            const normalized = foundLegacyUsers.map(u => ({
+              ...u,
+              establishmentId: estId,
+              avatar: getRoleAvatar(u.role || 'Productor')
+            }));
+            setUsers(normalized);
+          } else {
+            // Primera inicialización: sembrar con merge: true
+            const batch = writeBatch(db);
+            availableUsers.forEach(user => {
+              const userRef = doc(db, 'users', user.id);
+              batch.set(userRef, { ...user, establishmentId: estId }, { merge: true });
+            });
+            await batch.commit();
+            setUsers(availableUsers.map(u => ({ ...u, establishmentId: estId })));
+          }
+        } else {
+          const fetchedUsers = usersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { id: doc.id, ...data, avatar: getRoleAvatar(data.role || 'Productor') };
+          }) as User[];
+          // Deduplicate by ID to be absolutely sure
+          const uniqueUsers = Array.from(new Map(fetchedUsers.map(u => [u.id, u])).values());
+          setUsers(uniqueUsers);
+        }
 
             // Función auxiliar para fallar con gracia si una colección falla (aislamiento de errores con fallback a consulta sin orderBy si falta índice en Firestore)
             const safeFetch = async <T,>(promise: Promise<T>, defaultValue: T): Promise<T> => {
@@ -338,7 +369,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
               }
             };
 
-            const estId = currentUser?.establishmentId || 'main';
+            // Usar el estId resuelto al inicio del fetchData
 
             const [
               establishmentDocSnap,
@@ -1961,13 +1992,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const updateUserProfile = async (userId: string, profileData: { name?: string; notificationEmail?: string; avatar?: string; phone?: string; dni?: string }) => {
+        const estId = currentUser?.establishmentId || 'main';
         const userRef = doc(db, 'users', userId);
-        await setDoc(userRef, profileData, { merge: true });
+        const dataToSave = { ...profileData, establishmentId: estId };
+
+        await setDoc(userRef, dataToSave, { merge: true });
 
         // Sincronizar perfil en el documento canónico 'user-productor'
         if (userId === 'user-productor' || currentUser?.role === 'Productor' || currentUser?.email?.includes('productor@')) {
             try {
-                await setDoc(doc(db, 'users', 'user-productor'), profileData, { merge: true });
+                await setDoc(doc(db, 'users', 'user-productor'), dataToSave, { merge: true });
             } catch (e) {
                 console.warn('Sync producer profile warning:', e);
             }
@@ -1978,7 +2012,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             await fetch('/api/user', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(profileData)
+                body: JSON.stringify(dataToSave)
             });
         } catch (e) {
             console.warn('Warning syncing profile to server session:', e);
@@ -1986,14 +2020,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         
         const updatedUser = users.find(u => u.id === userId);
         if(updatedUser) {
-            const newUsers = users.map(u => u.id === userId ? { ...u, ...profileData } : u);
+            const newUsers = users.map(u => u.id === userId ? { ...u, ...dataToSave } : u);
             setUsers(newUsers);
             if (currentUser?.id === userId) {
-                const updatedCurrentUser = { ...currentUser, ...profileData };
+                const updatedCurrentUser = { ...currentUser, ...dataToSave };
                 setCurrentUser(updatedCurrentUser, true); // Assume rememberMe
             }
         } else if (currentUser?.id === userId || currentUser?.email === users.find(u => u.id === userId)?.email) {
-            const updatedCurrentUser = { ...currentUser, ...profileData };
+            const updatedCurrentUser = { ...currentUser, ...dataToSave };
             setCurrentUser(updatedCurrentUser, true);
         }
     };

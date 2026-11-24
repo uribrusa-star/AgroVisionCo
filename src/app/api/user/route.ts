@@ -28,6 +28,11 @@ export async function PATCH(request: Request) {
 
     // Actualizar campos en la sesión segura de Iron Session
     if (updates.name !== undefined) session.user.name = updates.name;
+    if (updates.phone !== undefined) session.user.phone = updates.phone;
+    if (updates.dni !== undefined) session.user.dni = updates.dni;
+    if (updates.establishmentId !== undefined && !session.user.establishmentId) {
+      session.user.establishmentId = updates.establishmentId;
+    }
     if (updates.notificationEmail !== undefined) session.user.notificationEmail = updates.notificationEmail;
     if (updates.avatar !== undefined) session.user.avatar = updates.avatar;
     if (updates.bottomNavEnabled !== undefined) session.user.bottomNavEnabled = updates.bottomNavEnabled;
@@ -42,6 +47,9 @@ export async function PATCH(request: Request) {
           updatedAt: new Date().toISOString()
         };
         if (updates.name !== undefined) firestoreUpdates.name = updates.name;
+        if (updates.phone !== undefined) firestoreUpdates.phone = updates.phone;
+        if (updates.dni !== undefined) firestoreUpdates.dni = updates.dni;
+        if (updates.establishmentId !== undefined) firestoreUpdates.establishmentId = updates.establishmentId;
         if (updates.notificationEmail !== undefined) firestoreUpdates.notificationEmail = updates.notificationEmail;
         if (updates.avatar !== undefined) firestoreUpdates.avatar = updates.avatar;
         if (updates.bottomNavEnabled !== undefined) firestoreUpdates.bottomNavEnabled = updates.bottomNavEnabled;
