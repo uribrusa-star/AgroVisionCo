@@ -2,7 +2,6 @@
 
 import React, { useState, useContext } from 'react';
 import { PageHeader } from '@/components/page-header';
-import { WeatherCard } from '@/components/weather-card';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { UserCredentialView } from '@/components/user-credential-view';
 import { AttendanceScannerDialog } from '@/components/attendance-scanner-dialog';
@@ -63,18 +62,13 @@ export default function AttendancePage() {
   if (!canManageGate) {
     return (
       <>
-        <div className="flex items-center justify-between gap-2 sm:gap-4 mb-4 pb-1">
-          <div className="min-w-0 pr-1">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
-              Control de Asistencia
-            </h1>
-            <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
-              Módulo de acceso y registro de personal en tranquera.
-            </p>
-          </div>
-          <div className="shrink-0">
-            <WeatherCard compact />
-          </div>
+        <div className="mb-4 pb-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+            Control de Asistencia
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Módulo de acceso y registro de personal en tranquera.
+          </p>
         </div>
 
         <div className="max-w-2xl mx-auto py-8 text-center space-y-6">
@@ -187,19 +181,14 @@ export default function AttendancePage() {
 
   return (
     <>
-      {/* Cabecera Adaptable a Celular con Clima al Lado del Título */}
-      <div className="flex items-center justify-between gap-2 sm:gap-4 mb-4 pb-1">
-        <div className="min-w-0 pr-1">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight truncate">
-            Control de Asistencia
-          </h1>
-          <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
-            Gestión de accesos en tranquera y personal en finca.
-          </p>
-        </div>
-        <div className="shrink-0">
-          <WeatherCard compact />
-        </div>
+      {/* Cabecera de la sección */}
+      <div className="mb-4 pb-1">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
+          Control de Asistencia
+        </h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          Gestión de accesos en tranquera y personal en finca.
+        </p>
       </div>
 
       {/* Botón Principal: Escanear Tranquera Ocupando Todo el Ancho */}
