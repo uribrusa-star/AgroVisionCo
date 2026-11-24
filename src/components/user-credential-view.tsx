@@ -350,7 +350,7 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
 
       doc.setFontSize(6.5);
       doc.setTextColor(100, 116, 139);
-      doc.text('Escanear en tranquera para registrar ingreso y salida', x + cardWidth / 2, y + 90, { align: 'center' });
+      doc.text('Escanear al ingresar para registrar asistencia', x + cardWidth / 2, y + 90, { align: 'center' });
 
       if (user.phone) {
         doc.setFontSize(7);
@@ -427,7 +427,7 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
                   ? `Ingreso registrado hoy a las ${format(new Date(currentOpenSession.checkIn), 'HH:mm')} hs (hace ${formatDistanceToNow(new Date(currentOpenSession.checkIn), { locale: es })})`
                   : userAttendanceLogs.length > 0 && userAttendanceLogs[0].checkOut
                     ? `Última salida registrada: ${format(new Date(userAttendanceLogs[0].checkOut!), "dd/MM/yyyy 'a las' HH:mm")} hs`
-                    : 'Presente su credencial en el escáner de la tranquera para iniciar su jornada.'}
+                    : 'Presente su credencial en el escáner de asistencia para iniciar su jornada.'}
               </p>
             </div>
           </div>
@@ -440,7 +440,7 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
               className="w-full sm:w-auto h-9 font-semibold gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
             >
               <ScanLine className="h-4 w-4" />
-              Abrir Escáner de Tranquera
+              Abrir Escáner de Asistencia
             </Button>
           )}
         </div>
@@ -521,7 +521,7 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
             {/* Botón de Actualizar Manual y Recomendación */}
             <div className="flex items-center justify-between gap-2 text-xs">
               <p className="text-[10px] text-muted-foreground leading-tight flex-1">
-                Muestre este QR al llegar a la tranquera. Brillo recomendado al 80%.
+                Muestre este QR al registrar asistencia. Brillo recomendado al 80%.
               </p>
               <Button 
                 type="button" 
@@ -616,7 +616,7 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
                 Resumen de Asistencia Personal
               </CardTitle>
               <CardDescription className="text-xs">
-                Cálculo automático de horas en base a ingresos y salidas en tranquera.
+                Cálculo automático de horas en base a ingresos y salidas registradas.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-2">

@@ -26,7 +26,7 @@ export function UserCredentialDialog({
             Credencial Oficial y Control de Asistencia
           </DialogTitle>
           <DialogDescription className="text-center text-xs">
-            Presente este código QR en el escáner de la tranquera para registrar ingreso y salida.
+            Presente este código QR en el escáner para registrar su ingreso y salida.
           </DialogDescription>
         </DialogHeader>
 

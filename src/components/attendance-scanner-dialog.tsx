@@ -446,7 +446,7 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                 <DialogTitle className="text-base font-bold text-white flex items-center gap-2">
                   Control de Asistencia
                   <span className="text-xs font-normal text-stone-400">
-                    Tranquera / Puerta
+                    Punto de Acceso
                   </span>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-stone-400">

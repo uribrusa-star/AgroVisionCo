@@ -224,7 +224,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
       };
     }, []);
 
-    // Sincronización automática de asistencias tomadas offline en tranquera
+    // Sincronización automática de asistencias tomadas offline
     useEffect(() => {
       if (typeof window === 'undefined') return;
 
@@ -233,7 +233,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
           if (synced > 0) {
             toast({
               title: "Asistencias Sincronizadas",
-              description: `Se sincronizaron ${synced} registros de tranquera tomados sin conexión.`,
+              description: `Se sincronizaron ${synced} registros de asistencia tomados sin conexión.`,
             });
           }
         }).catch(() => {});

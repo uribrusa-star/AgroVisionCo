@@ -59,8 +59,8 @@ export function exportAttendanceToExcel(
       'Egreso (hs)': checkOutTime,
       'Horas Trabajadas': hours,
       'Estado': log.status === 'in_progress' ? 'Presente' : 'Salida Registrada',
-      'Método': log.method === 'scan_gate' ? 'Escáner QR Tranquera' : log.method === 'self_check_in' ? 'Credencial Digital' : 'Manual',
-      'Registrado Por': log.registeredBy?.name || 'Sistema Tranquera',
+      'Método': log.method === 'scan_gate' ? 'Escáner QR Asistencia' : log.method === 'self_check_in' ? 'Credencial Digital' : 'Manual',
+      'Registrado Por': log.registeredBy?.name || 'Control de Asistencia',
     };
   });
 
@@ -183,7 +183,7 @@ export function exportAttendanceToPDF(
       outTime,
       `${hours} hs`,
       log.status === 'in_progress' ? 'Presente' : 'Salida',
-      log.method === 'scan_gate' ? 'QR Tranquera' : 'Manual',
+      log.method === 'scan_gate' ? 'QR Asistencia' : 'Manual',
     ];
   });
 

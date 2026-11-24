@@ -221,7 +221,7 @@ export default function UsersPage() {
       // 6. Pie y datos de contacto
       doc.setFontSize(6.5);
       doc.setTextColor(100, 116, 139);
-      doc.text('Escanear en tranquera para registrar ingreso y salida', x + cardWidth / 2, y + 90, { align: 'center' });
+      doc.text('Escanear al ingresar para registrar asistencia', x + cardWidth / 2, y + 90, { align: 'center' });
 
       if (user.phone) {
         doc.setFontSize(7);
@@ -503,7 +503,7 @@ export default function UsersPage() {
                                   </Badge>
                                   {establishmentData?.attendanceManagerId === user.id && (
                                       <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">
-                                          ✓ Control Tranquera
+                                          ✓ Control Asistencia
                                       </Badge>
                                   )}
                               </div>
@@ -528,7 +528,7 @@ export default function UsersPage() {
                                               title: isCurrent ? 'Responsabilidad Removida' : 'Responsable Designado',
                                               description: isCurrent 
                                                   ? `${user.name} ya no tiene acceso al control de asistencia.` 
-                                                  : `${user.name} ahora tiene acceso para cargar asistencias en tranquera.`
+                                                  : `${user.name} ahora tiene acceso para cargar asistencias.`
                                           });
                                       }}>
                                           <UserCheck className="mr-2 h-4 w-4 text-emerald-600" />

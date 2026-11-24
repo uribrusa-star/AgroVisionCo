@@ -490,7 +490,7 @@ export default function ProfilePage() {
                                             />
                                         </FormControl>
                                         <FormDescription>
-                                            Permite enviar y recibir credenciales digitales y coordinar accesos de tranquera.
+                                            Permite enviar y recibir credenciales digitales y coordinar accesos y asistencia.
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>

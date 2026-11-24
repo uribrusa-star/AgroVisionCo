@@ -216,7 +216,7 @@ export default function AttendancePage() {
             Control de Asistencia
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Módulo de acceso y registro de personal en tranquera.
+            Módulo de acceso y registro de asistencia del personal.
           </p>
         </div>
 
@@ -227,10 +227,10 @@ export default function AttendancePage() {
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-foreground">Acceso de Gestión Restringido</h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto mt-2 leading-relaxed">
-              El módulo de control de tranquera y carga de asistencias solo está habilitado para el <strong>Productor</strong> y el <strong>usuario que él designe</strong> como responsable de asistencia.
+              El módulo de control y carga de asistencias solo está habilitado para el <strong>Productor</strong> y el <strong>usuario que él designe</strong> como responsable de asistencia.
             </p>
             <p className="text-xs text-muted-foreground mt-2">
-              Para registrar su propio ingreso, presente su credencial digital ante el escáner de la tranquera.
+              Para registrar su propio ingreso, presente su credencial digital ante el escáner de asistencia.
             </p>
 
             <div className="mt-6 pt-4 border-t border-amber-200 dark:border-amber-900 flex justify-center">
@@ -336,18 +336,18 @@ export default function AttendancePage() {
           Control de Asistencia
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-          Gestión de accesos en tranquera y personal en finca.
+          Gestión de accesos, asistencia y personal en finca.
         </p>
       </div>
 
-      {/* Botón Principal: Escanear Tranquera Ocupando Todo el Ancho */}
+      {/* Botón Principal: Escanear Asistencia Ocupando Todo el Ancho */}
       <div className="mb-4">
         <Button
           onClick={() => setIsScannerOpen(true)}
           className="w-full h-12 text-sm sm:text-base font-bold gap-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-md rounded-2xl active:scale-[0.99] transition-all"
         >
           <ScanLine className="h-5 w-5" />
-          <span>Escanear Tranquera</span>
+          <span>Escanear Asistencia</span>
           {presentNow.length > 0 && (
             <Badge variant="secondary" className="ml-1 bg-white/20 text-white hover:bg-white/30 text-xs px-2 py-0.5">
               {presentNow.length} presentes
@@ -502,13 +502,13 @@ export default function AttendancePage() {
               <div className="py-12 text-center text-muted-foreground text-xs">
                 <Users className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
                 <p className="font-semibold text-sm">No hay personal activo en la finca en este momento.</p>
-                <p className="mt-1">Utilice el escáner de tranquera cuando los trabajadores ingresen al establecimiento.</p>
+                <p className="mt-1">Utilice el escáner de asistencia cuando los trabajadores ingresen al establecimiento.</p>
                 <Button 
                   size="sm" 
                   onClick={() => setIsScannerOpen(true)}
                   className="mt-4 h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
                 >
-                  <ScanLine className="h-3.5 w-3.5" /> Abrir Escáner de Tranquera
+                  <ScanLine className="h-3.5 w-3.5" /> Abrir Escáner de Asistencia
                 </Button>
               </div>
             ) : (
@@ -613,7 +613,7 @@ export default function AttendancePage() {
               <div className="py-12 text-center text-muted-foreground text-xs">
                 <Calendar className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
                 <p className="font-semibold text-sm">Aún no hay registros de asistencia cargados hoy.</p>
-                <p className="mt-1">Los ingresos y egresos registrados en tranquera se listarán aquí en tiempo real.</p>
+                <p className="mt-1">Los ingresos y egresos registrados se listarán aquí en tiempo real.</p>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -971,7 +971,7 @@ export default function AttendancePage() {
                       <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
                         <span className="flex items-center gap-1">
                           <ScanLine className="h-3 w-3 text-muted-foreground/70" />
-                          {log.method === 'scan_gate' ? 'Escáner QR Tranquera' : 'Manual'}
+                          {log.method === 'scan_gate' ? 'Escáner QR Asistencia' : 'Manual'}
                         </span>
                         {log.registeredBy?.name && (
                           <span className="text-[10px]">Por: {log.registeredBy.name}</span>
@@ -1065,7 +1065,7 @@ export default function AttendancePage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Escáner de Asistencia en Tranquera con Aprobación */}
+      {/* Escáner de Asistencia con Aprobación */}
       <AttendanceScannerDialog
         isOpen={isScannerOpen}
         onOpenChange={setIsScannerOpen}
