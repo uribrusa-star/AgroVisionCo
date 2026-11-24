@@ -10,6 +10,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, addDoc, getDoc, orderBy, limit, onSnapshot, updateDoc } from 'firebase/firestore';
 import { getRoleAvatar } from '@/lib/utils';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
+import { format } from 'date-fns';
 
 export const AppDataContext = React.createContext<AppData>({
   loading: true,
@@ -463,6 +464,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             limit(100)
         );
 
+        let fallbackAuditUnsub: (() => void) | null = null;
         const auditUnsubscribe = onSnapshot(auditQuery, (snapshot) => {
             const logsData = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -476,7 +478,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 where('establishmentId', '==', currentUser.establishmentId || 'main'),
                 limit(100)
             );
-            onSnapshot(fallbackQuery, (snapshot) => {
+            fallbackAuditUnsub = onSnapshot(fallbackQuery, (snapshot) => {
                 const logsData = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
@@ -485,9 +487,46 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             }, () => {});
         });
 
+        // Real-time listener for establishment attendance logs
+        const estId = currentUser.establishmentId || 'main';
+        const attendanceQuery = query(
+            collection(db, 'attendanceLogs'),
+            where('establishmentId', '==', estId),
+            orderBy('checkIn', 'desc'),
+            limit(200)
+        );
+
+        let fallbackAttUnsub: (() => void) | null = null;
+        const attendanceUnsubscribe = onSnapshot(attendanceQuery, (snapshot) => {
+            const attData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            } as AttendanceLog));
+            setAttendanceLogs(attData);
+        }, (error) => {
+            console.warn("Attendance listener index fallback:", error);
+            const fallbackAttQuery = query(
+                collection(db, 'attendanceLogs'),
+                where('establishmentId', '==', estId),
+                limit(200)
+            );
+            fallbackAttUnsub = onSnapshot(fallbackAttQuery, (snapshot) => {
+                const attData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                } as AttendanceLog)).sort((a, b) => new Date(b.checkIn || b.date).getTime() - new Date(a.checkIn || a.date).getTime());
+                setAttendanceLogs(attData);
+            }, (fallbackErr) => {
+                console.error("Error in fallback attendance listener:", fallbackErr);
+            });
+        });
+
         return () => {
             unsubscribe();
             auditUnsubscribe();
+            if (fallbackAuditUnsub) fallbackAuditUnsub();
+            attendanceUnsubscribe();
+            if (fallbackAttUnsub) fallbackAttUnsub();
         };
     }, [currentUser]);
 
@@ -1972,12 +2011,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     }): Promise<{ type: 'in' | 'out'; log: AttendanceLog; hoursWorked?: number }> => {
         const estId = currentUser?.establishmentId || 'main';
         const now = new Date();
-        const dateStr = data.targetDate || now.toISOString().split('T')[0];
+        const dateStr = data.targetDate || format(now, 'yyyy-MM-dd');
 
-        // Buscar si ya tiene un ingreso abierto en la fecha correspondiente
+        // Buscar si ya tiene un ingreso abierto (status === 'in_progress')
         const existingOpenLog = attendanceLogs.find(l => 
             l.status === 'in_progress' &&
-            l.date === dateStr &&
             ((data.personnelId && l.personnelId && l.personnelId === data.personnelId) ||
              (data.dni && l.dni && l.dni === data.dni) ||
              (l.personnelName.trim().toLowerCase() === data.personnelName.trim().toLowerCase()))
@@ -2014,10 +2052,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
             return { type: 'out', log: updatedLog, hoursWorked: totalHoursWorked };
         } else {
-            // Registrar INGRESO
-            const tempId = `att_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+            // Registrar INGRESO con ID de documento de Firestore asignado de antemano
+            const newDocRef = doc(collection(db, 'attendanceLogs'));
             const newLog: AttendanceLog = {
-                id: tempId,
+                id: newDocRef.id,
                 establishmentId: estId,
                 personnelId: data.personnelId,
                 personnelName: data.personnelName,
@@ -2035,14 +2073,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 notes: data.notes
             };
 
-            setAttendanceLogs(prev => [newLog, ...prev]);
+            setAttendanceLogs(prev => [newLog, ...prev.filter(l => l.id !== newDocRef.id)]);
 
             try {
-                const docRef = await addDoc(collection(db, 'attendanceLogs'), sanitizeForFirestore({
-                    ...newLog,
-                    establishmentId: estId
-                }));
-                setAttendanceLogs(prev => prev.map(l => l.id === tempId ? { ...l, id: docRef.id } : l));
+                await setDoc(newDocRef, sanitizeForFirestore(newLog));
                 logUserAction(
                     'Ingreso Registrado',
                     `${data.personnelName} (${data.role}) registró ingreso a la quinta`,

@@ -88,13 +88,14 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
     (user.id && l.personnelId === user.id) ||
     (user.dni && l.dni && l.dni === user.dni) ||
     (l.personnelName && user.name && l.personnelName.trim().toLowerCase() === user.name.trim().toLowerCase())
-  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  ).sort((a, b) => new Date(b.checkIn || b.date).getTime() - new Date(a.checkIn || a.date).getTime());
 
   const currentOpenSession = userAttendanceLogs.find(l => l.status === 'in_progress');
 
   // Estadísticas de asistencia
   const now = new Date();
-  const todayLogs = userAttendanceLogs.filter(l => isSameDay(new Date(l.date), now));
+  const todayDateStr = format(now, 'yyyy-MM-dd');
+  const todayLogs = userAttendanceLogs.filter(l => l.date === todayDateStr || (l.checkIn && isSameDay(new Date(l.checkIn), now)));
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekLogs = userAttendanceLogs.filter(l => new Date(l.date) >= weekStart);
   const monthStart = startOfMonth(now);

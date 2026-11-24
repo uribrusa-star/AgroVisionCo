@@ -121,9 +121,9 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
   const isPausedRef = useRef<boolean>(false);
   const recentlyScannedRef = useRef<Map<string, number>>(new Map());
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayLogs = attendanceLogs.filter(l => l.date === todayStr);
-  const currentlyPresent = todayLogs.filter(l => l.status === 'in_progress');
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayLogs = attendanceLogs.filter(l => l.date === todayStr || (l.checkIn && l.checkIn.startsWith(todayStr)));
+  const currentlyPresent = attendanceLogs.filter(l => l.status === 'in_progress');
 
   // Sync isPausedRef with pendingApproval / isSubmitting / lastScanError / lastCheckResult
   useEffect(() => {
@@ -315,10 +315,9 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
       photoUrl = p?.avatar || '';
     }
 
-    // Comprobar si ya tiene un ingreso abierto hoy en la quinta
+    // Comprobar si ya tiene un ingreso abierto en la quinta
     const existingOpenLog = attendanceLogs.find(l => 
       l.status === 'in_progress' &&
-      l.date === todayStr &&
       ((data.id && l.personnelId && l.personnelId === data.id) ||
        (data.dni && l.dni && l.dni === data.dni) ||
        (l.personnelName.trim().toLowerCase() === data.name.trim().toLowerCase()))

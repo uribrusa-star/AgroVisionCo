@@ -267,7 +267,7 @@ export default function AttendancePage() {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar className="h-11 w-11 border border-emerald-500/30 shrink-0">
-                        <AvatarImage src={getRoleAvatar(log.personnelRole || 'Recolector')} />
+                        <AvatarImage src={getRoleAvatar(((log as any).personnelRole || log.role || 'Personal') as any)} />
                         <AvatarFallback className="bg-emerald-100 text-emerald-800 font-bold text-sm">
                           {log.personnelName.charAt(0).toUpperCase()}
                         </AvatarFallback>
@@ -275,7 +275,7 @@ export default function AttendancePage() {
                       <div className="min-w-0 truncate">
                         <h4 className="font-bold text-sm text-foreground truncate">{log.personnelName}</h4>
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-emerald-500/40 text-emerald-700 dark:text-emerald-400">
-                          {log.personnelRole || 'Personal'}
+                          {(log as any).personnelRole || log.role || 'Personal'}
                         </Badge>
                         <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
                           <Clock className="h-3 w-3 shrink-0" />
