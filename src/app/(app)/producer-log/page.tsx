@@ -2,7 +2,6 @@
 'use client';
 
 import React from 'react';
-import { PageHeader } from "@/components/page-header";
 import { TransactionForm } from './transaction-form';
 import { NotesForm } from './notes-form';
 import { TransactionHistory } from './transaction-history';
@@ -57,19 +56,23 @@ export default function ProducerLogPage() {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <PageHeader
-            title="Bitácora del Productor"
-            description="Registre las finanzas y las observaciones diarias del establecimiento."
-            className="mb-0"
-        >
-          <WeatherCard />
-        </PageHeader>
-        <div className="flex items-center gap-2">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-2">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground shrink-0">
+            Bitácora del Productor
+          </h1>
+          <WeatherCard compact />
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Registre las finanzas y las observaciones diarias del establecimiento.
+          </p>
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
             <Button variant="outline" size="icon" onClick={toggleFinancials} title={showFinancials ? "Ocultar finanzas" : "Mostrar finanzas"}>
                 {showFinancials ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             <ExportButton />
+          </div>
         </div>
       </div>
 

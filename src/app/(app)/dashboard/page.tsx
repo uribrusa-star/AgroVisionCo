@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/page-header";
 import { BarChart as BarChartIcon, CalendarDays, DollarSign, Trophy, Weight, Tractor, QrCode } from "lucide-react";
 import { format } from "date-fns";
 import { AppDataContext } from '@/context/app-data-context.tsx';
@@ -112,9 +111,17 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Panel de Control" description="Estadísticas clave y actividad reciente.">
-        <WeatherCard />
-      </PageHeader>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-2">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground shrink-0">
+            Panel de Control
+          </h1>
+          <WeatherCard compact />
+        </div>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Estadísticas clave y actividad reciente.
+        </p>
+      </div>
       <PushNotificationBanner />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4 mb-6 sm:mb-8">

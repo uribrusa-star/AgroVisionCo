@@ -4,7 +4,6 @@
 
 import React, { useContext, useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BarChart, HardHat, Weight, QrCode } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -49,12 +48,17 @@ export default function EngineerLogPage() {
 
   return (
     <>
-      <PageHeader
-        title="Bitácora del Agrónomo"
-        description="Gestión de aplicaciones, fenología y visión general de la producción."
-      >
-        <WeatherCard />
-      </PageHeader>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-2">
+          <h1 className="text-xl sm:text-3xl font-bold text-foreground shrink-0">
+            Bitácora del Agrónomo
+          </h1>
+          <WeatherCard compact />
+        </div>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Gestión de aplicaciones, fenología y visión general de la producción.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 mb-6 sm:mb-8">
         <Card className="hover:shadow-md transition-shadow duration-300">
