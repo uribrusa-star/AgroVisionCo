@@ -52,9 +52,13 @@ export default function ProfilePage() {
   const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
   const { theme, setTheme } = useTheme();
   const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
-  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
 
-  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
+  const isPresent = (appData.attendanceLogs || []).some(l => 
+    l.status === 'in_progress' && currentUser &&
+    ((currentUser.id && l.personnelId === currentUser.id) ||
+     (currentUser.dni && l.dni === currentUser.dni) ||
+     (l.personnelName && currentUser.name && l.personnelName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()))
+  );
 
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
@@ -331,45 +335,24 @@ export default function ProfilePage() {
         {/* Columna Izquierda: Foto y Cierre de Sesión */}
         <div className="xl:col-span-1 flex flex-col gap-6">
             <Card className="flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
-                <Avatar className="h-32 w-32 mb-4 ring-4 ring-background shadow-lg">
-                    <AvatarImage src={getAvatarPreview()} alt={currentUser.name} />
-                    <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
-                </Avatar>
+                <div className="relative mb-4">
+                  <Avatar className="h-32 w-32 ring-4 ring-background shadow-lg">
+                      <AvatarImage src={getAvatarPreview()} alt={currentUser.name} />
+                      <AvatarFallback className="text-4xl">{currentUser.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span 
+                    className={cn(
+                      "absolute bottom-1 right-2 h-5 w-5 rounded-full ring-4 ring-background",
+                      isPresent ? "bg-emerald-500 animate-pulse" : "bg-slate-400 dark:bg-slate-500"
+                    )}
+                    title={isPresent ? "Presente en finca (activo)" : "Ausente de finca"}
+                  />
+                </div>
                 <CardTitle className="text-2xl mt-4">{currentUser.name}</CardTitle>
                 <CardDescription className="text-base mt-2 flex flex-col gap-1 items-center">
                     <span className="font-medium bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm inline-block">{currentUser.role}</span>
                     <span className="text-muted-foreground mt-2">{currentUser.email}</span>
                 </CardDescription>
-            </Card>
-
-            <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-950/20 shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="p-5 pb-2">
-                    <CardTitle className="text-base flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
-                        <QrCode className="h-5 w-5" />
-                        Credencial de Asistencia
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                        Código QR dinámico antifraude para registrar ingreso y salida en tranquera.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="p-5 pt-2">
-                    {canAccessAttendance ? (
-                        <Button asChild className="w-full h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs">
-                            <Link href="/attendance">
-                                <QrCode className="h-4 w-4" />
-                                Control de Asistencia y Tranquera
-                            </Link>
-                        </Button>
-                    ) : (
-                        <Button 
-                            onClick={() => setIsCredentialModalOpen(true)}
-                            className="w-full h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs"
-                        >
-                            <QrCode className="h-4 w-4" />
-                            Ver Mi Credencial Dinámica
-                        </Button>
-                    )}
-                </CardContent>
             </Card>
 
             <Card className="border-red-200 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/20 shadow-sm hover:shadow-md transition-shadow">
@@ -761,12 +744,6 @@ export default function ProfilePage() {
 
         </div>
       </div>
-
-      <UserCredentialDialog
-        isOpen={isCredentialModalOpen}
-        onOpenChange={setIsCredentialModalOpen}
-        user={currentUser}
-      />
     </>
   );
 }

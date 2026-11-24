@@ -26,17 +26,7 @@ import { canUserManageAttendance } from '@/lib/types';
 
 
 export default function DashboardPage() {
-  const { loading, harvests, collectors, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, currentUser, attendanceLogs, establishmentData } = React.useContext(AppDataContext);
-  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
-
-  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
-
-  const currentAttendance = (attendanceLogs || []).find(l => 
-    l.status === 'in_progress' && currentUser &&
-    ((currentUser.id && l.personnelId === currentUser.id) ||
-     (currentUser.dni && l.dni && l.dni === currentUser.dni) ||
-     (l.personnelName && currentUser.name && l.personnelName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()))
-  );
+  const { loading, harvests, collectors, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, currentUser } = React.useContext(AppDataContext);
 
   const calculateDashboardStats = (harvests: Harvest[], paymentLogs: CollectorPaymentLog[], packagingLogs: PackagingLog[], culturalPracticeLogs: CulturalPracticeLog[]) => {
     if (!harvests || harvests.length === 0) {
@@ -127,61 +117,6 @@ export default function DashboardPage() {
       </PageHeader>
       <PushNotificationBanner />
 
-      {/* Acceso Rápido a Asistencia y Credencial para Ingeniero y Encargado */}
-      {(currentUser?.role === 'Ingeniero Agronomo' || currentUser?.role === 'Encargado') && (
-        <div className="mb-6 p-3.5 sm:p-4 rounded-2xl border bg-card/80 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
-              currentAttendance ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-            }`}>
-              <QrCode className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-foreground">Mi Asistencia y Credencial ({currentUser.role})</span>
-                {currentAttendance ? (
-                  <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
-                    Presente en finca
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-muted-foreground text-[10px]">
-                    Fuera de finca
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {currentAttendance 
-                  ? `Ingreso hoy a las ${format(new Date(currentAttendance.checkIn), 'HH:mm')} hs. Muestre su QR al retirarse.`
-                  : 'Presente su credencial digital en la tranquera para registrar su ingreso.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <Button
-              size="sm"
-              onClick={() => setIsCredentialModalOpen(true)}
-              className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-            >
-              <QrCode className="h-3.5 w-3.5" />
-              Ver Mi QR
-            </Button>
-            {canAccessAttendance && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-              >
-                <Link href="/attendance">
-                  Ir a Asistencia
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4 mb-6 sm:mb-8">
         <Card className="hover:shadow-md transition-shadow duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
@@ -347,14 +282,6 @@ export default function DashboardPage() {
         <ProductionPaymentHistory />
         <PackagingHistory />
       </div>
-
-      {currentUser && (
-        <UserCredentialDialog
-          isOpen={isCredentialModalOpen}
-          onOpenChange={setIsCredentialModalOpen}
-          user={currentUser}
-        />
-      )}
     </>
   );
 }

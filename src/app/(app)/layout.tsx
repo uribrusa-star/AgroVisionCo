@@ -64,9 +64,16 @@ const allNavItems = [
 ];
 
 function UserMenu() {
-  const { currentUser } = React.useContext(AppDataContext);
+  const { currentUser, attendanceLogs } = React.useContext(AppDataContext);
   
   if(!currentUser) return null;
+
+  const isPresent = (attendanceLogs || []).some(l => 
+    l.status === 'in_progress' && 
+    ((currentUser.id && l.personnelId === currentUser.id) ||
+     (currentUser.dni && l.dni === currentUser.dni) ||
+     (l.personnelName && currentUser.name && l.personnelName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()))
+  );
   
   return (
       <Button variant="ghost" className="flex items-center gap-2 p-1 md:gap-3 md:pl-5 md:pr-2 md:py-2 h-10 md:h-12 rounded-full md:border md:border-primary/40 hover:bg-muted" asChild>
@@ -75,10 +82,19 @@ function UserMenu() {
                 <p className="text-xs text-muted-foreground leading-tight mb-0.5">{currentUser?.role || ''}</p>
                 <p className="text-sm font-medium text-foreground leading-tight">{currentUser?.name || 'Usuario'}</p>
             </div>
-            <Avatar className="h-8 w-8">
-                <AvatarImage src={getRoleAvatar(currentUser?.role)} alt="" />
-                <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-8 w-8">
+                  <AvatarImage src={getRoleAvatar(currentUser?.role)} alt="" />
+                  <AvatarFallback>{currentUser?.name?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
+              <span 
+                className={cn(
+                  "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-background",
+                  isPresent ? "bg-emerald-500 animate-pulse" : "bg-slate-400 dark:bg-slate-500"
+                )}
+                title={isPresent ? "Presente en finca (activo)" : "Ausente de finca"}
+              />
+            </div>
           </Link>
       </Button>
   )

@@ -30,19 +30,9 @@ import { PhenologyEvolutionChart } from './phenology-evolution-chart';
 import { WeatherCard } from '@/components/weather-card';
 
 export default function EngineerLogPage() {
-  const { loading, collectors, harvests, currentUser, attendanceLogs, establishmentData } = useContext(AppDataContext);
-  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
+  const { loading, collectors, harvests, currentUser } = useContext(AppDataContext);
   
   if (!currentUser) return null; // Guard clause
-
-  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
-
-  const currentAttendance = (attendanceLogs || []).find(l => 
-    l.status === 'in_progress' && 
-    ((currentUser.id && l.personnelId === currentUser.id) ||
-     (currentUser.dni && l.dni && l.dni === currentUser.dni) ||
-     (l.personnelName && currentUser.name && l.personnelName.trim().toLowerCase() === currentUser.name.trim().toLowerCase()))
-  );
 
   const totalProduction = harvests.reduce((acc, h) => acc + h.kilograms, 0);
   
@@ -65,62 +55,6 @@ export default function EngineerLogPage() {
       >
         <WeatherCard />
       </PageHeader>
-
-      {/* Banner de Asistencia y Credencial del Agrónomo */}
-      <div className="mb-6 p-3.5 sm:p-4 rounded-2xl border bg-card/80 backdrop-blur-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
-            currentAttendance 
-              ? 'bg-emerald-600 text-white shadow-xs' 
-              : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-          }`}>
-            <QrCode className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-foreground">Mi Asistencia y Ficha de Usuario</span>
-              {currentAttendance ? (
-                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
-                  Presente en finca
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-muted-foreground text-[10px]">
-                  Fuera de finca
-                </Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {currentAttendance 
-                ? `Ingreso registrado hoy a las ${format(new Date(currentAttendance.checkIn), 'HH:mm')} hs. Muestre su QR al retirarse.`
-                : 'Muestre su credencial dinámica en la tranquera para registrar su ingreso y computar sus horas.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-          <Button
-            size="sm"
-            onClick={() => setIsCredentialModalOpen(true)}
-            className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-          >
-            <QrCode className="h-3.5 w-3.5" />
-            Ver Mi Credencial QR
-          </Button>
-          {canAccessAttendance && (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-            >
-              <Link href="/attendance">
-                Panel Asistencia
-              </Link>
-            </Button>
-          )}
-        </div>
-      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 mb-6 sm:mb-8">
         <Card className="hover:shadow-md transition-shadow duration-300">
@@ -213,12 +147,6 @@ export default function EngineerLogPage() {
           <Supplies />
         </div>
       )}
-
-      <UserCredentialDialog
-        isOpen={isCredentialModalOpen}
-        onOpenChange={setIsCredentialModalOpen}
-        user={currentUser}
-      />
     </>
   );
 }

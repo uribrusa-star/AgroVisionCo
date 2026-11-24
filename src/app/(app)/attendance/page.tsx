@@ -215,40 +215,20 @@ export default function AttendancePage() {
             Mi Credencial Digital
           </Button>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsScannerOpen(true)}
-          className="text-xs border-emerald-500/40 text-emerald-700 dark:text-emerald-400 gap-1.5 hidden sm:flex hover:bg-emerald-50"
-        >
-          <ScanLine className="h-3.5 w-3.5" />
-          Abrir Escáner de Tranquera
-        </Button>
       </div>
 
       {/* Contenido Principal */}
       {activeTab === 'active-personnel' ? (
         <Card>
           <CardHeader className="p-4 sm:p-6 pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-emerald-600" />
-                  Personal Presente en la Quinta ({presentNow.length})
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Colaboradores que ingresaron hoy y aún no han registrado su salida.
-                </CardDescription>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => setIsScannerOpen(true)}
-                className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white self-start sm:self-auto shadow-xs"
-              >
-                <ScanLine className="h-3.5 w-3.5" />
-                Registrar Salida / Ingreso
-              </Button>
+            <div>
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-emerald-600" />
+                Personal Presente en la Quinta ({presentNow.length})
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Colaboradores que ingresaron hoy y aún no han registrado su salida.
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-2">
