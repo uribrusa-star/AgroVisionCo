@@ -1914,7 +1914,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const updateUserProfile = async (userId: string, profileData: { name: string; notificationEmail?: string; avatar?: string }) => {
+    const updateUserProfile = async (userId: string, profileData: { name?: string; notificationEmail?: string; avatar?: string; phone?: string; dni?: string }) => {
         const userRef = doc(db, 'users', userId);
         await setDoc(userRef, profileData, { merge: true });
 

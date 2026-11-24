@@ -47,7 +47,7 @@ const CreateUserSchema = z.object({
 });
 
 export default function UsersPage() {
-  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests, attendanceLogs, establishmentData, updateEstablishmentData } = useContext(AppDataContext);
+  const { users, currentUser, loading, updateUserPassword, updateUserProfile, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests, attendanceLogs, establishmentData, updateEstablishmentData } = useContext(AppDataContext);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [isAttendanceScannerOpen, setIsAttendanceScannerOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -59,6 +59,9 @@ export default function UsersPage() {
   
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [detailsUser, setDetailsUser] = useState<User | null>(null);
+  const [detailsPhone, setDetailsPhone] = useState('');
+  const [isEditingDetailsPhone, setIsEditingDetailsPhone] = useState(false);
+  const [isSavingDetailsPhone, setIsSavingDetailsPhone] = useState(false);
   const [qrRefreshTick, setQrRefreshTick] = useState(0);
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -262,7 +265,47 @@ export default function UsersPage() {
 
   const handleOpenDetails = (user: User) => {
     setDetailsUser(user);
+    setDetailsPhone(user.phone || '');
+    setIsEditingDetailsPhone(false);
     setIsDetailsDialogOpen(true);
+  };
+
+  const handleSaveDetailsPhone = async () => {
+    if (!detailsUser) return;
+    setIsSavingDetailsPhone(true);
+    try {
+      await updateUserProfile(detailsUser.id, { phone: detailsPhone.trim() });
+      setDetailsUser(prev => prev ? { ...prev, phone: detailsPhone.trim() } : null);
+      setIsEditingDetailsPhone(false);
+      toast({
+        title: "WhatsApp Guardado",
+        description: `El teléfono de contacto de ${detailsUser.name} ha sido actualizado.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el número de teléfono.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingDetailsPhone(false);
+    }
+  };
+
+  const handleOpenDetailsWhatsApp = () => {
+    if (!detailsUser) return;
+    const rawPhone = detailsPhone || detailsUser.phone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    if (!cleanPhone) {
+      setIsEditingDetailsPhone(true);
+      toast({
+        title: "Cargar WhatsApp",
+        description: "Por favor carga primero el número de teléfono del colaborador.",
+      });
+      return;
+    }
+    const text = `Hola ${detailsUser.name}, te comparto los datos de tu credencial oficial de AgroVista.`;
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
   
 
@@ -666,29 +709,73 @@ export default function UsersPage() {
                           </div>
                       </div>
 
-                      {/* Botones de Acción de Credencial */}
-                      <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full">
-                          <Button
+                      {/* Carga y Gestión de WhatsApp (reemplaza descarga PDF) */}
+                      <div className="w-full p-3 rounded-2xl bg-muted/40 border border-border/50 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-foreground flex items-center gap-1.5">
+                            <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                            WhatsApp / Teléfono:
+                          </span>
+                          {!isEditingDetailsPhone ? (
+                            <Button
                               type="button"
-                              onClick={() => handleDownloadCredentialPdf(detailsUser)}
-                              disabled={isGeneratingPdf}
-                              className="w-full sm:flex-1 h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
-                          >
-                              {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-                              Descargar Credencial (PDF)
-                          </Button>
-                          <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setIsEditingDetailsPhone(true)}
+                              className="h-6 px-2 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                            >
+                              {detailsPhone ? 'Editar número' : '+ Cargar número'}
+                            </Button>
+                          ) : null}
+                        </div>
+
+                        {isEditingDetailsPhone ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="tel"
+                              placeholder="Ej: +54 9 11 1234 5678"
+                              value={detailsPhone}
+                              onChange={(e) => setDetailsPhone(e.target.value)}
+                              className="flex-1 h-8 text-xs px-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                            />
+                            <Button
                               type="button"
-                              variant="outline"
+                              size="sm"
+                              onClick={handleSaveDetailsPhone}
+                              disabled={isSavingDetailsPhone}
+                              className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                            >
+                              {isSavingDetailsPhone ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Guardar'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
-                                  const text = `Hola, aquí tienes los datos de la credencial oficial de AgroVista para ${detailsUser.name} (${detailsUser.role}).`;
-                                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                                setDetailsPhone(detailsUser?.phone || '');
+                                setIsEditingDetailsPhone(false);
                               }}
-                              className="w-full sm:w-auto h-9 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 hover:bg-emerald-50"
-                          >
-                              <Share2 className="h-4 w-4" />
-                              WhatsApp
-                          </Button>
+                              className="h-8 px-2 text-xs"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-mono text-muted-foreground truncate">
+                              {detailsPhone ? detailsPhone : <span className="italic text-muted-foreground/60">Sin WhatsApp cargado</span>}
+                            </span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={handleOpenDetailsWhatsApp}
+                              className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shrink-0"
+                            >
+                              <Share2 className="h-3.5 w-3.5" />
+                              Contactar por WhatsApp
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Estado de Asistencia en Tiempo Real */}

@@ -29,6 +29,8 @@ export type User = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  dni?: string;
   notificationEmail?: string;
   avatar: string;
   role: UserRole;
@@ -426,7 +428,7 @@ export type AppData = {
   addKnowledgeItem: (item: Omit<KnowledgeItem, 'id'>) => Promise<void>;
   deleteKnowledgeItem: (itemId: string) => Promise<void>;
   updateUserPassword: (userId: string, newPassword: string) => Promise<void>;
-  updateUserProfile: (userId: string, profileData: { name: string; notificationEmail?: string; avatar?: string }) => Promise<void>;
+  updateUserProfile: (userId: string, profileData: { name?: string; notificationEmail?: string; avatar?: string; phone?: string; dni?: string }) => Promise<void>;
   notifications: PushNotification[];
     auditLogs: AuditLog[];
     logUserAction: (action: string, description: string, category: AuditLogCategory) => Promise<void>;

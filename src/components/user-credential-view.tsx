@@ -40,7 +40,8 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
     diagnosisLogs, 
     packagingLogs, 
     culturalPracticeLogs, 
-    harvests 
+    harvests,
+    updateUserProfile
   } = useContext(AppDataContext);
 
   const { toast } = useToast();
@@ -48,8 +49,52 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
 
   const [qrTick, setQrTick] = useState(0);
   const [secondsRemaining, setSecondsRemaining] = useState(60);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [phoneInput, setPhoneInput] = useState(user?.phone || '');
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
   const qrContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user?.phone) {
+      setPhoneInput(user.phone);
+    }
+  }, [user?.phone]);
+
+  const handleSavePhone = async () => {
+    if (!user) return;
+    setIsSavingPhone(true);
+    try {
+      await updateUserProfile(user.id, { phone: phoneInput.trim() });
+      setIsEditingPhone(false);
+      toast({
+        title: "WhatsApp Guardado",
+        description: "El número de contacto ha sido actualizado correctamente.",
+      });
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el número de teléfono.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingPhone(false);
+    }
+  };
+
+  const handleOpenWhatsApp = () => {
+    const rawPhone = phoneInput || user?.phone || '';
+    const cleanPhone = rawPhone.replace(/\D/g, '');
+    if (!cleanPhone) {
+      setIsEditingPhone(true);
+      toast({
+        title: "Cargar WhatsApp",
+        description: "Por favor carga primero el número de teléfono con código de área.",
+      });
+      return;
+    }
+    const text = `Hola ${user?.name || ''}, te comparto tu credencial oficial de acceso AgroVista.`;
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   // Timer de renovación de 60 segundos
   useEffect(() => {
@@ -490,31 +535,74 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
               </Button>
             </div>
 
-            {/* Acciones de descarga y compartir */}
-            <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-border/60">
-              <Button
-                type="button"
-                onClick={handleDownloadCredentialPdf}
-                disabled={isGeneratingPdf}
-                variant="outline"
-                className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-              >
-                {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
-                Descargar PDF
-              </Button>
+            {/* Sección de WhatsApp y Contacto (reemplaza descarga PDF) */}
+            <div className="mt-4 pt-3 border-t border-border/60 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                  WhatsApp de Contacto:
+                </span>
+                {!isEditingPhone ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditingPhone(true)}
+                    className="h-6 px-2 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                  >
+                    {phoneInput ? 'Editar número' : '+ Cargar número'}
+                  </Button>
+                ) : null}
+              </div>
 
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  const text = `Credencial AgroVista oficial de ${user.name} (${user.role}).`;
-                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                }}
-                className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                Compartir
-              </Button>
+              {isEditingPhone ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="tel"
+                    placeholder="Ej: +54 9 11 1234 5678"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    className="flex-1 h-8 text-xs px-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleSavePhone}
+                    disabled={isSavingPhone}
+                    className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                  >
+                    {isSavingPhone ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Guardar'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setPhoneInput(user?.phone || '');
+                      setIsEditingPhone(false);
+                    }}
+                    className="h-8 px-2 text-xs"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-muted/40 border border-border/40">
+                  <span className="text-xs font-mono text-muted-foreground truncate">
+                    {phoneInput ? phoneInput : <span className="italic text-muted-foreground/60">Sin WhatsApp cargado</span>}
+                  </span>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleOpenWhatsApp}
+                    className="h-7 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shrink-0"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Abrir WhatsApp
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

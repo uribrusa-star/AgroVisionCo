@@ -461,8 +461,8 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
             </TabsList>
 
             {/* TAB 1: ESCÁNER EN VIVO */}
-            <TabsContent value="scanner" className="mt-0 space-y-3">
-              <div className="relative w-full h-[390px] sm:h-[440px] rounded-2xl overflow-hidden bg-black flex items-center justify-center border-2 border-stone-800 shadow-inner">
+            <TabsContent value="scanner" className="mt-0 space-y-2">
+              <div className="relative w-full h-[410px] sm:h-[450px] rounded-2xl overflow-hidden bg-black flex items-center justify-center border-2 border-stone-800 shadow-inner">
                 <video
                   ref={videoRef}
                   playsInline
@@ -474,7 +474,7 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                 {/* Laser scan line overlay (visible solo cuando busca) */}
                 {!pendingApproval && !lastCheckResult && !lastScanError && (
                   <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                    <div className="w-56 h-56 sm:w-64 sm:h-64 border-2 border-dashed border-emerald-400/60 rounded-2xl flex items-center justify-center relative">
+                    <div className="w-52 h-52 sm:w-64 sm:h-64 border-2 border-dashed border-emerald-400/60 rounded-2xl flex items-center justify-center relative">
                       <div className="absolute top-0 w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse shadow-[0_0_8px_#10b981]" />
                     </div>
                     <span className="text-[11px] font-medium text-stone-300 mt-3 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
@@ -483,97 +483,108 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                   </div>
                 )}
 
-                {/* MODAL DE APROBACIÓN POR EL ENCARGADO */}
+                {/* MODAL DE APROBACIÓN POR EL ENCARGADO - ULTRA ADAPTADO A CELULARES */}
                 {pendingApproval && (
-                  <div className="absolute inset-0 bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-5 text-center overflow-y-auto z-40">
-                    <div className="flex flex-col items-center max-w-full my-auto">
+                  <div className="absolute inset-0 bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-center p-3 sm:p-5 text-center overflow-y-auto z-40">
+                    {/* Botón rápido de cierre en la esquina */}
+                    <button
+                      type="button"
+                      onClick={handleCancelApproval}
+                      disabled={isSubmitting}
+                      className="absolute top-2 right-2 h-8 w-8 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 flex items-center justify-center transition-colors"
+                      title="Descartar y volver a escanear"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+
+                    <div className="flex flex-col items-center w-full max-w-sm space-y-2 sm:space-y-3 my-auto">
+                      {/* Avatar del Colaborador */}
                       <div className="relative">
-                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 sm:border-3 border-emerald-500 shadow-xl mb-1.5">
+                        <Avatar className="h-14 w-14 sm:h-16 sm:w-16 border-2 border-emerald-500 shadow-lg">
                           <AvatarImage src={pendingApproval.photoUrl} />
-                          <AvatarFallback className="text-xl sm:text-2xl font-bold bg-primary text-primary-foreground">
+                          <AvatarFallback className="text-lg sm:text-xl font-bold bg-primary text-primary-foreground">
                             {pendingApproval.data.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="absolute bottom-1 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-stone-950" />
+                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-stone-950" />
                       </div>
 
-                      <h3 className="text-base sm:text-lg font-bold text-white truncate max-w-full leading-tight">
-                        {pendingApproval.data.name}
-                      </h3>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <Badge variant="outline" className="text-[10px] border-stone-700 text-stone-300">
-                          {pendingApproval.data.role || (pendingApproval.data.type === 'collector' ? 'Recolector' : 'Colaborador')}
-                        </Badge>
-                        {pendingApproval.data.dni && (
-                          <span className="text-[10px] text-stone-400 font-mono">DNI: {pendingApproval.data.dni}</span>
-                        )}
+                      {/* Nombre y Cargo */}
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-white truncate max-w-[260px] sm:max-w-xs leading-tight">
+                          {pendingApproval.data.name}
+                        </h3>
+                        <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                          <Badge variant="outline" className="text-[10px] py-0 px-2 border-stone-700 text-stone-300">
+                            {pendingApproval.data.role || (pendingApproval.data.type === 'collector' ? 'Recolector' : 'Colaborador')}
+                          </Badge>
+                          {pendingApproval.data.dni && (
+                            <span className="text-[10px] text-stone-400 font-mono">DNI: {pendingApproval.data.dni}</span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Tarjeta de Acción Detectada */}
-                      <div className="mt-3 w-full max-w-xs sm:max-w-sm">
+                      {/* Botón Principal Interactivo y de Confirmación Directa */}
+                      <div className="w-full">
                         {pendingApproval.actionType === 'in' ? (
-                          <div className="bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-300 p-2.5 sm:p-3 rounded-2xl">
-                            <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-bold text-emerald-400">
-                              <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
-                              ¿CONFIRMAR INGRESO?
+                          <button
+                            type="button"
+                            onClick={handleApprove}
+                            disabled={isSubmitting}
+                            className="w-full p-3 sm:p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg active:scale-[0.98] transition-all border border-emerald-400 flex flex-col items-center justify-center cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold tracking-wide text-white">
+                              <LogIn className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+                              {isSubmitting ? 'GUARDANDO INGRESO...' : '✓ CONFIRMAR INGRESO'}
                             </div>
-                            <p className="text-xs text-stone-200 mt-1">
+                            <div className="text-xs text-emerald-100 font-medium mt-1">
                               Hora de llegada: <strong className="text-white font-mono text-sm">{pendingApproval.currentTimeStr} hs</strong>
-                            </p>
-                            <p className="text-[10px] text-stone-400 mt-0.5">El empleado no tiene turno abierto hoy.</p>
-                          </div>
-                        ) : (
-                          <div className="bg-blue-500/20 border-2 border-blue-500/60 text-blue-300 p-2.5 sm:p-3 rounded-2xl">
-                            <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-bold text-blue-400">
-                              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-                              ¿CONFIRMAR SALIDA?
                             </div>
-                            <p className="text-xs text-stone-200 mt-1">
-                              Salida: <strong className="text-white font-mono">{pendingApproval.currentTimeStr} hs</strong> (Ingresó a las {pendingApproval.existingCheckInTime} hs)
-                            </p>
-                            <p className="text-xs font-semibold text-emerald-400 mt-0.5">
+                            <span className="text-[10px] text-emerald-200 mt-0.5">Toca aquí para aprobar el ingreso</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleApprove}
+                            disabled={isSubmitting}
+                            className="w-full p-3 sm:p-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-lg active:scale-[0.98] transition-all border border-blue-400 flex flex-col items-center justify-center cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold tracking-wide text-white">
+                              <LogOut className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+                              {isSubmitting ? 'GUARDANDO SALIDA...' : '✓ CONFIRMAR SALIDA'}
+                            </div>
+                            <div className="text-xs text-blue-100 font-medium mt-1">
+                              Salida: <strong className="text-white font-mono">{pendingApproval.currentTimeStr} hs</strong> (Ingresó {pendingApproval.existingCheckInTime} hs)
+                            </div>
+                            <div className="text-xs font-bold text-amber-300 mt-0.5">
                               Jornada calculada: <span className="font-mono">{pendingApproval.hoursWorked} horas</span>
-                            </p>
-                          </div>
+                            </div>
+                            <span className="text-[10px] text-blue-200 mt-0.5">Toca aquí para aprobar la salida</span>
+                          </button>
                         )}
                       </div>
 
-                      {pendingApproval.isDynamic && (
-                        <span className="text-[10px] text-emerald-400 mt-2 flex items-center gap-1 font-mono">
-                          <ShieldCheck className="h-3.5 w-3.5" /> Token Dinámico Verificado
-                        </span>
-                      )}
-                    </div>
+                      {/* Botones Secundarios */}
+                      <div className="flex items-center justify-between w-full pt-1 px-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCancelApproval}
+                          disabled={isSubmitting}
+                          className="h-8 text-xs text-stone-400 hover:text-white hover:bg-stone-800 gap-1.5"
+                        >
+                          <X className="h-3.5 w-3.5" /> Descartar
+                        </Button>
 
-                    {/* Botones de Aprobación */}
-                    <div className="grid grid-cols-2 gap-3 w-full max-w-xs sm:max-w-sm mt-3 pt-1">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={handleCancelApproval}
-                        disabled={isSubmitting}
-                        className="h-11 text-xs sm:text-sm font-semibold bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-200 gap-1.5 rounded-xl border border-stone-700"
-                      >
-                        <X className="h-4 w-4" /> Descartar
-                      </Button>
-
-                      <Button
-                        type="button"
-                        onClick={handleApprove}
-                        disabled={isSubmitting}
-                        className={`h-11 text-xs sm:text-sm font-bold gap-1.5 text-white shadow-lg active:scale-95 rounded-xl ${
-                          pendingApproval.actionType === 'in' 
-                            ? 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700' 
-                            : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700'
-                        }`}
-                      >
-                        <Check className="h-4 w-4" />
-                        {isSubmitting 
-                          ? 'Guardando...' 
-                          : pendingApproval.actionType === 'in' 
-                            ? 'Confirmar Ingreso' 
-                            : 'Confirmar Salida'}
-                      </Button>
+                        {pendingApproval.isDynamic ? (
+                          <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
+                            <ShieldCheck className="h-3 w-3" /> Token Dinámico
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-stone-400">Credencial Oficial</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
