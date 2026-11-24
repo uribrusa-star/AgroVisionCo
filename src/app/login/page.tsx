@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AppDataContext } from '@/context/app-data-context.tsx';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { signInWithCustomToken } from 'firebase/auth';
@@ -32,6 +32,7 @@ export default function LoginPage() {
   const { isClient, currentUser, loading, setCurrentUser, users } = useContext(AppDataContext);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [showPassword, setShowPassword] = React.useState(false);
   const { toast } = useToast();
 
   const form = useForm<LoginFormValues>({
@@ -152,7 +153,26 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Contraseña</FormLabel>
-                    <FormControl><Input type="password" placeholder="••••••••" {...field} disabled={isPending} /></FormControl>
+                    <FormControl>
+                      <div className="relative">
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="••••••••" 
+                          {...field} 
+                          disabled={isPending} 
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                          tabIndex={-1}
+                          title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

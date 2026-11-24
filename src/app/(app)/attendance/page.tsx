@@ -365,14 +365,15 @@ export default function AttendancePage() {
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-2">
-                  Responsable Designado para Asistencia
+                <h4 className="font-bold text-xs sm:text-sm text-foreground flex flex-wrap items-center gap-2">
+                  <span>Responsable Designado para Asistencia</span>
                   {currentManagerName ? (
-                    <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
-                      ✓ {currentManagerName}
+                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-primary/10 text-primary border-primary/30 whitespace-nowrap shrink-0 inline-flex items-center gap-1 font-medium">
+                      <span>✓</span>
+                      <span>{currentManagerName}</span>
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 text-muted-foreground whitespace-nowrap shrink-0">
                       Solo Productor
                     </Badge>
                   )}
@@ -418,7 +419,7 @@ export default function AttendancePage() {
           }`}
         >
           <Users className="h-4 w-4" />
-          <span>Presentes en Finca</span>
+          <span>Presentes</span>
           <Badge 
             variant="secondary" 
             className={`ml-1 text-[10px] px-1.5 py-0 ${
@@ -464,7 +465,7 @@ export default function AttendancePage() {
           }`}
         >
           <FileSpreadsheet className="h-4 w-4" />
-          <span>Historial y Planillas</span>
+          <span>Historial</span>
           <Badge 
             variant="secondary" 
             className={`ml-1 text-[10px] px-1.5 py-0 ${
@@ -482,19 +483,14 @@ export default function AttendancePage() {
       {activeTab === 'active-personnel' && (
         <Card>
           <CardHeader className="p-4 sm:p-6 pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-primary" />
-                  Personal Presente en la Quinta ({presentNow.length})
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Colaboradores que ingresaron y están actualmente cumpliendo jornada en el campo.
-                </CardDescription>
-              </div>
-              <Badge variant="outline" className="border-primary/40 text-primary bg-primary/5 text-xs">
-                🟢 {presentNow.length} en actividad
-              </Badge>
+            <div>
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-primary" />
+                Personal Presente en la Quinta ({presentNow.length})
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Colaboradores que ingresaron y están actualmente cumpliendo jornada en el campo.
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-2">
