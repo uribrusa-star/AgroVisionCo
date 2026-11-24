@@ -437,7 +437,7 @@ export function UserCredentialView({ user: propUser, onOpenScanner, compact = fa
             <Button 
               onClick={onOpenScanner}
               size="sm"
-              className="w-full sm:w-auto h-9 font-semibold gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+              className="w-full sm:w-auto h-9 font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
             >
               <ScanLine className="h-4 w-4" />
               Abrir Escáner de Asistencia

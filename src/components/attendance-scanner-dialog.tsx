@@ -439,8 +439,8 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
         <DialogHeader className="p-4 pb-2 bg-stone-900 text-white rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center shadow-xs">
-                <QrCode className="h-5 w-5 text-white" />
+              <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-xs">
+                <QrCode className="h-5 w-5" />
               </div>
               <div>
                 <DialogTitle className="text-base font-bold text-white flex items-center gap-2">
@@ -553,16 +553,16 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                             type="button"
                             onClick={handleApprove}
                             disabled={isSubmitting}
-                            className="w-full p-3 sm:p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-lg active:scale-[0.98] transition-all border border-emerald-400 flex flex-col items-center justify-center cursor-pointer group"
+                            className="w-full p-3 sm:p-3.5 rounded-2xl bg-primary hover:bg-primary/90 active:bg-primary text-primary-foreground shadow-lg active:scale-[0.98] transition-all border border-primary/40 flex flex-col items-center justify-center cursor-pointer group"
                           >
-                            <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold tracking-wide text-white">
+                            <div className="flex items-center gap-2 text-sm sm:text-base font-extrabold tracking-wide text-primary-foreground">
                               <LogIn className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
                               {isSubmitting ? 'GUARDANDO INGRESO...' : '✓ CONFIRMAR INGRESO'}
                             </div>
-                            <div className="text-xs text-emerald-100 font-medium mt-1">
-                              Hora de llegada: <strong className="text-white font-mono text-sm">{pendingApproval.currentTimeStr} hs</strong>
+                            <div className="text-xs text-primary-foreground/90 font-medium mt-1">
+                              Hora de llegada: <strong className="text-primary-foreground font-mono text-sm">{pendingApproval.currentTimeStr} hs</strong>
                             </div>
-                            <span className="text-[10px] text-emerald-200 mt-0.5">Toca aquí para aprobar el ingreso</span>
+                            <span className="text-[10px] text-primary-foreground/80 mt-0.5">Toca aquí para aprobar el ingreso</span>
                           </button>
                         ) : (
                           <button

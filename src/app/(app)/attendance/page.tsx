@@ -344,7 +344,7 @@ export default function AttendancePage() {
       <div className="mb-4">
         <Button
           onClick={() => setIsScannerOpen(true)}
-          className="w-full h-12 text-sm sm:text-base font-bold gap-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-md rounded-2xl active:scale-[0.99] transition-all"
+          className="w-full h-12 text-sm sm:text-base font-bold gap-2.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-2xl active:scale-[0.99] transition-all"
         >
           <ScanLine className="h-5 w-5" />
           <span>Escanear Asistencia</span>
@@ -358,17 +358,17 @@ export default function AttendancePage() {
 
       {/* Panel de Designación de Responsable (Solo visible para el Productor) */}
       {isProductor && (
-        <Card className="mb-5 border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+        <Card className="mb-5 border-primary/20 bg-primary/5 dark:bg-primary/10 shadow-xs">
           <CardContent className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs">
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
                 <h4 className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-2">
                   Responsable Designado para Asistencia
                   {currentManagerName ? (
-                    <Badge variant="outline" className="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-900 border-emerald-400">
+                    <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/30">
                       ✓ {currentManagerName}
                     </Badge>
                   ) : (
@@ -414,7 +414,7 @@ export default function AttendancePage() {
           size="sm"
           onClick={() => setActiveTab('active-personnel')}
           className={`h-9 text-xs gap-1.5 rounded-xl font-medium shrink-0 transition-all ${
-            activeTab === 'active-personnel' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
+            activeTab === 'active-personnel' ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs' : ''
           }`}
         >
           <Users className="h-4 w-4" />
@@ -423,8 +423,8 @@ export default function AttendancePage() {
             variant="secondary" 
             className={`ml-1 text-[10px] px-1.5 py-0 ${
               activeTab === 'active-personnel' 
-                ? 'bg-emerald-700 text-white' 
-                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
+                ? 'bg-black/20 text-white' 
+                : 'bg-primary/10 text-primary dark:text-primary-foreground'
             }`}
           >
             {presentNow.length}
@@ -437,7 +437,7 @@ export default function AttendancePage() {
           size="sm"
           onClick={() => setActiveTab('today-logs')}
           className={`h-9 text-xs gap-1.5 rounded-xl font-medium shrink-0 transition-all ${
-            activeTab === 'today-logs' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
+            activeTab === 'today-logs' ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs' : ''
           }`}
         >
           <Clock className="h-4 w-4" />
@@ -446,7 +446,7 @@ export default function AttendancePage() {
             variant="secondary" 
             className={`ml-1 text-[10px] px-1.5 py-0 ${
               activeTab === 'today-logs' 
-                ? 'bg-emerald-700 text-white' 
+                ? 'bg-black/20 text-white' 
                 : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300'
             }`}
           >
@@ -460,7 +460,7 @@ export default function AttendancePage() {
           size="sm"
           onClick={() => setActiveTab('history')}
           className={`h-9 text-xs gap-1.5 rounded-xl font-medium shrink-0 transition-all ${
-            activeTab === 'history' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
+            activeTab === 'history' ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs' : ''
           }`}
         >
           <FileSpreadsheet className="h-4 w-4" />
@@ -469,7 +469,7 @@ export default function AttendancePage() {
             variant="secondary" 
             className={`ml-1 text-[10px] px-1.5 py-0 ${
               activeTab === 'history' 
-                ? 'bg-emerald-700 text-white' 
+                ? 'bg-black/20 text-white' 
                 : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300'
             }`}
           >
@@ -485,14 +485,14 @@ export default function AttendancePage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-emerald-600" />
+                  <UserCheck className="h-5 w-5 text-primary" />
                   Personal Presente en la Quinta ({presentNow.length})
                 </CardTitle>
                 <CardDescription className="text-xs">
                   Colaboradores que ingresaron y están actualmente cumpliendo jornada en el campo.
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-xs">
+              <Badge variant="outline" className="border-primary/40 text-primary bg-primary/5 text-xs">
                 🟢 {presentNow.length} en actividad
               </Badge>
             </div>
@@ -506,7 +506,7 @@ export default function AttendancePage() {
                 <Button 
                   size="sm" 
                   onClick={() => setIsScannerOpen(true)}
-                  className="mt-4 h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                  className="mt-4 h-8 text-xs bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
                 >
                   <ScanLine className="h-3.5 w-3.5" /> Abrir Escáner de Asistencia
                 </Button>
@@ -653,7 +653,7 @@ export default function AttendancePage() {
                         {/* Estado y Acción de Borrado */}
                         <div className="flex items-center gap-1.5 shrink-0">
                           {isPresent ? (
-                            <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-medium">
+                            <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 font-medium">
                               🟢 Presente
                             </Badge>
                           ) : (
@@ -740,7 +740,7 @@ export default function AttendancePage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-base font-bold flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                  <FileSpreadsheet className="h-5 w-5 text-primary" />
                   Historial y Planillas de Asistencia
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -754,7 +754,7 @@ export default function AttendancePage() {
                   size="sm"
                   onClick={handleExportExcel}
                   disabled={isExportingExcel || filteredHistoryLogs.length === 0}
-                  className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                  className="h-8 text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>{isExportingExcel ? 'Generando...' : 'Exportar Excel'}</span>
@@ -764,7 +764,7 @@ export default function AttendancePage() {
                   variant="outline"
                   onClick={handleExportPDF}
                   disabled={isExportingPDF || filteredHistoryLogs.length === 0}
-                  className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  className="h-8 text-xs font-semibold gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
                 >
                   <FileText className="h-3.5 w-3.5" />
                   <span>{isExportingPDF ? 'Generando...' : 'Exportar PDF'}</span>
@@ -790,7 +790,7 @@ export default function AttendancePage() {
                     onClick={() => setHistoryPeriod(item.id as any)}
                     className={`px-3 py-1 rounded-full font-medium transition-all shrink-0 text-xs ${
                       historyPeriod === item.id
-                        ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                        ? 'bg-primary text-primary-foreground shadow-xs font-semibold'
                         : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
@@ -918,7 +918,7 @@ export default function AttendancePage() {
                         {/* Estado y eliminar */}
                         <div className="flex items-center gap-1.5 shrink-0">
                           {isPresent ? (
-                            <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-medium">
+                            <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 font-medium">
                               🟢 Presente
                             </Badge>
                           ) : (

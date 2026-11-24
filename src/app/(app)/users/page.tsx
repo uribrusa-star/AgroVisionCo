@@ -448,12 +448,12 @@ export default function UsersPage() {
               {/* Fila 2 en móvil (abajo): Control de Asistencia a ancho completo */}
               <Button 
                 onClick={() => setIsAttendanceScannerOpen(true)}
-                className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <LogIn className="h-4 w-4 shrink-0" />
                 <span>Control de Asistencia</span>
                 {attendanceLogs.filter(l => l.status === 'in_progress').length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-emerald-900 text-white text-[10px] font-bold rounded-full">
+                  <span className="ml-1 px-1.5 py-0.5 bg-black/20 text-white text-[10px] font-bold rounded-full">
                     {attendanceLogs.filter(l => l.status === 'in_progress').length}
                   </span>
                 )}
