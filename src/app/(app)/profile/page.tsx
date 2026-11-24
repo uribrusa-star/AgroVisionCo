@@ -26,6 +26,8 @@ import { NAV_ITEMS, getDefaultBottomNavItems } from '@/lib/navigation-config';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { UserCredentialDialog } from '@/components/user-credential-dialog';
+import { canUserManageAttendance } from '@/lib/types';
 
 const PasswordSchema = z.object({
   newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
@@ -43,13 +45,16 @@ const ProfileSchema = z.object({
 
 export default function ProfilePage() {
   const appData = React.useContext(AppDataContext);
-  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile, saveFcmToken } = appData;
+  const { currentUser, setCurrentUser, updateUserPassword, updateUserProfile, saveFcmToken, establishmentData } = appData;
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
   const { theme, setTheme } = useTheme();
   const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
+  const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
+
+  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
 
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
@@ -348,12 +353,22 @@ export default function ProfilePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-5 pt-2">
-                    <Button asChild className="w-full h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs">
-                        <Link href="/attendance">
+                    {canAccessAttendance ? (
+                        <Button asChild className="w-full h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs">
+                            <Link href="/attendance">
+                                <QrCode className="h-4 w-4" />
+                                Control de Asistencia y Tranquera
+                            </Link>
+                        </Button>
+                    ) : (
+                        <Button 
+                            onClick={() => setIsCredentialModalOpen(true)}
+                            className="w-full h-9 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-xs"
+                        >
                             <QrCode className="h-4 w-4" />
-                            Ver Mi Credencial y Ficha
-                        </Link>
-                    </Button>
+                            Ver Mi Credencial Dinámica
+                        </Button>
+                    )}
                 </CardContent>
             </Card>
 
@@ -746,6 +761,12 @@ export default function ProfilePage() {
 
         </div>
       </div>
+
+      <UserCredentialDialog
+        isOpen={isCredentialModalOpen}
+        onOpenChange={setIsCredentialModalOpen}
+        user={currentUser}
+      />
     </>
   );
 }

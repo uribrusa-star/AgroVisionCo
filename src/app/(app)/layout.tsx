@@ -13,6 +13,8 @@ import { clearIndexedDbPersistence, terminate } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { cn, getRoleAvatar } from '@/lib/utils';
+import { canUserManageAttendance } from '@/lib/types';
+import { UserCredentialDialog } from '@/components/user-credential-dialog';
 
 
 import {
@@ -46,7 +48,7 @@ import {
 
 const allNavItems = [
   { href: '/dashboard', label: 'Panel de Control', icon: LayoutDashboard, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
-  { href: '/attendance', label: 'Asistencia y Credencial', icon: QrCode, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
+  { href: '/attendance', label: 'Control de Asistencia', icon: QrCode, roles: ['Productor'] },
   { href: '/establishment', label: 'Establecimiento', icon: Building, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/map', label: 'Mapa', icon: Map, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/engineer-log', label: 'Bitácora del Agrónomo', icon: Leaf, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
@@ -138,10 +140,11 @@ function AppSidebarNav({ navItems, pathname, pendingTasksCount, handleReset }: {
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, isClient, loading, tasks } = React.useContext(AppDataContext);
+  const { currentUser, isClient, loading, tasks, establishmentData } = React.useContext(AppDataContext);
   const router = useRouter();
 
   const [showResetButton, setShowResetButton] = useState(false);
+  const [isCredentialDialogOpen, setIsCredentialDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isClient && !loading) {
@@ -220,7 +223,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
   
-  const navItems = allNavItems.filter(item => item.roles.includes(currentUser.role));
+  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
+
+  const navItems = allNavItems.filter(item => {
+    if (item.href === '/attendance') {
+      return canAccessAttendance;
+    }
+    return item.roles.includes(currentUser.role);
+  });
 
   const isProductor = currentUser.role === 'Productor';
   const isPaywalled = isProductor && (currentUser.subscriptionStatus === 'past_due' || currentUser.subscriptionStatus === 'canceled');
@@ -239,17 +249,29 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 </Link>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="h-9 px-2.5 sm:px-3 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-full font-medium shadow-2xs"
-                >
-                  <Link href="/attendance">
+                {canAccessAttendance ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="h-9 px-2.5 sm:px-3 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-full font-medium shadow-2xs"
+                  >
+                    <Link href="/attendance">
+                      <QrCode className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                      <span className="hidden sm:inline">Asistencia</span>
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCredentialDialogOpen(true)}
+                    className="h-9 px-2.5 sm:px-3 text-xs gap-1.5 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-full font-medium shadow-2xs"
+                  >
                     <QrCode className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     <span className="hidden sm:inline">Mi Credencial</span>
-                  </Link>
-                </Button>
+                  </Button>
+                )}
                 <NotificationBell />
                 <UserMenu />
               </div>
@@ -285,6 +307,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarInset>
           </div>
           <MobileBottomNav user={currentUser} />
+
+          <UserCredentialDialog
+            isOpen={isCredentialDialogOpen}
+            onOpenChange={setIsCredentialDialogOpen}
+            user={currentUser}
+          />
       </SidebarProvider>
   );
 }

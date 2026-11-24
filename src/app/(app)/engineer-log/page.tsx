@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { UserCredentialDialog } from '@/components/user-credential-dialog';
+import { canUserManageAttendance } from '@/lib/types';
 import { ApplicationHistory } from './application-history';
 import { PhenologyLogForm } from './phenology-log-form';
 import { PhenologyHistory } from './phenology-history';
@@ -29,10 +30,12 @@ import { PhenologyEvolutionChart } from './phenology-evolution-chart';
 import { WeatherCard } from '@/components/weather-card';
 
 export default function EngineerLogPage() {
-  const { loading, collectors, harvests, currentUser, attendanceLogs } = useContext(AppDataContext);
+  const { loading, collectors, harvests, currentUser, attendanceLogs, establishmentData } = useContext(AppDataContext);
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   
   if (!currentUser) return null; // Guard clause
+
+  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
 
   const currentAttendance = (attendanceLogs || []).find(l => 
     l.status === 'in_progress' && 
@@ -104,16 +107,18 @@ export default function EngineerLogPage() {
             <QrCode className="h-3.5 w-3.5" />
             Ver Mi Credencial QR
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-          >
-            <Link href="/attendance">
-              Panel Asistencia
-            </Link>
-          </Button>
+          {canAccessAttendance && (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+            >
+              <Link href="/attendance">
+                Panel Asistencia
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

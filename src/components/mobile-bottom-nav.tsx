@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, getDefaultBottomNavItems } from '@/lib/navigation-config';
-import { User } from '@/lib/types';
+import { User, canUserManageAttendance } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { AppDataContext } from '@/context/app-data-context.tsx';
 
 export function MobileBottomNav({ user }: { user: User }) {
   const pathname = usePathname();
+  const { establishmentData } = useContext(AppDataContext);
+  const canAccessAttendance = canUserManageAttendance(user, establishmentData);
 
   // If user disabled bottom nav explicitly, return null
   if (user.bottomNavEnabled === false) {
@@ -21,9 +24,12 @@ export function MobileBottomNav({ user }: { user: User }) {
     : getDefaultBottomNavItems(user.role);
 
   // Filter valid NAV_ITEMS allowed for the user role and included in user preferences
-  const itemsToRender = NAV_ITEMS.filter(item => 
-    item.roles.includes(user.role) && enabledRoutes.includes(item.href)
-  ).slice(0, 5); // Ensure maximum 5 items
+  const itemsToRender = NAV_ITEMS.filter(item => {
+    if (item.href === '/attendance') {
+      return canAccessAttendance && enabledRoutes.includes(item.href);
+    }
+    return item.roles.includes(user.role) && enabledRoutes.includes(item.href);
+  }).slice(0, 5); // Ensure maximum 5 items
 
   if (itemsToRender.length === 0) {
     return null;

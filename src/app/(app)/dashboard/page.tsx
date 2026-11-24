@@ -22,11 +22,14 @@ import { PushNotificationBanner } from '@/components/push-notification-banner';
 import { HarvestsOverTimeChart } from './harvests-over-time-chart';
 import { WeatherCard } from '@/components/weather-card';
 import { UserCredentialDialog } from '@/components/user-credential-dialog';
+import { canUserManageAttendance } from '@/lib/types';
 
 
 export default function DashboardPage() {
-  const { loading, harvests, collectors, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, currentUser, attendanceLogs } = React.useContext(AppDataContext);
+  const { loading, harvests, collectors, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, currentUser, attendanceLogs, establishmentData } = React.useContext(AppDataContext);
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
+
+  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
 
   const currentAttendance = (attendanceLogs || []).find(l => 
     l.status === 'in_progress' && currentUser &&
@@ -164,16 +167,18 @@ export default function DashboardPage() {
               <QrCode className="h-3.5 w-3.5" />
               Ver Mi QR
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-            >
-              <Link href="/attendance">
-                Ir a Asistencia
-              </Link>
-            </Button>
+            {canAccessAttendance && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              >
+                <Link href="/attendance">
+                  Ir a Asistencia
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       )}

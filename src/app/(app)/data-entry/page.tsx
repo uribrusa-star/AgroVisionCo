@@ -16,14 +16,17 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { UserCredentialDialog } from "@/components/user-credential-dialog";
 import { AttendanceScannerDialog } from "@/components/attendance-scanner-dialog";
+import { canUserManageAttendance } from "@/lib/types";
 
 export default function DataEntryPage() {
-  const { currentUser, attendanceLogs } = React.useContext(AppDataContext);
+  const { currentUser, attendanceLogs, establishmentData } = React.useContext(AppDataContext);
   const [showCalculator, setShowCalculator] = useState(false);
   const [isCredentialModalOpen, setIsCredentialModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   if (!currentUser) return null; // Guard clause
+
+  const canManageGate = canUserManageAttendance(currentUser, establishmentData);
 
   const currentAttendance = (attendanceLogs || []).find(l => 
     l.status === 'in_progress' && 
@@ -131,15 +134,17 @@ export default function DataEntryPage() {
             <QrCode className="h-3.5 w-3.5" />
             Mi Credencial QR
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsScannerOpen(true)}
-            className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-          >
-            <ScanLine className="h-3.5 w-3.5" />
-            Escanear Tranquera
-          </Button>
+          {canManageGate && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsScannerOpen(true)}
+              className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+            >
+              <ScanLine className="h-3.5 w-3.5" />
+              Escanear Tranquera
+            </Button>
+          )}
         </div>
       </div>
 

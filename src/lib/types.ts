@@ -45,6 +45,7 @@ export type User = {
   // Customization fields
   bottomNavEnabled?: boolean;
   bottomNavItems?: string[];
+  canManageAttendance?: boolean;
 };
 
 export type Collector = {
@@ -276,6 +277,8 @@ export type EstablishmentData = {
   hasGoodPracticesSeal?: boolean;
   producer: string;
   technicalManager: string;
+  attendanceManagerId?: string;
+  attendanceManagerName?: string;
   location: {
     coordinates: string;
     locality: string;
@@ -493,3 +496,14 @@ export type AttendanceLog = {
   method: 'scan_gate' | 'self_check_in' | 'manual';
   notes?: string;
 };
+
+export function canUserManageAttendance(
+  user: { id?: string; role?: string; canManageAttendance?: boolean } | null | undefined, 
+  establishment?: { attendanceManagerId?: string } | null | undefined
+): boolean {
+  if (!user) return false;
+  if (user.role === 'Productor' || user.role === 'SuperAdmin') return true;
+  if (establishment?.attendanceManagerId && user.id && establishment.attendanceManagerId === user.id) return true;
+  if (user.canManageAttendance) return true;
+  return false;
+}

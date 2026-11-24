@@ -4,7 +4,7 @@ import React, { useState, useContext, useTransition, useRef, useEffect } from 'r
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone, Activity, History, Sprout, Package, Scissors, UserX, CheckCircle2, FileDown, LogIn, ShieldCheck, Share2, Loader2, RefreshCw } from 'lucide-react';
+import { MoreHorizontal, KeyRound, Plus, ShieldAlert, Clock, Search, QrCode, Phone, Activity, History, Sprout, Package, Scissors, UserX, CheckCircle2, FileDown, LogIn, ShieldCheck, Share2, Loader2, RefreshCw, UserCheck } from 'lucide-react';
 import { QRScannerDialog } from '@/components/qr-scanner-dialog';
 import { AttendanceScannerDialog } from '@/components/attendance-scanner-dialog';
 import { buildDynamicUserQRPayload } from '@/lib/qr-security';
@@ -47,7 +47,7 @@ const CreateUserSchema = z.object({
 });
 
 export default function UsersPage() {
-  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests, attendanceLogs, establishmentData } = useContext(AppDataContext);
+  const { users, currentUser, loading, updateUserPassword, auditLogs, logUserAction, tasks, agronomistLogs, phenologyLogs, diagnosisLogs, packagingLogs, culturalPracticeLogs, harvests, attendanceLogs, establishmentData, updateEstablishmentData } = useContext(AppDataContext);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [isAttendanceScannerOpen, setIsAttendanceScannerOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -449,9 +449,16 @@ export default function UsersPage() {
                           </Avatar>
                           <div>
                               <h3 className="font-bold text-foreground text-base leading-tight">{user.name}</h3>
-                              <Badge variant={user.role === 'Productor' ? 'default' : 'secondary'} className="mt-1.5 text-[10px]">
-                                  {user.role}
-                              </Badge>
+                              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                  <Badge variant={user.role === 'Productor' ? 'default' : 'secondary'} className="text-[10px]">
+                                      {user.role}
+                                  </Badge>
+                                  {establishmentData?.attendanceManagerId === user.id && (
+                                      <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">
+                                          ✓ Control Tranquera
+                                      </Badge>
+                                  )}
+                              </div>
                           </div>
                       </div>
                       <div onClick={(e) => e.stopPropagation()}>
@@ -463,6 +470,22 @@ export default function UsersPage() {
                                       </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onSelect={async () => {
+                                          const isCurrent = establishmentData?.attendanceManagerId === user.id;
+                                          await updateEstablishmentData({
+                                              attendanceManagerId: isCurrent ? '' : user.id,
+                                              attendanceManagerName: isCurrent ? '' : user.name
+                                          });
+                                          toast({
+                                              title: isCurrent ? 'Responsabilidad Removida' : 'Responsable Designado',
+                                              description: isCurrent 
+                                                  ? `${user.name} ya no tiene acceso al control de asistencia.` 
+                                                  : `${user.name} ahora tiene acceso para cargar asistencias en tranquera.`
+                                          });
+                                      }}>
+                                          <UserCheck className="mr-2 h-4 w-4 text-emerald-600" />
+                                          {establishmentData?.attendanceManagerId === user.id ? 'Quitar Control Asistencia' : 'Designar Control Asistencia'}
+                                      </DropdownMenuItem>
                                       <DropdownMenuItem onSelect={() => handleOpenPasswordDialog(user)}>
                                           <KeyRound className="mr-2 h-4 w-4" />
                                           Cambiar Contraseña
