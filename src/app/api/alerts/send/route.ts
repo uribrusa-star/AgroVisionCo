@@ -16,13 +16,14 @@ export async function POST(req: Request) {
     const { title, body: messageBody, severity, targetRoles, targetUserId, targetUserIds } = body;
 
     if (!title || !messageBody) {
-      return NextResponse.json({ error: 'Missing title or body' }, { status: 400 });
+      return NextResponse.json({ error: 'Falta título o mensaje' }, { status: 400 });
     }
 
     let allTokens: string[] = [];
+    let targetUserIdsList: string[] = [];
 
     if (targetUserId) {
-      // Send to a single user (search by ID or email)
+      // Enviar a un usuario individual (por ID o por email)
       const userDoc = await adminDb.collection('users').doc(targetUserId).get();
       if (userDoc.exists) {
         const userData = userDoc.data();
@@ -41,26 +42,25 @@ export async function POST(req: Request) {
           targetUserIdsList.push(docSnap.id);
         }
       }
-      targetUserIdsList.push(targetUserId);
     } else if (targetUserIds && Array.isArray(targetUserIds) && targetUserIds.length > 0) {
-      // Send to specific multiple users
+      // Enviar a múltiples usuarios específicos
       const usersSnapshot = await adminDb.collection('users').where('__name__', 'in', targetUserIds).get();
       usersSnapshot.forEach((doc) => {
         const userData = doc.data();
-        if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+        if (userData?.fcmTokens && Array.isArray(userData.fcmTokens)) {
           allTokens = allTokens.concat(userData.fcmTokens);
         }
         targetUserIdsList.push(doc.id);
       });
       targetUserIdsList = targetUserIdsList.concat(targetUserIds);
     } else {
-      // Broadcast based on roles
+      // Broadcast masivo según roles
       const rolesToTarget = targetRoles || ['Productor', 'Ingeniero Agronomo', 'Encargado'];
       const usersSnapshot = await adminDb.collection('users').where('role', 'in', rolesToTarget).get();
       
       usersSnapshot.forEach((doc) => {
         const userData = doc.data();
-        if (userData.fcmTokens && Array.isArray(userData.fcmTokens)) {
+        if (userData?.fcmTokens && Array.isArray(userData.fcmTokens)) {
           allTokens = allTokens.concat(userData.fcmTokens);
         }
         targetUserIdsList.push(doc.id);
@@ -69,24 +69,27 @@ export async function POST(req: Request) {
 
     targetUserIdsList = Array.from(new Set(targetUserIdsList));
 
-    const batch = adminDb.batch();
-    const createdAt = new Date().toISOString();
-    
-    targetUserIdsList.forEach(userId => {
+    // Guardar notificación en la base de datos interna para cada usuario
+    if (adminDb && targetUserIdsList.length > 0) {
+      const batch = adminDb.batch();
+      const createdAt = new Date().toISOString();
+      
+      targetUserIdsList.forEach(userId => {
         const newNotifRef = adminDb.collection('notifications').doc();
         batch.set(newNotifRef, {
-            userId,
-            title,
-            body: messageBody,
-            severity: severity || 'info',
-            createdAt,
-            read: false
+          userId,
+          title,
+          body: messageBody,
+          severity: severity || 'info',
+          createdAt,
+          read: false
         });
-    });
-    
-    await batch.commit().catch(e => console.error("Error saving notifications to db:", e));
-    
-    // allTokens populated above
+      });
+      
+      await batch.commit().catch(e => console.error("Error guardando notificaciones en db:", e));
+    }
+
+    allTokens = Array.from(new Set(allTokens.filter(t => typeof t === 'string' && t.trim().length > 0)));
 
     if (allTokens.length === 0) {
       return NextResponse.json({
@@ -95,35 +98,47 @@ export async function POST(req: Request) {
         usersCount: targetUserIdsList.length,
         successCount: 0,
         failureCount: 0,
-        message: 'No devices registered for push notifications.'
+        message: 'Notificaciones guardadas en la bandeja. No hay dispositivos con token FCM activo registrados.'
       }, { status: 200 });
     }
 
-    // Firebase Messaging requires batches of 500, but realistically here we just send.
-    const message = {
-        notification: {
+    let successCount = 0;
+    let failureCount = 0;
+    let responses: any[] = [];
+
+    try {
+      if (adminMessaging) {
+        const message = {
+          notification: {
             title: title,
             body: messageBody,
-        },
-        data: {
-          severity: severity || 'info', // 'critical', 'warning', 'info'
-        },
-        tokens: allTokens, // Envío masivo usando sendEachForMulticast
-    };
+          },
+          data: {
+            severity: severity || 'info',
+          },
+          tokens: allTokens,
+        };
 
-    const response = await adminMessaging.sendEachForMulticast(message);
+        const response = await adminMessaging.sendEachForMulticast(message);
+        successCount = response.successCount;
+        failureCount = response.failureCount;
+        responses = response.responses;
+      }
+    } catch (pushErr: any) {
+      console.error('Error enviando push vía FCM:', pushErr);
+    }
     
     return NextResponse.json({
-        success: true,
-        count: targetUserIdsList.length,
-        usersCount: targetUserIdsList.length,
-        successCount: response.successCount,
-        failureCount: response.failureCount,
-        responses: response.responses
+      success: true,
+      count: targetUserIdsList.length,
+      usersCount: targetUserIdsList.length,
+      successCount,
+      failureCount,
+      responses
     });
 
   } catch (error: any) {
-    console.error('Error sending push notification:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error en ruta de alertas:', error);
+    return NextResponse.json({ error: error.message || 'Error interno del servidor' }, { status: 500 });
   }
 }
