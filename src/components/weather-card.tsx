@@ -78,51 +78,51 @@ export function WeatherCard({ compact = false, className }: WeatherCardProps = {
       className={cn(
         "flex items-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-border/50 shadow-xs hover:bg-white/90 dark:hover:bg-slate-900/90 transition-colors shrink-0",
         compact
-          ? "gap-1 sm:gap-2 px-1.5 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs"
-          : "gap-4 px-4 py-2 shadow-sm",
+          ? "gap-1.5 sm:gap-3 md:gap-3.5 px-2 sm:px-3.5 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs md:text-sm"
+          : "gap-4 px-4 py-2 shadow-sm rounded-xl",
         className
       )}
     >
       {loading ? (
-        <div className={cn("flex items-center gap-1.5 text-muted-foreground", compact ? "text-[11px] py-0.5" : "text-sm py-1 h-[24px]")}>
-          <Loader2 className={cn("animate-spin", compact ? "h-3 w-3" : "h-4 w-4")} />
+        <div className={cn("flex items-center gap-1.5 text-muted-foreground", compact ? "text-[11px] sm:text-xs md:text-sm py-0.5 sm:py-1" : "text-sm py-1 h-[24px]")}>
+          <Loader2 className={cn("animate-spin", compact ? "h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" : "h-4 w-4")} />
           <span>{compact ? "Clima..." : "Cargando clima..."}</span>
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-0.5 sm:gap-1" title="Temperatura">
-            <div className={cn("bg-orange-500/10 text-orange-600 rounded", compact ? "p-0.5" : "p-1.5")}>
-              <Thermometer className={cn(compact ? "h-3 w-3" : "h-4 w-4")} />
+          <div className="flex items-center gap-1 sm:gap-1.5" title="Temperatura">
+            <div className={cn("bg-orange-500/10 text-orange-600 rounded-md", compact ? "p-0.5 sm:p-1 md:p-1.5" : "p-1.5")}>
+              <Thermometer className={cn(compact ? "h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" : "h-4 w-4")} />
             </div>
-            <span className={cn("font-bold text-foreground", compact ? "text-[11px] sm:text-xs" : "text-sm")}>
+            <span className={cn("font-bold text-foreground", compact ? "text-[11px] sm:text-xs md:text-sm" : "text-sm")}>
               {weather?.temperature}°C
             </span>
           </div>
 
-          <div className={cn("w-px bg-border/60", compact ? "h-3" : "h-6")}></div>
+          <div className={cn("w-px bg-border/60", compact ? "h-3 sm:h-4 md:h-5" : "h-6")}></div>
 
           <div
-            className="flex items-center gap-0.5 sm:gap-1"
+            className="flex items-center gap-1 sm:gap-1.5"
             title="Velocidad del viento"
           >
-            <div className={cn("bg-blue-500/10 text-blue-600 rounded", compact ? "p-0.5" : "p-1.5")}>
-              <Wind className={cn(compact ? "h-3 w-3" : "h-4 w-4")} />
+            <div className={cn("bg-blue-500/10 text-blue-600 rounded-md", compact ? "p-0.5 sm:p-1 md:p-1.5" : "p-1.5")}>
+              <Wind className={cn(compact ? "h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" : "h-4 w-4")} />
             </div>
-            <span className={cn("font-semibold text-foreground", compact ? "text-[11px] sm:text-xs" : "text-sm")}>
-              {weather?.windSpeed} <span className={cn(compact ? "text-[9px] sm:text-[10px] text-muted-foreground" : "text-xs")}>km/h</span>
+            <span className={cn("font-semibold text-foreground", compact ? "text-[11px] sm:text-xs md:text-sm" : "text-sm")}>
+              {weather?.windSpeed} <span className={cn(compact ? "text-[9px] sm:text-[10px] md:text-xs text-muted-foreground" : "text-xs text-muted-foreground")}>km/h</span>
             </span>
           </div>
 
-          <div className={cn("w-px bg-border/60", compact ? "h-3" : "h-6")}></div>
+          <div className={cn("w-px bg-border/60", compact ? "h-3 sm:h-4 md:h-5" : "h-6")}></div>
 
           <div
-            className="flex items-center gap-0.5 sm:gap-1"
+            className="flex items-center gap-1 sm:gap-1.5"
             title="Probabilidad de lluvia"
           >
-            <div className={cn("bg-cyan-500/10 text-cyan-600 rounded", compact ? "p-0.5" : "p-1.5")}>
-              <CloudRain className={cn(compact ? "h-3 w-3" : "h-4 w-4")} />
+            <div className={cn("bg-cyan-500/10 text-cyan-600 rounded-md", compact ? "p-0.5 sm:p-1 md:p-1.5" : "p-1.5")}>
+              <CloudRain className={cn(compact ? "h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" : "h-4 w-4")} />
             </div>
-            <span className={cn("font-semibold text-foreground", compact ? "text-[11px] sm:text-xs" : "text-sm")}>
+            <span className={cn("font-semibold text-foreground", compact ? "text-[11px] sm:text-xs md:text-sm" : "text-sm")}>
               {weather?.rainProbability}%
             </span>
           </div>
