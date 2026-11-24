@@ -32,7 +32,7 @@ export default function AttendancePage() {
   const { currentUser, attendanceLogs, establishmentData, updateEstablishmentData, users, recordAttendanceCheck } = useContext(AppDataContext);
   const { toast } = useToast();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active-personnel' | 'today-logs' | 'my-credential'>('active-personnel');
+  const [activeTab, setActiveTab] = useState<'active-personnel' | 'today-logs'>('active-personnel');
   const [isAssigning, setIsAssigning] = useState(false);
   const [confirmExitLog, setConfirmExitLog] = useState<AttendanceLog | null>(null);
   const [isSubmittingExit, setIsSubmittingExit] = useState(false);
@@ -61,12 +61,19 @@ export default function AttendancePage() {
   if (!canManageGate) {
     return (
       <>
-        <PageHeader
-          title="Control de Asistencia"
-          description="Módulo de control de acceso y registro de personal en tranquera."
-        >
-          <WeatherCard compact />
-        </PageHeader>
+        <div className="flex items-center justify-between gap-2 sm:gap-4 mb-4 pb-1">
+          <div className="min-w-0 pr-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight truncate">
+              Control de Asistencia
+            </h1>
+            <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+              Módulo de acceso y registro de personal en tranquera.
+            </p>
+          </div>
+          <div className="shrink-0">
+            <WeatherCard compact />
+          </div>
+        </div>
 
         <div className="max-w-2xl mx-auto py-8 text-center space-y-6">
           <Card className="border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-6 sm:p-8 rounded-3xl text-center shadow-md">
@@ -157,37 +164,47 @@ export default function AttendancePage() {
 
   return (
     <>
-      <PageHeader
-        title="Control de Asistencia"
-        description="Gestión de accesos en tranquera, registro con aprobación y visualización de personal en finca."
-      >
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setIsScannerOpen(true)}
-            className="h-9 gap-2 font-semibold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-          >
-            <ScanLine className="h-4 w-4" />
-            <span>Escanear Tranquera</span>
-            {presentNow.length > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-white/20 text-white hover:bg-white/30 text-[10px] px-1.5 py-0">
-                {presentNow.length} presentes
-              </Badge>
-            )}
-          </Button>
+      {/* Cabecera Adaptable a Celular con Clima al Lado del Título */}
+      <div className="flex items-center justify-between gap-2 sm:gap-4 mb-4 pb-1">
+        <div className="min-w-0 pr-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-foreground tracking-tight truncate">
+            Control de Asistencia
+          </h1>
+          <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+            Gestión de accesos en tranquera y personal en finca.
+          </p>
+        </div>
+        <div className="shrink-0">
           <WeatherCard compact />
         </div>
-      </PageHeader>
+      </div>
+
+      {/* Botón Principal: Escanear Tranquera Ocupando Todo el Ancho */}
+      <div className="mb-4">
+        <Button
+          onClick={() => setIsScannerOpen(true)}
+          className="w-full h-12 text-sm sm:text-base font-bold gap-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white shadow-md rounded-2xl active:scale-[0.99] transition-all"
+        >
+          <ScanLine className="h-5 w-5" />
+          <span>Escanear Tranquera</span>
+          {presentNow.length > 0 && (
+            <Badge variant="secondary" className="ml-1 bg-white/20 text-white hover:bg-white/30 text-xs px-2 py-0.5">
+              {presentNow.length} presentes
+            </Badge>
+          )}
+        </Button>
+      </div>
 
       {/* Panel de Designación de Responsable (Solo visible para el Productor) */}
       {isProductor && (
-        <Card className="mb-6 border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
-          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <Card className="mb-5 border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-xs">
+          <CardContent className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <UserCog className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                <h4 className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-2">
                   Responsable Designado para Asistencia
                   {currentManagerName ? (
                     <Badge variant="outline" className="text-[10px] bg-emerald-100 text-emerald-800 dark:bg-emerald-900 border-emerald-400">
@@ -199,19 +216,19 @@ export default function AttendancePage() {
                     </Badge>
                   )}
                 </h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
                   Elige qué usuario (por ej. el Encargado) tendrá permiso para ver esta sección y hacer las cargas de asistencia del personal.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto w-full sm:w-auto">
               <Select
                 value={establishmentData?.attendanceManagerId || 'none'}
                 onValueChange={handleAssignManager}
                 disabled={isAssigning}
               >
-                <SelectTrigger className="w-[230px] h-9 text-xs bg-background">
+                <SelectTrigger className="w-full sm:w-[230px] h-9 text-xs bg-background">
                   <SelectValue placeholder="Seleccionar colaborador..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -228,89 +245,52 @@ export default function AttendancePage() {
         </Card>
       )}
 
-      {/* Banner informativo para el Encargado / Usuario Designado */}
-      {!isProductor && canManageGate && (
-        <div className="mb-6 p-3.5 rounded-2xl border border-emerald-500/40 bg-emerald-50/60 dark:bg-emerald-950/30 flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-200">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-            <span>Has sido designado por el productor para gestionar el <strong>Control de Asistencia</strong> del personal.</span>
-          </div>
-          <Badge className="bg-emerald-600 text-white text-[10px]">Encargado de Tranquera</Badge>
-        </div>
-      )}
-
-      {/* Selector directo de pestañas */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6 border-b pb-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Botón directo de Presentes */}
-          <Button
-            variant={activeTab === 'active-personnel' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('active-personnel')}
-            className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
-              activeTab === 'active-personnel' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            <span>Presentes en Finca</span>
-            <Badge 
-              variant="secondary" 
-              className={`ml-1 text-[10px] px-1.5 py-0 ${
-                activeTab === 'active-personnel' 
-                  ? 'bg-emerald-700 text-white' 
-                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
-              }`}
-            >
-              {presentNow.length}
-            </Badge>
-          </Button>
-
-          {/* Botón directo de Hoy - Registro Total */}
-          <Button
-            variant={activeTab === 'today-logs' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('today-logs')}
-            className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
-              activeTab === 'today-logs' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
-            }`}
-          >
-            <Calendar className="h-4 w-4" />
-            <span>Hoy (Jornada Total)</span>
-            <Badge 
-              variant="secondary" 
-              className={`ml-1 text-[10px] px-1.5 py-0 ${
-                activeTab === 'today-logs' 
-                  ? 'bg-emerald-700 text-white' 
-                  : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300'
-              }`}
-            >
-              {todayLogs.length}
-            </Badge>
-          </Button>
-
-          {/* Mi Credencial Digital */}
-          <Button
-            variant={activeTab === 'my-credential' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('my-credential')}
-            className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
-              activeTab === 'my-credential' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
-            }`}
-          >
-            <QrCode className="h-4 w-4" />
-            <span>Mi Credencial Digital</span>
-          </Button>
-        </div>
-
-        {/* Botón directo de Abrir Escáner */}
+      {/* Selector directo de pestañas: Presentes y Hoy */}
+      <div className="flex items-center gap-2 mb-5 border-b pb-3">
+        {/* Botón directo de Presentes */}
         <Button
-          variant="outline"
+          variant={activeTab === 'active-personnel' ? 'default' : 'outline'}
           size="sm"
-          onClick={() => setIsScannerOpen(true)}
-          className="h-8 text-xs gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          onClick={() => setActiveTab('active-personnel')}
+          className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
+            activeTab === 'active-personnel' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
+          }`}
         >
-          <ScanLine className="h-3.5 w-3.5" />
-          <span>Abrir Escáner</span>
+          <Users className="h-4 w-4" />
+          <span>Presentes en Finca</span>
+          <Badge 
+            variant="secondary" 
+            className={`ml-1 text-[10px] px-1.5 py-0 ${
+              activeTab === 'active-personnel' 
+                ? 'bg-emerald-700 text-white' 
+                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
+            }`}
+          >
+            {presentNow.length}
+          </Badge>
+        </Button>
+
+        {/* Botón directo de Hoy - Registro Total */}
+        <Button
+          variant={activeTab === 'today-logs' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveTab('today-logs')}
+          className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
+            activeTab === 'today-logs' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
+          }`}
+        >
+          <Calendar className="h-4 w-4" />
+          <span>Hoy (Jornada Total)</span>
+          <Badge 
+            variant="secondary" 
+            className={`ml-1 text-[10px] px-1.5 py-0 ${
+              activeTab === 'today-logs' 
+                ? 'bg-emerald-700 text-white' 
+                : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300'
+            }`}
+          >
+            {todayLogs.length}
+          </Badge>
         </Button>
       </div>
 
@@ -529,13 +509,6 @@ export default function AttendancePage() {
         </Card>
       )}
 
-      {/* CONTENIDO DE PESTAÑA 3: MI CREDENCIAL DIGITAL */}
-      {activeTab === 'my-credential' && (
-        <UserCredentialView 
-          user={currentUser} 
-          onOpenScanner={() => setIsScannerOpen(true)} 
-        />
-      )}
 
       {/* MODAL DE CONFIRMACIÓN PARA MARCAR SALIDA (EVITAR TOQUES ACCIDENTALES) */}
       <AlertDialog open={!!confirmExitLog} onOpenChange={(open) => !open && setConfirmExitLog(null)}>

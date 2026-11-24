@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const { notificationPermission, requestPermissionAndGetToken } = usePushNotifications();
   const { theme, setTheme } = useTheme();
   const [subscriptionPrice, setSubscriptionPrice] = useState(80000);
+  const [isCredentialOpen, setIsCredentialOpen] = useState(false);
 
   const isPresent = (appData.attendanceLogs || []).some(l => 
     l.status === 'in_progress' && currentUser &&
@@ -334,7 +335,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
         {/* Columna Izquierda: Foto y Cierre de Sesión */}
         <div className="xl:col-span-1 flex flex-col gap-6">
-            <Card className="flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
+            <Card className="flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow relative">
                 <div className="relative mb-4">
                   <Avatar className="h-32 w-32 ring-4 ring-background shadow-lg">
                       <AvatarImage src={getAvatarPreview()} alt={currentUser.name} />
@@ -347,12 +348,35 @@ export default function ProfilePage() {
                     )}
                     title={isPresent ? "Presente en finca (activo)" : "Ausente de finca"}
                   />
+
+                  {/* Botón QR en el extremo derecho de la foto */}
+                  <Button
+                    type="button"
+                    size="icon"
+                    onClick={() => setIsCredentialOpen(true)}
+                    className="absolute -top-1 -right-1 h-10 w-10 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg border-2 border-background active:scale-95 transition-transform"
+                    title="Ver Mi Credencial y Control de Asistencia"
+                  >
+                    <QrCode className="h-5 w-5" />
+                  </Button>
                 </div>
                 <CardTitle className="text-2xl mt-4">{currentUser.name}</CardTitle>
                 <CardDescription className="text-base mt-2 flex flex-col gap-1 items-center">
                     <span className="font-medium bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm inline-block">{currentUser.role}</span>
                     <span className="text-muted-foreground mt-2">{currentUser.email}</span>
                 </CardDescription>
+
+                {/* Botón de acceso directo a Credencial y Asistencia Personal */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCredentialOpen(true)}
+                  className="mt-4 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl shadow-xs"
+                >
+                  <QrCode className="h-4 w-4 text-emerald-600" />
+                  <span>Mi Asistencia y Credencial</span>
+                </Button>
             </Card>
 
             <Card className="border-red-200 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/20 shadow-sm hover:shadow-md transition-shadow">
@@ -744,6 +768,13 @@ export default function ProfilePage() {
 
         </div>
       </div>
+
+      {/* Diálogo de Credencial, Resumen de Asistencia y Movimientos */}
+      <UserCredentialDialog
+        isOpen={isCredentialOpen}
+        onOpenChange={setIsCredentialOpen}
+        user={currentUser}
+      />
     </>
   );
 }
