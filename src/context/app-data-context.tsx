@@ -11,6 +11,13 @@ import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, 
 import { getRoleAvatar } from '@/lib/utils';
 import { getBatchPhiStatus } from '@/lib/phi-utils';
 import { format } from 'date-fns';
+import { 
+  enqueueOfflineAttendance, 
+  dequeueOfflineAttendance, 
+  flushOfflineAttendanceQueue, 
+  getCachedAttendanceLogs, 
+  setCachedAttendanceLogs 
+} from '@/lib/offline-attendance-sync';
 
 export const AppDataContext = React.createContext<AppData>({
   loading: true,
@@ -164,7 +171,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [supplies, setSupplies] = useState<Supply[]>([]);
     const [notifications, setNotifications] = useState<PushNotification[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-    const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
+    const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>(() => {
+        if (typeof window !== 'undefined') {
+            const cached = getCachedAttendanceLogs();
+            if (cached && cached.length > 0) return cached;
+        }
+        return [];
+    });
     const [tasks, setTasks] = useState<Task[]>([]);
     const [batches, setBatches] = useState<Batch[]>([]);
     const [collectorPaymentLogs, setCollectorPaymentLogs] = useState<CollectorPaymentLog[]>([]);
@@ -208,6 +221,39 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         window.removeEventListener('focus', unlockBodyTouch);
         window.removeEventListener('pageshow', unlockBodyTouch);
         window.removeEventListener('visibilitychange', unlockBodyTouch);
+      };
+    }, []);
+
+    // Sincronización automática de asistencias tomadas offline en tranquera
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+
+      const handleOnline = () => {
+        flushOfflineAttendanceQueue().then(({ synced }) => {
+          if (synced > 0) {
+            toast({
+              title: "Asistencias Sincronizadas",
+              description: `Se sincronizaron ${synced} registros de tranquera tomados sin conexión.`,
+            });
+          }
+        }).catch(() => {});
+      };
+
+      // Si hay red al montar, procesar cola pendiente
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        flushOfflineAttendanceQueue().catch(() => {});
+      }
+
+      window.addEventListener('online', handleOnline);
+      const syncInterval = setInterval(() => {
+        if (typeof navigator !== 'undefined' && navigator.onLine) {
+          flushOfflineAttendanceQueue().catch(() => {});
+        }
+      }, 25000);
+
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        clearInterval(syncInterval);
       };
     }, []);
 
@@ -2084,37 +2130,28 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 notes: data.notes || existingOpenLog.notes
             };
 
-            setAttendanceLogs(prev => prev.map(l => l.id === existingOpenLog.id ? updatedLog : l));
+            // 1. Actualización inmediata en estado local y caché local de persistencia
+            setAttendanceLogs(prev => {
+                const next = prev.map(l => l.id === existingOpenLog.id ? updatedLog : l);
+                setCachedAttendanceLogs(next);
+                return next;
+            });
 
-            try {
-                const logRef = doc(db, 'attendanceLogs', existingOpenLog.id);
-                await setDoc(logRef, sanitizeForFirestore(updatedLog), { merge: true });
-                logUserAction(
-                    'Salida Registrada',
-                    `${data.personnelName} (${data.role}) registró salida (${totalHoursWorked} hs trabajadas)`,
-                    'staff'
-                );
-            } catch (err) {
-                console.warn('Direct client update failed, syncing via Admin API:', err);
-                try {
-                    await fetch('/api/attendance', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(sanitizeForFirestore(updatedLog))
-                    });
-                    logUserAction(
-                        'Salida Registrada',
-                        `${data.personnelName} (${data.role}) registró salida (${totalHoursWorked} hs trabajadas)`,
-                        'staff'
-                    );
-                } catch (apiErr) {
-                    console.error('Error updating attendance log out:', apiErr);
-                }
-            }
+            // 2. Encolar para sincronización garantizada
+            enqueueOfflineAttendance(updatedLog, 'save');
+
+            // 3. Intento de subida en background (no bloquea al usuario)
+            flushOfflineAttendanceQueue().catch(() => {});
+
+            logUserAction(
+                'Salida Registrada',
+                `${data.personnelName} (${data.role}) registró salida (${totalHoursWorked} hs trabajadas)`,
+                'staff'
+            ).catch(() => {});
 
             return { type: 'out', log: updatedLog, hoursWorked: totalHoursWorked };
         } else {
-            // Registrar INGRESO con ID de documento de Firestore asignado de antemano
+            // Registrar INGRESO con ID asignado localmente de antemano
             const newDocRef = doc(collection(db, 'attendanceLogs'));
             const newLog: AttendanceLog = {
                 id: newDocRef.id,
@@ -2135,49 +2172,38 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 notes: data.notes
             };
 
-            setAttendanceLogs(prev => [newLog, ...prev.filter(l => l.id !== newDocRef.id)]);
+            // 1. Actualización inmediata en estado local y caché local de persistencia
+            setAttendanceLogs(prev => {
+                const next = [newLog, ...prev.filter(l => l.id !== newDocRef.id)];
+                setCachedAttendanceLogs(next);
+                return next;
+            });
 
-            try {
-                await setDoc(newDocRef, sanitizeForFirestore(newLog));
-                logUserAction(
-                    'Ingreso Registrado',
-                    `${data.personnelName} (${data.role}) registró ingreso a la quinta`,
-                    'staff'
-                );
-            } catch (err) {
-                console.warn('Direct client write failed, syncing via Admin API:', err);
-                try {
-                    await fetch('/api/attendance', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(sanitizeForFirestore(newLog))
-                    });
-                    logUserAction(
-                        'Ingreso Registrado',
-                        `${data.personnelName} (${data.role}) registró ingreso a la quinta`,
-                        'staff'
-                    );
-                } catch (apiErr) {
-                    console.error('Error creating attendance log in:', apiErr);
-                }
-            }
+            // 2. Encolar para sincronización garantizada
+            enqueueOfflineAttendance(newLog, 'save');
+
+            // 3. Intento de subida en background (no bloquea al usuario)
+            flushOfflineAttendanceQueue().catch(() => {});
+
+            logUserAction(
+                'Ingreso Registrado',
+                `${data.personnelName} (${data.role}) registró ingreso a la quinta`,
+                'staff'
+            ).catch(() => {});
 
             return { type: 'in', log: newLog };
         }
     };
 
     const deleteAttendanceLog = async (id: string) => {
-        setAttendanceLogs(prev => prev.filter(l => l.id !== id));
-        try {
-            await deleteDoc(doc(db, 'attendanceLogs', id));
-        } catch (err) {
-            console.warn('Direct client delete failed, syncing via Admin API:', err);
-            try {
-                await fetch(`/api/attendance?id=${id}`, { method: 'DELETE' });
-            } catch (apiErr) {
-                console.error('Error deleting attendance log:', apiErr);
-            }
-        }
+        setAttendanceLogs(prev => {
+            const next = prev.filter(l => l.id !== id);
+            setCachedAttendanceLogs(next);
+            return next;
+        });
+
+        enqueueOfflineAttendance({ id } as AttendanceLog, 'delete');
+        flushOfflineAttendanceQueue().catch(() => {});
     };
 
     const value = {

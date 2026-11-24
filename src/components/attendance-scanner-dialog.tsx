@@ -98,6 +98,20 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
   const [activeTab, setActiveTab] = useState<'scanner' | 'present' | 'history'>('scanner');
   const [cameraActive, setCameraActive] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(() => 
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateOnline = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', updateOnline);
+    window.addEventListener('offline', updateOnline);
+    return () => {
+      window.removeEventListener('online', updateOnline);
+      window.removeEventListener('offline', updateOnline);
+    };
+  }, []);
   
   // Pending approval state (Scanner pauses when populated, requires Encargado approval)
   const [pendingApproval, setPendingApproval] = useState<PendingAttendanceApproval | null>(null);
@@ -281,26 +295,33 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
 
   // Cuando la cámara detecta un QR, corta el escaneo y prepara la aprobación
   const handleDetectedQR = (rawCode: string) => {
-    // Verificar cooldown de escaneo repetido (12 segundos para la misma persona)
+    // Validar el código primero
+    const validation = parseAndValidateAttendanceQR(rawCode);
+
+    if (!validation.valid || !validation.data) {
+      const now = Date.now();
+      const lastErrTime = recentlyScannedRef.current.get(rawCode) || 0;
+      if (now - lastErrTime > 5000) {
+        recentlyScannedRef.current.set(rawCode, now);
+        playSound('error');
+        setLastScanError(validation.error || 'Código QR no reconocido como credencial oficial.');
+      }
+      return;
+    }
+
+    const { data, isDynamic } = validation;
+
+    // Verificar cooldown de escaneo para esta persona (8 segundos para evitar re-escaneo accidental)
+    const personKey = data.id || data.dni || data.name || rawCode;
     const now = Date.now();
-    const lastScanTime = recentlyScannedRef.current.get(rawCode) || 0;
-    if (now - lastScanTime < 12000) {
-      return; // Ignorar código recién aprobado o mostrado repetidamente
+    const lastScanTime = recentlyScannedRef.current.get(personKey) || recentlyScannedRef.current.get(rawCode) || 0;
+    if (now - lastScanTime < 8000) {
+      return; // Ignorar código recién aprobado de esta misma persona
     }
 
     // Pausar inmediatamente
     isPausedRef.current = true;
     playSound('detected');
-
-    const validation = parseAndValidateAttendanceQR(rawCode);
-
-    if (!validation.valid || !validation.data) {
-      playSound('error');
-      setLastScanError(validation.error || 'Código QR no reconocido como credencial oficial.');
-      return;
-    }
-
-    const { data, isDynamic } = validation;
 
     // Buscar foto/avatar
     let photoUrl = '';
@@ -357,7 +378,8 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
     if (!pendingApproval || isSubmitting) return;
     setIsSubmitting(true);
 
-    const { data, actionType, hoursWorked, isDynamic, photoUrl } = pendingApproval;
+    const { data, photoUrl, isDynamic } = pendingApproval;
+    const personKey = data.id || data.dni || data.name;
 
     try {
       const result = await recordAttendanceCheck({
@@ -368,11 +390,9 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
         method: 'scan_gate'
       });
 
-      // Añadir al registro de cooldown para evitar re-escaneo inmediato del mismo QR
-      recentlyScannedRef.current.set(JSON.stringify(data), Date.now());
-      if (data.id) {
-        recentlyScannedRef.current.set(data.id, Date.now());
-      }
+      // Añadir al registro de cooldown de escaneo para esta persona (8s)
+      recentlyScannedRef.current.set(personKey, Date.now());
+      if (data.id) recentlyScannedRef.current.set(data.id, Date.now());
 
       playSound(result.type);
       setPendingApproval(null);
@@ -392,16 +412,11 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
         setLastCheckResult(null);
         setIsSubmitting(false);
         isPausedRef.current = false;
-      }, 1400);
+      }, 1100);
 
     } catch (err) {
       console.error('Error saving approved attendance check:', err);
-      playSound('error');
-      toast({
-        title: 'Error al registrar',
-        description: 'No se pudo guardar la asistencia en el servidor.',
-        variant: 'destructive'
-      });
+      // Desbloquear de inmediato la interfaz para que el encargado pueda seguir trabajando
       setIsSubmitting(false);
       setPendingApproval(null);
       isPausedRef.current = false;
@@ -439,10 +454,17 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                 </DialogDescription>
               </div>
             </div>
-            <Badge variant="outline" className="border-stone-700 text-emerald-400 bg-stone-800 text-xs">
-              <Users className="h-3.5 w-3.5 mr-1" />
-              {currentlyPresent.length} en finca
-            </Badge>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Badge variant="outline" className="border-stone-700 text-emerald-400 bg-stone-800 text-xs">
+                <Users className="h-3.5 w-3.5 mr-1" />
+                {currentlyPresent.length} en finca
+              </Badge>
+              {!isOnline && (
+                <Badge variant="outline" className="border-amber-600/50 text-amber-300 bg-amber-950/60 text-[10px] px-1.5 py-0 font-medium">
+                  Modo Offline
+                </Badge>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
@@ -603,7 +625,16 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                         ? `✓ Ingreso registrado (${lastCheckResult.time} hs)`
                         : `✓ Salida registrada (${lastCheckResult.hoursWorked} hs trabajadas)`}
                     </p>
-                    <span className="text-[10px] text-stone-400 mt-2">Continuando escaneo...</span>
+                    {!isOnline ? (
+                      <span className="text-[10px] text-amber-300 mt-1.5 flex items-center gap-1 font-medium bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-800/40">
+                        Guardado en dispositivo • Se subirá al volver la red
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-emerald-400 mt-1.5 font-medium">
+                        Registrado correctamente
+                      </span>
+                    )}
+                    <span className="text-[10px] text-stone-400 mt-1">Listo para el siguiente...</span>
                   </div>
                 )}
 
