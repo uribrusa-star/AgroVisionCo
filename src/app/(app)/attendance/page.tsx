@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { QrCode, ScanLine, Users, Clock, UserCheck, ShieldAlert, UserCog, CheckCircle2, LogOut, Calendar, ArrowRight } from 'lucide-react';
+import { QrCode, ScanLine, Users, Clock, UserCheck, ShieldAlert, UserCog, CheckCircle2, LogOut, Calendar, ArrowRight, Trash2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getRoleAvatar } from '@/lib/utils';
@@ -29,13 +29,15 @@ import { canUserManageAttendance, AttendanceLog } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AttendancePage() {
-  const { currentUser, attendanceLogs, establishmentData, updateEstablishmentData, users, recordAttendanceCheck } = useContext(AppDataContext);
+  const { currentUser, attendanceLogs, establishmentData, updateEstablishmentData, users, recordAttendanceCheck, deleteAttendanceLog } = useContext(AppDataContext);
   const { toast } = useToast();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'active-personnel' | 'today-logs'>('active-personnel');
   const [isAssigning, setIsAssigning] = useState(false);
   const [confirmExitLog, setConfirmExitLog] = useState<AttendanceLog | null>(null);
   const [isSubmittingExit, setIsSubmittingExit] = useState(false);
+  const [deleteTargetLog, setDeleteTargetLog] = useState<AttendanceLog | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!currentUser) return null;
 
@@ -156,6 +158,27 @@ export default function AttendancePage() {
       });
     } finally {
       setIsSubmittingExit(false);
+    }
+  };
+
+  const handleDeleteLog = async () => {
+    if (!deleteTargetLog) return;
+    setIsDeleting(true);
+    try {
+      await deleteAttendanceLog(deleteTargetLog.id);
+      toast({
+        title: "Registro Eliminado",
+        description: `Se eliminó el registro de asistencia de ${deleteTargetLog.personnelName}.`,
+      });
+      setDeleteTargetLog(null);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el registro de asistencia.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -487,18 +510,31 @@ export default function AttendancePage() {
                           </div>
                         </div>
 
-                        {isPresent && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isPresent && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setConfirmExitLog(log)}
+                              className="h-8 text-xs text-blue-600 hover:text-blue-700 border-blue-300 dark:border-blue-800"
+                            >
+                              <LogOut className="h-3.5 w-3.5 mr-1" />
+                              Salida
+                            </Button>
+                          )}
+
                           <Button
                             type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setConfirmExitLog(log)}
-                            className="h-8 text-xs text-blue-600 hover:text-blue-700 border-blue-300 dark:border-blue-800"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteTargetLog(log)}
+                            className="h-8 w-8 text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                            title="Eliminar registro de asistencia"
                           >
-                            <LogOut className="h-3.5 w-3.5 mr-1" />
-                            Salida
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -542,6 +578,47 @@ export default function AttendancePage() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs"
             >
               {isSubmittingExit ? 'Registrando...' : 'Confirmar Salida'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* MODAL DE CONFIRMACIÓN PARA ELIMINAR REGISTRO DE ASISTENCIA */}
+      <AlertDialog open={!!deleteTargetLog} onOpenChange={(open) => !open && setDeleteTargetLog(null)}>
+        <AlertDialogContent className="max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <div className="h-11 w-11 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-1">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-base font-bold">
+              ¿Eliminar registro de asistencia?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              Estás por eliminar el registro de asistencia de <strong>{deleteTargetLog?.personnelName}</strong>. 
+              {deleteTargetLog?.checkIn && (
+                <span className="block mt-1 font-medium text-foreground">
+                  Ingreso: {format(new Date(deleteTargetLog.checkIn), 'HH:mm')} hs
+                  {deleteTargetLog.checkOut ? ` • Salida: ${format(new Date(deleteTargetLog.checkOut), 'HH:mm')} hs` : ' (Activo)'}.
+                </span>
+              )}
+              <span className="block mt-1.5 text-rose-600 dark:text-rose-400 font-medium">
+                Esta acción removerá el registro del historial de la jornada. Utilícela si se cometió una equivocación o carga duplicada.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel disabled={isDeleting} className="text-xs">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteLog();
+              }}
+              disabled={isDeleting}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs"
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar Registro'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
