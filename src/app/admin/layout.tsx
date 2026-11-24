@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!isClient || loading || !currentUser || currentUser.role !== 'SuperAdmin') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F7F4EB] dark:bg-stone-950 p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100/70 dark:bg-stone-950 p-4">
         <Loader2 className="h-10 w-10 animate-spin text-[#2d4a22] dark:text-emerald-400" />
         <p className="mt-4 text-[#2d4a22] dark:text-emerald-400 font-medium">Verificando credenciales de administrador...</p>
       </div>
@@ -52,9 +52,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F4EB] dark:bg-stone-950 transition-colors duration-300 flex flex-col">
+    <div className="min-h-screen bg-slate-100/70 dark:bg-stone-950 transition-colors duration-300 flex flex-col">
       {/* Top Navbar */}
-      <header className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 sticky top-0 z-50 shadow-sm transition-colors duration-300">
+      <header className="bg-white dark:bg-stone-900 border-b border-slate-200 dark:border-stone-800 sticky top-0 z-50 shadow-sm transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">

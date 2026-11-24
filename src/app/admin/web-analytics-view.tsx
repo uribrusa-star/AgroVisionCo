@@ -216,7 +216,7 @@ export function WebAnalyticsView() {
 
       {/* Main Chart: Traffic Evolution */}
       <Card className="border-0 shadow-sm bg-white dark:bg-stone-900 overflow-hidden">
-        <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-4">
+        <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800 pb-4">
           <CardTitle className="text-lg font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
             <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             Evolución Diaria de Visitas y Visitantes
@@ -271,35 +271,35 @@ export function WebAnalyticsView() {
         
         {/* Orígenes / Fuentes */}
         <Card className="border-0 shadow-sm bg-white dark:bg-stone-900 overflow-hidden">
-          <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800">
+          <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800">
             <CardTitle className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
               <Search className="h-4 w-4 text-sky-500" />
               Origen de Tráfico (Fuentes)
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60">
               <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
                 🌐 Tráfico Directo (agrovista.co)
               </span>
               <Badge variant="outline" className="font-bold">{referrerTotals.direct}</Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60">
               <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
                 🔍 Búsqueda en Google
               </span>
               <Badge variant="outline" className="font-bold">{referrerTotals.google}</Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60">
               <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
                 💬 WhatsApp
               </span>
               <Badge variant="outline" className="font-bold">{referrerTotals.whatsapp}</Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60">
               <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
                 📱 Redes Sociales (FB / IG)
               </span>
@@ -310,7 +310,7 @@ export function WebAnalyticsView() {
 
         {/* Clics & Botones más interactuados */}
         <Card className="border-0 shadow-sm bg-white dark:bg-stone-900 overflow-hidden">
-          <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800">
+          <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800">
             <CardTitle className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
               <MousePointerClick className="h-4 w-4 text-purple-500" />
               Botones & Elementos Más Interactuados
@@ -321,7 +321,7 @@ export function WebAnalyticsView() {
               <p className="text-xs text-stone-400 text-center py-6">No se han registrado clics de botones aún.</p>
             ) : (
               Object.entries(interactionTotals).map(([targetName, count]) => (
-                <div key={targetName} className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60">
+                <div key={targetName} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60">
                   <span className="text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-2">
                     <ArrowUpRight className="h-3.5 w-3.5 text-purple-600" />
                     {targetName.replaceAll('_', ' ')}

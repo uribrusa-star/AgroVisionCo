@@ -435,7 +435,7 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
 
           <div className="w-full sm:w-auto">
             <Select value={selectedSeasonYear} onValueChange={setSelectedSeasonYear}>
-              <SelectTrigger className="w-full sm:w-[260px] bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-xs font-semibold">
+              <SelectTrigger className="w-full sm:w-[260px] bg-slate-50 dark:bg-stone-800 border-slate-200 dark:border-stone-700 text-xs font-semibold">
                 <SelectValue placeholder="Seleccionar vista" />
               </SelectTrigger>
               <SelectContent className="dark:bg-stone-900 dark:border-stone-800">

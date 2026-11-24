@@ -483,7 +483,7 @@ export default function AdminDashboardPage() {
 
       <Tabs defaultValue="analytics" className="w-full pb-20 md:pb-0">
         {/* Desktop Tabs Bar */}
-        <TabsList className="hidden md:grid w-full grid-cols-7 max-w-[1150px] mb-6 h-auto p-1.5 bg-stone-100 dark:bg-stone-800 rounded-xl shadow-inner">
+        <TabsList className="hidden md:grid w-full grid-cols-7 max-w-[1150px] mb-6 h-auto p-1.5 bg-slate-100 dark:bg-stone-800 rounded-xl shadow-inner">
           <TabsTrigger value="analytics" title="Analíticas" className="flex items-center justify-center gap-2 py-2.5 px-2 text-xs sm:text-sm font-semibold transition-all data-[state=active]:shadow">
             <Activity className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>Analíticas</span>
@@ -589,13 +589,13 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="map" className="mt-0 space-y-6">
           <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
-            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-4">
+            <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800 pb-4">
                <CardTitle className="flex items-center gap-2 text-xl text-[#2d4a22] dark:text-emerald-400">
                   <MapPin className="h-6 w-6" /> Vista Satelital AgroVision
                </CardTitle>
                <CardDescription className="dark:text-stone-400">Visualización geográfica y operativa de todos los clientes.</CardDescription>
             </CardHeader>
-            <div className="h-auto sm:h-[600px] w-full p-2 bg-stone-100 dark:bg-stone-950">
+            <div className="h-auto sm:h-[600px] w-full p-2 bg-slate-100/70 dark:bg-stone-950">
                <AdminMap establishments={establishments} pestLogs={[...diagnosisPestLogs, ...agroPestLogs]} />
             </div>
           </Card>
@@ -603,7 +603,7 @@ export default function AdminDashboardPage() {
 
         <TabsContent value="directory" className="mt-0">
           <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
-            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
                   <Building className="h-6 w-6 text-[#2d4a22] dark:text-emerald-400" />
@@ -617,7 +617,7 @@ export default function AdminDashboardPage() {
             </CardHeader>
             
             {/* VISTA MÓVIL: Tarjetas */}
-            <div className="md:hidden p-4 space-y-4 bg-stone-50/50 dark:bg-stone-950/40">
+            <div className="md:hidden p-4 space-y-4 bg-slate-50/70 dark:bg-stone-950/40">
               {establishments.length === 0 ? (
                 <p className="text-center text-stone-500 dark:text-stone-400 py-4">No hay establecimientos registrados.</p>
               ) : (
@@ -626,9 +626,9 @@ export default function AdminDashboardPage() {
                   const hasSeal = est.hasGoodPracticesSeal ?? false;
                   
                   return (
-                    <Card key={est.id} className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-sm relative">
+                    <Card key={est.id} className="border-slate-200 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-sm relative">
                       <div className={`h-1.5 w-full ${isActive ? 'bg-[#2d4a22] dark:bg-emerald-500' : 'bg-red-500'}`} />
-                      <CardHeader className="pb-2 cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
+                      <CardHeader className="pb-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-stone-800/50 transition-colors" onClick={() => router.push(`/admin/${est.id}`)}>
                         <CardTitle className="text-lg font-headline truncate dark:text-stone-100">{est.producer}</CardTitle>
                         <CardDescription className="flex flex-col gap-1 mt-1">
                           <span className="flex items-center gap-1.5 text-stone-600 dark:text-stone-400">
@@ -639,7 +639,7 @@ export default function AdminDashboardPage() {
                       </CardHeader>
                       <CardContent className="pb-4 pt-2">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-700/60 gap-3">
+                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60 border border-slate-100 dark:border-stone-700/60 gap-3">
                             <Badge variant={hasSeal ? "default" : "outline"} className={`w-full justify-center py-1 ${hasSeal ? "bg-green-600 dark:bg-green-600 shadow-sm text-white" : "dark:text-stone-300 dark:border-stone-600"}`}>
                               {hasSeal ? <ShieldCheck className="h-3.5 w-3.5 mr-1.5"/> : <ShieldAlert className="h-3.5 w-3.5 mr-1.5"/>}
                               {hasSeal ? 'Certificado' : 'Sin Sello'}
@@ -647,7 +647,7 @@ export default function AdminDashboardPage() {
                             <Switch checked={hasSeal} onCheckedChange={() => toggleGoodPractices(est.id, hasSeal)} className="data-[state=checked]:bg-green-600" />
                           </div>
                           
-                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-700/60 gap-3">
+                          <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 dark:bg-stone-800/60 border border-slate-100 dark:border-stone-700/60 gap-3">
                              <Badge variant={isActive ? "default" : "destructive"} className={`w-full justify-center py-1 ${isActive ? "bg-[#2d4a22] dark:bg-emerald-600 shadow-sm text-white" : ""}`}>
                               {isActive ? <Power className="h-3.5 w-3.5 mr-1.5"/> : <PowerOff className="h-3.5 w-3.5 mr-1.5"/>}
                               {isActive ? 'Activo' : 'Suspendido'}
@@ -773,7 +773,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
-            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6">
+            <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800 pb-6">
               <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
                 <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                 Gestión de Suscripciones
@@ -781,7 +781,7 @@ export default function AdminDashboardPage() {
               <CardDescription className="dark:text-stone-400">Actualiza manualmente el estado de cobro de los productores titulares.</CardDescription>
             </CardHeader>
             {/* VISTA MÓVIL: Tarjetas Expandibles */}
-            <div className="md:hidden p-4 space-y-3 bg-stone-50/50 dark:bg-stone-950/40">
+            <div className="md:hidden p-4 space-y-3 bg-slate-50/70 dark:bg-stone-950/40">
               {producers.map((prod) => {
                 const status = prod.subscriptionStatus || 'trial';
                 const statusLabels = {
@@ -1032,7 +1032,7 @@ export default function AdminDashboardPage() {
 
             {/* Formulario de Broadcast */}
             <Card className="border-0 shadow-lg shadow-black/5 bg-white dark:bg-stone-900 dark:text-stone-100 overflow-hidden">
-            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800 pb-6">
+            <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800 pb-6">
               <CardTitle className="flex items-center gap-2 text-xl dark:text-stone-100">
                 <BellRing className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 Alertas Globales (Broadcast)
@@ -1083,7 +1083,7 @@ export default function AdminDashboardPage() {
                   </Select>
                 </div>
               </CardContent>
-              <CardFooter className="bg-stone-50 dark:bg-stone-800/80 border-t border-stone-100 dark:border-stone-800 px-6 py-4 flex justify-between items-center">
+              <CardFooter className="bg-slate-50 dark:bg-stone-800/80 border-t border-slate-100 dark:border-stone-800 px-6 py-4 flex justify-between items-center">
                 <p className="text-xs text-stone-500 dark:text-stone-400">Esta acción notificará a todos las cuentas activas.</p>
                 <Button type="submit" disabled={isBroadcasting} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                   <Send className="mr-2 h-4 w-4" />

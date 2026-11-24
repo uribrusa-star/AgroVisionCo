@@ -456,7 +456,7 @@ export default function AdminEstablishmentDetail() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm overflow-hidden">
-              <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800">
+              <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800">
                 <CardTitle className="flex items-center gap-2 text-lg dark:text-stone-100">
                   <Pickaxe className="h-5 w-5 text-stone-600 dark:text-stone-400" />
                   Recolectores ({collectors.length})
@@ -467,7 +467,7 @@ export default function AdminEstablishmentDetail() {
                   {collectors.map(c => (
                     <div key={c.id} className="flex items-center justify-between p-3 px-4">
                       <span className="font-medium text-stone-700 dark:text-stone-300">{c.name}</span>
-                      <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-full">{c.totalHarvested?.toLocaleString() || 0} kg</span>
+                      <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 bg-slate-100 dark:bg-stone-800 px-2 py-1 rounded-full">{c.totalHarvested?.toLocaleString() || 0} kg</span>
                     </div>
                   ))}
                   {collectors.length === 0 && <div className="p-4 text-center text-sm text-stone-500 dark:text-stone-400">Sin recolectores</div>}
@@ -476,7 +476,7 @@ export default function AdminEstablishmentDetail() {
             </Card>
 
             <Card className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm overflow-hidden">
-              <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800">
+              <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800">
                 <CardTitle className="flex items-center gap-2 text-lg dark:text-stone-100">
                   <Package className="h-5 w-5 text-stone-600 dark:text-stone-400" />
                   Embaladores ({packers.length})
@@ -487,7 +487,7 @@ export default function AdminEstablishmentDetail() {
                   {packers.map(p => (
                     <div key={p.id} className="flex items-center justify-between p-3 px-4">
                       <span className="font-medium text-stone-700 dark:text-stone-300">{p.name}</span>
-                      <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-full">{p.totalPackaged?.toLocaleString() || 0} kg</span>
+                      <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 bg-slate-100 dark:bg-stone-800 px-2 py-1 rounded-full">{p.totalPackaged?.toLocaleString() || 0} kg</span>
                     </div>
                   ))}
                   {packers.length === 0 && <div className="p-4 text-center text-sm text-stone-500 dark:text-stone-400">Sin embaladores</div>}
@@ -500,7 +500,7 @@ export default function AdminEstablishmentDetail() {
         {/* Right Column: Recent Activity */}
         <div className="space-y-6">
           <Card className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm overflow-hidden h-full">
-            <CardHeader className="bg-stone-50 dark:bg-stone-800/80 border-b border-stone-100 dark:border-stone-800">
+            <CardHeader className="bg-slate-50 dark:bg-stone-800/80 border-b border-slate-100 dark:border-stone-800">
               <CardTitle className="flex items-center gap-2 text-lg dark:text-stone-100">
                 <Clock className="h-5 w-5 text-stone-600 dark:text-stone-400" />
                 Actividad Reciente
