@@ -463,9 +463,16 @@ export default function ProfilePage() {
                     </div>
                     <div className="mt-4 sm:mt-0">
                       {currentUser.subscriptionStatus !== 'active' ? (
-                        <Button onClick={handleSubscribe} disabled={isPending} className="w-full sm:w-auto">
-                          {isPending ? "Procesando..." : `Suscribirse por $${subscriptionPrice.toLocaleString('es-AR')} / mes`}
-                        </Button>
+                        <div className="flex flex-col items-start sm:items-end gap-1">
+                          <Button onClick={handleSubscribe} disabled={isPending} className="w-full sm:w-auto">
+                            {isPending ? "Procesando..." : `Suscribirse por $${((typeof currentUser.subscriptionPrice === 'number' && currentUser.subscriptionPrice > 0) ? currentUser.subscriptionPrice : subscriptionPrice).toLocaleString('es-AR')} / mes`}
+                          </Button>
+                          {typeof currentUser.subscriptionPrice === 'number' && currentUser.subscriptionPrice > 0 && (
+                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                              ★ Cuota con tarifa especial asignada
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <Button variant="outline" disabled className="w-full sm:w-auto text-green-600 border-green-200 bg-green-50/50">
                           Suscripción al día

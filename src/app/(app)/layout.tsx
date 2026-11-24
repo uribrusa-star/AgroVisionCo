@@ -48,7 +48,6 @@ import {
 
 const allNavItems = [
   { href: '/dashboard', label: 'Panel de Control', icon: LayoutDashboard, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
-  { href: '/attendance', label: 'Control de Asistencia', icon: QrCode, roles: ['Productor'] },
   { href: '/establishment', label: 'Establecimiento', icon: Building, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/map', label: 'Mapa', icon: Map, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
   { href: '/engineer-log', label: 'Bitácora del Agrónomo', icon: Leaf, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
@@ -61,6 +60,7 @@ const allNavItems = [
   { href: '/collectors', label: 'Recolectores', icon: HardHat, roles: ['Productor', 'Encargado'] },
   { href: '/packers', label: 'Embaladores', icon: Package, roles: ['Productor', 'Encargado'] },
   { href: '/users', label: 'Usuarios', icon: BookUser, roles: ['Productor'] },
+  { href: '/attendance', label: 'Control de Asistencia', icon: QrCode, roles: ['Productor'] },
 ];
 
 function UserMenu() {

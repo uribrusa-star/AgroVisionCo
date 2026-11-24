@@ -51,6 +51,8 @@ export default function AdminDashboardPage() {
   const [subPrice, setSubPrice] = useState(80000);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [editPriceValue, setEditPriceValue] = useState(80000);
+  const [editingProducerPriceId, setEditingProducerPriceId] = useState<string | null>(null);
+  const [tempProducerPrice, setTempProducerPrice] = useState<string>('');
 
   // Broadcast state
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -354,6 +356,32 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleUpdateProducerPrice = async (producerId: string, customPrice: number | null) => {
+    try {
+      if (customPrice === null || isNaN(customPrice) || customPrice <= 0) {
+        const { deleteField } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'users', producerId), {
+          subscriptionPrice: deleteField()
+        });
+        toast({
+          title: "Cuota Restablecida",
+          description: `El productor ahora usará la cuota base global ($${subPrice.toLocaleString('es-AR')}).`,
+        });
+      } else {
+        await updateDoc(doc(db, 'users', producerId), {
+          subscriptionPrice: customPrice
+        });
+        toast({
+          title: "Cuota Personalizada Guardada",
+          description: `La cuota mensual para este productor se fijó en $${customPrice.toLocaleString('es-AR')}.`,
+        });
+      }
+      setEditingProducerPriceId(null);
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo actualizar la cuota del productor.", variant: "destructive" });
+    }
+  };
+
   const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!broadcastTitle || !broadcastBody) {
@@ -447,7 +475,9 @@ export default function AdminDashboardPage() {
   // Finance Metrics
   const activeCount = producers.filter(p => p.subscriptionStatus === 'active').length;
   const trialCount = producers.filter(p => p.subscriptionStatus === 'trial' || !p.subscriptionStatus).length;
-  const mrr = activeCount * subPrice;
+  const mrr = producers
+    .filter(p => p.subscriptionStatus === 'active')
+    .reduce((sum, p) => sum + (typeof p.subscriptionPrice === 'number' && p.subscriptionPrice > 0 ? p.subscriptionPrice : subPrice), 0);
 
   return (
     <div className="space-y-6 animate-in fade-in zoom-in duration-500 pb-10">
@@ -818,6 +848,59 @@ export default function AdminDashboardPage() {
                             : 'No definida'}
                         </span>
                       </div>
+                      <div className="flex justify-between items-center text-sm py-1 border-t border-stone-200/50 dark:border-stone-700/50">
+                        <span className="text-stone-500 dark:text-stone-400">Cuota Mensual:</span>
+                        {editingProducerPriceId === prod.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              value={tempProducerPrice}
+                              onChange={(e) => setTempProducerPrice(e.target.value)}
+                              placeholder={subPrice.toString()}
+                              className="w-24 h-8 text-xs px-2 dark:bg-stone-800"
+                              autoFocus
+                            />
+                            <Button
+                              size="sm"
+                              className="h-8 px-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                              onClick={() => {
+                                const val = tempProducerPrice ? Number(tempProducerPrice) : null;
+                                handleUpdateProducerPrice(prod.id, val);
+                              }}
+                            >
+                              ✓
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 px-1.5 text-stone-400 text-xs"
+                              onClick={() => setEditingProducerPriceId(null)}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex items-center gap-1.5 cursor-pointer"
+                            onClick={() => {
+                              setEditingProducerPriceId(prod.id);
+                              setTempProducerPrice(typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? prod.subscriptionPrice.toString() : '');
+                            }}
+                          >
+                            <span className="font-bold text-stone-800 dark:text-stone-200">
+                              ${(typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? prod.subscriptionPrice : subPrice).toLocaleString('es-AR')}
+                            </span>
+                            {typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? (
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 border-emerald-400 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40">
+                                Personalizada
+                              </Badge>
+                            ) : (
+                              <span className="text-[10px] text-stone-400">(Base)</span>
+                            )}
+                            <span className="text-xs text-stone-400">✏️</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="pt-2">
                         <label className="text-xs text-stone-500 dark:text-stone-400 mb-1 block">Modificar Estado:</label>
                         <Select 
@@ -843,7 +926,7 @@ export default function AdminDashboardPage() {
                           size="sm"
                           className="w-full text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 border-stone-200 dark:border-stone-700 shadow-sm font-semibold h-9 mt-2"
                           onClick={() => {
-                            const amount = subPrice;
+                            const amount = (typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? prod.subscriptionPrice : subPrice);
                             generateSubscriptionReceiptPDF(
                               prod.name,
                               prod.notificationEmail || prod.email,
@@ -875,6 +958,7 @@ export default function AdminDashboardPage() {
                   <TableRow className="hover:bg-transparent border-stone-100 dark:border-stone-800">
                     <TableHead className="py-4 pl-6 font-semibold text-stone-600 dark:text-stone-400">Productor Titular</TableHead>
                     <TableHead className="py-4 font-semibold text-stone-600 dark:text-stone-400">Email de Contacto</TableHead>
+                    <TableHead className="py-4 text-center font-semibold text-stone-600 dark:text-stone-400">Cuota Mensual</TableHead>
                     <TableHead className="py-4 text-center font-semibold text-stone-600 dark:text-stone-400">Vencimiento</TableHead>
                     <TableHead className="py-4 pr-6 text-center font-semibold text-stone-600 dark:text-stone-400 w-48">Plan / Estado</TableHead>
                   </TableRow>
@@ -891,6 +975,60 @@ export default function AdminDashboardPage() {
                         </TableCell>
                         <TableCell className="py-4 text-stone-600 dark:text-stone-300 text-sm">
                           {prod.notificationEmail || prod.email}
+                        </TableCell>
+                        <TableCell className="py-4 text-center">
+                          {editingProducerPriceId === prod.id ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <Input
+                                type="number"
+                                value={tempProducerPrice}
+                                onChange={(e) => setTempProducerPrice(e.target.value)}
+                                placeholder={subPrice.toString()}
+                                className="w-24 h-8 text-xs px-2 dark:bg-stone-800"
+                                autoFocus
+                              />
+                              <Button
+                                size="sm"
+                                className="h-8 px-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                                onClick={() => {
+                                  const val = tempProducerPrice ? Number(tempProducerPrice) : null;
+                                  handleUpdateProducerPrice(prod.id, val);
+                                }}
+                                title="Guardar cuota"
+                              >
+                                ✓
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 px-1.5 text-stone-400 hover:bg-stone-100 text-xs"
+                                onClick={() => setEditingProducerPriceId(null)}
+                                title="Cancelar"
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              className="flex flex-col items-center justify-center cursor-pointer group py-1 px-2 rounded-lg hover:bg-stone-100/60 dark:hover:bg-stone-800/60 transition-colors"
+                              onClick={() => {
+                                setEditingProducerPriceId(prod.id);
+                                setTempProducerPrice(typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? prod.subscriptionPrice.toString() : '');
+                              }}
+                              title="Haz clic para modificar la cuota de este productor"
+                            >
+                              <span className="text-sm font-bold text-stone-900 dark:text-stone-100 group-hover:text-emerald-600 transition-colors">
+                                ${(typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? prod.subscriptionPrice : subPrice).toLocaleString('es-AR')}
+                              </span>
+                              {typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? (
+                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-emerald-400 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40">
+                                  Personalizada
+                                </Badge>
+                              ) : (
+                                <span className="text-[10px] text-stone-400">Base global</span>
+                              )}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="py-4 text-center">
                           <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
@@ -923,7 +1061,7 @@ export default function AdminDashboardPage() {
                             size="sm"
                             className="w-full mt-2 text-stone-600 dark:text-stone-300 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 border-stone-200 dark:border-stone-700 shadow-sm"
                             onClick={() => {
-                              const amount = subPrice;
+                              const amount = (typeof prod.subscriptionPrice === 'number' && prod.subscriptionPrice > 0 ? prod.subscriptionPrice : subPrice);
                               generateSubscriptionReceiptPDF(
                                 prod.name,
                                 prod.notificationEmail || prod.email,

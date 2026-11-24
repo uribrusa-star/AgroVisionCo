@@ -19,9 +19,16 @@ export async function POST(request: Request) {
     }
     let subscriptionPrice = 80000;
     try {
-      const financeDoc = await adminDb.collection('platformSettings').doc('finance').get();
-      if (financeDoc.exists) {
-        subscriptionPrice = financeDoc.data()?.subscriptionPrice || 80000;
+      if (adminDb && session.user.id) {
+        const userDoc = await adminDb.collection('users').doc(session.user.id).get();
+        if (userDoc.exists && typeof userDoc.data()?.subscriptionPrice === 'number' && userDoc.data()!.subscriptionPrice > 0) {
+          subscriptionPrice = userDoc.data()!.subscriptionPrice;
+        } else {
+          const financeDoc = await adminDb.collection('platformSettings').doc('finance').get();
+          if (financeDoc.exists && typeof financeDoc.data()?.subscriptionPrice === 'number') {
+            subscriptionPrice = financeDoc.data()!.subscriptionPrice;
+          }
+        }
       }
     } catch (e) {
       console.error("Error reading subscriptionPrice:", e);

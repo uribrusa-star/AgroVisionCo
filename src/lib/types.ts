@@ -41,6 +41,7 @@ export type User = {
   // Subscription fields
   subscriptionStatus?: 'trial' | 'active' | 'past_due' | 'canceled';
   subscriptionExpiryDate?: string;
+  subscriptionPrice?: number;
   mercadoPagoSubscriptionId?: string;
   establishmentId?: string;
 

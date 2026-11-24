@@ -331,7 +331,7 @@ export function AdminAnalytics({ establishments, subPrice = 35000 }: { establish
         const st = u.subscriptionStatus || 'trial';
         if (st === 'active') {
           statusCounts.active++;
-          mrrTotal += subPrice;
+          mrrTotal += (typeof u.subscriptionPrice === 'number' && u.subscriptionPrice > 0 ? u.subscriptionPrice : subPrice);
         } else if (st === 'trial') {
           statusCounts.trial++;
         } else {

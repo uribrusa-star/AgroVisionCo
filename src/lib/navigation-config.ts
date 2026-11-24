@@ -12,7 +12,6 @@ export type NavItem = {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Panel de Control', shortLabel: 'Inicio', icon: LayoutDashboard, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
-  { href: '/attendance', label: 'Control de Asistencia', shortLabel: 'Asistencia', icon: QrCode, roles: ['Productor'] },
   { href: '/data-entry', label: 'Entrada de Datos', shortLabel: 'Cosecha', icon: StrawberryIcon, roles: ['Productor', 'Encargado'] },
   { href: '/producer-log', label: 'Bitácora Productor', shortLabel: 'Bitácora', icon: NotebookPen, roles: ['Productor'] },
   { href: '/engineer-log', label: 'Bitácora Agrónomo', shortLabel: 'Bitácora', icon: Leaf, roles: ['Productor', 'Ingeniero Agronomo', 'Encargado'] },
@@ -24,6 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/collectors', label: 'Recolectores', shortLabel: 'Recolectores', icon: HardHat, roles: ['Productor', 'Encargado'] },
   { href: '/packers', label: 'Embaladores', shortLabel: 'Embaladores', icon: Package, roles: ['Productor', 'Encargado'] },
   { href: '/users', label: 'Usuarios', shortLabel: 'Usuarios', icon: BookUser, roles: ['Productor'] },
+  { href: '/attendance', label: 'Control de Asistencia', shortLabel: 'Asistencia', icon: QrCode, roles: ['Productor'] },
   { href: '/contact-requests', label: 'Solicitudes', shortLabel: 'Solicitudes', icon: Mail, roles: ['SuperAdmin'] },
 ];
 
