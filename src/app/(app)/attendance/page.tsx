@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { QrCode, ScanLine, Users, Clock, UserCheck, ShieldAlert, UserCog, CheckCircle2, LogOut, Calendar, ArrowRight, Trash2 } from 'lucide-react';
+import { QrCode, ScanLine, Users, Clock, UserCheck, ShieldAlert, UserCog, CheckCircle2, LogIn, LogOut, Calendar, ArrowRight, Trash2 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getRoleAvatar } from '@/lib/utils';
@@ -433,7 +433,7 @@ export default function AttendancePage() {
               </div>
 
               {/* Resumen de métricas de la jornada */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <Badge variant="outline" className="text-xs border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700">
                   Presentes: <strong>{presentNow.length}</strong>
                 </Badge>
@@ -447,7 +447,7 @@ export default function AttendancePage() {
             </div>
           </CardHeader>
 
-          <CardContent className="p-4 sm:p-6 pt-2">
+          <CardContent className="p-3 sm:p-6 pt-2">
             {todayLogs.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground text-xs">
                 <Calendar className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
@@ -455,73 +455,50 @@ export default function AttendancePage() {
                 <p className="mt-1">Los ingresos y egresos registrados en tranquera se listarán aquí en tiempo real.</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {todayLogs.map(log => {
                   const isPresent = log.status === 'in_progress';
-                  const checkInTime = log.checkIn ? format(new Date(log.checkIn), 'HH:mm') : '--:--';
-                  const checkOutTime = log.checkOut ? format(new Date(log.checkOut), 'HH:mm') : null;
+                  const checkInDate = log.checkIn ? new Date(log.checkIn) : null;
+                  const checkOutDate = log.checkOut ? new Date(log.checkOut) : null;
+                  const checkInTime = checkInDate ? format(checkInDate, 'HH:mm') : '--:--';
+                  const checkOutTime = checkOutDate ? format(checkOutDate, 'HH:mm') : null;
+                  const currentHours = checkInDate ? Math.round(Math.max(0, (Date.now() - checkInDate.getTime()) / (1000 * 60 * 60)) * 10) / 10 : 0;
 
                   return (
                     <div 
                       key={log.id}
-                      className="p-3 rounded-2xl border bg-card hover:bg-muted/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                      className="p-3 sm:p-3.5 rounded-2xl border bg-card hover:bg-muted/20 transition-all shadow-xs flex flex-col gap-2.5 text-xs"
                     >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border border-border shrink-0">
-                          <AvatarImage src={getRoleAvatar(((log as any).personnelRole || log.role || 'Personal') as any)} />
-                          <AvatarFallback className="font-bold text-xs">
-                            {log.personnelName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-sm text-foreground">{log.personnelName}</h4>
-                            {isPresent ? (
-                              <Badge className="bg-emerald-600 text-white text-[10px] px-1.5 py-0">
-                                🟢 Presente en Finca
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="border-blue-400 text-blue-700 bg-blue-50 dark:bg-blue-950/40 text-[10px] px-1.5 py-0">
-                                ✓ Salida Registrada
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
-                            <span>{(log as any).personnelRole || log.role || 'Personal'}</span>
-                            {log.dni && <span>• DNI: {log.dni}</span>}
-                            <span>• Método: {log.method === 'scan_gate' ? 'Escáner QR' : 'Manual'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 self-end sm:self-auto">
-                        <div className="text-right">
-                          <div className="flex items-center gap-1 font-mono font-medium text-foreground">
-                            <span>{checkInTime} hs</span>
-                            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                            <span>{checkOutTime ? `${checkOutTime} hs` : 'Activo'}</span>
-                          </div>
-                          <div className="text-[11px] text-muted-foreground mt-0.5">
-                            {isPresent ? (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">En jornada</span>
-                            ) : (
-                              <span>Jornada: <strong className="text-foreground">{log.hoursWorked || 0} hs</strong></span>
-                            )}
+                      {/* 1. Cabecera de la tarjeta: Colaborador + Estado + Botón Eliminar */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Avatar className="h-10 w-10 border border-border shrink-0">
+                            <AvatarImage src={getRoleAvatar(((log as any).personnelRole || log.role || 'Personal') as any)} />
+                            <AvatarFallback className="font-bold text-xs bg-primary/10 text-primary">
+                              {log.personnelName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-foreground truncate">
+                              {log.personnelName}
+                            </h4>
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
+                              <span>{(log as any).personnelRole || log.role || 'Personal'}</span>
+                              {log.dni && <span>• DNI: {log.dni}</span>}
+                            </div>
                           </div>
                         </div>
 
+                        {/* Estado y Acción de Borrado */}
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {isPresent && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setConfirmExitLog(log)}
-                              className="h-8 text-xs text-blue-600 hover:text-blue-700 border-blue-300 dark:border-blue-800"
-                            >
-                              <LogOut className="h-3.5 w-3.5 mr-1" />
-                              Salida
-                            </Button>
+                          {isPresent ? (
+                            <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-medium">
+                              🟢 Presente
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-blue-400 text-blue-700 bg-blue-50 dark:bg-blue-950/40 text-[10px] px-2 py-0.5 font-medium">
+                              ✓ Salida
+                            </Badge>
                           )}
 
                           <Button
@@ -529,12 +506,62 @@ export default function AttendancePage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setDeleteTargetLog(log)}
-                            className="h-8 w-8 text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                            className="h-7 w-7 text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
                             title="Eliminar registro de asistencia"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
+                      </div>
+
+                      {/* 2. Bloque central de horarios y jornada */}
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 font-mono text-xs">
+                          <div className="flex items-center gap-1 text-foreground font-semibold">
+                            <LogIn className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>{checkInTime} hs</span>
+                          </div>
+                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                          <div className="flex items-center gap-1 font-semibold">
+                            <LogOut className="h-3.5 w-3.5 text-blue-600" />
+                            <span className={isPresent ? "text-emerald-600 font-sans text-xs" : "text-foreground"}>
+                              {checkOutTime ? `${checkOutTime} hs` : 'En finca'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-right text-[11px]">
+                          {isPresent ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                              {currentHours} hs en curso
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">
+                              Jornada: <strong className="text-foreground font-mono">{log.hoursWorked || 0} hs</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 3. Pie de tarjeta: Método de registro y botón marcar salida si está activo */}
+                      <div className="flex items-center justify-between pt-0.5 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <ScanLine className="h-3 w-3 text-muted-foreground/70" />
+                          {log.method === 'scan_gate' ? 'Escáner QR' : 'Carga Manual'}
+                        </span>
+
+                        {isPresent && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setConfirmExitLog(log)}
+                            className="h-7 px-2.5 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 border-blue-300 dark:border-blue-800 rounded-lg gap-1 font-medium"
+                          >
+                            <LogOut className="h-3 w-3" />
+                            <span>Marcar Salida</span>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   );
