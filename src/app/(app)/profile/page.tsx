@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode, Phone } from 'lucide-react';
+import { KeyRound, User as UserIcon, LogOut, BellRing, Save, Moon, Sun, Monitor, CreditCard, Smartphone, Download, FileSpreadsheet, FileText, Database, Loader2, QrCode, Phone, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
@@ -117,7 +117,13 @@ export default function ProfilePage() {
     return null;
   }
 
-  const availableNavItems = NAV_ITEMS.filter(item => item.roles.includes(currentUser.role));
+  const canAccessAttendance = canUserManageAttendance(currentUser, establishmentData);
+  const availableNavItems = NAV_ITEMS.filter(item => {
+    if (item.href === '/attendance') {
+      return canAccessAttendance;
+    }
+    return item.roles.includes(currentUser.role);
+  });
 
   const handleToggleBottomNav = (enabled: boolean) => {
     setBottomNavEnabled(enabled);
@@ -131,6 +137,30 @@ export default function ProfilePage() {
         });
       } catch (e) {
         toast({ title: "Error", description: "No se pudo guardar la preferencia.", variant: "destructive" });
+      }
+    });
+  };
+
+  const handleMoveNavItem = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= selectedNavItems.length) return;
+
+    const reordered = [...selectedNavItems];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    setSelectedNavItems(reordered);
+    if (!currentUser) return;
+
+    startTransition(async () => {
+      try {
+        await updateUserProfile(currentUser.id, { bottomNavItems: reordered });
+        toast({
+          title: "Orden Actualizado",
+          description: "Se guardó el nuevo orden de la barra inferior.",
+        });
+      } catch (e) {
+        toast({ title: "Error", description: "No se pudo actualizar el orden.", variant: "destructive" });
       }
     });
   };
@@ -568,35 +598,145 @@ export default function ProfilePage() {
                     </div>
 
                     {bottomNavEnabled && (
-                        <div className="space-y-3 pt-2 animate-in fade-in duration-200">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs font-semibold uppercase text-muted-foreground">
-                                    Secciones Visibles ({selectedNavItems.length}/5)
-                                </label>
-                                <span className="text-xs text-muted-foreground">Seleccione entre 4 y 5 opciones</span>
+                        <div className="space-y-5 pt-3 animate-in fade-in duration-200">
+                            {/* Live Mobile Bar Preview */}
+                            <div className="p-3.5 bg-muted/30 rounded-xl border border-primary/20 flex flex-col gap-2.5">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                                        <Smartphone className="h-3.5 w-3.5 text-primary" />
+                                        <span>Vista previa en celular (orden de izquierda a derecha)</span>
+                                    </div>
+                                    <span className="text-[11px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
+                                        {selectedNavItems.length} de 5
+                                    </span>
+                                </div>
+                                <div className="grid grid-flow-col auto-cols-fr gap-1.5 bg-background/90 p-2 rounded-lg border shadow-xs">
+                                    {selectedNavItems.map((href, idx) => {
+                                        const item = NAV_ITEMS.find(n => n.href === href);
+                                        if (!item) return null;
+                                        const Icon = item.icon;
+                                        return (
+                                            <div key={href} className="flex flex-col items-center justify-center py-1.5 px-1 rounded-md bg-muted/30 border border-muted text-center relative group">
+                                                <span className="text-[9px] font-bold text-muted-foreground mb-0.5">#{idx + 1}</span>
+                                                <div className="p-1 rounded-full bg-primary/10 text-primary mb-0.5">
+                                                    <Icon className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[10px] font-medium leading-tight truncate max-w-[65px]">
+                                                    {item.shortLabel || item.label}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-[11px] text-muted-foreground text-center">
+                                    Así es exactamente como se organizarán los botones en la barra fija inferior de tu celular.
+                                </p>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {availableNavItems.map((item) => {
-                                    const isChecked = selectedNavItems.includes(item.href);
-                                    const Icon = item.icon;
-                                    return (
-                                        <div 
-                                            key={item.href}
-                                            onClick={() => handleToggleNavItem(item.href)}
-                                            className={cn(
-                                                "flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all select-none",
-                                                isChecked ? "border-primary/50 bg-primary/5 shadow-xs" : "hover:bg-muted/30 opacity-70"
-                                            )}
-                                        >
-                                            <Checkbox 
-                                                checked={isChecked}
-                                                onCheckedChange={() => handleToggleNavItem(item.href)}
-                                            />
-                                            <Icon className="h-4 w-4 text-primary shrink-0" />
-                                            <span className="text-sm font-medium leading-none">{item.label}</span>
-                                        </div>
-                                    );
-                                })}
+
+                            {/* Reordering Controls */}
+                            <div className="space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                        Posición y Orden de los Accesos Activos
+                                    </label>
+                                    <span className="text-[11px] text-muted-foreground">Usa las flechas para reordenar</span>
+                                </div>
+                                <div className="space-y-2">
+                                    {selectedNavItems.map((href, index) => {
+                                        const item = NAV_ITEMS.find(n => n.href === href);
+                                        if (!item) return null;
+                                        const Icon = item.icon;
+                                        return (
+                                            <div 
+                                                key={href} 
+                                                className="flex items-center justify-between p-2.5 bg-background border rounded-lg shadow-2xs hover:border-primary/40 transition-all"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                                                        {index + 1}
+                                                    </span>
+                                                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                                                    <span className="text-sm font-medium">{item.label}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 hover:bg-muted"
+                                                        disabled={index === 0}
+                                                        onClick={() => handleMoveNavItem(index, 'up')}
+                                                        title="Mover a la izquierda / antes"
+                                                    >
+                                                        <ChevronUp className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 hover:bg-muted"
+                                                        disabled={index === selectedNavItems.length - 1}
+                                                        onClick={() => handleMoveNavItem(index, 'down')}
+                                                        title="Mover a la derecha / después"
+                                                    >
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                        onClick={() => handleToggleNavItem(href)}
+                                                        title="Quitar de la barra inferior"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Available Sections Toggle */}
+                            <div className="space-y-2.5 pt-1">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                        Todas las Secciones Disponibles
+                                    </label>
+                                    <span className="text-xs text-muted-foreground">Mínimo 4, máximo 5</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {availableNavItems.map((item) => {
+                                        const orderIndex = selectedNavItems.indexOf(item.href);
+                                        const isChecked = orderIndex !== -1;
+                                        const Icon = item.icon;
+                                        return (
+                                            <div 
+                                                key={item.href}
+                                                onClick={() => handleToggleNavItem(item.href)}
+                                                className={cn(
+                                                    "flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all select-none",
+                                                    isChecked ? "border-primary/50 bg-primary/5 shadow-2xs" : "hover:bg-muted/30 opacity-70"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Checkbox 
+                                                        checked={isChecked}
+                                                        onCheckedChange={() => handleToggleNavItem(item.href)}
+                                                    />
+                                                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                                                    <span className="text-sm font-medium leading-none">{item.label}</span>
+                                                </div>
+                                                {isChecked && (
+                                                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                                        #{orderIndex + 1}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     )}

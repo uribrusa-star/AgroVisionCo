@@ -23,13 +23,17 @@ export function MobileBottomNav({ user }: { user: User }) {
     ? user.bottomNavItems
     : getDefaultBottomNavItems(user.role);
 
-  // Filter valid NAV_ITEMS allowed for the user role and included in user preferences
-  const itemsToRender = NAV_ITEMS.filter(item => {
-    if (item.href === '/attendance') {
-      return canAccessAttendance && enabledRoutes.includes(item.href);
-    }
-    return item.roles.includes(user.role) && enabledRoutes.includes(item.href);
-  }).slice(0, 5); // Ensure maximum 5 items
+  // Mapear respetando el orden exacto configurado por el usuario
+  const itemsToRender = enabledRoutes
+    .map(route => NAV_ITEMS.find(item => item.href === route))
+    .filter((item): item is typeof NAV_ITEMS[number] => {
+      if (!item) return false;
+      if (item.href === '/attendance') {
+        return canAccessAttendance;
+      }
+      return item.roles.includes(user.role);
+    })
+    .slice(0, 5); // Ensure maximum 5 items
 
   if (itemsToRender.length === 0) {
     return null;
