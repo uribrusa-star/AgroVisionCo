@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { UserCredentialView } from '@/components/user-credential-view';
@@ -8,6 +8,7 @@ import { AttendanceScannerDialog } from '@/components/attendance-scanner-dialog'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -20,18 +21,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { QrCode, ScanLine, Users, Clock, UserCheck, ShieldAlert, UserCog, CheckCircle2, LogIn, LogOut, Calendar, ArrowRight, Trash2 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { QrCode, ScanLine, Users, Clock, UserCheck, ShieldAlert, UserCog, CheckCircle2, LogIn, LogOut, Calendar, ArrowRight, Trash2, FileSpreadsheet, Download, FileText, Search, Filter } from 'lucide-react';
+import { format, formatDistanceToNow, startOfWeek, endOfWeek, subWeeks, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getRoleAvatar } from '@/lib/utils';
 import { canUserManageAttendance, AttendanceLog } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { exportAttendanceToExcel, exportAttendanceToPDF } from '@/lib/export-attendance';
 
 export default function AttendancePage() {
   const { currentUser, attendanceLogs, establishmentData, updateEstablishmentData, users, recordAttendanceCheck, deleteAttendanceLog } = useContext(AppDataContext);
   const { toast } = useToast();
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active-personnel' | 'today-logs'>('active-personnel');
+  const [activeTab, setActiveTab] = useState<'active-personnel' | 'today-logs' | 'history'>('active-personnel');
+  const [historyPeriod, setHistoryPeriod] = useState<'this-week' | 'last-week' | 'this-month' | 'last-month' | 'all' | 'custom'>('this-week');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyRoleFilter, setHistoryRoleFilter] = useState('all');
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [confirmExitLog, setConfirmExitLog] = useState<AttendanceLog | null>(null);
   const [isSubmittingExit, setIsSubmittingExit] = useState(false);
@@ -57,6 +66,146 @@ export default function AttendancePage() {
   const totalHoursWorkedToday = todayLogs
     .filter(l => l.status === 'completed' && l.hoursWorked)
     .reduce((sum, l) => sum + (l.hoursWorked || 0), 0);
+
+  // Historial filtrado de asistencias
+  const filteredHistoryLogs = useMemo(() => {
+    const now = new Date();
+    let startLimit: Date | null = null;
+    let endLimit: Date | null = null;
+
+    if (historyPeriod === 'this-week') {
+      startLimit = startOfWeek(now, { weekStartsOn: 1 });
+      endLimit = endOfWeek(now, { weekStartsOn: 1 });
+    } else if (historyPeriod === 'last-week') {
+      const prevWeek = subWeeks(now, 1);
+      startLimit = startOfWeek(prevWeek, { weekStartsOn: 1 });
+      endLimit = endOfWeek(prevWeek, { weekStartsOn: 1 });
+    } else if (historyPeriod === 'this-month') {
+      startLimit = startOfMonth(now);
+      endLimit = endOfMonth(now);
+    } else if (historyPeriod === 'last-month') {
+      const prevMonth = subMonths(now, 1);
+      startLimit = startOfMonth(prevMonth);
+      endLimit = endOfMonth(prevMonth);
+    } else if (historyPeriod === 'custom') {
+      if (customStartDate) startLimit = new Date(`${customStartDate}T00:00:00`);
+      if (customEndDate) endLimit = new Date(`${customEndDate}T23:59:59`);
+    }
+
+    return (attendanceLogs || [])
+      .filter(log => {
+        // Filtro por fecha
+        if (startLimit || endLimit) {
+          const logDate = log.checkIn ? new Date(log.checkIn) : log.date ? new Date(`${log.date}T12:00:00`) : null;
+          if (logDate) {
+            if (startLimit && logDate < startLimit) return false;
+            if (endLimit && logDate > endLimit) return false;
+          }
+        }
+
+        // Filtro por rol
+        if (historyRoleFilter !== 'all') {
+          const role = (log as any).personnelRole || log.role;
+          if (role !== historyRoleFilter) return false;
+        }
+
+        // Filtro por texto de búsqueda
+        if (historySearch.trim()) {
+          const query = historySearch.toLowerCase();
+          const nameMatch = log.personnelName?.toLowerCase().includes(query);
+          const dniMatch = log.dni?.toLowerCase().includes(query);
+          if (!nameMatch && !dniMatch) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.checkIn || a.date).getTime();
+        const timeB = new Date(b.checkIn || b.date).getTime();
+        return timeB - timeA;
+      });
+  }, [attendanceLogs, historyPeriod, customStartDate, customEndDate, historyRoleFilter, historySearch]);
+
+  const historyMetrics = useMemo(() => {
+    const uniqueCollaborators = new Set(filteredHistoryLogs.map(l => l.personnelName.trim().toLowerCase())).size;
+    const totalHours = filteredHistoryLogs.reduce((acc, l) => acc + ((l as any).hoursWorked ?? l.totalHoursWorked ?? 0), 0);
+    const completed = filteredHistoryLogs.filter(l => l.status === 'completed').length;
+    const inProgress = filteredHistoryLogs.filter(l => l.status === 'in_progress').length;
+    return {
+      uniqueCollaborators,
+      totalHours: Math.round(totalHours * 10) / 10,
+      totalLogs: filteredHistoryLogs.length,
+      completed,
+      inProgress
+    };
+  }, [filteredHistoryLogs]);
+
+  const getPeriodLabel = () => {
+    switch (historyPeriod) {
+      case 'this-week': return 'Esta_Semana';
+      case 'last-week': return 'Semana_Anterior';
+      case 'this-month': return 'Este_Mes';
+      case 'last-month': return 'Mes_Anterior';
+      case 'custom': return `Personalizado_${customStartDate || 'inicio'}_a_${customEndDate || 'fin'}`;
+      default: return 'Historico_Completo';
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (filteredHistoryLogs.length === 0) {
+      toast({
+        title: "Sin registros para exportar",
+        description: "No hay registros de asistencia en el período y filtros seleccionados.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsExportingExcel(true);
+    try {
+      await new Promise(r => setTimeout(r, 60));
+      exportAttendanceToExcel(filteredHistoryLogs, getPeriodLabel(), establishmentData?.producer || 'AgroVista');
+      toast({
+        title: "Planilla Excel Generada",
+        description: `Se descargó la planilla con ${filteredHistoryLogs.length} asistencias.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Error al exportar",
+        description: "No se pudo generar el archivo Excel.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (filteredHistoryLogs.length === 0) {
+      toast({
+        title: "Sin registros para exportar",
+        description: "No hay registros de asistencia en el período y filtros seleccionados.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsExportingPDF(true);
+    try {
+      await new Promise(r => setTimeout(r, 60));
+      exportAttendanceToPDF(filteredHistoryLogs, getPeriodLabel(), establishmentData?.producer || 'AgroVista');
+      toast({
+        title: "Informe PDF Generado",
+        description: `Se descargó el reporte con ${filteredHistoryLogs.length} asistencias.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Error al exportar",
+        description: "No se pudo generar el informe PDF.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
 
   // Si el usuario no tiene permisos para gestionar la asistencia
   if (!canManageGate) {
@@ -257,14 +406,14 @@ export default function AttendancePage() {
         </Card>
       )}
 
-      {/* Selector directo de pestañas: Presentes y Hoy */}
-      <div className="flex items-center gap-2 mb-5 border-b pb-3">
+      {/* Selector directo de pestañas: Presentes, Hoy e Historial */}
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-5 border-b pb-3 overflow-x-auto no-scrollbar">
         {/* Botón directo de Presentes */}
         <Button
           variant={activeTab === 'active-personnel' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setActiveTab('active-personnel')}
-          className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
+          className={`h-9 text-xs gap-1.5 rounded-xl font-medium shrink-0 transition-all ${
             activeTab === 'active-personnel' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
           }`}
         >
@@ -287,12 +436,12 @@ export default function AttendancePage() {
           variant={activeTab === 'today-logs' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setActiveTab('today-logs')}
-          className={`h-9 text-xs gap-1.5 rounded-xl font-medium transition-all ${
+          className={`h-9 text-xs gap-1.5 rounded-xl font-medium shrink-0 transition-all ${
             activeTab === 'today-logs' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
           }`}
         >
-          <Calendar className="h-4 w-4" />
-          <span>Hoy (Jornada Total)</span>
+          <Clock className="h-4 w-4" />
+          <span>Hoy (Jornada)</span>
           <Badge 
             variant="secondary" 
             className={`ml-1 text-[10px] px-1.5 py-0 ${
@@ -302,6 +451,29 @@ export default function AttendancePage() {
             }`}
           >
             {todayLogs.length}
+          </Badge>
+        </Button>
+
+        {/* Botón directo de Historial y Planillas */}
+        <Button
+          variant={activeTab === 'history' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setActiveTab('history')}
+          className={`h-9 text-xs gap-1.5 rounded-xl font-medium shrink-0 transition-all ${
+            activeTab === 'history' ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : ''
+          }`}
+        >
+          <FileSpreadsheet className="h-4 w-4" />
+          <span>Historial y Planillas</span>
+          <Badge 
+            variant="secondary" 
+            className={`ml-1 text-[10px] px-1.5 py-0 ${
+              activeTab === 'history' 
+                ? 'bg-emerald-700 text-white' 
+                : 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-300'
+            }`}
+          >
+            {(attendanceLogs || []).length}
           </Badge>
         </Button>
       </div>
@@ -550,6 +722,259 @@ export default function AttendancePage() {
                             <LogOut className="h-3 w-3" />
                             <span>Marcar Salida</span>
                           </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* CONTENIDO DE PESTAÑA 3: HISTORIAL Y PLANILLAS */}
+      {activeTab === 'history' && (
+        <Card className="rounded-2xl shadow-xs">
+          <CardHeader className="p-4 sm:p-6 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                  Historial y Planillas de Asistencia
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Consulta registros anteriores, filtra por semanas o meses y descarga planillas consolidadas.
+                </CardDescription>
+              </div>
+
+              {/* Botones de Exportación */}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleExportExcel}
+                  disabled={isExportingExcel || filteredHistoryLogs.length === 0}
+                  className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>{isExportingExcel ? 'Generando...' : 'Exportar Excel'}</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF || filteredHistoryLogs.length === 0}
+                  className="h-8 text-xs font-semibold gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>{isExportingPDF ? 'Generando...' : 'Exportar PDF'}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Barra de Filtros de Período y Búsqueda */}
+            <div className="mt-4 pt-3 border-t space-y-3">
+              {/* Pills de Período Rápido */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs">
+                {[
+                  { id: 'this-week', label: 'Esta Semana' },
+                  { id: 'last-week', label: 'Semana Anterior' },
+                  { id: 'this-month', label: 'Este Mes' },
+                  { id: 'last-month', label: 'Mes Anterior' },
+                  { id: 'all', label: 'Todo el Historial' },
+                  { id: 'custom', label: 'Personalizado' },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setHistoryPeriod(item.id as any)}
+                    className={`px-3 py-1 rounded-full font-medium transition-all shrink-0 text-xs ${
+                      historyPeriod === item.id
+                        ? 'bg-emerald-600 text-white shadow-xs font-semibold'
+                        : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Selector de Rango Personalizado si aplica */}
+              {historyPeriod === 'custom' && (
+                <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-muted/30 border text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Desde:</span>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="h-7 px-2 rounded-lg border bg-background text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground">Hasta:</span>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="h-7 px-2 rounded-lg border bg-background text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Filtros secundarios: Rol y Buscador */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por colaborador o DNI..."
+                    value={historySearch}
+                    onChange={(e) => setHistorySearch(e.target.value)}
+                    className="h-8 pl-8 text-xs bg-muted/20"
+                  />
+                </div>
+
+                <Select value={historyRoleFilter} onValueChange={setHistoryRoleFilter}>
+                  <SelectTrigger className="h-8 text-xs bg-muted/20">
+                    <SelectValue placeholder="Filtrar por rol..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los roles</SelectItem>
+                    <SelectItem value="Recolector">Recolectores</SelectItem>
+                    <SelectItem value="Encargado">Encargados</SelectItem>
+                    <SelectItem value="Ingeniero Agronomo">Ingenieros Agrónomos</SelectItem>
+                    <SelectItem value="Productor">Productores</SelectItem>
+                    <SelectItem value="Personal">Personal General</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tarjetas de Métricas del Período Filtrado */}
+              <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-500/20">
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">Colaboradores</p>
+                  <p className="text-sm sm:text-base font-bold text-emerald-800 dark:text-emerald-300">
+                    {historyMetrics.uniqueCollaborators}
+                  </p>
+                </div>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-500/20">
+                  <p className="text-[10px] text-blue-700 dark:text-blue-400 font-medium">Jornadas Totales</p>
+                  <p className="text-sm sm:text-base font-bold text-blue-800 dark:text-blue-300">
+                    {historyMetrics.totalLogs}
+                  </p>
+                </div>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-500/20">
+                  <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">Horas Acumuladas</p>
+                  <p className="text-sm sm:text-base font-bold text-amber-800 dark:text-amber-300">
+                    {historyMetrics.totalHours} hs
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-3 sm:p-6 pt-2">
+            {filteredHistoryLogs.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground text-xs">
+                <FileSpreadsheet className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
+                <p className="font-semibold text-sm">No se encontraron asistencias en este período.</p>
+                <p className="mt-1">Intenta seleccionar otro rango de fechas o limpiar los filtros.</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {filteredHistoryLogs.map((log) => {
+                  const isPresent = log.status === 'in_progress';
+                  const checkInDate = log.checkIn ? new Date(log.checkIn) : null;
+                  const checkOutDate = log.checkOut ? new Date(log.checkOut) : null;
+                  const checkInTime = checkInDate ? format(checkInDate, 'HH:mm') : '--:--';
+                  const checkOutTime = checkOutDate ? format(checkOutDate, 'HH:mm') : null;
+                  const hours = (log as any).hoursWorked ?? log.totalHoursWorked ?? 0;
+
+                  return (
+                    <div
+                      key={log.id}
+                      className="p-3 sm:p-3.5 rounded-2xl border bg-card hover:bg-muted/20 transition-all shadow-xs flex flex-col gap-2.5 text-xs"
+                    >
+                      {/* Cabecera */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Avatar className="h-10 w-10 border border-border shrink-0">
+                            <AvatarImage src={getRoleAvatar(((log as any).personnelRole || log.role || 'Personal') as any)} />
+                            <AvatarFallback className="font-bold text-xs bg-primary/10 text-primary">
+                              {log.personnelName.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-foreground truncate">{log.personnelName}</h4>
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
+                              <span>{(log as any).personnelRole || log.role || 'Personal'}</span>
+                              {log.dni && <span>• DNI: {log.dni}</span>}
+                              <span>• {log.date}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Estado y eliminar */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isPresent ? (
+                            <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 font-medium">
+                              🟢 Presente
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="border-blue-400 text-blue-700 bg-blue-50 dark:bg-blue-950/40 text-[10px] px-2 py-0.5 font-medium">
+                              ✓ {hours} hs
+                            </Badge>
+                          )}
+
+                          {isProductor && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteTargetLog(log)}
+                              className="h-7 w-7 text-stone-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+                              title="Eliminar registro de asistencia"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Horarios */}
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-muted/40 border border-border/40 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 font-mono text-xs">
+                          <div className="flex items-center gap-1 text-foreground font-semibold">
+                            <LogIn className="h-3.5 w-3.5 text-emerald-600" />
+                            <span>{checkInTime} hs</span>
+                          </div>
+                          <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                          <div className="flex items-center gap-1 font-semibold">
+                            <LogOut className="h-3.5 w-3.5 text-blue-600" />
+                            <span className={isPresent ? 'text-emerald-600 font-sans text-xs' : 'text-foreground'}>
+                              {checkOutTime ? `${checkOutTime} hs` : 'En finca'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-right text-[11px] text-muted-foreground">
+                          {isPresent ? (
+                            <span className="text-emerald-600 font-semibold">En curso</span>
+                          ) : (
+                            <span>Jornada: <strong className="text-foreground font-mono">{hours} hs</strong></span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Pie */}
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <ScanLine className="h-3 w-3 text-muted-foreground/70" />
+                          {log.method === 'scan_gate' ? 'Escáner QR Tranquera' : 'Manual'}
+                        </span>
+                        {log.registeredBy?.name && (
+                          <span className="text-[10px]">Por: {log.registeredBy.name}</span>
                         )}
                       </div>
                     </div>

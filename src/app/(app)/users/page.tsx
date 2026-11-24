@@ -423,36 +423,41 @@ export default function UsersPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Usuarios</h1>
             <p className="text-muted-foreground text-sm">Vea y gestione los usuarios del sistema.</p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
+              {/* Fila 1 en móvil: Escanear Credencial y Agregar Empleado juntos */}
+              <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsQRScannerOpen(true)}
+                  className="w-full sm:w-auto h-10 gap-1.5 sm:gap-2 px-2.5 sm:px-4 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold justify-center text-xs sm:text-sm shadow-xs"
+                >
+                  <QrCode className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Escanear Credencial</span>
+                </Button>
+                {canManageUsers && (
+                  <Button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="w-full sm:w-auto h-10 gap-1.5 sm:gap-2 px-2.5 sm:px-4 font-semibold justify-center text-xs sm:text-sm shadow-xs"
+                  >
+                      <Plus className="h-4 w-4 shrink-0" />
+                      <span className="truncate">Agregar Empleado</span>
+                  </Button>
+                )}
+              </div>
+
+              {/* Fila 2 en móvil (abajo): Control de Asistencia a ancho completo */}
               <Button 
                 onClick={() => setIsAttendanceScannerOpen(true)}
                 className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <LogIn className="h-4 w-4 shrink-0" />
-                Control de Asistencia
+                <span>Control de Asistencia</span>
                 {attendanceLogs.filter(l => l.status === 'in_progress').length > 0 && (
                   <span className="ml-1 px-1.5 py-0.5 bg-emerald-900 text-white text-[10px] font-bold rounded-full">
                     {attendanceLogs.filter(l => l.status === 'in_progress').length}
                   </span>
                 )}
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsQRScannerOpen(true)}
-                className="w-full sm:w-auto h-10 gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold justify-center text-sm shadow-xs"
-              >
-                <QrCode className="h-4 w-4 shrink-0" />
-                Escanear Credencial
-              </Button>
-              {canManageUsers && (
-                <Button 
-                  onClick={() => setIsCreateDialogOpen(true)}
-                  className="w-full sm:w-auto h-10 gap-2 font-semibold justify-center text-sm shadow-xs"
-                >
-                    <Plus className="h-4 w-4 shrink-0" />
-                    Agregar Empleado
-                </Button>
-              )}
           </div>
       </div>
 
@@ -547,7 +552,7 @@ export default function UsersPage() {
       
       {/* Dialog for user details */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-          <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl">
+          <DialogContent className="w-[calc(100vw-1.25rem)] sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-3.5 sm:p-6 rounded-2xl">
               <DialogHeader>
                   <DialogTitle className="text-center font-bold text-lg">Credencial y Ficha de Usuario</DialogTitle>
                   <DialogDescription className="text-center text-xs">
@@ -674,25 +679,25 @@ export default function UsersPage() {
                 }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 10);
 
                 return (
-                  <div className="flex flex-col items-center gap-4 py-2">
-                      <div className="flex flex-col sm:flex-row items-center gap-5 w-full bg-muted/20 p-4 rounded-xl border">
-                          <Avatar className="h-20 w-20 border-2 border-primary/20 shadow-md shrink-0">
+                  <div className="flex flex-col items-center gap-3.5 py-1 w-full max-w-full overflow-hidden">
+                      <div className="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-5 w-full max-w-full bg-muted/20 p-3 sm:p-4 rounded-xl border">
+                          <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 border-primary/20 shadow-md shrink-0">
                               <AvatarImage src={getRoleAvatar(detailsUser.role)} />
-                              <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">{detailsUser.name.charAt(0).toUpperCase()}</AvatarFallback>
+                              <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl sm:text-2xl">{detailsUser.name.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
-                          <div className="text-center sm:text-left flex-1 min-w-0">
-                              <div className="flex items-center justify-center sm:justify-start gap-2">
-                                <h3 className="font-bold text-xl text-foreground truncate">{detailsUser.name}</h3>
-                                <Badge variant={detailsUser.role === 'Productor' ? 'default' : 'secondary'} className="text-[10px] px-2 py-0.5">
+                          <div className="text-center sm:text-left flex-1 min-w-0 max-w-full">
+                              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
+                                <h3 className="font-bold text-lg sm:text-xl text-foreground truncate">{detailsUser.name}</h3>
+                                <Badge variant={detailsUser.role === 'Productor' ? 'default' : 'secondary'} className="text-[10px] px-2 py-0.5 shrink-0">
                                     {detailsUser.role}
                                 </Badge>
                               </div>
                               <p className="text-muted-foreground text-xs truncate mt-0.5">{detailsUser.email || 'Sin correo registrado'}</p>
                               {detailsUser.dni && (
-                                <p className="text-muted-foreground text-xs">DNI: <span className="font-mono font-medium text-foreground">{detailsUser.dni}</span></p>
+                                <p className="text-muted-foreground text-xs truncate">DNI: <span className="font-mono font-medium text-foreground">{detailsUser.dni}</span></p>
                               )}
                               {detailsUser.phone && (
-                                <p className="text-muted-foreground text-xs">Teléfono: <span className="font-medium text-foreground">{detailsUser.phone}</span></p>
+                                <p className="text-muted-foreground text-xs truncate">Teléfono: <span className="font-medium text-foreground">{detailsUser.phone}</span></p>
                               )}
                           </div>
                           <div className="flex flex-col items-center bg-white p-2 rounded-xl border border-border shadow-xs shrink-0" ref={qrCodeSvgRef}>
@@ -710,10 +715,10 @@ export default function UsersPage() {
                       </div>
 
                       {/* Carga y Gestión de WhatsApp (reemplaza descarga PDF) */}
-                      <div className="w-full p-3 rounded-2xl bg-muted/40 border border-border/50 space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-foreground flex items-center gap-1.5">
-                            <Phone className="h-3.5 w-3.5 text-emerald-600" />
+                      <div className="w-full max-w-full p-3 rounded-2xl bg-muted/40 border border-border/50 space-y-2">
+                        <div className="flex items-center justify-between text-xs gap-2">
+                          <span className="font-semibold text-foreground flex items-center gap-1.5 truncate">
+                            <Phone className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                             WhatsApp / Teléfono:
                           </span>
                           {!isEditingDetailsPhone ? (
@@ -722,7 +727,7 @@ export default function UsersPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setIsEditingDetailsPhone(true)}
-                              className="h-6 px-2 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                              className="h-6 px-2 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 shrink-0"
                             >
                               {detailsPhone ? 'Editar número' : '+ Cargar número'}
                             </Button>
@@ -730,20 +735,20 @@ export default function UsersPage() {
                         </div>
 
                         {isEditingDetailsPhone ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 max-w-full">
                             <input
                               type="tel"
                               placeholder="Ej: +54 9 11 1234 5678"
                               value={detailsPhone}
                               onChange={(e) => setDetailsPhone(e.target.value)}
-                              className="flex-1 h-8 text-xs px-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
+                              className="min-w-0 flex-1 h-8 text-xs px-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono"
                             />
                             <Button
                               type="button"
                               size="sm"
                               onClick={handleSaveDetailsPhone}
                               disabled={isSavingDetailsPhone}
-                              className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                              className="h-8 px-2.5 sm:px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium shrink-0"
                             >
                               {isSavingDetailsPhone ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Guardar'}
                             </Button>
@@ -755,13 +760,13 @@ export default function UsersPage() {
                                 setDetailsPhone(detailsUser?.phone || '');
                                 setIsEditingDetailsPhone(false);
                               }}
-                              className="h-8 px-2 text-xs"
+                              className="h-8 px-2 text-xs shrink-0"
                             >
                               ✕
                             </Button>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 max-w-full">
                             <span className="text-xs font-mono text-muted-foreground truncate">
                               {detailsPhone ? detailsPhone : <span className="italic text-muted-foreground/60">Sin WhatsApp cargado</span>}
                             </span>
@@ -769,10 +774,10 @@ export default function UsersPage() {
                               type="button"
                               size="sm"
                               onClick={handleOpenDetailsWhatsApp}
-                              className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs shrink-0"
+                              className="w-full sm:w-auto h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs justify-center"
                             >
-                              <Share2 className="h-3.5 w-3.5" />
-                              Contactar por WhatsApp
+                              <Share2 className="h-3.5 w-3.5 shrink-0" />
+                              <span>Contactar por WhatsApp</span>
                             </Button>
                           </div>
                         )}
@@ -833,9 +838,9 @@ export default function UsersPage() {
                       })()}
 
                       {detailsUser.lastLoginAt && (
-                          <div className="bg-muted/40 border p-2.5 rounded-lg w-full flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                              <Clock className="h-3.5 w-3.5 text-primary" />
-                              <span>Última conexión activa: <strong className="text-foreground">{formatDistanceToNow(new Date(detailsUser.lastLoginAt), { addSuffix: true, locale: es })}</strong></span>
+                          <div className="bg-muted/40 border p-2 rounded-lg w-full max-w-full flex flex-wrap items-center justify-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground text-center">
+                              <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <span>Última conexión: <strong className="text-foreground">{formatDistanceToNow(new Date(detailsUser.lastLoginAt), { addSuffix: true, locale: es })}</strong></span>
                           </div>
                       )}
 
@@ -877,16 +882,16 @@ export default function UsersPage() {
                                     };
 
                                     return (
-                                      <div key={act.id} className="flex items-start gap-2.5 p-2 rounded-lg border bg-background hover:bg-muted/30 transition-colors text-xs">
+                                      <div key={act.id} className="flex items-start gap-2 p-2 rounded-lg border bg-background hover:bg-muted/30 transition-colors text-xs max-w-full overflow-hidden">
                                         <div className="shrink-0 mt-0.5">{getActionBadge()}</div>
                                         <div className="flex-1 min-w-0">
-                                          <div className="flex items-center justify-between gap-2">
+                                          <div className="flex items-center justify-between gap-1.5">
                                             <span className="font-semibold text-foreground truncate">{act.action}</span>
                                             <span className="text-[10px] text-muted-foreground shrink-0 font-medium">
                                               {formatDistanceToNow(new Date(act.timestamp), { addSuffix: true, locale: es })}
                                             </span>
                                           </div>
-                                          <p className="text-muted-foreground text-[11px] mt-0.5 leading-snug">{act.description}</p>
+                                          <p className="text-muted-foreground text-[11px] mt-0.5 leading-snug break-words">{act.description}</p>
                                         </div>
                                       </div>
                                     );
