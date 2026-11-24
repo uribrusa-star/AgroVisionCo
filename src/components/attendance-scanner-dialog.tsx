@@ -463,7 +463,7 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
 
             {/* TAB 1: ESCÁNER EN VIVO */}
             <TabsContent value="scanner" className="mt-0 space-y-3">
-              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center border-2 border-stone-800 shadow-inner">
+              <div className="relative w-full h-[390px] sm:h-[440px] rounded-2xl overflow-hidden bg-black flex items-center justify-center border-2 border-stone-800 shadow-inner">
                 <video
                   ref={videoRef}
                   playsInline
@@ -475,10 +475,10 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                 {/* Laser scan line overlay (visible solo cuando busca) */}
                 {!pendingApproval && !lastCheckResult && !lastScanError && (
                   <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                    <div className="w-64 h-64 border-2 border-dashed border-emerald-400/60 rounded-2xl flex items-center justify-center relative">
+                    <div className="w-56 h-56 sm:w-64 sm:h-64 border-2 border-dashed border-emerald-400/60 rounded-2xl flex items-center justify-center relative">
                       <div className="absolute top-0 w-full h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse shadow-[0_0_8px_#10b981]" />
                     </div>
-                    <span className="text-[11px] font-medium text-stone-300 mt-2 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
+                    <span className="text-[11px] font-medium text-stone-300 mt-3 bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
                       Apunta la credencial digital o física al recuadro
                     </span>
                   </div>
@@ -486,22 +486,22 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
 
                 {/* MODAL DE APROBACIÓN POR EL ENCARGADO */}
                 {pendingApproval && (
-                  <div className="absolute inset-0 bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-between p-5 text-center animate-in fade-in zoom-in duration-200 z-40">
-                    <div className="flex flex-col items-center max-w-full">
+                  <div className="absolute inset-0 bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-5 text-center overflow-y-auto z-40">
+                    <div className="flex flex-col items-center max-w-full my-auto">
                       <div className="relative">
-                        <Avatar className="h-20 w-20 border-3 border-emerald-500 shadow-xl mb-2">
+                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 sm:border-3 border-emerald-500 shadow-xl mb-1.5">
                           <AvatarImage src={pendingApproval.photoUrl} />
-                          <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                          <AvatarFallback className="text-xl sm:text-2xl font-bold bg-primary text-primary-foreground">
                             {pendingApproval.data.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="absolute bottom-1 right-0 h-4 w-4 rounded-full bg-emerald-500 border-2 border-stone-950" />
+                        <span className="absolute bottom-1 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-stone-950" />
                       </div>
 
-                      <h3 className="text-lg font-bold text-white truncate max-w-full">
+                      <h3 className="text-base sm:text-lg font-bold text-white truncate max-w-full leading-tight">
                         {pendingApproval.data.name}
                       </h3>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-1.5 mt-1">
                         <Badge variant="outline" className="text-[10px] border-stone-700 text-stone-300">
                           {pendingApproval.data.role || (pendingApproval.data.type === 'collector' ? 'Recolector' : 'Colaborador')}
                         </Badge>
@@ -511,29 +511,29 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                       </div>
 
                       {/* Tarjeta de Acción Detectada */}
-                      <div className="mt-3 w-full max-w-sm">
+                      <div className="mt-3 w-full max-w-xs sm:max-w-sm">
                         {pendingApproval.actionType === 'in' ? (
-                          <div className="bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-300 p-3 rounded-2xl">
-                            <div className="flex items-center justify-center gap-2 text-base font-bold text-emerald-400">
-                              <LogIn className="h-5 w-5" />
+                          <div className="bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-300 p-2.5 sm:p-3 rounded-2xl">
+                            <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-bold text-emerald-400">
+                              <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
                               ¿CONFIRMAR INGRESO?
                             </div>
                             <p className="text-xs text-stone-200 mt-1">
-                              Hora de llegada: <strong className="text-white">{pendingApproval.currentTimeStr} hs</strong>
+                              Hora de llegada: <strong className="text-white font-mono text-sm">{pendingApproval.currentTimeStr} hs</strong>
                             </p>
                             <p className="text-[10px] text-stone-400 mt-0.5">El empleado no tiene turno abierto hoy.</p>
                           </div>
                         ) : (
-                          <div className="bg-blue-500/20 border-2 border-blue-500/60 text-blue-300 p-3 rounded-2xl">
-                            <div className="flex items-center justify-center gap-2 text-base font-bold text-blue-400">
-                              <LogOut className="h-5 w-5" />
+                          <div className="bg-blue-500/20 border-2 border-blue-500/60 text-blue-300 p-2.5 sm:p-3 rounded-2xl">
+                            <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-bold text-blue-400">
+                              <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
                               ¿CONFIRMAR SALIDA?
                             </div>
                             <p className="text-xs text-stone-200 mt-1">
-                              Salida: <strong className="text-white">{pendingApproval.currentTimeStr} hs</strong> (Ingresó a las {pendingApproval.existingCheckInTime} hs)
+                              Salida: <strong className="text-white font-mono">{pendingApproval.currentTimeStr} hs</strong> (Ingresó a las {pendingApproval.existingCheckInTime} hs)
                             </p>
                             <p className="text-xs font-semibold text-emerald-400 mt-0.5">
-                              Jornada calculada: {pendingApproval.hoursWorked} horas
+                              Jornada calculada: <span className="font-mono">{pendingApproval.hoursWorked} horas</span>
                             </p>
                           </div>
                         )}
@@ -547,13 +547,13 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                     </div>
 
                     {/* Botones de Aprobación */}
-                    <div className="grid grid-cols-2 gap-3 w-full max-w-sm mt-3">
+                    <div className="grid grid-cols-2 gap-3 w-full max-w-xs sm:max-w-sm mt-3 pt-1">
                       <Button
                         type="button"
                         variant="secondary"
                         onClick={handleCancelApproval}
                         disabled={isSubmitting}
-                        className="h-10 text-xs font-semibold bg-stone-800 hover:bg-stone-700 text-stone-300 gap-1.5"
+                        className="h-11 text-xs sm:text-sm font-semibold bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-200 gap-1.5 rounded-xl border border-stone-700"
                       >
                         <X className="h-4 w-4" /> Descartar
                       </Button>
@@ -562,14 +562,18 @@ export function AttendanceScannerDialog({ isOpen, onOpenChange }: AttendanceScan
                         type="button"
                         onClick={handleApprove}
                         disabled={isSubmitting}
-                        className={`h-10 text-xs font-bold gap-1.5 text-white shadow-lg ${
+                        className={`h-11 text-xs sm:text-sm font-bold gap-1.5 text-white shadow-lg active:scale-95 rounded-xl ${
                           pendingApproval.actionType === 'in' 
-                            ? 'bg-emerald-600 hover:bg-emerald-500' 
-                            : 'bg-blue-600 hover:bg-blue-500'
+                            ? 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700' 
+                            : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700'
                         }`}
                       >
                         <Check className="h-4 w-4" />
-                        {isSubmitting ? 'Guardando...' : 'Aprobar y Registrar'}
+                        {isSubmitting 
+                          ? 'Guardando...' 
+                          : pendingApproval.actionType === 'in' 
+                            ? 'Confirmar Ingreso' 
+                            : 'Confirmar Salida'}
                       </Button>
                     </div>
                   </div>
