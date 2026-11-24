@@ -273,7 +273,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 } catch (err) {
                   try {
                     return await getDocs(query(colRef, where('establishmentId', '==', estId)));
-                  } catch (e2) {
+                  } catch (e2: any) {
+                    if (colName === 'attendanceLogs') {
+                      // Fallback transparente a la API del servidor /api/attendance
+                      return { docs: [] } as any;
+                    }
                     console.error(`Failed fallback query for ${colName}:`, e2);
                     return { docs: [] } as any;
                   }
