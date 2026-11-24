@@ -256,13 +256,34 @@ const MapComponent = ({ center, geoJsonData }: MapProps) => {
         let densidad = 'N/A';
         let hectareas = 'N/A';
 
-        const activeBatch = (batches || []).find(b => b.id === activeInfoWindow);
+        const clean = (val: string) => val ? val.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const cleanActive = clean(activeInfoWindow || '');
+        const strippedActive = cleanActive.replace(/^l0+/, 'l');
+
+        const activeBatch = (batches || []).find(b => {
+            const bId = clean(b.id || '');
+            const strippedBId = bId.replace(/^l0+/, 'l');
+            return bId === cleanActive || strippedBId === strippedActive || (bId.startsWith('l') && bId.slice(1) === cleanActive);
+        });
+
         if (activeBatch && activeBatch.varieties && activeBatch.varieties.length > 0) {
-            variedad = activeBatch.varieties.map(v => v.name).join(', ');
+            variedad = activeBatch.varieties.map(v => v.name).filter(Boolean).join(', ');
             const totalDensidad = activeBatch.varieties.reduce((sum, v) => sum + (v.plantCount || 0), 0);
             densidad = totalDensidad > 0 ? totalDensidad.toLocaleString('es-ES') : 'N/A';
             const totalHectareas = activeBatch.varieties.reduce((sum, v) => sum + (v.area || 0), 0);
             hectareas = totalHectareas > 0 ? totalHectareas.toLocaleString('es-ES') : 'N/A';
+        }
+
+        if (variedad === 'N/A' && geoJsonData?.features) {
+            const matchingFeature = geoJsonData.features.find((f: any) => {
+                const props = f.properties || {};
+                return props[activeInfoWindow!] !== undefined || props.name === activeInfoWindow || props.id === activeInfoWindow || Object.keys(props).find(k => k.startsWith('L')) === activeInfoWindow;
+            });
+            if (matchingFeature?.properties?.variety) {
+                variedad = matchingFeature.properties.variety;
+            } else if (matchingFeature?.properties?.variedad) {
+                variedad = matchingFeature.properties.variedad;
+            }
         }
 
         return (

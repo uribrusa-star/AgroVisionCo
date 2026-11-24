@@ -367,7 +367,8 @@ export default function EstablishmentPage() {
 
       try {
           const updatedFeatures = parsedGeoJson.features.filter((f: any) => {
-             const name = Object.keys(f.properties || {}).find(k => k.startsWith('L'));
+             const props = f.properties || {};
+             const name = props.name || props.id || Object.keys(props).find(k => k.startsWith('L')) || Object.keys(props).find(k => !['variety', 'variedad', 'area', 'plantcount'].includes(k.toLowerCase()));
              return name !== batchName;
           });
           
@@ -474,20 +475,78 @@ export default function EstablishmentPage() {
                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lotes Registrados en el Mapa</h4>
                     <div className="flex flex-wrap gap-2">
                       {parsedGeoJson.features.map((feature: any, idx: number) => {
-                        const name = Object.keys(feature.properties || {}).find(k => k.startsWith('L')) || `Lote ${idx}`;
                         if (feature.geometry?.type !== 'Polygon') return null;
-                        
+
+                        const props = feature.properties || {};
+                        const name = props.name || props.id || Object.keys(props).find(k => k.startsWith('L')) || Object.keys(props).find(k => !['variety', 'variedad', 'area', 'plantcount'].includes(k.toLowerCase())) || `Lote ${idx + 1}`;
+
+                        // Determinar la variedad del lote
+                        const getBatchVariety = () => {
+                          if (props.variety && typeof props.variety === 'string' && props.variety.trim()) {
+                            return props.variety.trim();
+                          }
+                          if (props.variedad && typeof props.variedad === 'string' && props.variedad.trim()) {
+                            return props.variedad.trim();
+                          }
+
+                          const clean = (val: string) => val ? val.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                          const cleanName = clean(name);
+                          const strippedName = cleanName.replace(/^l0+/, 'l');
+
+                          const matchedBatch = (batches || []).find((b: any) => {
+                            const bId = clean(b.id || '');
+                            const strippedBId = bId.replace(/^l0+/, 'l');
+                            return bId === cleanName || strippedBId === strippedName || (bId.startsWith('l') && bId.slice(1) === cleanName);
+                          });
+
+                          if (matchedBatch) {
+                            if (matchedBatch.varieties && matchedBatch.varieties.length > 0) {
+                              const vNames = matchedBatch.varieties.map((v: any) => v.name?.trim()).filter(Boolean);
+                              if (vNames.length > 0) return vNames.join(', ');
+                            }
+                            if (matchedBatch.variety && typeof matchedBatch.variety === 'string' && matchedBatch.variety.trim()) {
+                              return matchedBatch.variety.trim();
+                            }
+                          }
+
+                          if (establishmentData?.planting?.variety) {
+                            const genVariety = establishmentData.planting.variety.trim();
+                            if (genVariety && !genVariety.includes(',') && !genVariety.includes(';') && !genVariety.includes('/')) {
+                              return genVariety;
+                            }
+                          }
+
+                          return null;
+                        };
+
+                        const variety = getBatchVariety();
+
                         return (
-                          <div key={name} className="flex items-center gap-1.5 bg-muted px-3 py-1.5 rounded-full text-sm border shadow-sm transition-all hover:shadow-md">
-                             <MapPin className="h-3 w-3 text-primary" />
+                          <div key={name} className="flex items-center gap-2 bg-muted/80 hover:bg-muted px-3 py-1.5 rounded-full text-sm border shadow-xs transition-all hover:shadow-sm">
+                             <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
                              <span className="font-bold text-foreground">{name}</span>
+                             {variety ? (
+                               <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                 {variety}
+                               </span>
+                             ) : (
+                               <span className="text-[11px] text-muted-foreground/70 italic">
+                                 Sin variedad
+                               </span>
+                             )}
                              {agronomistAccess.includes(currentUser?.role as UserRole) && (
-                               <Button variant="ghost" size="icon" className="h-6 w-6 ml-1 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteBatch(name)}>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 className="h-6 w-6 -mr-1 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full" 
+                                 onClick={() => handleDeleteBatch(name)}
+                                 title={`Eliminar lote ${name}`}
+                               >
                                  <Trash2 className="h-3.5 w-3.5" />
                                </Button>
                              )}
                           </div>
-                        )
+                        );
                       })}
                     </div>
                   </div>
