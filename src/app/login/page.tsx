@@ -33,12 +33,20 @@ export default function LoginPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = React.useState(false);
+  const [redirectTimeout, setRedirectTimeout] = React.useState(false);
   const { toast } = useToast();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: '', password: '', rememberMe: false },
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setRedirectTimeout(true);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (isClient && currentUser) {
@@ -106,7 +114,9 @@ export default function LoginPage() {
     });
   };
 
-  if (!isClient || currentUser || loading) {
+  // Only show loading screen during initial SSR hydration or while actively redirecting an authenticated user
+  const isRedirecting = isClient && currentUser && !redirectTimeout;
+  if (!isClient || isRedirecting) {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
             <div className="flex flex-col items-center gap-4">

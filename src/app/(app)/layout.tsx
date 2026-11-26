@@ -9,8 +9,7 @@ import { useForm } from 'react-hook-form';
 import { ForegroundNotificationListener } from '@/components/ForegroundNotificationListener';
 import { NotificationBell } from '@/components/notification-bell';
 import { signOut } from 'firebase/auth';
-import { clearIndexedDbPersistence, terminate } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { MobileBottomNav } from '@/components/mobile-bottom-nav';
 import { cn, getRoleAvatar } from '@/lib/utils';
 import { canUserManageAttendance } from '@/lib/types';
@@ -156,7 +155,7 @@ function AppSidebarNav({ navItems, pathname, pendingTasksCount, handleReset }: {
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, isClient, loading, tasks, establishmentData } = React.useContext(AppDataContext);
+  const { currentUser, setCurrentUser, isClient, loading, tasks, establishmentData } = React.useContext(AppDataContext);
   const router = useRouter();
 
   const [showResetButton, setShowResetButton] = useState(false);
@@ -185,24 +184,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const handleReset = async () => {
     if (typeof window !== 'undefined') {
       try {
-        await fetch('/api/logout', { method: 'POST' });
-        await signOut(auth);
-        
-        await terminate(db);
-        await clearIndexedDbPersistence(db);
-
-        sessionStorage.clear();
-        localStorage.clear();
-
-        router.replace('/login');
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 300);
+        setCurrentUser(null, false);
+        await signOut(auth).catch(() => {});
+        await fetch('/api/logout', { method: 'POST' }).catch(() => {});
       } catch (e) {
-        console.error("Error signing out completely:", e);
+        console.error("Error signing out:", e);
+      } finally {
         sessionStorage.clear();
         localStorage.clear();
-        window.location.href = '/login';
+        window.location.replace('/login');
       }
     }
   };

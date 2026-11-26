@@ -11,6 +11,8 @@ import { useTheme } from 'next-themes';
 
 import { PageHeader } from "@/components/page-header";
 import { AppDataContext } from '@/context/app-data-context.tsx';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { exportAllProducerDataToExcel, exportAllProducerDataToPDF, exportAllProducerDataToJSON } from '@/lib/export-full-data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -271,18 +273,18 @@ export default function ProfilePage() {
   };
 
   const handleLogout = async () => {
-    const response = await fetch('/api/logout', { method: 'POST' });
-    if (response.ok) {
-        setCurrentUser(null, false);
-        router.push('/login');
-    } else {
-        toast({
-            title: "Error",
-            description: "No se pudo cerrar la sesión.",
-            variant: "destructive",
-        });
+    try {
+      setCurrentUser(null, false);
+      await signOut(auth).catch(() => {});
+      await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+    } catch (e) {
+      console.error("Error signing out:", e);
+    } finally {
+      sessionStorage.clear();
+      localStorage.clear();
+      window.location.replace('/login');
     }
-  }
+  };
 
   const onPasswordSubmit = (values: z.infer<typeof PasswordSchema>) => {
     if(!currentUser) return;

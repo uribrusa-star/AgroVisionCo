@@ -6,12 +6,11 @@ import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Loader2, LogOut, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { auth, db } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { terminate, clearIndexedDbPersistence } from 'firebase/firestore';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, isClient, loading } = React.useContext(AppDataContext);
+  const { currentUser, setCurrentUser, isClient, loading } = React.useContext(AppDataContext);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -28,17 +27,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = async () => {
     if (typeof window !== 'undefined') {
       try {
-        await fetch('/api/logout', { method: 'POST' });
-        await signOut(auth);
-        
-        await terminate(db);
-        await clearIndexedDbPersistence(db);
+        setCurrentUser(null, false);
+        await signOut(auth).catch(() => {});
+        await fetch('/api/logout', { method: 'POST' }).catch(() => {});
       } catch (error) {
-        console.error('Error logging out and clearing cache:', error);
+        console.error('Error logging out:', error);
+      } finally {
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+        window.location.replace('/login');
       }
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-      window.location.href = '/';
     }
   };
 
