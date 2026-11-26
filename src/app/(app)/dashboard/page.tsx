@@ -124,13 +124,13 @@ export default function DashboardPage() {
       </div>
       <PushNotificationBanner />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4 mb-4 sm:mb-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4 mb-3.5 sm:mb-5">
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:px-4 sm:pt-3.5 sm:pb-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:px-4 sm:pt-3.5 sm:pb-1.5">
             <CardTitle className="text-xs sm:text-sm font-medium">Cosecha Total</CardTitle>
             <Weight className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent className="p-3 sm:px-4 sm:pb-3.5 sm:pt-0">
+          <CardContent className="p-3 pt-0 pb-3 sm:px-4 sm:pb-3.5 sm:pt-0">
             <div className="text-lg sm:text-xl font-bold tracking-tight">
               {loading ? <Skeleton className="h-6 sm:h-7 w-20 sm:w-24" /> : `${dashboardStats.totalHarvest.toLocaleString('es-ES', { maximumFractionDigits: 0 })} kg`}
             </div>
@@ -141,14 +141,14 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:px-4 sm:pt-3.5 sm:pb-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:px-4 sm:pt-3.5 sm:pb-1.5">
             <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Costo Mano de Obra">
               <span className="hidden sm:inline">Costo de Mano de Obra</span>
               <span className="sm:hidden">Costo Mano Obra</span>
             </CardTitle>
             <DollarSign className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent className="p-3 sm:px-4 sm:pb-3.5 sm:pt-0">
+          <CardContent className="p-3 pt-0 pb-3 sm:px-4 sm:pb-3.5 sm:pt-0">
             <div className="text-lg sm:text-xl font-bold tracking-tight">
               {loading ? <Skeleton className="h-6 sm:h-7 w-20 sm:w-24" /> : `$${dashboardStats.totalLaborCost.toLocaleString('es-ES', { maximumFractionDigits: 0 })}`}
             </div>
@@ -159,14 +159,14 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:px-4 sm:pt-3.5 sm:pb-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:px-4 sm:pt-3.5 sm:pb-1.5">
             <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Rendimiento Promedio">
               <span className="hidden sm:inline">Rendimiento Promedio</span>
               <span className="sm:hidden">Rend. Promedio</span>
             </CardTitle>
             <BarChartIcon className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent className="p-3 sm:px-4 sm:pb-3.5 sm:pt-0">
+          <CardContent className="p-3 pt-0 pb-3 sm:px-4 sm:pb-3.5 sm:pt-0">
             <div className="text-lg sm:text-xl font-bold tracking-tight">
               {loading ? <Skeleton className="h-6 sm:h-7 w-20 sm:w-24" /> : `${dashboardStats.averageYield.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg/lote`}
             </div>
@@ -177,14 +177,14 @@ export default function DashboardPage() {
         </Card>
 
         <Card className="hover:shadow-md transition-shadow duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:px-4 sm:pt-3.5 sm:pb-1.5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:px-4 sm:pt-3.5 sm:pb-1.5">
             <CardTitle className="text-xs sm:text-sm font-medium truncate" title="Día Pico de Cosecha">
               <span className="hidden sm:inline">Día Pico de Cosecha</span>
               <span className="sm:hidden">Día Pico</span>
             </CardTitle>
             <CalendarDays className="h-4 w-4 text-primary shrink-0" />
           </CardHeader>
-          <CardContent className="p-3 sm:px-4 sm:pb-3.5 sm:pt-0">
+          <CardContent className="p-3 pt-0 pb-3 sm:px-4 sm:pb-3.5 sm:pt-0">
             <div className="text-lg sm:text-xl font-bold tracking-tight">
               {loading ? <Skeleton className="h-6 sm:h-7 w-20 sm:w-24" /> : (dashboardStats.peakDay || 'N/A')}
             </div>
@@ -194,7 +194,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 mt-4 sm:mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5">
         <div className="md:col-span-2 xl:col-span-2">
           <MonthlyHarvestChart harvests={harvests} />
         </div>
@@ -206,14 +206,14 @@ export default function DashboardPage() {
         </div>
         <div className="md:col-span-2 xl:col-span-2">
             <Card>
-            <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+            <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
                   <Tractor className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   Cosechas Recientes
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">Una lista de las entradas de cosecha más recientes.</CardDescription>
             </CardHeader>
-            <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
                 <div className="flex flex-col gap-2 max-h-[250px] overflow-auto pr-2">
                     {loading && Array.from({ length: 3 }).map((_,i) => (
                       <Skeleton key={i} className="h-16 w-full rounded-lg" />
@@ -249,11 +249,11 @@ export default function DashboardPage() {
         </div>
         <div className="md:col-span-1 xl:col-span-1">
             <Card>
-                <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+                <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
                     <CardTitle className="text-sm sm:text-base font-semibold">Ranking de Productividad</CardTitle>
                     <CardDescription className="text-xs text-muted-foreground">Rendimiento de cada recolector ordenado de mayor a menor.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0 max-h-[250px] overflow-auto">
+                <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 max-h-[250px] overflow-auto">
                     <Table>
                         <TableHeader>
                         <TableRow>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
           <BatchYieldChart />
         </div>
       </div>
-       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5">
+       <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5 sm:gap-5 mt-3.5 sm:mt-5">
         <ProductionPaymentHistory />
         <PackagingHistory />
       </div>

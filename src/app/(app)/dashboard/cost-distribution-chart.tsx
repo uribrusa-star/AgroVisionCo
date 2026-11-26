@@ -176,12 +176,12 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
   }
 
   return (
-    <Card className="h-full flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
         <CardTitle className="text-sm sm:text-base font-semibold">Distribución de Costos</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">Desglose de los costos operativos totales registrados.</CardDescription>
       </CardHeader>
-      <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">{chart}</CardContent>
+      <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">{chart}</CardContent>
     </Card>
   );
 }

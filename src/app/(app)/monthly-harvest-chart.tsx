@@ -83,14 +83,14 @@ function MonthlyHarvestChartComponent({ harvests }: { harvests: Harvest[] }) {
   }
 
   return (
-    <Card className="h-full flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
         <CardTitle className="text-sm sm:text-base font-semibold">Cosecha Mensual</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">Total de kilogramos cosechados por mes.</CardDescription>
       </CardHeader>
-      <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
+      <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
         <ChartContainer config={chartConfig} className="h-[200px] sm:h-[220px] w-full">
-          <BarChart data={chartData} accessibilityLayer>
+          <BarChart data={chartData} accessibilityLayer margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="month"
