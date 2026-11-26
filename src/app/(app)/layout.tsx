@@ -302,7 +302,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             />
 
             <SidebarInset className={cn("flex-1 w-full bg-muted/20", currentUser.bottomNavEnabled !== false && "pb-16 md:pb-0")}>
-                <main className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full relative">
+                <main className="p-3.5 sm:p-4 md:p-5 lg:p-6 max-w-7xl mx-auto w-full relative">
                   {showPaywallBlocker ? (
                     <div className="flex flex-col items-center justify-center h-[60vh] text-center px-4">
                       <div className="bg-background p-8 rounded-xl shadow-lg max-w-md border border-orange-200">

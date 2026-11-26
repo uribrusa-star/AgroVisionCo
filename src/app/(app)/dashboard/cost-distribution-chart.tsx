@@ -95,15 +95,15 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
 
   const chart = (
     <div className="flex flex-col items-center w-full">
-      <ChartContainer config={costChartConfig} className="h-[200px] sm:h-[240px] w-full">
+      <ChartContainer config={costChartConfig} className="h-[140px] sm:h-[155px] w-full">
         <RechartsPieChart>
           <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => `$${Math.round(Number(value)).toLocaleString('es-AR')}`} />} />
           <Pie 
             data={costDistributionData} 
             dataKey="value" 
             nameKey="name" 
-            innerRadius={isForPdf ? 45 : 55} 
-            outerRadius={isForPdf ? 75 : 85}
+            innerRadius={isForPdf ? 45 : 38} 
+            outerRadius={isForPdf ? 75 : 62}
             paddingAngle={3}
             strokeWidth={2}
           >
@@ -115,26 +115,26 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
       </ChartContainer>
 
       {/* Modern Responsive Legend List */}
-      <div className="flex flex-col gap-2 w-full mt-3 pt-3 border-t border-stone-100 dark:border-stone-800">
+      <div className="flex flex-col gap-1 w-full mt-2 pt-2 border-t border-stone-100 dark:border-stone-800">
         {costDistributionData.map((item) => {
           const percent = totalCost > 0 ? ((item.value / totalCost) * 100).toFixed(0) : 0;
           const label = costChartConfig[item.name as keyof typeof costChartConfig]?.label || item.name;
           return (
-            <div key={item.name} className="flex items-center justify-between text-xs py-1.5 px-2 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors leading-normal">
-              <div className="flex items-center gap-2 min-w-0 pr-2 overflow-visible">
+            <div key={item.name} className="flex items-center justify-between text-xs py-1 px-1.5 rounded-md hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors leading-tight">
+              <div className="flex items-center gap-1.5 min-w-0 pr-2 overflow-visible">
                 <span 
-                  className="w-3 h-3 rounded-full shrink-0 shadow-sm" 
+                  className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs" 
                   style={{ backgroundColor: item.fill }} 
                 />
-                <span className="text-stone-700 dark:text-stone-300 font-semibold whitespace-nowrap leading-normal overflow-visible">
+                <span className="text-stone-700 dark:text-stone-300 font-medium whitespace-nowrap text-xs leading-normal">
                   {label}
                 </span>
               </div>
-              <div className="flex items-center gap-2 shrink-0 ml-auto leading-normal">
-                <span className="text-stone-900 dark:text-stone-100 font-bold leading-normal">
+              <div className="flex items-center gap-1.5 shrink-0 ml-auto leading-normal">
+                <span className="text-stone-900 dark:text-stone-100 font-semibold text-xs leading-normal">
                   ${Math.round(item.value).toLocaleString('es-AR')}
                 </span>
-                <span className="text-stone-400 dark:text-stone-500 font-semibold text-[11px] min-w-[36px] text-right leading-normal">
+                <span className="text-stone-400 dark:text-stone-500 font-medium text-[10px] min-w-[32px] text-right leading-normal">
                   ({percent}%)
                 </span>
               </div>
@@ -149,39 +149,39 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
     // For PDF generation, we need the Card structure to be captured by html2canvas
     return (
         <Card className="bg-white text-stone-900 overflow-visible">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-stone-900 text-lg font-bold">Distribución de Costos</CardTitle>
+            <CardHeader className="p-4 pb-2">
+                <CardTitle className="text-stone-900 text-base font-bold">Distribución de Costos</CardTitle>
             </CardHeader>
-            <CardContent className="pt-0 pb-4 overflow-visible">{chart}</CardContent>
+            <CardContent className="p-4 pt-0 pb-4 overflow-visible">{chart}</CardContent>
         </Card>
     )
   }
 
   if (loading) {
-    return <Skeleton className="h-[400px] w-full" />;
+    return <Skeleton className="h-[220px] w-full" />;
   }
 
   if (costDistributionData.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Distribución de Costos</CardTitle>
-          <CardDescription>Desglose de los costos operativos totales registrados.</CardDescription>
+        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+          <CardTitle className="text-sm sm:text-base font-semibold">Distribución de Costos</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">Desglose de los costos operativos totales registrados.</CardDescription>
         </CardHeader>
-        <CardContent className="flex h-[300px] w-full items-center justify-center">
-            <p className="text-muted-foreground">No hay costos registrados para mostrar.</p>
+        <CardContent className="flex h-[200px] sm:h-[220px] w-full items-center justify-center p-3.5 sm:p-4 pt-0 sm:pt-0">
+            <p className="text-muted-foreground text-xs">No hay costos registrados para mostrar.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col justify-between">
-      <CardHeader>
-        <CardTitle>Distribución de Costos</CardTitle>
-        <CardDescription>Desglose de los costos operativos totales registrados.</CardDescription>
+    <Card className="h-full flex flex-col justify-between hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+        <CardTitle className="text-sm sm:text-base font-semibold">Distribución de Costos</CardTitle>
+        <CardDescription className="text-xs text-muted-foreground">Desglose de los costos operativos totales registrados.</CardDescription>
       </CardHeader>
-      <CardContent>{chart}</CardContent>
+      <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">{chart}</CardContent>
     </Card>
   );
 }

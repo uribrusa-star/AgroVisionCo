@@ -127,16 +127,16 @@ function PackagingHistoryComponent() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5 text-primary" />
+      <Card className="hover:shadow-md transition-shadow duration-300">
+        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+          <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
+            <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Historial de Embalaje
           </CardTitle>
-          <CardDescription>Registro de trabajos realizados. Haz clic para ver detalles.</CardDescription>
+          <CardDescription className="text-xs text-muted-foreground">Registro de trabajos realizados. Haz clic para ver detalles.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-2 max-h-[400px] overflow-auto pr-2">
+        <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
+          <div className="flex flex-col gap-2 max-h-[300px] overflow-auto pr-2">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)
             ) : sortedLogs.length === 0 ? (

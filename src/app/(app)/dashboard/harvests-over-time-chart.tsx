@@ -73,12 +73,12 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
   if (!isClient) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Evolución de Cosechas por Lote</CardTitle>
-          <CardDescription>Kilogramos cosechados a lo largo del tiempo para cada lote.</CardDescription>
+        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+          <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">Kilogramos cosechados a lo largo del tiempo para cada lote.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[350px] w-full" />
+        <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
+          <Skeleton className="h-[220px] sm:h-[260px] w-full" />
         </CardContent>
       </Card>
     );
@@ -87,12 +87,12 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
   if (chartData.length === 0) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Evolución de Cosechas por Lote</CardTitle>
-          <CardDescription>Kilogramos cosechados a lo largo del tiempo para cada lote.</CardDescription>
+        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+          <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">Kilogramos cosechados a lo largo del tiempo para cada lote.</CardDescription>
         </CardHeader>
-        <CardContent className="flex h-[350px] w-full items-center justify-center">
-          <p className="text-muted-foreground">No hay datos de cosecha suficientes para mostrar el gráfico.</p>
+        <CardContent className="flex h-[220px] sm:h-[260px] w-full items-center justify-center p-3.5 sm:p-4 pt-0 sm:pt-0">
+          <p className="text-muted-foreground text-xs">No hay datos de cosecha suficientes para mostrar el gráfico.</p>
         </CardContent>
       </Card>
     );
@@ -100,12 +100,12 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-300">
-      <CardHeader>
-        <CardTitle>Evolución de Cosechas por Lote</CardTitle>
-        <CardDescription>Comparativa de kilogramos recolectados por lote a lo largo de la temporada.</CardDescription>
+      <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+        <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
+        <CardDescription className="text-xs text-muted-foreground">Comparativa de kilogramos recolectados por lote a lo largo de la temporada.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="h-[350px] w-full">
+      <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
+        <div className="h-[220px] sm:h-[260px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -113,13 +113,13 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
                 dataKey="label"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11 }}
               />
               <YAxis
                 unit=" kg"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11 }}
               />
               <Tooltip
                 formatter={(value: number, name: string) => [
@@ -127,12 +127,12 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
                   name.startsWith("Lote") ? name : `Lote ${name}`,
                 ]}
                 labelStyle={{ fontWeight: "bold" }}
-                contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)" }}
+                contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", fontSize: "12px" }}
                 filterNull={true}
               />
               <Legend
                 iconType="circle"
-                wrapperStyle={{ fontSize: "13px", paddingTop: "15px" }}
+                wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
                 formatter={(value: string) => (value.startsWith("Lote") ? value : `Lote ${value}`)}
               />
               {batchesPresent.map((batchId, index) => (

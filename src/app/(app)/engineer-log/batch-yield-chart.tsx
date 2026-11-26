@@ -38,18 +38,18 @@ function BatchYieldChartComponent() {
   }).reverse(); // reverse to show chronologically
 
   if (loading) {
-    return <Skeleton className="h-[400px] w-full" />;
+    return <Skeleton className="h-[220px] sm:h-[240px] w-full" />;
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Rendimiento por Lote</CardTitle>
-        <CardDescription>Kilogramos cosechados de los últimos 10 lotes con actividad.</CardDescription>
+    <Card className="hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+        <CardTitle className="text-sm sm:text-base font-semibold">Rendimiento por Lote</CardTitle>
+        <CardDescription className="text-xs text-muted-foreground">Kilogramos cosechados de los últimos 10 lotes con actividad.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
          {chartData.length > 0 ? (
-           <ChartContainer config={chartConfig} className="h-[300px] w-full">
+           <ChartContainer config={chartConfig} className="h-[200px] sm:h-[220px] w-full">
             <RechartsBarChart data={chartData} accessibilityLayer>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -72,8 +72,8 @@ function BatchYieldChartComponent() {
             </RechartsBarChart>
           </ChartContainer>
          ) : (
-          <div className="flex h-[300px] w-full items-center justify-center">
-            <p className="text-muted-foreground">No hay datos de lotes cosechados para mostrar.</p>
+          <div className="flex h-[200px] sm:h-[220px] w-full items-center justify-center">
+            <p className="text-muted-foreground text-xs">No hay datos de lotes cosechados para mostrar.</p>
           </div>
          )}
       </CardContent>

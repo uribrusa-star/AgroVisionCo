@@ -48,14 +48,14 @@ export default function EngineerLogPage() {
 
   return (
     <>
-      <div className="mb-6 sm:mb-8">
-        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-2">
-          <h1 className="text-base sm:text-2xl md:text-3xl font-bold text-foreground min-w-0 leading-tight">
+      <div className="mb-3 sm:mb-4">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-1.5">
+          <h1 className="text-base sm:text-xl md:text-2xl font-bold text-foreground min-w-0 leading-tight">
             Bitácora del Agrónomo
           </h1>
           <WeatherCard compact />
         </div>
-        <p className="text-muted-foreground text-sm sm:text-base">
+        <p className="text-muted-foreground text-xs sm:text-sm">
           Gestión de aplicaciones, fenología y visión general de la producción.
         </p>
       </div>

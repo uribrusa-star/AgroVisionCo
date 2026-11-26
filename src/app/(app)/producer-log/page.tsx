@@ -69,9 +69,9 @@ export default function ProducerLogPage() {
 
   return (
     <>
-      <div className="mb-6 sm:mb-8">
-        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-2">
-          <h1 className="text-base sm:text-2xl md:text-3xl font-bold text-foreground min-w-0 leading-tight">
+      <div className="mb-3 sm:mb-4">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 mb-1.5">
+          <h1 className="text-base sm:text-xl md:text-2xl font-bold text-foreground min-w-0 leading-tight">
             Bitácora del Productor
           </h1>
           <WeatherCard compact />
