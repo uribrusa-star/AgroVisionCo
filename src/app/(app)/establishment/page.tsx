@@ -228,6 +228,68 @@ export default function EstablishmentPage() {
     }
   }, [calculatedDensityInfo]);
 
+  // Auto-calculate unique varieties from all loaded batches and map features
+  const autoCalculatedVarieties = React.useMemo(() => {
+    const foundVarieties = new Set<string>();
+
+    // 1. From batches array
+    (batches || []).forEach((batch: any) => {
+      if (batch.varieties && Array.isArray(batch.varieties)) {
+        batch.varieties.forEach((v: any) => {
+          const name = typeof v === 'string' ? v.trim() : v?.name?.trim();
+          if (name) foundVarieties.add(name);
+        });
+      }
+      if (batch.variety && typeof batch.variety === 'string' && batch.variety.trim()) {
+        foundVarieties.add(batch.variety.trim());
+      }
+    });
+
+    // 2. From GeoJSON features (lots registered on map)
+    if (establishmentData?.geoJsonData) {
+      try {
+        const parsed = JSON.parse(establishmentData.geoJsonData);
+        (parsed.features || []).forEach((feature: any) => {
+          const props = feature.properties || {};
+          const v = props.variety || props.variedad;
+          if (v && typeof v === 'string' && v.trim()) {
+            v.split(/[,;/]+/).map((s: string) => s.trim()).filter(Boolean).forEach((s: string) => foundVarieties.add(s));
+          }
+        });
+      } catch (e) {
+        // ignore json parse error
+      }
+    }
+
+    if (foundVarieties.size === 0) return null;
+
+    // Deduplicate case-insensitively while preserving first appearance
+    const uniqueList: string[] = [];
+    const seen = new Set<string>();
+    Array.from(foundVarieties).forEach((variety) => {
+      const lower = variety.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        uniqueList.push(variety);
+      }
+    });
+
+    return uniqueList.length > 0 ? uniqueList.join(', ') : null;
+  }, [batches, establishmentData?.geoJsonData]);
+
+  // Sync auto-calculated varieties to Firestore when it changes
+  React.useEffect(() => {
+    if (
+      autoCalculatedVarieties &&
+      establishmentData &&
+      autoCalculatedVarieties !== establishmentData.planting?.variety
+    ) {
+      updateEstablishmentData({
+        planting: { ...establishmentData.planting, variety: autoCalculatedVarieties }
+      });
+    }
+  }, [autoCalculatedVarieties, establishmentData?.planting?.variety]);
+
   const geoJsonForm = useForm<z.infer<typeof geoJsonSchema>>({
     resolver: zodResolver(geoJsonSchema),
     defaultValues: {
@@ -575,7 +637,19 @@ export default function EstablishmentPage() {
         </InfoCard>
 
         <InfoCard title="Implantación del Cultivo" icon={Sprout} onEdit={() => handleEdit('planting')} editableBy={agronomistAccess}>
-            <InfoItem label="Variedades" value={establishmentData.planting.variety} />
+            <InfoItem 
+              label="Variedades" 
+              value={
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  <span>{autoCalculatedVarieties || establishmentData.planting.variety || 'No especificadas'}</span>
+                  {autoCalculatedVarieties && (
+                    <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-500/20 px-1.5 py-0.5 rounded-full" title="Auto-detectado de los lotes registrados">
+                      Auto ({autoCalculatedVarieties.split(',').length} {autoCalculatedVarieties.split(',').length === 1 ? 'variedad' : 'variedades'})
+                    </span>
+                  )}
+                </span>
+              } 
+            />
             <InfoItem label="Fecha de Plantación" value={new Date(establishmentData.planting.date).toLocaleDateString('es-ES', { timeZone: 'UTC' })} />
             <InfoItem label="Origen de Plantas" value={establishmentData.planting.origin} />
             <InfoItem label="Densidad" value={
@@ -731,6 +805,7 @@ export default function EstablishmentPage() {
           schema={plantingSchema}
           defaultValues={{ 
             ...establishmentData.planting, 
+            variety: autoCalculatedVarieties || establishmentData.planting.variety || '',
             date: establishmentData.planting.date.split('T')[0],
             density: calculatedDensityInfo ? calculatedDensityInfo.densityString : establishmentData.planting.density,
           }}
@@ -740,7 +815,14 @@ export default function EstablishmentPage() {
               <>
                   <FormField control={form.control} name="variety" render={({ field }) => ( 
                     <FormItem> 
-                      <FormLabel>Variedades</FormLabel> 
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Variedades</FormLabel> 
+                        {autoCalculatedVarieties && (
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                            Auto-detectado de los lotes
+                          </span>
+                        )}
+                      </div>
                       <FormControl>
                         <>
                           <Input list="known-varieties" placeholder="Ej: San Andreas, Otra" {...field} />
@@ -1157,7 +1239,7 @@ function GalleryEditModal({
               {/* Ficha técnica rápida con datos reales */}
               <div className="grid grid-cols-2 gap-2 text-[11px] bg-muted/40 p-2.5 rounded-md border text-muted-foreground">
                 <div><span className="font-semibold text-foreground">Sistema:</span> {establishmentData?.system || 'Bajo túnel'}</div>
-                <div><span className="font-semibold text-foreground">Variedades:</span> {establishmentData?.planting?.variety || 'San Andreas, Camarosa'}</div>
+                <div><span className="font-semibold text-foreground">Variedades:</span> {autoCalculatedVarieties || establishmentData?.planting?.variety || 'San Andreas, Camarosa'}</div>
                 <div><span className="font-semibold text-foreground">Riego:</span> {establishmentData?.irrigation?.system || 'Riego por goteo'}</div>
                 <div><span className="font-semibold text-foreground">Agrónomo:</span> {establishmentData?.technicalManager || 'Ing. Agr. Juan Pérez'}</div>
               </div>
