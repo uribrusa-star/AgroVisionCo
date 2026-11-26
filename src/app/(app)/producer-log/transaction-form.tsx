@@ -91,7 +91,7 @@ export function TransactionForm() {
   };
   
   return (
-    <Card>
+    <Card id="gastos-ingresos-del-dia" className="scroll-mt-24">
       <CardHeader>
         <CardTitle>Gastos e Ingresos del Día</CardTitle>
         <CardDescription>Registre las transacciones financieras diarias.</CardDescription>

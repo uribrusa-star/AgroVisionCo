@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
-import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box, LayoutGrid, List, Search, ChevronsUpDown, Check, ChevronDown, ChevronUp, Eye, Info } from 'lucide-react';
+import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box, LayoutGrid, List, Search, ChevronsUpDown, Check, ChevronDown, ChevronUp, Eye, Info, RotateCcw } from 'lucide-react';
 import { cn, getRoleAvatar } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -86,6 +86,14 @@ function TaskDetailsDialog({
     isPending: boolean;
     assignablePeople?: { id: string; name: string; role: string }[];
 }) {
+    const [confirmAction, setConfirmAction] = useState<{
+        status: TaskStatus;
+        title: string;
+        description: string;
+        confirmLabel: string;
+        confirmColor: string;
+    } | null>(null);
+
     if (!task) return null;
 
     const priorityInfo = {
@@ -225,8 +233,13 @@ function TaskDetailsDialog({
                                     type="button"
                                     className="w-full sm:w-auto flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
                                     onClick={() => {
-                                        onUpdateStatus(task.id, 'in-progress');
-                                        onClose();
+                                        setConfirmAction({
+                                            status: 'in-progress',
+                                            title: '¿Desea iniciar esta tarea?',
+                                            description: `La tarea "${task.title}" pasará al estado "En Progreso" para comenzar los trabajos.`,
+                                            confirmLabel: 'Iniciar Tarea',
+                                            confirmColor: 'bg-blue-600 hover:bg-blue-700 text-white',
+                                        });
                                     }}
                                     disabled={isPending}
                                 >
@@ -239,8 +252,13 @@ function TaskDetailsDialog({
                                     type="button"
                                     className="w-full sm:w-auto flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
                                     onClick={() => {
-                                        onUpdateStatus(task.id, 'completed');
-                                        onClose();
+                                        setConfirmAction({
+                                            status: 'completed',
+                                            title: '¿Confirmar finalización de la tarea?',
+                                            description: `¿Confirma que se han completado todas las labores de "${task.title}"? Pasará a "Completado".`,
+                                            confirmLabel: 'Sí, Completar Tarea',
+                                            confirmColor: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+                                        });
                                     }}
                                     disabled={isPending}
                                 >
@@ -252,13 +270,19 @@ function TaskDetailsDialog({
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    className="w-full sm:w-auto flex-1 gap-1.5"
+                                    className="w-full sm:w-auto flex-1 gap-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-semibold"
                                     onClick={() => {
-                                        onUpdateStatus(task.id, 'in-progress');
-                                        onClose();
+                                        setConfirmAction({
+                                            status: 'in-progress',
+                                            title: '¿Desea reabrir esta tarea?',
+                                            description: `La tarea "${task.title}" volverá a estar "En Progreso" para continuar o corregir los trabajos.`,
+                                            confirmLabel: 'Reabrir Tarea',
+                                            confirmColor: 'bg-amber-600 hover:bg-amber-700 text-white',
+                                        });
                                     }}
                                     disabled={isPending}
                                 >
+                                    <RotateCcw className="h-4 w-4" />
                                     <span>Reabrir Tarea</span>
                                 </Button>
                             )}
@@ -269,6 +293,30 @@ function TaskDetailsDialog({
                     </Button>
                 </DialogFooter>
             </DialogContent>
+
+            {confirmAction && (
+                <AlertDialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{confirmAction.title}</AlertDialogTitle>
+                            <AlertDialogDescription>{confirmAction.description}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setConfirmAction(null)}>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    onUpdateStatus(task.id, confirmAction.status);
+                                    setConfirmAction(null);
+                                    onClose();
+                                }}
+                                className={confirmAction.confirmColor}
+                            >
+                                {confirmAction.confirmLabel}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </Dialog>
     );
 }
@@ -278,6 +326,13 @@ const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Ta
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        status: TaskStatus;
+        title: string;
+        description: string;
+        confirmLabel: string;
+        confirmColor: string;
+    } | null>(null);
     const assignedUser = users.find(u => u.id === task.assignedTo.id);
 
     const {
@@ -480,7 +535,13 @@ const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Ta
                                 className="w-full h-8 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50/50 hover:bg-blue-100/70 border-blue-200/80 transition-all flex items-center justify-center gap-1.5 shadow-none"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleUpdateStatus('in-progress');
+                                    setConfirmAction({
+                                        status: 'in-progress',
+                                        title: '¿Desea iniciar esta tarea?',
+                                        description: `La tarea "${task.title}" pasará al estado "En Progreso" para comenzar los trabajos.`,
+                                        confirmLabel: 'Iniciar Tarea',
+                                        confirmColor: 'bg-blue-600 hover:bg-blue-700 text-white',
+                                    });
                                 }}
                                 disabled={isPending}
                             >
@@ -497,7 +558,13 @@ const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Ta
                                     className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted border-dashed shrink-0"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleUpdateStatus('pending');
+                                        setConfirmAction({
+                                            status: 'pending',
+                                            title: '¿Regresar tarea a Pendiente?',
+                                            description: `La tarea "${task.title}" regresará al estado Pendiente.`,
+                                            confirmLabel: 'Mover a Pendiente',
+                                            confirmColor: 'bg-muted-foreground hover:bg-foreground text-white',
+                                        });
                                     }}
                                     disabled={isPending}
                                     title="Regresar a Pendiente"
@@ -510,7 +577,13 @@ const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Ta
                                     className="flex-1 h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 shadow-sm"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        handleUpdateStatus('completed');
+                                        setConfirmAction({
+                                            status: 'completed',
+                                            title: '¿Confirmar finalización de la tarea?',
+                                            description: `¿Confirma que se han completado todas las labores de "${task.title}"? Pasará a "Completado".`,
+                                            confirmLabel: 'Sí, Completar Tarea',
+                                            confirmColor: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+                                        });
                                     }}
                                     disabled={isPending}
                                 >
@@ -523,15 +596,22 @@ const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Ta
                             <Button
                                 type="button"
                                 size="sm"
-                                variant="ghost"
-                                className="w-full h-7 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/50 flex items-center justify-center gap-1"
+                                variant="outline"
+                                className="w-full h-8 text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700/60 transition-all flex items-center justify-center gap-1.5 shadow-none"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleUpdateStatus('in-progress');
+                                    setConfirmAction({
+                                        status: 'in-progress',
+                                        title: '¿Desea reabrir esta tarea?',
+                                        description: `La tarea "${task.title}" volverá a estar "En Progreso" para continuar o corregir los trabajos.`,
+                                        confirmLabel: 'Reabrir Tarea',
+                                        confirmColor: 'bg-amber-600 hover:bg-amber-700 text-white',
+                                    });
                                 }}
                                 disabled={isPending}
                             >
-                                <span>Reabrir tarea</span>
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                <span>Reabrir Tarea</span>
                             </Button>
                         )}
                     </div>
@@ -557,6 +637,29 @@ const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Ta
                         ) : null}
                     </CardFooter>
             </Card>
+
+            {confirmAction && (
+                <AlertDialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
+                    <AlertDialogContent onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>{confirmAction.title}</AlertDialogTitle>
+                            <AlertDialogDescription>{confirmAction.description}</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setConfirmAction(null)}>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={() => {
+                                    handleUpdateStatus(confirmAction.status);
+                                    setConfirmAction(null);
+                                }}
+                                className={confirmAction.confirmColor}
+                            >
+                                {confirmAction.confirmLabel}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </div>
     )
 }

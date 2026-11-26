@@ -8,7 +8,7 @@ import { TransactionHistory } from './transaction-history';
 import { NotesHistory } from './notes-history';
 import { HarvestSummary } from './harvest-summary';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { DollarSign, Hand, TrendingDown, TrendingUp, Percent, Scale, Eye, EyeOff } from 'lucide-react';
+import { DollarSign, Hand, TrendingDown, TrendingUp, Percent, Scale, Eye, EyeOff, NotebookPen } from 'lucide-react';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,15 @@ export default function ProducerLogPage() {
     localStorage.setItem('agrovision_showFinancials', String(newVal));
   };
   
+  const scrollToDailyTransactions = () => {
+    const el = document.getElementById('gastos-ingresos-del-dia');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.classList.add('ring-2', 'ring-primary', 'transition-all');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-primary'), 2000);
+    }
+  };
+
   const totalHarvestLaborCost = (collectorPaymentLogs || []).reduce((acc, p) => acc + p.payment, 0);
   const totalPackagingLaborCost = (packagingLogs || []).reduce((acc, p) => acc + p.payment, 0);
   const totalCulturalPracticeCost = (culturalPracticeLogs || []).reduce((acc, p) => acc + p.payment, 0);
@@ -64,14 +73,28 @@ export default function ProducerLogPage() {
           <WeatherCard compact />
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <p className="text-muted-foreground text-sm sm:text-base">
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
             Registre las finanzas y las observaciones diarias del establecimiento.
           </p>
-          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-            <Button variant="outline" size="icon" onClick={toggleFinancials} title={showFinancials ? "Ocultar finanzas" : "Mostrar finanzas"}>
-                {showFinancials ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={scrollToDailyTransactions}
+              className="gap-1.5 text-xs font-semibold text-primary border-primary/40 bg-primary/5 hover:bg-primary/10 shadow-2xs h-9 px-3 rounded-lg"
+              title="Ir a carga de Gastos e Ingresos del Día"
+            >
+              <NotebookPen className="h-4 w-4 text-primary shrink-0" />
+              <span>Gastos e Ingresos del Día</span>
             </Button>
-            <ExportButton />
+
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg" onClick={toggleFinancials} title={showFinancials ? "Ocultar finanzas" : "Mostrar finanzas"}>
+                  {showFinancials ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+              <ExportButton />
+            </div>
           </div>
         </div>
       </div>
