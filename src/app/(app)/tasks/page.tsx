@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
-import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box, LayoutGrid, List, Search, ChevronsUpDown, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, MoreHorizontal, ArrowRight, Flag, Wrench, PlusCircle, Trash2, GripVertical, Box, LayoutGrid, List, Search, ChevronsUpDown, Check, ChevronDown, ChevronUp, Eye, Info } from 'lucide-react';
 import { cn, getRoleAvatar } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -68,10 +68,216 @@ const TaskSchema = z.object({
 
 type TaskFormValues = z.infer<typeof TaskSchema>;
 
-const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?: boolean }) => {
+
+function TaskDetailsDialog({
+    task,
+    isOpen,
+    onClose,
+    onUpdateStatus,
+    canUpdateStatus,
+    isPending,
+    assignablePeople = [],
+}: {
+    task: Task | null;
+    isOpen: boolean;
+    onClose: () => void;
+    onUpdateStatus: (taskId: string, newStatus: TaskStatus) => void;
+    canUpdateStatus: boolean;
+    isPending: boolean;
+    assignablePeople?: { id: string; name: string; role: string }[];
+}) {
+    if (!task) return null;
+
+    const priorityInfo = {
+        alta: { label: 'Alta Prioridad', color: 'bg-red-500/10 text-red-600 border-red-300 dark:border-red-800' },
+        media: { label: 'Prioridad Media', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-300 dark:border-yellow-800' },
+        baja: { label: 'Baja Prioridad', color: 'bg-blue-500/10 text-blue-600 border-blue-300 dark:border-blue-800' },
+    }[task.priority || 'media'];
+
+    const statusInfo = {
+        pending: { label: 'Pendiente', color: 'bg-amber-500/10 text-amber-700 border-amber-300' },
+        'in-progress': { label: 'En Progreso', color: 'bg-blue-500/10 text-blue-700 border-blue-300' },
+        completed: { label: 'Completada', color: 'bg-emerald-500/10 text-emerald-700 border-emerald-300' },
+    }[task.status];
+
+    const assignedPerson = assignablePeople.find(u => u.id === task.assignedTo.id);
+
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogContent className="w-[95vw] sm:max-w-lg p-4 sm:p-6 max-h-[90vh] overflow-y-auto rounded-2xl">
+                <DialogHeader className="space-y-2 text-left">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className={cn("text-xs font-semibold", priorityInfo.color)}>
+                            {priorityInfo.label}
+                        </Badge>
+                        <Badge variant="outline" className={cn("text-xs font-semibold", statusInfo.color)}>
+                            {statusInfo.label}
+                        </Badge>
+                        {task.dueDate && (
+                            <Badge variant="outline" className={cn("text-xs", isPast(new Date(task.dueDate)) && task.status !== 'completed' ? "bg-red-500/10 text-red-600 border-red-300" : "bg-muted text-muted-foreground")}>
+                                <CalendarIcon className="h-3 w-3 mr-1" />
+                                {isPast(new Date(task.dueDate)) && task.status !== 'completed'
+                                    ? `Vencida (${format(new Date(task.dueDate), 'dd/MM/yyyy')})`
+                                    : `Vence: ${format(new Date(task.dueDate), 'dd/MM/yyyy')}`
+                                }
+                            </Badge>
+                        )}
+                    </div>
+                    <DialogTitle className="text-base sm:text-xl font-bold text-foreground leading-snug pt-1">
+                        {task.title}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                    {/* Lotes asociados */}
+                    {((task.batchIds && task.batchIds.length > 0) || task.batchId) && (
+                        <div className="space-y-1.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                                <Box className="h-3.5 w-3.5 text-primary" /> Lote(s) de Aplicación
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                                {(task.batchIds && task.batchIds.length > 0 ? task.batchIds : [task.batchId]).map(id => id && (
+                                    <Badge key={id} variant="secondary" className="text-xs px-2.5 py-0.5 bg-primary/10 text-primary border border-primary/20 font-medium">
+                                        Lote: {id}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Descripción completa */}
+                    <div className="space-y-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Descripción e Instrucciones
+                        </span>
+                        <div className="bg-muted/40 p-3.5 rounded-xl border border-border/60 text-xs sm:text-sm text-foreground whitespace-pre-wrap leading-relaxed select-text">
+                            {task.description}
+                        </div>
+                    </div>
+
+                    {/* Materiales e Insumos */}
+                    {task.materials && task.materials.length > 0 && (
+                        <div className="space-y-1.5">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                                <Wrench className="h-3.5 w-3.5 text-muted-foreground" /> Insumos / Materiales Requeridos
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {task.materials.map((m, i) => (
+                                    <div key={i} className="flex items-center justify-between p-2 bg-background border rounded-lg text-xs">
+                                        <span className="font-semibold text-foreground truncate pr-2">{m.name}</span>
+                                        {m.quantity ? (
+                                            <Badge variant="outline" className="text-[10px] bg-muted shrink-0">
+                                                {m.quantity} un.
+                                            </Badge>
+                                        ) : null}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Responsable y Plazo */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div className="p-3 bg-muted/20 border rounded-xl flex items-center gap-3">
+                            <Avatar className="h-9 w-9 border border-border">
+                                <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                                    {(assignedPerson?.name || task.assignedTo.name || '?').charAt(0)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Asignado a</p>
+                                <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                                    {assignedPerson?.name || task.assignedTo.name}
+                                </p>
+                                {assignedPerson?.role && (
+                                    <p className="text-[10px] text-muted-foreground truncate">{assignedPerson.role}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {task.dueDate && (
+                            <div className="p-3 bg-muted/20 border rounded-xl flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                    <CalendarIcon className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Plazo de Entrega</p>
+                                    <p className="text-xs sm:text-sm font-bold text-foreground">
+                                        {format(new Date(task.dueDate), "d 'de' MMMM, yyyy", { locale: es })}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">
+                                        {isPast(new Date(task.dueDate))
+                                            ? `Venció hace ${formatDistanceToNow(new Date(task.dueDate), { locale: es })}`
+                                            : `Vence en ${formatDistanceToNow(new Date(task.dueDate), { locale: es })}`
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2 border-t mt-2">
+                    {canUpdateStatus && (
+                        <>
+                            {task.status === 'pending' && (
+                                <Button
+                                    type="button"
+                                    className="w-full sm:w-auto flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                                    onClick={() => {
+                                        onUpdateStatus(task.id, 'in-progress');
+                                        onClose();
+                                    }}
+                                    disabled={isPending}
+                                >
+                                    <span>Iniciar Tarea</span>
+                                    <ArrowRight className="h-4 w-4" />
+                                </Button>
+                            )}
+                            {task.status === 'in-progress' && (
+                                <Button
+                                    type="button"
+                                    className="w-full sm:w-auto flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                                    onClick={() => {
+                                        onUpdateStatus(task.id, 'completed');
+                                        onClose();
+                                    }}
+                                    disabled={isPending}
+                                >
+                                    <Check className="h-4 w-4" />
+                                    <span>Completar Tarea</span>
+                                </Button>
+                            )}
+                            {task.status === 'completed' && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full sm:w-auto flex-1 gap-1.5"
+                                    onClick={() => {
+                                        onUpdateStatus(task.id, 'in-progress');
+                                        onClose();
+                                    }}
+                                    disabled={isPending}
+                                >
+                                    <span>Reabrir Tarea</span>
+                                </Button>
+                            )}
+                        </>
+                    )}
+                    <Button type="button" variant="secondary" onClick={onClose} className="w-full sm:w-auto">
+                        Cerrar
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+const SortableTaskCard = ({ task, isOverlay = false, onViewDetails }: { task: Task, isOverlay?: boolean, onViewDetails?: (task: Task) => void }) => {
     const { users, currentUser, updateTaskStatus, deleteTask } = useContext(AppDataContext);
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
+    const [isExpanded, setIsExpanded] = useState(false);
     const assignedUser = users.find(u => u.id === task.assignedTo.id);
 
     const {
@@ -134,9 +340,17 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
             >
                 <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
-                        <CardTitle className="text-sm font-bold flex items-center gap-2">
-                           <Flag className={cn("h-3.5 w-3.5", priorityInfo.iconColor)} />
-                           {task.title}
+                        <CardTitle 
+                           className="text-sm font-bold flex items-center gap-2 cursor-pointer hover:text-primary transition-colors flex-1"
+                           onPointerDown={(e) => e.stopPropagation()}
+                           onClick={(e) => {
+                               e.stopPropagation();
+                               onViewDetails?.(task);
+                           }}
+                           title="Toca para ver detalles de la tarea"
+                        >
+                           <Flag className={cn("h-3.5 w-3.5 shrink-0", priorityInfo.iconColor)} />
+                           <span className="line-clamp-2">{task.title}</span>
                         </CardTitle>
                         <AlertDialog>
                             <DropdownMenu>
@@ -146,6 +360,15 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                    {onViewDetails && (
+                                        <>
+                                            <DropdownMenuItem onSelect={() => onViewDetails(task)}>
+                                                <Eye className="mr-2 h-4 w-4 text-primary" />
+                                                <span>Ver detalles</span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                        </>
+                                    )}
                                     <DropdownMenuLabel>Mover a</DropdownMenuLabel>
                                     {task.status !== 'pending' && canUpdateStatus && <DropdownMenuItem onSelect={() => handleUpdateStatus('pending')}><ArrowRight className="mr-2 h-4 w-4" />Pendiente</DropdownMenuItem>}
                                     {task.status !== 'in-progress' && canUpdateStatus && <DropdownMenuItem onSelect={() => handleUpdateStatus('in-progress')}><ArrowRight className="mr-2 h-4 w-4" />En Progreso</DropdownMenuItem>}
@@ -188,13 +411,61 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
                         </div>
                     )}
                 </CardHeader>
-                <CardContent className="text-xs text-muted-foreground pb-4 space-y-3">
-                    <p className="line-clamp-2">{task.description}</p>
+                <CardContent className="text-xs text-muted-foreground pb-3 space-y-2.5">
+                    <div>
+                        <p className={cn("leading-relaxed transition-all", !isExpanded && "line-clamp-2")}>
+                            {task.description}
+                        </p>
+                        <div className="flex items-center justify-between gap-2 mt-1.5 pt-0.5" onPointerDown={(e) => e.stopPropagation()}>
+                            {task.description && task.description.length > 70 ? (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsExpanded(prev => !prev);
+                                    }}
+                                    className="text-[11px] font-semibold text-primary hover:underline inline-flex items-center gap-0.5"
+                                >
+                                    {isExpanded ? (
+                                        <>
+                                            <span>Ver menos</span>
+                                            <ChevronUp className="h-3 w-3" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Ver más</span>
+                                            <ChevronDown className="h-3 w-3" />
+                                        </>
+                                    )}
+                                </button>
+                            ) : <div />}
+
+                            {onViewDetails && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onViewDetails(task);
+                                    }}
+                                    className="text-[11px] font-semibold text-muted-foreground hover:text-foreground inline-flex items-center gap-1 hover:underline ml-auto"
+                                    title="Ver todos los detalles"
+                                >
+                                    <Eye className="h-3 w-3 text-primary" />
+                                    <span>Detalles</span>
+                                </button>
+                            )}
+                        </div>
+                    </div>
                      {task.materials && task.materials.length > 0 && (
                         <div className="flex items-start gap-2">
                             <Wrench className="h-3.5 w-3.5 mt-0.5 text-muted-foreground flex-shrink-0" />
                             <div className="flex flex-wrap gap-1">
-                                {task.materials.map((m, i) => <Badge key={i} variant="secondary" className="text-[10px]">{m.name}</Badge>)}
+                                {task.materials.map((m, i) => (
+                                    <Badge key={i} variant="secondary" className="text-[10px]">
+                                        {m.name}
+                                        {m.quantity ? ` (${m.quantity})` : ''}
+                                    </Badge>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -290,7 +561,7 @@ const SortableTaskCard = ({ task, isOverlay = false }: { task: Task, isOverlay?:
     )
 }
 
-const KanbanColumn = ({ id, title, tasks }: { id: TaskStatus, title: string, tasks: Task[] }) => {
+const KanbanColumn = ({ id, title, tasks, onViewDetails }: { id: TaskStatus, title: string, tasks: Task[], onViewDetails?: (task: Task) => void }) => {
     const { setNodeRef } = useDroppable({
         id: id,
     });
@@ -310,7 +581,7 @@ const KanbanColumn = ({ id, title, tasks }: { id: TaskStatus, title: string, tas
             <CardContent className="flex-grow p-2 space-y-3">
                 <SortableContext id={id} items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                     {tasks.length > 0 ? (
-                        tasks.map(task => <SortableTaskCard key={task.id} task={task} />)
+                        tasks.map(task => <SortableTaskCard key={task.id} task={task} onViewDetails={onViewDetails} />)
                     ) : (
                         <div className="border-2 border-dashed border-muted-foreground/20 rounded-xl h-32 flex flex-col items-center justify-center bg-muted/10">
                             <p className="text-sm text-muted-foreground font-medium">Arrastra una tarea aquí</p>
@@ -331,6 +602,7 @@ export default function TasksPage() {
     const [filterType, setFilterType] = useState('all');
     const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedTaskDetail, setSelectedTaskDetail] = useState<Task | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -668,9 +940,9 @@ export default function TasksPage() {
             onDragEnd={handleDragEnd}
         >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KanbanColumn id="pending" title="Pendiente" tasks={categorizedTasks.pending} />
-                <KanbanColumn id="in-progress" title="En Progreso" tasks={categorizedTasks.inProgress} />
-                <KanbanColumn id="completed" title="Completado" tasks={categorizedTasks.completed} />
+                <KanbanColumn id="pending" title="Pendiente" tasks={categorizedTasks.pending} onViewDetails={setSelectedTaskDetail} />
+                <KanbanColumn id="in-progress" title="En Progreso" tasks={categorizedTasks.inProgress} onViewDetails={setSelectedTaskDetail} />
+                <KanbanColumn id="completed" title="Completado" tasks={categorizedTasks.completed} onViewDetails={setSelectedTaskDetail} />
             </div>
 
             <DragOverlay dropAnimation={{
@@ -698,11 +970,12 @@ export default function TasksPage() {
                                 <th className="p-4 font-medium text-muted-foreground">Prioridad</th>
                                 <th className="p-4 font-medium text-muted-foreground">Responsable</th>
                                 <th className="p-4 font-medium text-muted-foreground">Vencimiento</th>
+                                <th className="p-4 font-medium text-muted-foreground text-right">Detalles</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y">
                             {filteredTasks.length > 0 ? filteredTasks.map(task => (
-                                <tr key={task.id} className="hover:bg-muted/10 transition-colors">
+                                <tr key={task.id} className="hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedTaskDetail(task)}>
                                     <td className="p-4 font-medium flex items-center gap-2">
                                         <Flag className={cn("h-4 w-4 flex-shrink-0", task.priority === 'alta' ? 'text-red-500' : task.priority === 'media' ? 'text-yellow-500' : 'text-blue-500')} />
                                         <span className="truncate max-w-[200px] sm:max-w-xs">{task.title}</span>
@@ -725,9 +998,23 @@ export default function TasksPage() {
                                             </span>
                                         ) : '-'}
                                     </td>
+                                    <td className="p-4 text-right">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedTaskDetail(task);
+                                            }}
+                                            className="h-7 px-2 text-xs text-primary gap-1"
+                                        >
+                                            <Eye className="h-3.5 w-3.5" />
+                                            <span className="hidden sm:inline">Detalles</span>
+                                        </Button>
+                                    </td>
                                 </tr>
                             )) : (
-                                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No se encontraron tareas.</td></tr>
+                                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">No se encontraron tareas.</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -735,6 +1022,27 @@ export default function TasksPage() {
             </Card>
         )}
       </div>
+
+      <TaskDetailsDialog
+          task={selectedTaskDetail}
+          isOpen={!!selectedTaskDetail}
+          onClose={() => setSelectedTaskDetail(null)}
+          onUpdateStatus={(taskId, newStatus) => {
+              updateTaskStatus(taskId, newStatus);
+              setSelectedTaskDetail(prev => prev && prev.id === taskId ? { ...prev, status: newStatus } : null);
+              toast({
+                  title: 'Tarea Actualizada',
+                  description: `Estado actualizado a ${newStatus === 'in-progress' ? 'En Progreso' : newStatus === 'pending' ? 'Pendiente' : 'Completado'}.`,
+              });
+          }}
+          canUpdateStatus={
+              selectedTaskDetail 
+                  ? Boolean(currentUser?.id === selectedTaskDetail.assignedTo.id || currentUser?.role === 'Productor' || currentUser?.role === 'Encargado' || currentUser?.role === 'SuperAdmin')
+                  : false
+          }
+          isPending={isPending}
+          assignablePeople={assignablePeople}
+      />
     </>
   );
 }
