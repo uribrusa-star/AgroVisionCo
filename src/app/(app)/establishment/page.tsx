@@ -974,6 +974,7 @@ export default function EstablishmentPage() {
           }
         }}
         establishmentData={establishmentData}
+        varieties={autoCalculatedVarieties || establishmentData?.planting?.variety}
       />
 
       <BatchBuilder 
@@ -993,6 +994,7 @@ function GalleryEditModal({
   initialImages,
   onSave,
   establishmentData,
+  varieties,
   isReadOnly = false
 }: {
   open: boolean;
@@ -1000,6 +1002,7 @@ function GalleryEditModal({
   initialImages: string[];
   onSave: (images: string[]) => Promise<void>;
   establishmentData: any;
+  varieties?: string | null;
   isReadOnly?: boolean;
 }) {
   const [images, setImages] = useState<string[]>(initialImages);
@@ -1239,7 +1242,7 @@ function GalleryEditModal({
               {/* Ficha técnica rápida con datos reales */}
               <div className="grid grid-cols-2 gap-2 text-[11px] bg-muted/40 p-2.5 rounded-md border text-muted-foreground">
                 <div><span className="font-semibold text-foreground">Sistema:</span> {establishmentData?.system || 'Bajo túnel'}</div>
-                <div><span className="font-semibold text-foreground">Variedades:</span> {autoCalculatedVarieties || establishmentData?.planting?.variety || 'San Andreas, Camarosa'}</div>
+                <div><span className="font-semibold text-foreground">Variedades:</span> {varieties || establishmentData?.planting?.variety || 'San Andreas, Camarosa'}</div>
                 <div><span className="font-semibold text-foreground">Riego:</span> {establishmentData?.irrigation?.system || 'Riego por goteo'}</div>
                 <div><span className="font-semibold text-foreground">Agrónomo:</span> {establishmentData?.technicalManager || 'Ing. Agr. Juan Pérez'}</div>
               </div>
