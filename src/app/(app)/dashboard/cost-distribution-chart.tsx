@@ -97,7 +97,7 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
     <div className="flex flex-col items-center w-full">
       <ChartContainer config={costChartConfig} className="h-[200px] sm:h-[240px] w-full">
         <RechartsPieChart>
-          <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => `$${Number(value).toLocaleString('es-AR')}`} />} />
+          <ChartTooltip content={<ChartTooltipContent nameKey="name" formatter={(value) => `$${Math.round(Number(value)).toLocaleString('es-AR')}`} />} />
           <Pie 
             data={costDistributionData} 
             dataKey="value" 
@@ -132,7 +132,7 @@ function CostDistributionChartComponent({ isForPdf = false }: { isForPdf?: boole
               </div>
               <div className="flex items-center gap-2 shrink-0 ml-auto leading-normal">
                 <span className="text-stone-900 dark:text-stone-100 font-bold leading-normal">
-                  ${item.value.toLocaleString('es-AR')}
+                  ${Math.round(item.value).toLocaleString('es-AR')}
                 </span>
                 <span className="text-stone-400 dark:text-stone-500 font-semibold text-[11px] min-w-[36px] text-right leading-normal">
                   ({percent}%)

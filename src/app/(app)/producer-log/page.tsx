@@ -63,6 +63,10 @@ export default function ProducerLogPage() {
   const totalKg = (harvests || []).reduce((acc, h) => acc + h.kilograms, 0);
   const costPerKg = totalKg > 0 ? totalCost / totalKg : 0;
 
+  const formatCurrency = (val: number) => {
+    return Math.round(val || 0).toLocaleString('es-AR');
+  };
+
   return (
     <>
       <div className="mb-6 sm:mb-8">
@@ -113,7 +117,7 @@ export default function ProducerLogPage() {
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                     <div className="text-base sm:text-lg 2xl:text-lg font-bold truncate">
-                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${totalIncome.toLocaleString('es-AR')}` : '***')}
+                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${formatCurrency(totalIncome)}` : '***')}
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5" title="Ventas registradas">
                       Ventas registradas
@@ -131,7 +135,7 @@ export default function ProducerLogPage() {
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                     <div className="text-base sm:text-lg 2xl:text-lg font-bold truncate">
-                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${totalCost.toLocaleString('es-AR')}` : '***')}
+                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${formatCurrency(totalCost)}` : '***')}
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5" title="Operativos y Laborales">
                       Operativos/Laborales
@@ -149,7 +153,7 @@ export default function ProducerLogPage() {
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                     <div className={`text-base sm:text-lg 2xl:text-lg font-bold truncate ${showFinancials ? (grossMargin >= 0 ? 'text-green-600' : 'text-red-600') : ''}`}>
-                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${grossMargin.toLocaleString('es-AR')}` : '***')}
+                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${formatCurrency(grossMargin)}` : '***')}
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5" title="Rentabilidad actual">
                       Rentabilidad actual
@@ -182,7 +186,7 @@ export default function ProducerLogPage() {
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                     <div className="text-base sm:text-lg 2xl:text-lg font-bold truncate">
-                      {loading ? <Skeleton className="h-6 sm:h-7 w-16" /> : (showFinancials ? `$${costPerKg.toFixed(2)}` : '***')}
+                      {loading ? <Skeleton className="h-6 sm:h-7 w-16" /> : (showFinancials ? `$${costPerKg.toLocaleString('es-AR', { maximumFractionDigits: 2 })}` : '***')}
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5" title="Costo prom. producción">
                       Costo prom. prod.
@@ -200,7 +204,7 @@ export default function ProducerLogPage() {
                 </CardHeader>
                 <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
                     <div className="text-base sm:text-lg 2xl:text-lg font-bold truncate">
-                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${totalLaborCost.toLocaleString('es-AR')}` : '***')}
+                      {loading ? <Skeleton className="h-6 sm:h-7 w-20" /> : (showFinancials ? `$${formatCurrency(totalLaborCost)}` : '***')}
                     </div>
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mt-0.5" title="Carga laboral total">
                       Carga laboral total

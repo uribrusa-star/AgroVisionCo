@@ -177,7 +177,7 @@ function TransactionHistoryComponent() {
                                 </div>
                             </div>
                             <div className={`text-right font-bold text-sm ${transaction.type === 'Ingreso' ? 'text-green-600' : 'text-red-600'}`}>
-                                {transaction.type === 'Ingreso' ? '+' : '-'} ${transaction.amount.toLocaleString('es-AR', {minimumFractionDigits: 2})}
+                                {transaction.type === 'Ingreso' ? '+' : '-'} ${transaction.amount.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2})}
                             </div>
                         </div>
                     ))}
@@ -231,13 +231,13 @@ function TransactionHistoryComponent() {
                                      {selectedTransaction.pricePerUnit && (
                                          <div className="space-y-1">
                                             <p className="text-sm font-medium text-muted-foreground">Precio por Unidad</p>
-                                            <p className="font-semibold">${selectedTransaction.pricePerUnit.toLocaleString('es-AR', {minimumFractionDigits: 2})}</p>
+                                            <p className="font-semibold">${selectedTransaction.pricePerUnit.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</p>
                                         </div>
                                      )}
                                     <div className="space-y-1">
                                         <p className="text-sm font-medium text-muted-foreground">Monto Total</p>
                                         <p className={`font-bold text-lg ${selectedTransaction.type === 'Ingreso' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {selectedTransaction.type === 'Ingreso' ? '+' : '-'} ${selectedTransaction.amount.toLocaleString('es-AR', {minimumFractionDigits: 2})}
+                                            {selectedTransaction.type === 'Ingreso' ? '+' : '-'} ${selectedTransaction.amount.toLocaleString('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 2})}
                                         </p>
                                     </div>
                                 </CardContent>

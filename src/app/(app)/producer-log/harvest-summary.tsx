@@ -124,7 +124,7 @@ export function HarvestSummary() {
         ]);
 
         const formattedCostByCategory = Object.fromEntries(
-            Object.entries(costByCategory).map(([key, value]) => [key, `$${value.toLocaleString('es-AR')}`])
+            Object.entries(costByCategory).map(([key, value]) => [key, `$${Math.round(value).toLocaleString('es-AR')}`])
         );
 
         const aiInput = {
@@ -134,7 +134,7 @@ export function HarvestSummary() {
               "Rendimiento (kg/ha)": (totalProduction / farmArea).toLocaleString('es-ES', {maximumFractionDigits: 0})
             }),
             costData: JSON.stringify({
-              "Costo Total (ARS)": `$${totalCost.toLocaleString('es-AR')}`,
+              "Costo Total (ARS)": `$${Math.round(totalCost).toLocaleString('es-AR')}`,
               "Costos por Categoría (ARS)": formattedCostByCategory
             }),
             agronomistLogs: JSON.stringify(agronomistLogs.slice(0, 15).map(l => ({type: l.type, product: l.product, notes: l.notes}))),
