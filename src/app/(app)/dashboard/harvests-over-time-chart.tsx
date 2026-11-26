@@ -27,6 +27,7 @@ const colors = [
 
 export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
   const [isClient, setIsClient] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -70,14 +71,19 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
     return { chartData, batchesPresent };
   }, [harvests]);
 
+  const visibleBatches = useMemo(() => {
+    if (!selectedBatch) return batchesPresent;
+    return batchesPresent.filter((b) => b === selectedBatch);
+  }, [batchesPresent, selectedBatch]);
+
   if (!isClient) {
     return (
       <Card>
-        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+        <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
           <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
           <CardDescription className="text-xs text-muted-foreground">Kilogramos cosechados a lo largo del tiempo para cada lote.</CardDescription>
         </CardHeader>
-        <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
+        <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
           <Skeleton className="h-[220px] sm:h-[260px] w-full" />
         </CardContent>
       </Card>
@@ -87,11 +93,11 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
   if (chartData.length === 0) {
     return (
       <Card>
-        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
+        <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
           <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
           <CardDescription className="text-xs text-muted-foreground">Kilogramos cosechados a lo largo del tiempo para cada lote.</CardDescription>
         </CardHeader>
-        <CardContent className="flex h-[220px] sm:h-[260px] w-full items-center justify-center p-3.5 sm:p-4 pt-0 sm:pt-0">
+        <CardContent className="flex h-[220px] sm:h-[260px] w-full items-center justify-center p-3 pt-0 sm:p-4 sm:pt-0">
           <p className="text-muted-foreground text-xs">No hay datos de cosecha suficientes para mostrar el gráfico.</p>
         </CardContent>
       </Card>
@@ -100,56 +106,115 @@ export function HarvestsOverTimeChart({ harvests }: { harvests: Harvest[] }) {
 
   return (
     <Card className="hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2">
-        <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
-        <CardDescription className="text-xs text-muted-foreground">Comparativa de kilogramos recolectados por lote a lo largo de la temporada.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-3.5 sm:p-4 pt-0 sm:pt-0">
-        <div className="h-[220px] sm:h-[260px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey="label"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <YAxis
-                unit=" kg"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 11 }}
-              />
-              <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${value ? value.toLocaleString("es-ES") : 0} kg`,
-                  name.startsWith("Lote") ? name : `Lote ${name}`,
-                ]}
-                labelStyle={{ fontWeight: "bold" }}
-                contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", fontSize: "12px" }}
-                filterNull={true}
-              />
-              <Legend
-                iconType="circle"
-                wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }}
-                formatter={(value: string) => (value.startsWith("Lote") ? value : `Lote ${value}`)}
-              />
-              {batchesPresent.map((batchId, index) => (
-                <Line
+      <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div>
+            <CardTitle className="text-sm sm:text-base font-semibold">Evolución de Cosechas por Lote</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">Comparativa de kilogramos recolectados por lote a lo largo de la temporada.</CardDescription>
+          </div>
+          {chartData.length > 10 && (
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1 sm:hidden self-end">
+              ⇄ Desliza para recorrer fechas
+            </span>
+          )}
+        </div>
+
+        {/* Filter chips to isolate specific lots */}
+        {batchesPresent.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-0.5 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setSelectedBatch(null)}
+              className={`px-2 py-0.5 rounded-full text-[11px] font-semibold transition-colors shrink-0 ${
+                selectedBatch === null
+                  ? "bg-primary text-primary-foreground shadow-2xs"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              Todos los Lotes
+            </button>
+            {batchesPresent.map((batchId) => {
+              const index = batchesPresent.indexOf(batchId);
+              const color = colors[index % colors.length];
+              const isSelected = selectedBatch === batchId;
+              return (
+                <button
                   key={batchId}
-                  type="monotone"
-                  dataKey={batchId}
-                  name={batchId}
-                  stroke={colors[index % colors.length]}
-                  strokeWidth={2.5}
-                  connectNulls={true}
-                  dot={{ r: 4, strokeWidth: 1, fill: colors[index % colors.length] }}
-                  activeDot={{ r: 6 }}
+                  type="button"
+                  onClick={() => setSelectedBatch(isSelected ? null : batchId)}
+                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors shrink-0 border ${
+                    isSelected
+                      ? "bg-primary/10 border-primary text-primary font-bold shadow-2xs"
+                      : "bg-background border-border/70 text-muted-foreground hover:border-foreground/30"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0 shadow-2xs" style={{ backgroundColor: color }} />
+                  <span>{batchId.startsWith("Lote") ? batchId : `Lote ${batchId}`}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </CardHeader>
+      <CardContent className="p-3 pt-1 sm:p-4 sm:pt-0">
+        <div className="w-full overflow-x-auto pb-1 scrollbar-thin">
+          <div
+            className="h-[220px] sm:h-[260px] w-full"
+            style={{ minWidth: chartData.length > 10 ? `${Math.max(520, chartData.length * 26)}px` : "100%" }}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 11 }}
+                  minTickGap={16}
                 />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
+                <YAxis
+                  unit=" kg"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fontSize: 11 }}
+                  width={48}
+                />
+                <Tooltip
+                  formatter={(value: number, name: string) => [
+                    `${value ? value.toLocaleString("es-ES") : 0} kg`,
+                    name.startsWith("Lote") ? name : `Lote ${name}`,
+                  ]}
+                  labelStyle={{ fontWeight: "bold" }}
+                  contentStyle={{ borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--background)", fontSize: "12px" }}
+                  filterNull={true}
+                />
+                {selectedBatch === null && (
+                  <Legend
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
+                    formatter={(value: string) => (value.startsWith("Lote") ? value : `Lote ${value}`)}
+                  />
+                )}
+                {visibleBatches.map((batchId) => {
+                  const index = batchesPresent.indexOf(batchId);
+                  const color = colors[index % colors.length];
+                  return (
+                    <Line
+                      key={batchId}
+                      type="monotone"
+                      dataKey={batchId}
+                      name={batchId}
+                      stroke={color}
+                      strokeWidth={selectedBatch ? 3 : 2}
+                      connectNulls={true}
+                      dot={chartData.length > 15 && !selectedBatch ? false : { r: 2.5, strokeWidth: 1, fill: color }}
+                      activeDot={{ r: 5, stroke: "#fff", strokeWidth: 2 }}
+                    />
+                  );
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </CardContent>
     </Card>
