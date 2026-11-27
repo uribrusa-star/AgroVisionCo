@@ -19,6 +19,7 @@ import {
   Users,
   UserCheck,
   Package,
+  Clock,
 } from 'lucide-react';
 import { ContactModal } from '@/components/contact-modal';
 import { WebAnalyticsTracker } from '@/components/web-analytics-tracker';
@@ -115,9 +116,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Panel de Control"
-                    previewSrc="/dashboard_mockup_v2.jpeg?v=3"
-                    mobileSrc="/dashboard_mobile.jpeg?v=3"
-                    desktopSrc="/dashboard_mockup_v2.jpeg?v=3"
+                    previewSrc="/dashboard_mockup_v2.jpeg?v=4"
+                    mobileSrc="/dashboard_mobile.jpeg?v=4"
+                    desktopSrc="/dashboard_mockup_v2.jpeg?v=4"
                     altText="Panel de control de cosechas y costos de frutilla en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -133,9 +134,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Mapa Interactivo de Lotes"
-                    previewSrc="/map_mockup_v2.jpeg?v=3"
-                    mobileSrc="/map_mobile.jpeg?v=3"
-                    desktopSrc="/map_mockup_v2.jpeg?v=3"
+                    previewSrc="/map_mockup_v2.jpeg?v=4"
+                    mobileSrc="/map_mobile.jpeg?v=4"
+                    desktopSrc="/map_mockup_v2.jpeg?v=4"
                     altText="Mapa satelital de lotes de frutilla con alertas sanitarias"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -151,9 +152,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Bitácora del Agrónomo"
-                    previewSrc="/bitacora-agronomo_v2.jpeg?v=3"
-                    mobileSrc="/bitacora-agronomo_mobile.jpeg?v=3"
-                    desktopSrc="/bitacora-agronomo_v2.jpeg?v=3"
+                    previewSrc="/bitacora-agronomo_v2.jpeg?v=4"
+                    mobileSrc="/bitacora-agronomo_mobile.jpeg?v=4"
+                    desktopSrc="/bitacora-agronomo_v2.jpeg?v=4"
                     altText="Bitácora del agrónomo con recetas fitosanitarias y control de carencia"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -169,9 +170,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Trazabilidad Agrícola"
-                    previewSrc="/trazabilidad_mockup.jpeg?v=3"
-                    mobileSrc="/trazabilidad_mockup.jpeg?v=3"
-                    desktopSrc="/trazabilidad_mockup.jpeg?v=3"
+                    previewSrc="/trazabilidad_mockup.jpeg?v=4"
+                    mobileSrc="/trazabilidad_mobile.jpeg?v=4"
+                    desktopSrc="/trazabilidad_mockup.jpeg?v=4"
                     altText="Registro de cosecha de frutilla y reporte de trazabilidad oficial"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -187,9 +188,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Predicciones e Inteligencia"
-                    previewSrc="/predicciones_mockup_v2.jpeg?v=3"
-                    mobileSrc="/predicciones_mobile.jpeg?v=3"
-                    desktopSrc="/predicciones_mockup_v2.jpeg?v=3"
+                    previewSrc="/predicciones_mockup_v2.jpeg?v=4"
+                    mobileSrc="/predicciones_mobile.jpeg?v=4"
+                    desktopSrc="/predicciones_mockup_v2.jpeg?v=4"
                     altText="Pronóstico agroclimático y alertas de heladas para frutilla"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -205,9 +206,9 @@ export default function Home() {
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Bitácora del Productor"
-                    previewSrc="/bitacora_productor_mockup_v2.jpeg?v=3"
-                    mobileSrc="/bitacora_productor_mobile.jpeg?v=3"
-                    desktopSrc="/bitacora_productor_mockup_v2.jpeg?v=3"
+                    previewSrc="/bitacora_productor_mockup_v2.jpeg?v=4"
+                    mobileSrc="/bitacora-productor_mobile.jpeg?v=4"
+                    desktopSrc="/bitacora_productor_mockup_v2.jpeg?v=4"
                     altText="Costos, ingresos y costo por kilo de frutilla en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -241,15 +242,15 @@ export default function Home() {
             </div>
 
             <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-              <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:max-w-none lg:grid-cols-4">
 
                 {/* 1. Recolectores */}
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Gestión de Recolectores y Credenciales QR"
-                    previewSrc="/recolectores_mockup.jpeg?v=3"
-                    mobileSrc="/recolectores_mockup.jpeg?v=3"
-                    desktopSrc="/recolectores_mockup.jpeg?v=3"
+                    previewSrc="/recolectores_mockup.jpeg?v=4"
+                    mobileSrc="/recolectores_mobile.jpeg?v=4"
+                    desktopSrc="/recolectores_mockup.jpeg?v=4"
                     altText="Gestión de cuadrillas de recolectores con credenciales QR en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -263,33 +264,13 @@ export default function Home() {
                   </dd>
                 </div>
 
-                {/* 2. Ingeniero y Encargados */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Ingeniero Agrónomo y Encargados de Campo"
-                    previewSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=3"
-                    mobileSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=3"
-                    desktopSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=3"
-                    altText="Roles de ingeniero agrónomo y encargado de campo en AgroVista"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Ingeniero y Encargados
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">
-                      Accesos diferenciados por función técnica y operativa. El <strong>Ingeniero</strong> gestiona recetas fitosanitarias, monitoreo fenológico y control de carencia (PHI). El <strong>Encargado</strong> coordina tareas culturales diarias (deshoje, riego, microtúneles) y control de personal en lote.
-                    </p>
-                  </dd>
-                </div>
-
-                {/* 3. Embaladores */}
+                {/* 2. Embaladores */}
                 <div className="flex flex-col items-start">
                   <FeatureMockupDialog
                     title="Gestión de Embaladores y Control de Empaque"
-                    previewSrc="/embaladores_mockup.jpeg?v=3"
-                    mobileSrc="/embaladores_mockup.jpeg?v=3"
-                    desktopSrc="/embaladores_mockup.jpeg?v=3"
+                    previewSrc="/embaladores_mockup.jpeg?v=4"
+                    mobileSrc="/embaladores_mobile.jpeg?v=4"
+                    desktopSrc="/embaladores_mockup.jpeg?v=4"
                     altText="Gestión de embaladores y credenciales QR de empaque en AgroVista"
                   />
                   <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
@@ -299,6 +280,46 @@ export default function Home() {
                   <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
                     <p className="flex-auto">
                       Control del sector de galpón y empaque con credenciales QR personalizadas. Trazabilidad de cajas y bandejas preparadas por embalador, control de calidad por categoría y cálculo automático de jornales o pago por bulto procesado.
+                    </p>
+                  </dd>
+                </div>
+
+                {/* 3. Control de Asistencia */}
+                <div className="flex flex-col items-start">
+                  <FeatureMockupDialog
+                    title="Control de Asistencia y Presentismo QR"
+                    previewSrc="/asistencia_mobile.jpeg?v=4"
+                    mobileSrc="/asistencia_mobile.jpeg?v=4"
+                    desktopSrc="/asistencia_mobile.jpeg?v=4"
+                    altText="Control de asistencia y presentismo con código QR en AgroVista"
+                  />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <Clock className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Control de Asistencia
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">
+                      Escaneo ágil de credenciales QR al ingreso y egreso en lote o galpón. Monitoreo en tiempo real del personal activo en la quinta y exportación automática a planillas Excel y PDF para liquidación de jornales.
+                    </p>
+                  </dd>
+                </div>
+
+                {/* 4. Ingeniero y Encargados */}
+                <div className="flex flex-col items-start">
+                  <FeatureMockupDialog
+                    title="Ingeniero Agrónomo y Encargados de Campo"
+                    previewSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=4"
+                    mobileSrc="/usuarios_mobile.jpeg?v=4"
+                    desktopSrc="/equipo_ingeniero_encargado_mockup.jpeg?v=4"
+                    altText="Roles de ingeniero agrónomo y encargado de campo en AgroVista"
+                  />
+                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
+                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
+                    Ingeniero y Encargados
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    <p className="flex-auto">
+                      Accesos diferenciados por función técnica y operativa. El <strong>Ingeniero</strong> gestiona recetas fitosanitarias, monitoreo fenológico y control de carencia (PHI). El <strong>Encargado</strong> coordina tareas culturales diarias (deshoje, riego, microtúneles) y control de personal en lote.
                     </p>
                   </dd>
                 </div>

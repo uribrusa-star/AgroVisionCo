@@ -59,14 +59,14 @@ export function FeatureMockupDialog({
           />
         </div>
         {/* Vista para PC */}
-        <div className="hidden sm:block p-1">
+        <div className="hidden sm:flex justify-center items-center p-1">
           <Image
             src={desktopSrc}
             alt={altText}
             width={1920}
             height={1080}
             quality={100}
-            className="w-full h-auto rounded-xl object-contain max-h-[88vh] shadow-2xl"
+            className="w-auto h-auto rounded-xl object-contain max-h-[88vh] shadow-2xl"
           />
         </div>
       </DialogContent>
