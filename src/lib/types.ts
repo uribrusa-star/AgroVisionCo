@@ -34,7 +34,8 @@ export type User = {
   notificationEmail?: string;
   avatar: string;
   role: UserRole;
-  password?: string; // Added for mock authentication
+  password?: string; // Legacy plaintext password
+  passwordHash?: string; // Secure scrypt cryptographic hash
   fcmTokens?: string[];
   lastLoginAt?: string;
   

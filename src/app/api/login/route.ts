@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import type { User } from '@/lib/types';
+import { verifyPassword, hashPassword } from '@/lib/auth-crypto';
 
 import { getRoleAvatar } from '@/lib/utils';
 import { users as mockUsers } from '@/lib/data';
@@ -67,9 +68,13 @@ export async function POST(request: Request) {
 
     // Manejo especial resiliente para la cuenta principal del productor
     const isMainProducer = emailAliases.some(e => e === 'productor@agrovision.co' || e === 'productor@agrovista.co');
-    
+    let isPasswordValid = false;
+
     if (isMainProducer) {
-      if (password === 'uribrusa' || password === 'UriBrusa22' || (user && user.password === password)) {
+      const storedSecret = user?.passwordHash || user?.password || 'uribrusa';
+      isPasswordValid = verifyPassword(password, storedSecret) || (storedSecret !== 'UriBrusa22' && verifyPassword(password, 'UriBrusa22'));
+
+      if (isPasswordValid) {
         if (!user) {
           user = {
             id: 'user-productor',
@@ -77,41 +82,53 @@ export async function POST(request: Request) {
             email: 'productor@agrovista.co',
             role: 'Productor',
             avatar: 'https://i.imgur.com/IwHcGqs.png',
-            password,
             notificationEmail: 'productor@agrovista.co'
           };
         } else {
           user.id = 'user-productor'; // Consolidar siempre en el ID canónico
           user.establishmentId = 'main'; // El productor principal siempre pertenece al establecimiento 'main'
-          user.password = password;
         }
 
-        // Sincronizar credenciales en Firestore sin pisar el nombre personalizado si ya existe
+        // Migrar automáticamente a hash criptográfico seguro en Firestore
         try {
           if (adminDb) {
             const updatePayload: Record<string, any> = {
               email: user.email || 'productor@agrovista.co',
               role: 'Productor',
               establishmentId: 'main',
-              password: password,
+              passwordHash: hashPassword(password),
               updatedAt: new Date().toISOString()
             };
-            // Solo establecer nombre si el usuario en BD no tiene uno cargado
             if (user.name) {
               updatePayload.name = user.name;
             }
             await adminDb.collection('users').doc('user-productor').set(updatePayload, { merge: true });
           }
         } catch (syncErr) {
-          console.warn('Warning syncing producer password to Firestore:', syncErr);
+          console.warn('Warning syncing producer password hash to Firestore:', syncErr);
         }
-      } else {
-        return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
       }
     } else {
-      if (!user || user.password !== password) {
-        return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
+      if (user) {
+        const storedSecret = user.passwordHash || user.password;
+        isPasswordValid = verifyPassword(password, storedSecret);
+
+        // Si era una contraseña legacy en texto plano, migrarla automáticamente a hash seguro
+        if (isPasswordValid && !user.passwordHash && adminDb && user.id) {
+          try {
+            await adminDb.collection('users').doc(user.id).update({
+              passwordHash: hashPassword(password),
+              updatedAt: new Date().toISOString()
+            });
+          } catch (migErr) {
+            console.warn('Warning migrating user password to hash in Firestore:', migErr);
+          }
+        }
       }
+    }
+
+    if (!isPasswordValid || !user) {
+      return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 });
     }
 
     // Verificar si el establecimiento está suspendido (seguro)
@@ -152,8 +169,8 @@ export async function POST(request: Request) {
       console.warn('Warning updating lastLoginAt:', e);
     }
     
-    // Omitir la contraseña antes de guardar en la sesión por seguridad
-    const { password: _, ...userToSave } = user;
+    // Omitir la contraseña y el hash antes de guardar en la sesión por seguridad
+    const { password: _, passwordHash: __, ...userToSave } = user;
 
     // Generar un token personalizado para Firebase Auth (seguro)
     let customToken: string | null = null;

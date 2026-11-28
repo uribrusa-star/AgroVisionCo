@@ -3,6 +3,7 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { sessionOptions } from '@/lib/session';
+import { hashPassword } from '@/lib/auth-crypto';
 
 export async function POST(request: Request) {
   try {
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
       role,
       avatar: '',
       establishmentId,
-      password, // Save password for mock login to work
+      passwordHash: hashPassword(password),
       dni: body.dni || '',
       phone: body.phone || '',
       createdAt: new Date().toISOString(),
@@ -159,7 +160,7 @@ export async function PUT(request: Request) {
 
     if (password && password.trim().length >= 6) {
       updateDataAuth.password = password;
-      updateDataFirestore.password = password; // For the mock login compatibility
+      updateDataFirestore.passwordHash = hashPassword(password);
     }
 
     // Update Firebase Auth user
