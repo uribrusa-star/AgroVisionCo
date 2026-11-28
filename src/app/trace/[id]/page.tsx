@@ -422,31 +422,39 @@ export default function TracePage() {
 
                                             {log.images && log.images.length > 0 && (
                                                 <div className={`mt-2 grid gap-2 ${log.images.length === 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}>
-                                                    {log.images.slice(0, 4).map((img, imgIdx) => (
-                                                        <div 
-                                                            key={imgIdx}
-                                                            className="relative aspect-square rounded-lg overflow-hidden border border-stone-300 shadow-2xs cursor-pointer group bg-stone-100"
-                                                            onClick={() => {
-                                                                setSelectedImage(img.url);
-                                                                setSelectedLogInfo({ 
-                                                                    state: log.developmentState, 
-                                                                    date: new Date(log.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) 
-                                                                });
-                                                            }}
-                                                        >
-                                                            <Image 
-                                                                src={img.url} 
-                                                                alt={`${log.developmentState} - ${imgIdx + 1}`} 
-                                                                fill 
-                                                                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 px-2 py-0.5 rounded text-[10px] font-bold text-stone-800 shadow-md flex items-center gap-1">
-                                                                    <Info className="h-3 w-3 text-[#196F3D]" /> Ampliar
+                                                    {log.images.slice(0, 4).map((img, imgIdx) => {
+                                                        const thumbUrl = getOptimizedImageUrl(img.url, { width: 320, quality: 75 });
+                                                        return (
+                                                            <div 
+                                                                key={imgIdx}
+                                                                className="relative aspect-square rounded-lg overflow-hidden border border-stone-300 shadow-2xs cursor-pointer group bg-stone-100"
+                                                                onClick={() => {
+                                                                    setSelectedImage(img.url);
+                                                                    setSelectedLogInfo({ 
+                                                                        state: log.developmentState, 
+                                                                        date: new Date(log.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) 
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <img 
+                                                                    src={thumbUrl} 
+                                                                    alt={`${log.developmentState} - ${imgIdx + 1}`} 
+                                                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                                    loading="lazy"
+                                                                    decoding="async"
+                                                                    onError={(e) => {
+                                                                        const target = e.target as HTMLImageElement;
+                                                                        if (target.src !== img.url) target.src = img.url;
+                                                                    }}
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center pointer-events-none">
+                                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 px-2 py-0.5 rounded text-[10px] font-bold text-stone-800 shadow-md flex items-center gap-1">
+                                                                        <Info className="h-3 w-3 text-[#196F3D]" /> Ampliar
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </li>
@@ -483,24 +491,31 @@ export default function TracePage() {
                     </DialogHeader>
                     <div className="relative w-full h-[80vh] flex items-center justify-center p-2 sm:p-4">
                         <AnimatePresence mode="wait">
-                            {selectedImage && (
-                                <motion.div
-                                    key={selectedImage}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="relative w-full h-full flex items-center justify-center"
-                                >
-                                    <Image
-                                        src={selectedImage}
-                                        alt="Imagen ampliada"
-                                        fill
-                                        className="object-contain"
-                                        priority
-                                    />
-                                </motion.div>
-                            )}
+                            {selectedImage && (() => {
+                                const optimizedFull = getOptimizedImageUrl(selectedImage, { width: 1200, quality: 80 });
+                                return (
+                                    <motion.div
+                                        key={selectedImage}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="relative w-full h-full flex items-center justify-center"
+                                    >
+                                        <img
+                                            src={optimizedFull}
+                                            alt="Imagen ampliada"
+                                            className="max-w-full max-h-[78vh] object-contain rounded-lg"
+                                            loading="eager"
+                                            decoding="async"
+                                            onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                if (target.src !== selectedImage) target.src = selectedImage;
+                                            }}
+                                        />
+                                    </motion.div>
+                                );
+                            })()}
                         </AnimatePresence>
                     </div>
                 </DialogContent>
@@ -649,17 +664,17 @@ export default function TracePage() {
                     </DialogHeader>
 
                     <div className="p-4 sm:p-5 pt-3.5 space-y-3.5 overflow-y-auto flex-1">
-                        {/* GALERÍA / CARRUSEL */}
+                        {/* GALERÍA / CARRUSEL (Máximo 10 imágenes) */}
                         {((data?.establishmentData?.images || [
                           'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
                           'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
                           'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
-                        ]).length > 0) && (() => {
-                            const rawImages: string[] = data?.establishmentData?.images || [
+                        ]).slice(0, 10).length > 0) && (() => {
+                            const rawImages: string[] = (data?.establishmentData?.images || [
                               'https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=800&q=80',
                               'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80',
                               'https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80'
-                            ];
+                            ]).slice(0, 10);
                             const currentRawUrl = rawImages[activeEstablishmentImg] || rawImages[0];
                             const optimizedMainUrl = getOptimizedImageUrl(currentRawUrl, { width: 800, quality: 75 });
 

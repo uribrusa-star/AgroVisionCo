@@ -1020,11 +1020,15 @@ function GalleryEditModal({
   const handleAddUrl = () => {
     const trimmed = newUrlInput.trim();
     if (!trimmed) return;
+    if (images.length >= 10) {
+      alert('Se permite un máximo de 10 imágenes para el establecimiento.');
+      return;
+    }
     if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
       alert('Por favor ingrese una URL válida que comience con http:// o https://');
       return;
     }
-    setImages(prev => [...prev, trimmed]);
+    setImages(prev => [...prev, trimmed].slice(0, 10));
     setNewUrlInput('');
   };
 
@@ -1079,12 +1083,12 @@ function GalleryEditModal({
                       }
                     }}
                   />
-                  <Button size="sm" onClick={handleAddUrl} className="shrink-0 text-xs">
-                    Agregar
+                  <Button size="sm" onClick={handleAddUrl} disabled={images.length >= 10} className="shrink-0 text-xs">
+                    {images.length >= 10 ? 'Máximo alcanzado' : 'Agregar'}
                   </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Soporta links de Imgur, Unsplash, Google Drive (directos), o cualquier link de imagen público.
+                  Máximo 10 imágenes permitidas. Soporta links de Imgur, Unsplash, Google Drive (directos), o cualquier link de imagen público.
                 </p>
               </div>
             )}
@@ -1092,7 +1096,7 @@ function GalleryEditModal({
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
-                  URLs Cargadas ({images.length})
+                  URLs Cargadas ({images.length} / 10)
                 </h4>
                 {!isReadOnly && images.length > 0 && (
                   <Button variant="ghost" size="sm" onClick={() => setImages([])} className="text-xs text-destructive h-6 px-2">
@@ -1255,7 +1259,7 @@ function GalleryEditModal({
             {isReadOnly ? 'Cerrar' : 'Cancelar'}
           </Button>
           {!isReadOnly && (
-            <Button onClick={() => onSave(images.filter(Boolean))}>
+            <Button onClick={() => onSave(images.filter(Boolean).slice(0, 10))}>
               Guardar Galería de Fotos
             </Button>
           )}
