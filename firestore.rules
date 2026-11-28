@@ -7,81 +7,179 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Por defecto, denegamos todo el acceso
+    // Obtener los datos del usuario logueado en la colección users
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Verificar si el usuario es SuperAdmin
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        getUserData().role == 'SuperAdmin' || 
+        getUserData().establishmentId == 'main'
+      );
+    }
+
+    // Obtener el establecimiento del usuario autenticado
+    function getUserEstablishment() {
+      return getUserData().establishmentId;
+    }
+
+    // Regla de aislamiento multi-inquilino (tenant)
+    function belongsToTenant(data) {
+      return isSuperAdmin() || (
+        isAuthenticated() && 
+        data.establishmentId == getUserEstablishment()
+      );
+    }
+
+    // Por defecto, denegamos todo el acceso no contemplado explícitamente
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Permitir acceso a todas las colecciones SOLAMENTE a usuarios logueados.
-    // En una iteración futura, podemos agregar validación estricta por `establishmentId`.
-    match /users/{document} {
-      allow read, write: if isAuthenticated();
+    // Reglas para la colección users:
+    // - Un usuario puede leer su propio perfil, los usuarios de su mismo establecimiento, o SuperAdmin
+    // - Un usuario puede editar su propio perfil básico, o SuperAdmin / Productor de su establecimiento
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isSuperAdmin() ||
+        resource.data.establishmentId == getUserEstablishment()
+      );
+      allow create: if isAuthenticated() && (
+        isSuperAdmin() ||
+        request.resource.data.establishmentId == getUserEstablishment()
+      );
+      allow update: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (request.auth.uid == userId && request.resource.data.role == resource.data.role) ||
+        (resource.data.establishmentId == getUserEstablishment() && getUserData().role == 'Productor')
+      );
+      allow delete: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (resource.data.establishmentId == getUserEstablishment() && getUserData().role == 'Productor')
+      );
     }
-    match /establishment/{document} {
-      allow read, write: if isAuthenticated();
+
+    // Reglas para el documento de establecimiento:
+    match /establishment/{estId} {
+      allow read: if isAuthenticated() && (
+        estId == getUserEstablishment() ||
+        isSuperAdmin()
+      );
+      allow write: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (estId == getUserEstablishment() && getUserData().role == 'Productor')
+      );
     }
-    match /collectors/{document} {
-      allow read, write: if isAuthenticated();
+
+    // Colecciones operativas multi-inquilino (aisladas por establishmentId)
+    match /collectors/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /packers/{document} {
-      allow read, write: if isAuthenticated();
+    match /packers/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /harvests/{document} {
-      allow read, write: if isAuthenticated();
+    match /harvests/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /packagingLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /packagingLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /culturalPracticeLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /culturalPracticeLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /agronomistLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /agronomistLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /phenologyLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /phenologyLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /predictionLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /predictionLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /diagnosisLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /diagnosisLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /supplies/{document} {
-      allow read, write: if isAuthenticated();
+    match /supplies/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /tasks/{document} {
-      allow read, write: if isAuthenticated();
+    match /tasks/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /batches/{document} {
-      allow read, write: if isAuthenticated();
+    match /batches/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /collectorPaymentLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /collectorPaymentLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /producerLogs/{document} {
-      allow read, write: if isAuthenticated();
+    match /producerLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /transactions/{document} {
-      allow read, write: if isAuthenticated();
+    match /transactions/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /knowledge/{document} {
-      allow read, write: if isAuthenticated();
+    match /notifications/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /notifications/{document} {
-      allow read, write: if isAuthenticated();
+    match /attendanceLogs/{doc} {
+      allow read: if isAuthenticated() && belongsToTenant(resource.data);
+      allow create: if isAuthenticated() && belongsToTenant(request.resource.data);
+      allow update, delete: if isAuthenticated() && belongsToTenant(resource.data);
     }
-    match /platformSettings/{document} {
-      allow read, write: if isAuthenticated();
+    match /auditLogs/{doc} {
+      allow read, write: if isAuthenticated() && (
+        isSuperAdmin() || 
+        (resource != null && belongsToTenant(resource.data)) ||
+        (request.resource != null && belongsToTenant(request.resource.data))
+      );
     }
-    match /auditLogs/{document} {
-      allow read, write: if isAuthenticated();
+
+    // Colección de conocimiento agronómico global (lectura para autenticados, escritura admin)
+    match /knowledge/{doc} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
     }
-    match /attendanceLogs/{document} {
-      allow read, write: if isAuthenticated();
+
+    // Configuración y solicitudes internas administrativas
+    match /platformSettings/{doc} {
+      allow read, write: if isSuperAdmin();
     }
-    match /contactRequests/{document} {
-      allow read, write: if isAuthenticated();
+    match /contactRequests/{doc} {
+      allow read, write: if isSuperAdmin();
     }
   }
 }
