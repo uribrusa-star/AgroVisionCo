@@ -149,35 +149,18 @@ export default function TracePage() {
 
     return (
         <div className="min-h-screen bg-[#FAF9F6] text-[#18201C] px-4 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6 selection:bg-emerald-100 selection:text-emerald-900">
-            {/* Header Compacto y Elegante: Diseñado para entrar completo en el primer pantallazo en PC */}
+            {/* Header Compacto y Minimalista */}
             <header className="max-w-5xl mx-auto text-center mb-4 sm:mb-5 lg:mb-6">
-                {/* Fila superior de insignia institucional y marca */}
-                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-1.5">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#0F2A1D] border border-emerald-900/40 text-[10px] sm:text-[11px] font-semibold text-emerald-300 uppercase tracking-wider shadow-2xs">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Pasaporte de Trazabilidad
-                    </div>
-
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white border border-stone-300 text-[10px] sm:text-[11px] text-stone-700 shadow-2xs">
-                        <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0">
-                            <Image src="/logo.png" alt="AgroVista" width={14} height={14} className="object-contain" />
-                        </div>
-                        <span className="font-semibold text-[#0D2618]">AgroVista</span>
-                    </div>
-
-                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-300 text-[10px] sm:text-[11px] font-mono text-stone-700">
-                        <span className="text-stone-400 font-sans text-[10px] uppercase font-bold">Lote:</span>
-                        <span className="font-bold text-[#0D2618]">{id}</span>
-                    </div>
-                </div>
-
-                {/* Título principal optimizado en altura */}
-                <h1 className="text-2xl sm:text-3xl lg:text-3xl font-extrabold tracking-tight text-[#0D2618] font-headline">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#0D2618] font-headline">
                     Historia de tu Frutilla
                 </h1>
                 <p className="text-[11px] sm:text-xs md:text-sm text-stone-600 mt-1 max-w-xl mx-auto leading-normal">
                     Certificación de origen, buenas prácticas e historial agronómico verificado en Coronda, Santa Fe.
                 </p>
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100 border border-stone-300 text-[11px] sm:text-xs font-mono text-stone-700 shadow-2xs">
+                    <span className="text-stone-400 font-sans text-[10px] uppercase font-bold">Lote:</span>
+                    <span className="font-bold text-[#0D2618]">{id}</span>
+                </div>
             </header>
 
             {/* Layout Principal: 2 columnas en PC (lg) con altura equilibrada para ver todo de una sola vez */}
