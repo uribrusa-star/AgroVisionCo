@@ -163,38 +163,38 @@ export default function TracePage() {
                 </div>
             </header>
 
-            {/* Layout Principal: 2 columnas en PC (lg) con altura equilibrada para ver todo de una sola vez */}
-            <main className="max-w-6xl mx-auto space-y-5 sm:space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-stretch">
+            {/* Layout Principal: 2 columnas en PC (lg) con tamaño amplio y generoso en PC manteniendo móvil perfecto */}
+            <main className="max-w-6xl mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 items-stretch">
                     
                     {/* COLUMNA 1: Resumen del Cultivo */}
                     <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-xs flex flex-col justify-between overflow-hidden">
-                        {/* Cabecera oscura compacta */}
-                        <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 border-b border-emerald-950 shrink-0">
+                        {/* Cabecera oscura */}
+                        <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 lg:px-6 lg:py-4 border-b border-emerald-950 shrink-0">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
-                                    <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
-                                        <Sprout className="h-4 w-4" />
+                                <CardTitle className="flex items-center gap-2 lg:gap-2.5 text-sm sm:text-base lg:text-lg font-bold text-white">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
+                                        <Sprout className="h-4 w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     Resumen del Cultivo
                                 </CardTitle>
-                                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-300 bg-emerald-900/40 border border-emerald-700/40 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] sm:text-[11px] lg:text-xs font-semibold text-emerald-300 bg-emerald-900/40 border border-emerald-700/40 px-2 py-0.5 lg:px-2.5 lg:py-1 rounded-full">
                                     Datos Certificados
                                 </span>
                             </div>
                         </CardHeader>
 
-                        <CardContent className="p-3.5 sm:p-4.5 flex-1 flex flex-col justify-between space-y-3">
-                            {/* 4 tarjetas en 2 columnas y 2 filas tanto en móvil como en PC */}
-                            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+                        <CardContent className="p-3.5 sm:p-4.5 lg:p-6 flex-1 flex flex-col justify-between space-y-3 lg:space-y-4">
+                            {/* 4 tarjetas en 2 columnas y 2 filas (compactas en móvil, amplias en PC) */}
+                            <div className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:gap-3.5">
                                 {/* Fecha de Cosecha */}
-                                <div className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                <div className="flex items-center gap-2 lg:gap-3 p-2 sm:p-2.5 lg:p-3.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Fecha Cosecha</p>
-                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 leading-tight truncate">
+                                        <p className="text-[8.5px] sm:text-[9.5px] lg:text-[10.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Fecha Cosecha</p>
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm lg:text-base text-[#0D2618] mt-0.5 leading-tight truncate">
                                             {new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </p>
                                     </div>
@@ -203,42 +203,42 @@ export default function TracePage() {
                                 {/* Establecimiento (Quinta) */}
                                 <div 
                                     onClick={() => setShowEstablishmentModal(true)}
-                                    className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] hover:bg-white rounded-xl border border-stone-200 hover:border-emerald-700/40 cursor-pointer transition-all shadow-2xs group"
+                                    className="flex items-center gap-2 lg:gap-3 p-2 sm:p-2.5 lg:p-3.5 bg-[#FAF9F6] hover:bg-white rounded-xl border border-stone-200 hover:border-emerald-700/40 cursor-pointer transition-all shadow-2xs group"
                                 >
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">
+                                        <p className="text-[8.5px] sm:text-[9.5px] lg:text-[10.5px] font-bold uppercase tracking-wider text-stone-500 truncate">
                                             Establecimiento
                                         </p>
-                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate group-hover:text-[#196F3D] transition-colors">
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm lg:text-base text-[#0D2618] mt-0.5 truncate group-hover:text-[#196F3D] transition-colors">
                                             {data.establishmentName || 'Quinta Las Fresas'}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Lote de Origen */}
-                                <div className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <Leaf className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                <div className="flex items-center gap-2 lg:gap-3 p-2 sm:p-2.5 lg:p-3.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Leaf className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Lote Origen</p>
-                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate">
+                                        <p className="text-[8.5px] sm:text-[9.5px] lg:text-[10.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Lote Origen</p>
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm lg:text-base text-[#0D2618] mt-0.5 truncate">
                                             {data.batchId}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Recolector */}
-                                <div className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                <div className="flex items-center gap-2 lg:gap-3 p-2 sm:p-2.5 lg:p-3.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Cuadrillero</p>
-                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate">
+                                        <p className="text-[8.5px] sm:text-[9.5px] lg:text-[10.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Cuadrillero</p>
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm lg:text-base text-[#0D2618] mt-0.5 truncate">
                                             {data.collectorName}
                                         </p>
                                     </div>
@@ -249,39 +249,39 @@ export default function TracePage() {
                             {data.bpaCertified && (
                                 <div 
                                     onClick={() => setShowBpaModal(true)}
-                                    className="p-2.5 sm:p-3 bg-[#0F2A1D] hover:bg-[#133525] rounded-xl border border-emerald-800/80 cursor-pointer transition-all shadow-sm flex items-center justify-between gap-3 group mt-1"
+                                    className="p-2.5 sm:p-3 lg:p-4 bg-[#0F2A1D] hover:bg-[#133525] rounded-xl border border-emerald-800/80 cursor-pointer transition-all shadow-sm flex items-center justify-between gap-3 group mt-1 lg:mt-2"
                                 >
-                                    <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex items-center gap-3 lg:gap-4 min-w-0">
                                         {/* Sello Oficial BPA AgroVista con dimensiones fijas garantizadas */}
-                                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] sm:min-w-[56px] sm:min-h-[56px] sm:max-w-[56px] sm:max-h-[56px] rounded-full bg-white border border-emerald-600/60 shadow-md overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] sm:min-w-[56px] sm:min-h-[56px] sm:max-w-[56px] sm:max-h-[56px] lg:min-w-[64px] lg:min-h-[64px] lg:max-w-[64px] lg:max-h-[64px] rounded-full bg-white border border-emerald-600/60 shadow-md overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                                             <Image 
                                                 src="/logoBPA-sinfondo.png" 
                                                 alt="Sello Oficial BPA AgroVista" 
                                                 fill
-                                                sizes="(max-width: 640px) 48px, 56px"
+                                                sizes="(max-width: 640px) 48px, (max-width: 1024px) 56px, 64px"
                                                 className="object-contain p-0.5"
                                                 priority
                                             />
                                         </div>
                                         <div className="min-w-0 text-white">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
+                                                <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
                                                     Buenas Prácticas Agrícolas
                                                 </span>
-                                                <span className="text-[8px] font-extrabold bg-emerald-800 text-emerald-200 px-1 py-0.2 rounded border border-emerald-600/50">
+                                                <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-extrabold bg-emerald-800 text-emerald-200 px-1 py-0.2 rounded border border-emerald-600/50">
                                                     G.A.P.
                                                 </span>
                                             </div>
-                                            <p className="font-bold text-xs sm:text-sm text-white mt-0.5 truncate group-hover:text-emerald-200 transition-colors">
+                                            <p className="font-bold text-xs sm:text-sm lg:text-base text-white mt-0.5 truncate group-hover:text-emerald-200 transition-colors">
                                                 Inocuidad & Cuidado de Origen
                                             </p>
-                                            <p className="text-[10px] text-emerald-100/70 truncate">
+                                            <p className="text-[10px] sm:text-[11px] lg:text-xs text-emerald-100/70 truncate mt-0.5">
                                                 Período de carencia cumplido, agua segura y control biológico.
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="hidden sm:flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-900/60 px-2.5 py-1 rounded-lg border border-emerald-700/50 shrink-0 group-hover:bg-emerald-800 transition-colors">
-                                        Ver Sello <ArrowUpRight className="h-3 w-3" />
+                                    <div className="hidden sm:flex items-center gap-1 text-[11px] lg:text-xs font-bold text-emerald-300 bg-emerald-900/60 px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-lg border border-emerald-700/50 shrink-0 group-hover:bg-emerald-800 transition-colors">
+                                        Ver Sello <ArrowUpRight className="h-3 w-3 lg:h-3.5 lg:w-3.5" />
                                     </div>
                                 </div>
                             )}
@@ -290,61 +290,61 @@ export default function TracePage() {
 
                     {/* COLUMNA 2: Cadena de Custodia y Trazabilidad */}
                     <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-xs flex flex-col justify-between overflow-hidden">
-                        {/* Cabecera oscura compacta */}
-                        <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 border-b border-emerald-950 shrink-0">
-                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
-                                <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
-                                    <Truck className="h-4 w-4" />
+                        {/* Cabecera oscura */}
+                        <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 lg:px-6 lg:py-4 border-b border-emerald-950 shrink-0">
+                            <CardTitle className="flex items-center gap-2 lg:gap-2.5 text-sm sm:text-base lg:text-lg font-bold text-white">
+                                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
+                                    <Truck className="h-4 w-4 lg:h-5 lg:w-5" />
                                 </div>
                                 Cadena de Custodia y Trazabilidad
                             </CardTitle>
                         </CardHeader>
 
-                        <CardContent className="p-3.5 sm:p-4.5 flex-1 flex flex-col justify-center">
-                            <ul className="space-y-3 sm:space-y-3.5 relative">
+                        <CardContent className="p-3.5 sm:p-4.5 lg:p-6 flex-1 flex flex-col justify-center">
+                            <ul className="space-y-3 sm:space-y-3.5 lg:space-y-4.5 relative">
                                 {/* Línea conectora sobria en verde bosque */}
-                                <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-[#0F2A1D]/20 hidden sm:block" />
+                                <div className="absolute left-4 lg:left-5 top-4 bottom-4 w-0.5 bg-[#0F2A1D]/20 hidden sm:block" />
 
-                                <li className="flex items-start gap-3 relative">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
-                                        <Sprout className="h-4 w-4" />
+                                <li className="flex items-start gap-3 lg:gap-4 relative">
+                                    <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
+                                        <Sprout className="h-4 w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1 pt-0.5">
                                         <div className="flex items-center justify-between gap-2 w-full">
-                                            <p className="font-bold text-xs sm:text-sm text-[#0D2618]">1. Cosecha en Campo</p>
-                                            <span className="text-[9px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded shrink-0">Completado</span>
+                                            <p className="font-bold text-xs sm:text-sm lg:text-base text-[#0D2618]">1. Cosecha en Campo</p>
+                                            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 lg:px-2 lg:py-0.5 rounded shrink-0">Completado</span>
                                         </div>
-                                        <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5 leading-snug">
+                                        <p className="text-[11px] sm:text-xs lg:text-[13px] text-stone-600 mt-0.5 lg:mt-1 leading-snug lg:leading-relaxed">
                                             Fruto cosechado a mano en punto óptimo de maduración por cuadrilleros registrados y capacitados.
                                         </p>
                                     </div>
                                 </li>
 
-                                <li className="flex items-start gap-3 relative">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
-                                        <Package className="h-4 w-4" />
+                                <li className="flex items-start gap-3 lg:gap-4 relative">
+                                    <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
+                                        <Package className="h-4 w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1 pt-0.5">
                                         <div className="flex items-center justify-between gap-2 w-full">
-                                            <p className="font-bold text-xs sm:text-sm text-[#0D2618]">2. Empaque y Control de Calidad</p>
-                                            <span className="text-[9px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded shrink-0">Completado</span>
+                                            <p className="font-bold text-xs sm:text-sm lg:text-base text-[#0D2618]">2. Empaque y Control de Calidad</p>
+                                            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 lg:px-2 lg:py-0.5 rounded shrink-0">Completado</span>
                                         </div>
-                                        <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5 leading-snug">
+                                        <p className="text-[11px] sm:text-xs lg:text-[13px] text-stone-600 mt-0.5 lg:mt-1 leading-snug lg:leading-relaxed">
                                             Selección cuidadosa, descarte de fruta defectuosa y acondicionamiento higiénico en bandejas de origen.
                                         </p>
                                     </div>
                                 </li>
 
-                                <li className="flex items-start gap-3 relative">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
-                                        <Truck className="h-4 w-4" />
+                                <li className="flex items-start gap-3 lg:gap-4 relative">
+                                    <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
+                                        <Truck className="h-4 w-4 lg:h-5 lg:w-5" />
                                     </div>
                                     <div className="min-w-0 flex-1 pt-0.5">
                                         <div className="flex items-center justify-between gap-2 w-full">
-                                            <p className="font-bold text-xs sm:text-sm text-[#0D2618]">3. Logística y Distribución Comercial</p>
-                                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded shrink-0">En Destino</span>
+                                            <p className="font-bold text-xs sm:text-sm lg:text-base text-[#0D2618]">3. Logística y Distribución Comercial</p>
+                                            <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 lg:px-2 lg:py-0.5 rounded shrink-0">En Destino</span>
                                         </div>
-                                        <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5 leading-snug">
+                                        <p className="text-[11px] sm:text-xs lg:text-[13px] text-stone-600 mt-0.5 lg:mt-1 leading-snug lg:leading-relaxed">
                                             Transporte directo y ágil desde la quinta hacia mercados mayoristas y verdulerías, garantizando la frescura del fruto recién cortado.
                                         </p>
                                     </div>
@@ -357,21 +357,21 @@ export default function TracePage() {
 
                 {/* FILA INFERIOR (ANCHO COMPLETO): Historial de Fenología del Lote */}
                 {data.phenologyLogs && data.phenologyLogs.length > 0 && (
-                    <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-xs overflow-hidden mt-5 sm:mt-6">
-                        <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 border-b border-emerald-950">
-                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
-                                <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
-                                    <Leaf className="h-4 w-4" />
+                    <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-xs overflow-hidden mt-5 sm:mt-6 lg:mt-7">
+                        <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 lg:px-6 lg:py-4 border-b border-emerald-950">
+                            <CardTitle className="flex items-center gap-2 lg:gap-2.5 text-sm sm:text-base lg:text-lg font-bold text-white">
+                                <div className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
+                                    <Leaf className="h-4 w-4 lg:h-5 lg:w-5" />
                                 </div>
                                 Historial de Fenología del Lote
                             </CardTitle>
-                            <CardDescription className="text-emerald-100/70 text-[11px] mt-0.5">
+                            <CardDescription className="text-emerald-100/70 text-[11px] lg:text-xs mt-0.5">
                                 Registros fisiológicos documentados durante el ciclo de floración y cuajado del cultivo.
                             </CardDescription>
                         </CardHeader>
 
-                        <CardContent className="p-4 sm:p-5 pt-4">
-                            <ul className="space-y-3">
+                        <CardContent className="p-4 sm:p-5 lg:p-6 pt-4 lg:pt-5">
+                            <ul className="space-y-3 lg:space-y-4">
                                 {data.phenologyLogs.map((log, index) => {
                                     const Icon = phenologyIcons[log.developmentState] || Info;
                                     return (
