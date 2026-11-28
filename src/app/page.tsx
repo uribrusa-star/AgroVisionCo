@@ -25,6 +25,7 @@ import { ContactModal } from '@/components/contact-modal';
 import { WebAnalyticsTracker } from '@/components/web-analytics-tracker';
 import { HeroMusicPlayer } from '@/components/home/hero-music-player';
 import { FeatureMockupDialog } from '@/components/home/feature-mockup-dialog';
+import { CoreFeaturesShowcase } from '@/components/home/core-features-showcase';
 import { FaqSection } from '@/components/home/faq-section';
 import { HomeJsonLd } from '@/components/home/json-ld';
 import { AuthRedirect } from '@/components/home/auth-redirect';
@@ -69,7 +70,6 @@ export default function Home() {
               muted
               playsInline
               preload="metadata"
-              poster="/dashboard_mockup.jpeg"
               className="object-cover w-full h-full opacity-30"
             >
               <source src="/hero_background.mp4" type="video/mp4" />
@@ -109,119 +109,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-              <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-                
-                {/* 1. Panel de Control */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Panel de Control"
-                    previewSrc="/dashboard_mockup.jpeg?v=5"
-                    mobileSrc="/dashboard_mobile.jpeg?v=5"
-                    desktopSrc="/dashboard_mockup.jpeg?v=5"
-                    altText="Panel de control de cosechas y costos de frutilla en AgroVista"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Panel de Control
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Resumen visual de cosechas totales, costos de mano de obra, rendimiento promedio por lote y el día de pico productivo de tu temporada.</p>
-                  </dd>
-                </div>
-
-                {/* 2. Mapa Interactivo */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Mapa Interactivo de Lotes"
-                    previewSrc="/map_mockup.jpeg?v=5"
-                    mobileSrc="/map_mobile.jpeg?v=5"
-                    desktopSrc="/map_mockup.jpeg?v=5"
-                    altText="Mapa satelital de lotes de frutilla con alertas sanitarias"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <MapPin className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Mapa Interactivo
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Visualización satelital de tus lotes delimitados, alertas sanitarias geolocalizadas, estados de carencia (PHI) y tarjetas flotantes de resumen en tiempo real.</p>
-                  </dd>
-                </div>
-
-                {/* 3. Bitácora del Agrónomo */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Bitácora del Agrónomo"
-                    previewSrc="/bitacora-agronomo_mockup.jpeg?v=5"
-                    mobileSrc="/bitacora-agronomo_mobile.jpeg?v=5"
-                    desktopSrc="/bitacora-agronomo_mockup.jpeg?v=5"
-                    altText="Bitácora del agrónomo con recetas fitosanitarias y control de carencia"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <Leaf className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Bitácora del Agrónomo
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Gestión integral de recetas fitosanitarias, riegos, nutrición foliar, monitoreo fenológico e informes agronómicos técnicos generados con IA.</p>
-                  </dd>
-                </div>
-
-                {/* 4. Trazabilidad */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Trazabilidad Agrícola"
-                    previewSrc="/trazabilidad_mockup.jpeg?v=5"
-                    mobileSrc="/trazabilidad_mobile.jpeg?v=5"
-                    desktopSrc="/trazabilidad_mockup.jpeg?v=5"
-                    altText="Registro de cosecha de frutilla y reporte de trazabilidad oficial"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Trazabilidad de Cosecha
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Seguimiento garantizado origen-destino con códigos QR, registro rápido de kilos recolectados por trabajador y embalaje por categoría.</p>
-                  </dd>
-                </div>
-
-                {/* 5. Predicciones */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Predicciones e Inteligencia"
-                    previewSrc="/predicciones_mockup.jpeg?v=5"
-                    mobileSrc="/predicciones_mobile.jpeg?v=5"
-                    desktopSrc="/predicciones_mockup.jpeg?v=5"
-                    altText="Pronóstico agroclimático y alertas de heladas para frutilla"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Predicciones Climáticas e IA
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Pronóstico agroclimático en tiempo real, alertas de heladas, prevención de plagas y recomendaciones inteligentes para proteger la producción.</p>
-                  </dd>
-                </div>
-
-                {/* 6. Bitácora del Productor */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Bitácora del Productor"
-                    previewSrc="/bitacora-productor_mockup.jpeg?v=5"
-                    mobileSrc="/bitacora-productor_mobile.jpeg?v=5"
-                    desktopSrc="/bitacora-productor_mockup.jpeg?v=5"
-                    altText="Costos, ingresos y costo por kilo de frutilla en AgroVista"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Bitácora del Productor
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">Administración financiera integral: ingresos por ventas, costos operativos, margen neto, ROI, costo por kilo y liquidación de mano de obra.</p>
-                  </dd>
-                </div>
-
-              </dl>
-            </div>
+            {/* Interactive Showcase of Core Features */}
+            <CoreFeaturesShowcase />
           </div>
         </section>
 
