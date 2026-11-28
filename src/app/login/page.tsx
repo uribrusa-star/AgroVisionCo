@@ -207,7 +207,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold" disabled={isPending}>
+              <Button type="submit" className="w-full bg-[#0D2618] hover:bg-[#153E26] text-white font-bold transition-colors duration-200 shadow-sm" disabled={isPending}>
                 {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isPending ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </Button>

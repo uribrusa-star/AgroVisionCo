@@ -36,6 +36,35 @@ export const metadata: Metadata = {
   },
 };
 
+// Ícono minimalista de productor / granjero con sombrero de campo y overol en estilo Lucide
+function FarmerIcon({ className = "w-5 h-5", ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      {/* Copa del sombrero de campo */}
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      {/* Ala ancha del sombrero */}
+      <path d="M3 10.5c2.5-1 5.5-1.5 9-1.5s6.5.5 9 1.5" />
+      {/* Rostro debajo del ala */}
+      <path d="M8.5 11.5c0 2 1.5 3.5 3.5 3.5s3.5-1.5 3.5-3.5" />
+      {/* Hombros */}
+      <path d="M5 21v-1.5a7 7 0 0 1 14 0V21" />
+      {/* Tiradores / overol de campo */}
+      <line x1="9.5" y1="17" x2="9.5" y2="21" />
+      <line x1="14.5" y1="17" x2="14.5" y2="21" />
+    </svg>
+  );
+}
+
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 dark:bg-stone-900">
@@ -48,12 +77,14 @@ export default function Home() {
         <HeroMusicPlayer />
 
         <nav>
-          <Link href="/login">
+          <Link href="/login" aria-label="Iniciar Sesión" title="Iniciar Sesión">
             <Button
               variant="outline"
-              className="text-[#0D2618] border-[#0D2618]/40 hover:border-[#0D2618] hover:bg-stone-100 rounded-[8px] font-medium text-sm transition-all"
+              size="icon"
+              className="w-10 h-10 rounded-full text-[#0D2618] border-[#0D2618]/30 hover:border-[#0D2618] hover:bg-[#0D2618] hover:text-[#FAF9F6] bg-white shadow-sm transition-all duration-200 group"
             >
-              Iniciar Sesión
+              <FarmerIcon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+              <span className="sr-only">Iniciar Sesión</span>
             </Button>
           </Link>
         </nav>
