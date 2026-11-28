@@ -339,14 +339,20 @@ export default function Home() {
                 
                 {/* Header Badge & Title */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-stone-200/80">
-                  <div className="flex items-start sm:items-center gap-3 w-full sm:w-auto">
-                    <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-[#196F3D] shrink-0">
-                      <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <div className="flex items-start sm:items-center gap-3.5 w-full sm:w-auto">
+                    <div className="w-12 h-12 rounded-full bg-white border border-stone-200 p-1 shrink-0 flex items-center justify-center shadow-xs">
+                      <Image 
+                        src="/logoBPA-sinfondo.png" 
+                        alt="Sello BPA AgroVista" 
+                        width={44} 
+                        height={44} 
+                        className="object-contain" 
+                      />
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-base sm:text-lg md:text-xl text-[#18201C] truncate">Quinta Las Fresas</span>
-                        <Badge className="bg-emerald-50 text-[#196F3D] border-emerald-200/80 text-[10px] font-semibold shrink-0">
+                        <span className="font-bold text-base sm:text-lg md:text-xl text-[#0D2618] truncate">Quinta Las Fresas</span>
+                        <Badge className="bg-emerald-50 text-[#196F3D] border-emerald-200/80 text-[10px] font-bold shrink-0">
                           100% Inocuo BPA
                         </Badge>
                       </div>
@@ -354,8 +360,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <Badge className="bg-stone-100 text-stone-800 border-stone-200 font-semibold text-xs px-3 py-1 shrink-0 self-start sm:self-auto">
-                    <Award className="h-3.5 w-3.5 mr-1 text-[#196F3D]" /> Certificado de Calidad
+                  <Badge className="bg-[#0F2A1D] text-emerald-300 border border-emerald-800 font-semibold text-xs px-3 py-1 shrink-0 self-start sm:self-auto">
+                    <Award className="h-3.5 w-3.5 mr-1 text-emerald-400" /> Certificado de Calidad
                   </Badge>
                 </div>
 
