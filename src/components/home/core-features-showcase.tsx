@@ -219,12 +219,12 @@ export function CoreFeaturesShowcase() {
         key={activeFeature.id}
         className="mt-4 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-2xl overflow-hidden transition-all duration-500 animate-in fade-in-50"
       >
-        <div className="p-6 sm:p-8 lg:p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+        <div className="p-5 sm:p-6 lg:p-7">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
             
-            {/* Columna Izquierda (5 columnas): Título, Descripción y los 3 Beneficios en un vistazo */}
-            <div className="lg:col-span-5 space-y-5 order-2 lg:order-1">
-              <div className="space-y-2.5">
+            {/* Columna Izquierda (4 columnas): Título, Descripción y los 3 Beneficios en un vistazo */}
+            <div className="lg:col-span-4 space-y-4 order-2 lg:order-1">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <Badge className="bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border-green-200 dark:border-green-800 text-[10px] font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3 text-green-600 dark:text-green-400" />
@@ -235,41 +235,41 @@ export function CoreFeaturesShowcase() {
                   </span>
                 </div>
 
-                <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
                   {activeFeature.title}
                 </h3>
 
-                <p className="text-sm sm:text-base text-gray-600 dark:text-green-200/80 leading-relaxed">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-green-200/80 leading-relaxed">
                   {activeFeature.description}
                 </p>
               </div>
 
               {/* 3 Beneficios directos agrupados en la misma columna */}
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-2 pt-0.5">
                 {activeFeature.bullets.map((bullet, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800/80 space-y-1 hover:border-green-300 dark:hover:border-green-800 transition-colors"
+                    className="p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800/80 space-y-0.5 hover:border-green-300 dark:hover:border-green-800 transition-colors"
                   >
-                    <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold text-xs sm:text-sm">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold text-xs">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400" />
                       <span>{bullet.title}</span>
                     </div>
-                    <p className="text-xs text-stone-600 dark:text-stone-300 leading-snug pl-6">
+                    <p className="text-[11px] sm:text-xs text-stone-600 dark:text-stone-300 leading-snug pl-5">
                       {bullet.text}
                     </p>
                   </div>
                 ))}
               </div>
 
-              <div className="pt-2 text-xs text-stone-500 flex items-center gap-1.5">
+              <div className="pt-1 text-[11px] text-stone-500 flex items-center gap-1.5">
                 <Maximize2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                 <span>Haz clic en la captura de la derecha para verla en pantalla completa.</span>
               </div>
             </div>
 
-            {/* Columna Derecha (7 columnas): Gran captura en alta definición */}
-            <div className="lg:col-span-7 order-1 lg:order-2 flex items-center justify-center">
+            {/* Columna Derecha (8 columnas): Gran captura en alta definición */}
+            <div className="lg:col-span-8 order-1 lg:order-2 flex items-center justify-center">
               <div className="w-full">
                 <FeatureMockupDialog
                   title={activeFeature.title}
