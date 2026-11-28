@@ -43,15 +43,15 @@ export default function Home() {
       <WebAnalyticsTracker />
       <HomeJsonLd />
 
-      {/* Header */}
-      <header className="px-6 lg:px-8 h-20 flex items-center justify-between border-b border-gray-100 dark:border-green-900/40 bg-white/80 dark:bg-green-950/80 backdrop-blur-md sticky top-0 z-50">
+      {/* Header B2B AgTech Sobrio */}
+      <header className="px-6 lg:px-8 h-20 flex items-center justify-between border-b border-[#E5E7EB] bg-[#FAF9F6] sticky top-0 z-50">
         <HeroMusicPlayer />
 
         <nav>
           <Link href="/login">
             <Button
               variant="outline"
-              className="text-green-700 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/50"
+              className="text-[#0D2618] border-[#0D2618]/40 hover:border-[#0D2618] hover:bg-stone-100 rounded-[8px] font-medium text-sm transition-all"
             >
               Iniciar Sesión
             </Button>
@@ -59,9 +59,9 @@ export default function Home() {
         </nav>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section AgTech B2B Sobrio */}
       <main className="flex-1">
-        <section className="relative px-6 lg:px-8 py-32 md:py-48 overflow-hidden bg-green-950">
+        <section className="relative px-6 lg:px-8 py-20 sm:py-28 md:py-36 overflow-hidden bg-[#0D2618] min-h-[calc(100vh-80px)] flex items-center justify-center">
           {/* Background Video with opacity */}
           <div className="absolute inset-0 z-0">
             <video
@@ -70,44 +70,59 @@ export default function Home() {
               muted
               playsInline
               preload="metadata"
-              className="object-cover w-full h-full opacity-30"
+              className="object-cover w-full h-full opacity-35"
             >
               <source src="/hero_background.mp4" type="video/mp4" />
             </video>
-            {/* Gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-green-950 via-transparent to-green-900/50"></div>
+            {/* Gradient overlay: verde bosque profundo (#0D2618) en la parte inferior a transparente/oscuro suave arriba */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0D2618] via-[#0D2618]/70 to-[#0D2618]/30"></div>
           </div>
 
-          <div className="relative z-10 mx-auto max-w-4xl text-center px-4 sm:px-6">
-            {/* Píldora de identidad refinada y compacta */}
-            <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/15 backdrop-blur-md px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-medium text-emerald-200 mb-4 sm:mb-5 shadow-xs">
-              <span className="text-xs">🍓</span>
-              <span>Gestión Agrícola • Nacida en Coronda</span>
-            </div>
+          <div className="relative z-10 mx-auto max-w-4xl text-center px-4 sm:px-6 flex flex-col items-center">
+            {/* Etiqueta superior en texto limpio en mayúsculas con espaciado */}
+            <span className="tracking-[0.2em] uppercase text-xs sm:text-sm font-semibold text-emerald-300/90 mb-4 sm:mb-5">
+              TRAZABILIDAD AGRÍCOLA
+            </span>
 
-            {/* Título */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md leading-tight sm:leading-tight">
+            {/* Título principal (H1) en blanco, sans-serif bold, interlineado ajustado */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md leading-[1.18] sm:leading-[1.15] max-w-3xl">
               Trazabilidad Agrícola para Producción de Frutillas
             </h1>
 
-            {/* Subtítulo equilibrado */}
-            <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg leading-relaxed text-emerald-50/90 max-w-3xl mx-auto drop-shadow-sm font-normal">
-              AgroVista, sistema de gestión nacido en <strong>Coronda</strong>; diseñado específicamente para optimizar el rendimiento, controlar sanidad y maximizar las ganancias de tus lotes de frutilla. Con IA, reportes automáticos en PDF, mapas interactivos y mucho más.
+            {/* Párrafo descriptivo corto de dos líneas en blanco suave */}
+            <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg leading-relaxed text-white/85 max-w-2xl mx-auto drop-shadow-sm font-normal">
+              Optimizá el rendimiento, controlá la sanidad y maximizá la rentabilidad de tus lotes con mapas satelitales, IA y trazabilidad en PDF.
             </p>
 
-            {/* Botón CTA sin emoji */}
-            <div className="mt-8 sm:mt-10 flex items-center justify-center">
+            {/* Botón principal sólido en verde esmeralda sobrio (#1E8449) y enlace inferior */}
+            <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3.5">
               <ContactModal
                 buttonText="Probar Demo Gratis"
                 buttonSize="lg"
-                buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold"
+                buttonClassName="bg-[#1E8449] hover:bg-[#196F3D] text-white px-8 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-md hover:shadow-lg transition-all font-semibold"
               />
+
+              <a
+                href="#funciones"
+                className="text-white/80 hover:text-white text-xs sm:text-sm transition-colors py-1 inline-flex items-center gap-1"
+              >
+                Ver funciones del sistema
+              </a>
+            </div>
+
+            {/* Fila horizontal limpia separada por divisores verticales sutiles */}
+            <div className="mt-12 sm:mt-14 pt-6 border-t border-white/10 w-full max-w-lg flex items-center justify-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-emerald-100/70 font-medium tracking-wide">
+              <span>Monitoreo por lote</span>
+              <span className="text-white/20">|</span>
+              <span>Reportes con QR</span>
+              <span className="text-white/20">|</span>
+              <span>Uso offline</span>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-24 bg-white dark:bg-green-950 sm:py-32">
+        <section id="funciones" className="py-24 bg-white dark:bg-green-950 sm:py-32 scroll-mt-20">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl font-headline">
