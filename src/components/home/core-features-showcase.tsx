@@ -135,16 +135,30 @@ export function CoreFeaturesShowcase() {
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
 
   const activeFeature = FEATURES[activeIndex];
 
-  // Auto-scroll the active tab into view on mobile devices
+  // Auto-scroll the active tab into view horizontally inside ITS OWN CONTAINER ONLY
+  // Strictly scrolls tabsContainerRef without affecting window or page scroll position
   useEffect(() => {
-    if (tabRefs.current[activeIndex]) {
-      tabRefs.current[activeIndex]?.scrollIntoView({
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const container = tabsContainerRef.current;
+    const activeTab = tabRefs.current[activeIndex];
+    if (container && activeTab) {
+      const containerWidth = container.clientWidth;
+      const tabOffsetLeft = activeTab.offsetLeft;
+      const tabWidth = activeTab.clientWidth;
+      const targetScrollLeft = tabOffsetLeft - (containerWidth / 2) + (tabWidth / 2);
+
+      container.scrollTo({
+        left: targetScrollLeft,
         behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center',
       });
     }
   }, [activeIndex]);
@@ -183,6 +197,7 @@ export function CoreFeaturesShowcase() {
       {/* Selector de pestañas: scroll horizontal táctil en móvil (< lg) y 1 sola fila en PC (lg+) */}
       <div className="relative w-full p-1.5 rounded-2xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 shadow-inner">
         <div
+          ref={tabsContainerRef}
           className="flex lg:grid lg:grid-cols-6 gap-1.5 sm:gap-2 overflow-x-auto py-0.5 px-0.5 scroll-smooth snap-x snap-mandatory lg:snap-none [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
