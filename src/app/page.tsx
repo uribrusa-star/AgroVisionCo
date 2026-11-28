@@ -119,13 +119,16 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section id="funciones" className="py-24 bg-white dark:bg-green-950 sm:py-32 scroll-mt-20">
+        <section id="funciones" className="py-24 bg-[#FAF9F6] border-b border-stone-200/80 sm:py-32 scroll-mt-20">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl font-headline">
+              <span className="tracking-[0.18em] uppercase text-xs font-semibold text-[#196F3D] block mb-3">
+                TECNOLOGÍA APLICADA
+              </span>
+              <h2 className="text-3xl font-bold tracking-tight text-[#18201C] sm:text-4xl font-headline">
                 Todo lo que necesitas para tu campo
               </h2>
-              <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-green-200/80">
+              <p className="mt-4 text-base sm:text-lg leading-relaxed text-stone-600">
                 Lleva el control exacto de tus cosechas, monitorea la fenología de las plantas, controla tus finanzas y toma decisiones informadas en tiempo real.
               </p>
             </div>
@@ -136,17 +139,16 @@ export default function Home() {
         </section>
 
         {/* Workforce & Roles Management Section */}
-        <section className="py-24 bg-stone-50 dark:bg-stone-900 border-t border-gray-100 dark:border-green-900/40">
+        <section className="py-24 bg-white border-b border-stone-200/80 sm:py-32">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
-              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-300 border-green-200 dark:border-green-800 px-3.5 py-1 font-semibold text-xs rounded-full inline-flex items-center gap-1.5 mb-4">
-                <Users className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                <span>Gestión de Cuadrillas y Personal</span>
-              </Badge>
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 sm:text-4xl font-headline">
+              <span className="tracking-[0.18em] uppercase text-xs font-semibold text-[#196F3D] block mb-3">
+                GESTIÓN OPERATIVA
+              </span>
+              <h2 className="text-3xl font-bold tracking-tight text-[#18201C] sm:text-4xl font-headline">
                 Control de Personal, Roles y Credenciales QR
               </h2>
-              <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-green-200/80">
+              <p className="mt-4 text-base sm:text-lg leading-relaxed text-stone-600">
                 Digitaliza el trabajo en el lote y en el galpón. Cada miembro del equipo cuenta con herramientas a medida y credenciales QR para agilizar la operación y garantizar la transparencia.
               </p>
             </div>
@@ -156,27 +158,26 @@ export default function Home() {
               {/* 1. Recolectores (Texto Izquierda / Imagen Derecha) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
                 <div className="lg:col-span-5 space-y-4">
-                  <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>PASO 1 • COSECHA EN SURCO</span>
-                  </Badge>
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                  <span className="tracking-[0.16em] uppercase text-xs font-semibold text-[#196F3D] block">
+                    PASO 1 • COSECHA EN SURCO
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#18201C] font-headline">
                     Cuadrillas de Recolectores
                   </h3>
-                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                  <p className="text-base leading-7 text-stone-600">
                     Digitaliza la recolección en el campo sin planillas de papel. Cada cosechero cuenta con su credencial física o digital para registrar kilos al instante.
                   </p>
-                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-stone-700">
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Carnets QR individuales:</strong> Emisión e impresión rápida para cada cosechero.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Pesaje ágil en el surco:</strong> Escaneo rápido y carga de kilos por lote.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Liquidación transparente:</strong> Historial individual de rendimiento y pago exacto.</span>
                     </li>
                   </ul>
@@ -206,27 +207,26 @@ export default function Home() {
                 </div>
 
                 <div className="lg:col-span-5 order-1 lg:order-2 space-y-4">
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border-green-200 dark:border-green-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                    <span>PASO 2 • CONTROL DE INGRESO</span>
-                  </Badge>
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                  <span className="tracking-[0.16em] uppercase text-xs font-semibold text-[#196F3D] block">
+                    PASO 2 • CONTROL DE INGRESO
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#18201C] font-headline">
                     Control de Asistencia QR
                   </h3>
-                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                  <p className="text-base leading-7 text-stone-600">
                     Controla quién está en el campo en tiempo real. El encargado escanea el código QR en la tranquera o galpón al inicio y fin de la jornada.
                   </p>
-                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-stone-700">
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Presentismo en vivo:</strong> Conoce al instante cuántos trabajadores están activos hoy.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Horas trabajadas exactas:</strong> Registro automático de entradas, salidas y turnos.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Planillas para RRHH:</strong> Exporta reportes listos a Excel y PDF con un solo clic.</span>
                     </li>
                   </ul>
@@ -236,27 +236,26 @@ export default function Home() {
               {/* 3. Embaladores (Texto Izquierda / Imagen Derecha) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
                 <div className="lg:col-span-5 space-y-4">
-                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                    <Package className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <span>PASO 3 • GALPÓN Y EMPAQUE</span>
-                  </Badge>
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                  <span className="tracking-[0.16em] uppercase text-xs font-semibold text-[#196F3D] block">
+                    PASO 3 • GALPÓN Y EMPAQUE
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#18201C] font-headline">
                     Cuadrillas de Embaladores
                   </h3>
-                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                  <p className="text-base leading-7 text-stone-600">
                     Seguimiento detallado de bandejas y cajas preparadas en el galpón. Identificación por puesto de empaque para asegurar estándares de calidad.
                   </p>
-                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-stone-700">
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Puestos con código QR:</strong> Asignación rápida de bultos por cada embalador.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Control de calidad:</strong> Trazabilidad por calibre, categoría y lote de origen.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Liquidación por productividad:</strong> Pago automatizado según bultos o jornales fijados.</span>
                     </li>
                   </ul>
@@ -286,27 +285,26 @@ export default function Home() {
                 </div>
 
                 <div className="lg:col-span-5 order-1 lg:order-2 space-y-4">
-                  <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                    <UserCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>GESTIÓN Y ROLES TÉCNICOS</span>
-                  </Badge>
-                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                  <span className="tracking-[0.16em] uppercase text-xs font-semibold text-[#196F3D] block">
+                    GESTIÓN Y ROLES TÉCNICOS
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#18201C] font-headline">
                     Ingeniero y Encargados
                   </h3>
-                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                  <p className="text-base leading-7 text-stone-600">
                     Organiza el equipo con permisos específicos según su función técnica. Cada perfil accede únicamente a las herramientas y datos que necesita.
                   </p>
-                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-stone-700">
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Ingeniero Agrónomo:</strong> Recetas fitosanitarias, monitoreo fenológico y carencia PHI.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Encargado de Campo:</strong> Coordinación de labores culturales diarias y cuadrillas en lote.</span>
                     </li>
                     <li className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-[#196F3D] shrink-0 mt-0.5" />
                       <span><strong>Roles y Seguridad:</strong> Accesos diferenciados y protegidos con credenciales seguras.</span>
                     </li>
                   </ul>
