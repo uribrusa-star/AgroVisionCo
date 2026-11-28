@@ -226,14 +226,9 @@ export default function TracePage() {
                                         <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center justify-between gap-1">
-                                            <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">
-                                                Establecimiento
-                                            </p>
-                                            <span className="text-[8px] sm:text-[9px] font-bold text-[#196F3D] group-hover:text-emerald-700 flex items-center shrink-0">
-                                                Fotos ↗
-                                            </span>
-                                        </div>
+                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">
+                                            Establecimiento
+                                        </p>
                                         <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate group-hover:text-[#196F3D] transition-colors">
                                             {data.establishmentName || 'Quinta Las Fresas'}
                                         </p>
@@ -314,17 +309,12 @@ export default function TracePage() {
                     <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-xs flex flex-col justify-between overflow-hidden">
                         {/* Cabecera oscura compacta */}
                         <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 border-b border-emerald-950 shrink-0">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
-                                    <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
-                                        <Truck className="h-4 w-4" />
-                                    </div>
-                                    Cadena de Custodia y Trazabilidad
-                                </CardTitle>
-                                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-300 bg-emerald-900/40 border border-emerald-700/40 px-2 py-0.5 rounded-full">
-                                    Seguimiento Total
-                                </span>
-                            </div>
+                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
+                                <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
+                                    <Truck className="h-4 w-4" />
+                                </div>
+                                Cadena de Custodia y Trazabilidad
+                            </CardTitle>
                         </CardHeader>
 
                         <CardContent className="p-3.5 sm:p-4.5 flex-1 flex flex-col justify-center">
@@ -336,10 +326,10 @@ export default function TracePage() {
                                     <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
                                         <Sprout className="h-4 w-4" />
                                     </div>
-                                    <div className="min-w-0 pt-0.5">
-                                        <div className="flex items-center gap-2">
+                                    <div className="min-w-0 flex-1 pt-0.5">
+                                        <div className="flex items-center justify-between gap-2 w-full">
                                             <p className="font-bold text-xs sm:text-sm text-[#0D2618]">1. Cosecha en Campo</p>
-                                            <span className="text-[9px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">Completado</span>
+                                            <span className="text-[9px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded shrink-0">Completado</span>
                                         </div>
                                         <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5 leading-snug">
                                             Fruto cosechado a mano en punto óptimo de maduración por cuadrilleros registrados y capacitados.
@@ -351,10 +341,10 @@ export default function TracePage() {
                                     <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
                                         <Package className="h-4 w-4" />
                                     </div>
-                                    <div className="min-w-0 pt-0.5">
-                                        <div className="flex items-center gap-2">
+                                    <div className="min-w-0 flex-1 pt-0.5">
+                                        <div className="flex items-center justify-between gap-2 w-full">
                                             <p className="font-bold text-xs sm:text-sm text-[#0D2618]">2. Empaque y Control de Calidad</p>
-                                            <span className="text-[9px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">Completado</span>
+                                            <span className="text-[9px] font-bold text-[#196F3D] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded shrink-0">Completado</span>
                                         </div>
                                         <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5 leading-snug">
                                             Selección cuidadosa, descarte de fruta defectuosa y acondicionamiento higiénico en bandejas de origen.
@@ -366,10 +356,10 @@ export default function TracePage() {
                                     <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] border border-emerald-800/80 text-emerald-300 flex items-center justify-center shrink-0 z-10 shadow-2xs">
                                         <Truck className="h-4 w-4" />
                                     </div>
-                                    <div className="min-w-0 pt-0.5">
-                                        <div className="flex items-center gap-2">
+                                    <div className="min-w-0 flex-1 pt-0.5">
+                                        <div className="flex items-center justify-between gap-2 w-full">
                                             <p className="font-bold text-xs sm:text-sm text-[#0D2618]">3. Logística y Distribución Comercial</p>
-                                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded">En Destino</span>
+                                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-1.5 py-0.2 rounded shrink-0">En Destino</span>
                                         </div>
                                         <p className="text-[11px] sm:text-xs text-stone-600 mt-0.5 leading-snug">
                                             Transporte directo y ágil desde la quinta hacia mercados mayoristas y verdulerías, garantizando la frescura del fruto recién cortado.
@@ -386,17 +376,12 @@ export default function TracePage() {
                 {data.phenologyLogs && data.phenologyLogs.length > 0 && (
                     <Card className="bg-white border border-stone-200/90 rounded-2xl shadow-xs overflow-hidden mt-5 sm:mt-6">
                         <CardHeader className="bg-[#0F2A1D] text-white px-4 py-3 sm:px-5 sm:py-3.5 border-b border-emerald-950">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
-                                    <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
-                                        <Leaf className="h-4 w-4" />
-                                    </div>
-                                    Historial de Fenología del Lote
-                                </CardTitle>
-                                <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-300 bg-emerald-900/40 border border-emerald-700/40 px-2 py-0.5 rounded-full">
-                                    Bitácora Agronómica
-                                </span>
-                            </div>
+                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base font-bold text-white">
+                                <div className="w-7 h-7 rounded-lg bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center text-emerald-300 shrink-0">
+                                    <Leaf className="h-4 w-4" />
+                                </div>
+                                Historial de Fenología del Lote
+                            </CardTitle>
                             <CardDescription className="text-emerald-100/70 text-[11px] mt-0.5">
                                 Registros fisiológicos documentados durante el ciclo de floración y cuajado del cultivo.
                             </CardDescription>
@@ -453,8 +438,8 @@ export default function TracePage() {
                                             ) : null}
 
                                             {log.images && log.images.length > 0 && (
-                                                <div className={`mt-2 grid gap-2 ${log.images.length === 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'}`}>
-                                                    {log.images.map((img, imgIdx) => (
+                                                <div className={`mt-2 grid gap-2 ${log.images.length === 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 sm:grid-cols-4'}`}>
+                                                    {log.images.slice(0, 4).map((img, imgIdx) => (
                                                         <div 
                                                             key={imgIdx}
                                                             className="relative aspect-square rounded-lg overflow-hidden border border-stone-300 shadow-2xs cursor-pointer group bg-stone-100"
