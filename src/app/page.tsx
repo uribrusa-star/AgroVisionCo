@@ -78,21 +78,33 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-green-950 via-transparent to-green-900/50"></div>
           </div>
 
-          <div className="relative z-10 mx-auto max-w-5xl text-center">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md">
-              Trazabilidad Agrícola Inteligente para la Producción de Frutillas
+          <div className="relative z-10 mx-auto max-w-4xl text-center px-4 sm:px-6">
+            {/* Píldora de identidad y contexto local */}
+            <div className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium text-emerald-200 mb-5 sm:mb-6 shadow-sm transition-all">
+              <span className="text-sm">🍓</span>
+              <span>Gestión Agrícola • Nacida en Coronda</span>
+            </div>
+
+            {/* Título de alto impacto en 2-3 líneas limpias */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white font-headline drop-shadow-md leading-tight sm:leading-tight">
+              El control total de tu cosecha de frutillas.
             </h1>
-            <p className="mt-6 text-lg leading-8 text-green-50 max-w-3xl mx-auto drop-shadow-sm">
-              AgroVista es la plataforma integral nacida en <strong>Coronda</strong>, diseñada específicamente para optimizar el rendimiento, 
-              controlar la sanidad y maximizar las ganancias de tus lotes de frutillas. Con inteligencia artificial, 
-              reportes agronómicos y mapas interactivos en tiempo real.
+
+            {/* Subtítulo ligero y claro */}
+            <p className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl leading-relaxed text-emerald-100/90 max-w-2xl mx-auto drop-shadow-sm font-normal">
+              Escaneo QR en surco, liquidación de cuadrillas y costos al día. Simple, rápido y sin planillas de papel.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+
+            {/* Botón CTA con aire visual y micro-texto de confianza */}
+            <div className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-2.5">
               <ContactModal
                 buttonText="Probar Demo Gratis 🚀"
                 buttonSize="lg"
-                buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold"
+                buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold"
               />
+              <span className="text-xs text-emerald-200/70 font-medium tracking-wide">
+                Sin descargas pesadas • Acceso instantáneo
+              </span>
             </div>
           </div>
         </section>
