@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { adminDb } from '@/lib/firebase-admin';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { sessionOptions } from '@/lib/session';
 
 // Helper to sanitize text and prevent HTML / XSS Injection
 function sanitizeInput(str: string | undefined | null): string {
@@ -27,6 +30,12 @@ const contactSchema = z.object({
 // GET: Obtener todas las solicitudes de contacto para el Administrador
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user || session.user.role !== 'SuperAdmin') {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     if (!adminDb) {
       return NextResponse.json({ success: true, requests: [] });
     }

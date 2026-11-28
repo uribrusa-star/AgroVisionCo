@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { sessionOptions } from '@/lib/session';
 
 export async function GET(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+
+    if (!session.user || session.user.role !== 'SuperAdmin') {
+      return NextResponse.json({ error: 'No autorizado. Solo SuperAdmin.' }, { status: 401 });
+    }
+
     const collectionsToUpdate = [
       'collectors', 'packers', 'harvests', 'agronomistLogs', 'phenologyLogs', 
       'predictionLogs', 'diagnosisLogs', 'supplies', 'tasks', 'batches', 

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions } from '@/lib/session';
 
-const protectedRoutes = ['/dashboard', '/attendance', '/establishment', '/map', '/producer-log', '/data-entry', '/engineer-log', '/collectors', '/packers', '/users', '/predictions', '/tasks', '/traceability', '/profile'];
+const protectedRoutes = ['/admin', '/dashboard', '/attendance', '/establishment', '/map', '/producer-log', '/data-entry', '/engineer-log', '/collectors', '/packers', '/users', '/predictions', '/tasks', '/traceability', '/profile'];
 const publicRoutes = ['/', '/login'];
 
 export async function middleware(request: NextRequest) {
@@ -16,6 +16,11 @@ export async function middleware(request: NextRequest) {
   if (!user && isProtectedRoute) {
     // Redirect to login page if not authenticated and trying to access a protected route
     return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Restringir la ruta /admin exclusivamente a usuarios con rol SuperAdmin
+  if (user && pathname.startsWith('/admin') && user.role !== 'SuperAdmin') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   if (user && (pathname === '/' || pathname === '/login')) {
