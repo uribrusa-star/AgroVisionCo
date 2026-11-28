@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
 import { sendEmail } from '@/services/email-service';
+import { getIronSession } from 'iron-session';
+import { cookies } from 'next/headers';
+import { sessionOptions } from '@/lib/session';
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const session = await getIronSession(cookieStore, sessionOptions);
+    if (!session.user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { alerts, weatherSummary } = body as { 
       alerts?: Array<{ risk: string; eventDate: string; recommendation: string; urgency: string }>;
       weatherSummary?: string;
     };
 
-    const recipient = 'uribrusa@gmail.com';
+    const recipient = session.user.notificationEmail || session.user.email || 'uribrusa@gmail.com';
 
     if (!alerts || alerts.length === 0) {
       // Si no hay riesgo, podemos enviar un reporte de clima estable o retornar
