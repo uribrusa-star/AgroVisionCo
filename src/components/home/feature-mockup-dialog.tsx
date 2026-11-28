@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Maximize2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -31,8 +30,8 @@ export function FeatureMockupDialog({
     <Dialog>
       <div className={`w-full ${className ?? 'mb-6'}`}>
         <DialogTrigger asChild>
-          <div className="rounded-xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-sm hover:border-stone-300 dark:hover:border-stone-700 transition-all cursor-pointer group">
-            {/* Contenedor de la captura limpia, sin overlays que tapen datos */}
+          <div className="rounded-xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-xs hover:border-stone-300 dark:hover:border-stone-700 transition-all cursor-pointer">
+            {/* Contenedor de la captura 100% limpia sin botones ni overlays */}
             <div className="relative aspect-[3320/1896] w-full bg-stone-50 dark:bg-stone-900/50">
               <Image
                 src={previewSrc}
@@ -46,17 +45,6 @@ export function FeatureMockupDialog({
               />
             </div>
           </div>
-        </DialogTrigger>
-
-        {/* Acción de ampliar ubicada fuera del gráfico */}
-        <DialogTrigger asChild>
-          <button
-            type="button"
-            className="mt-2.5 ml-auto flex items-center justify-end gap-1.5 text-xs text-stone-500 hover:text-[#196F3D] dark:hover:text-emerald-400 font-medium transition-colors cursor-pointer group"
-          >
-            <Maximize2 className="w-3.5 h-3.5 text-[#196F3D] dark:text-emerald-400 group-hover:scale-110 transition-transform" />
-            <span>Ampliar captura en alta resolución</span>
-          </button>
         </DialogTrigger>
       </div>
 
