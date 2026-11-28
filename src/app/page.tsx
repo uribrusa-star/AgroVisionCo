@@ -241,11 +241,38 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-              <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:max-w-none lg:grid-cols-4">
+            <div className="mx-auto mt-16 max-w-6xl space-y-20 lg:space-y-28">
 
-                {/* 1. Recolectores */}
-                <div className="flex flex-col items-start">
+              {/* 1. Recolectores (Texto Izquierda / Imagen Derecha) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+                <div className="lg:col-span-5 space-y-4">
+                  <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>PASO 1 • COSECHA EN SURCO</span>
+                  </Badge>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                    Cuadrillas de Recolectores
+                  </h3>
+                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    Digitaliza la recolección en el campo sin planillas de papel. Cada cosechero cuenta con su credencial física o digital para registrar kilos al instante.
+                  </p>
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Carnets QR individuales:</strong> Emisión e impresión rápida para cada cosechero.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Pesaje ágil en el surco:</strong> Escaneo rápido y carga de kilos por lote.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Liquidación transparente:</strong> Historial individual de rendimiento y pago exacto.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="lg:col-span-7">
                   <FeatureMockupDialog
                     title="Gestión de Recolectores y Credenciales QR"
                     previewSrc="/recolectores_mockup.jpeg?v=5"
@@ -253,39 +280,12 @@ export default function Home() {
                     desktopSrc="/recolectores_mockup.jpeg?v=5"
                     altText="Gestión de cuadrillas de recolectores con credenciales QR en AgroVista"
                   />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <Users className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Cuadrillas de Recolectores
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">
-                      Emisión e impresión de carnets con código QR personal para cada cosechero. Registro ágil de kilos pesados en el surco escaneando la credencial, historial de rendimiento por trabajador y liquidación transparente por kilo cosechado.
-                    </p>
-                  </dd>
                 </div>
+              </div>
 
-                {/* 2. Embaladores */}
-                <div className="flex flex-col items-start">
-                  <FeatureMockupDialog
-                    title="Gestión de Embaladores y Control de Empaque"
-                    previewSrc="/embaladores_mockup.jpeg?v=5"
-                    mobileSrc="/embaladores_mobile.jpeg?v=5"
-                    desktopSrc="/embaladores_mockup.jpeg?v=5"
-                    altText="Gestión de embaladores y credenciales QR de empaque en AgroVista"
-                  />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <Package className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Cuadrillas de Embaladores
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">
-                      Control del sector de galpón y empaque con credenciales QR personalizadas. Trazabilidad de cajas y bandejas preparadas por embalador, control de calidad por categoría y cálculo automático de jornales o pago por bulto procesado.
-                    </p>
-                  </dd>
-                </div>
-
-                {/* 3. Control de Asistencia */}
-                <div className="flex flex-col items-start">
+              {/* 2. Asistencia (Imagen Izquierda / Texto Derecha) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+                <div className="lg:col-span-7 order-2 lg:order-1">
                   <FeatureMockupDialog
                     title="Control de Asistencia y Presentismo QR"
                     previewSrc="/asistencia_mockup.jpeg?v=5"
@@ -293,19 +293,79 @@ export default function Home() {
                     desktopSrc="/asistencia_mockup.jpeg?v=5"
                     altText="Control de asistencia y presentismo con código QR en AgroVista"
                   />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <Clock className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Control de Asistencia
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">
-                      Escaneo ágil de credenciales QR al ingreso y egreso en lote o galpón. Monitoreo en tiempo real del personal activo en la quinta y exportación automática a planillas Excel y PDF para liquidación de jornales.
-                    </p>
-                  </dd>
                 </div>
 
-                {/* 4. Ingeniero y Encargados */}
-                <div className="flex flex-col items-start">
+                <div className="lg:col-span-5 order-1 lg:order-2 space-y-4">
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border-green-200 dark:border-green-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                    <span>PASO 2 • CONTROL DE INGRESO</span>
+                  </Badge>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                    Control de Asistencia QR
+                  </h3>
+                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    Controla quién está en el campo en tiempo real. El encargado escanea el código QR en la tranquera o galpón al inicio y fin de la jornada.
+                  </p>
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Presentismo en vivo:</strong> Conoce al instante cuántos trabajadores están activos hoy.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Horas trabajadas exactas:</strong> Registro automático de entradas, salidas y turnos.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Planillas para RRHH:</strong> Exporta reportes listos a Excel y PDF con un solo clic.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 3. Embaladores (Texto Izquierda / Imagen Derecha) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+                <div className="lg:col-span-5 space-y-4">
+                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200 dark:border-blue-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                    <Package className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>PASO 3 • GALPÓN Y EMPAQUE</span>
+                  </Badge>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                    Cuadrillas de Embaladores
+                  </h3>
+                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    Seguimiento detallado de bandejas y cajas preparadas en el galpón. Identificación por puesto de empaque para asegurar estándares de calidad.
+                  </p>
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Puestos con código QR:</strong> Asignación rápida de bultos por cada embalador.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Control de calidad:</strong> Trazabilidad por calibre, categoría y lote de origen.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Liquidación por productividad:</strong> Pago automatizado según bultos o jornales fijados.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="lg:col-span-7">
+                  <FeatureMockupDialog
+                    title="Gestión de Embaladores y Control de Empaque"
+                    previewSrc="/embaladores_mockup.jpeg?v=5"
+                    mobileSrc="/embaladores_mobile.jpeg?v=5"
+                    desktopSrc="/embaladores_mockup.jpeg?v=5"
+                    altText="Gestión de embaladores y credenciales QR de empaque en AgroVista"
+                  />
+                </div>
+              </div>
+
+              {/* 4. Ingeniero y Encargados (Imagen Izquierda / Texto Derecha) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+                <div className="lg:col-span-7 order-2 lg:order-1">
                   <FeatureMockupDialog
                     title="Ingeniero Agrónomo y Encargados de Campo"
                     previewSrc="/usuarios_mockup.jpeg?v=5"
@@ -313,18 +373,36 @@ export default function Home() {
                     desktopSrc="/usuarios_mockup.jpeg?v=5"
                     altText="Roles de ingeniero agrónomo y encargado de campo en AgroVista"
                   />
-                  <dt className="flex items-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 dark:text-green-50">
-                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400 flex-none" />
-                    Ingeniero y Encargados
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600 dark:text-green-200/80">
-                    <p className="flex-auto">
-                      Accesos diferenciados por función técnica y operativa. El <strong>Ingeniero</strong> gestiona recetas fitosanitarias, monitoreo fenológico y control de carencia (PHI). El <strong>Encargado</strong> coordina tareas culturales diarias (deshoje, riego, microtúneles) y control de personal en lote.
-                    </p>
-                  </dd>
                 </div>
 
-              </dl>
+                <div className="lg:col-span-5 order-1 lg:order-2 space-y-4">
+                  <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>GESTIÓN Y ROLES TÉCNICOS</span>
+                  </Badge>
+                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+                    Ingeniero y Encargados
+                  </h3>
+                  <p className="text-base leading-7 text-gray-600 dark:text-green-200/80">
+                    Organiza el equipo con permisos específicos según su función técnica. Cada perfil accede únicamente a las herramientas y datos que necesita.
+                  </p>
+                  <ul className="space-y-2.5 pt-2 text-sm sm:text-base text-gray-700 dark:text-green-100/90">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Ingeniero Agrónomo:</strong> Recetas fitosanitarias, monitoreo fenológico y carencia PHI.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Encargado de Campo:</strong> Coordinación de labores culturales diarias y cuadrillas en lote.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                      <span><strong>Roles y Seguridad:</strong> Accesos diferenciados y protegidos con credenciales seguras.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
