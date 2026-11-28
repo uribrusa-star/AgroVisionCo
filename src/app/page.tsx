@@ -315,93 +315,89 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Public Traceability Passport Showcase Section */}
-        <section className="py-16 sm:py-24 bg-emerald-950 text-white relative overflow-hidden px-4 sm:px-6">
-          {/* Subtle background glow */}
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
-
+        {/* Public Traceability Passport Showcase Section - AgTech B2B Sobrio */}
+        <section className="py-16 sm:py-24 bg-[#FAF9F6] border-b border-stone-200/80 text-[#18201C] relative px-4 sm:px-6">
           <div className="mx-auto max-w-7xl relative z-10">
             <div className="mx-auto max-w-3xl text-center space-y-3 sm:space-y-4">
-              <Badge className="bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border-emerald-500/30 px-3 py-1 font-semibold text-xs rounded-full inline-flex items-center gap-1.5">
-                <QrCode className="h-3.5 w-3.5 text-emerald-400" />
+              <Badge className="bg-emerald-50 text-[#196F3D] hover:bg-emerald-100/70 border-emerald-200/80 px-3 py-1 font-semibold text-xs rounded-full inline-flex items-center gap-1.5">
+                <QrCode className="h-3.5 w-3.5 text-[#196F3D]" />
                 <span>Valor Agregado para tu Cosecha</span>
               </Badge>
               
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-headline leading-tight px-2">
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#18201C] font-headline leading-tight px-2">
                 Trazabilidad Digital para tu producción
               </h2>
               
-              <p className="text-sm sm:text-base md:text-lg text-emerald-100/90 leading-relaxed max-w-2xl mx-auto px-2">
+              <p className="text-sm sm:text-base md:text-lg text-stone-600 leading-relaxed max-w-2xl mx-auto px-2">
                 AgroVista genera códigos QR únicos para cada lote cosechado. Tus compradores, verdulerías y supermercados escanean la bandeja y acceden al historial digital mostrando el origen de tu frutilla.
               </p>
             </div>
 
             {/* Interactive Mockup / Live Preview Card */}
             <div className="mt-10 sm:mt-14 max-w-4xl mx-auto">
-              <div className="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-2xl border border-emerald-500/20 space-y-5">
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-8 shadow-xs border border-stone-200/90 space-y-5 text-[#18201C]">
                 
                 {/* Header Badge & Title */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-stone-200 dark:border-stone-800">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-stone-200/80">
                   <div className="flex items-start sm:items-center gap-3 w-full sm:w-auto">
-                    <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-[#196F3D] shrink-0">
                       <ShieldCheck className="h-6 w-6 sm:h-7 sm:w-7" />
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-base sm:text-lg md:text-xl text-stone-900 dark:text-stone-100 truncate">Quinta Las Fresas</span>
-                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 text-[10px] font-bold shrink-0">
+                        <span className="font-bold text-base sm:text-lg md:text-xl text-[#18201C] truncate">Quinta Las Fresas</span>
+                        <Badge className="bg-emerald-50 text-[#196F3D] border-emerald-200/80 text-[10px] font-semibold shrink-0">
                           100% Inocuo BPA
                         </Badge>
                       </div>
-                      <p className="text-xs text-stone-500 dark:text-stone-400 break-words">Lote 1: Camino Real • Código: TR-2026-LOT1-89B</p>
+                      <p className="text-xs text-stone-500 font-mono break-words">Lote 1: Camino Real • Código: TR-2026-LOT1-89B</p>
                     </div>
                   </div>
 
-                  <Badge className="bg-emerald-700 text-white font-bold text-xs px-3 py-1 shrink-0 self-start sm:self-auto">
-                    <Award className="h-3.5 w-3.5 mr-1" /> Certificado de Calidad
+                  <Badge className="bg-stone-100 text-stone-800 border-stone-200 font-semibold text-xs px-3 py-1 shrink-0 self-start sm:self-auto">
+                    <Award className="h-3.5 w-3.5 mr-1 text-[#196F3D]" /> Certificado de Calidad
                   </Badge>
                 </div>
 
                 {/* Timeline Grid Demo */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 py-1">
-                  <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 space-y-1.5">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-stone-50/70 border border-stone-200/80 space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-stone-500">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Etapa 1: Floración</span>
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
+                      <span className="font-semibold text-[#196F3D]">Etapa 1: Floración</span>
+                      <Calendar className="h-3.5 w-3.5 shrink-0 text-stone-400" />
                     </div>
-                    <p className="text-xs font-bold text-stone-800 dark:text-stone-200">12 de Mayo</p>
-                    <p className="text-[11px] sm:text-xs text-stone-600 dark:text-stone-400 leading-snug">Monitoreo fenológico registrado con fotometría y control biológico de plagas (MIP).</p>
+                    <p className="text-xs font-bold text-[#18201C]">12 de Mayo</p>
+                    <p className="text-[11px] sm:text-xs text-stone-600 leading-snug">Monitoreo fenológico registrado con fotometría y control biológico de plagas (MIP).</p>
                   </div>
 
-                  <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 space-y-1.5">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-stone-50/70 border border-stone-200/80 space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-stone-500">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Etapa 2: Carencia PHI</span>
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-semibold text-[#196F3D]">Etapa 2: Carencia PHI</span>
+                      <ShieldCheck className="h-3.5 w-3.5 text-[#196F3D] shrink-0" />
                     </div>
-                    <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Período Cumplido</p>
-                    <p className="text-[11px] sm:text-xs text-stone-600 dark:text-stone-400 leading-snug">Cero residuos químicos. Aplicación fitosanitaria respetando los días libres de carencia.</p>
+                    <p className="text-xs font-bold text-[#18201C]">Período Cumplido</p>
+                    <p className="text-[11px] sm:text-xs text-stone-600 leading-snug">Cero residuos químicos. Aplicación fitosanitaria respetando los días libres de carencia.</p>
                   </div>
 
-                  <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 space-y-1.5">
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-stone-50/70 border border-stone-200/80 space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-stone-500">
-                      <span className="font-semibold text-emerald-700 dark:text-emerald-400">Etapa 3: Cosecha</span>
-                      <Sprout className="h-3.5 w-3.5 shrink-0" />
+                      <span className="font-semibold text-[#196F3D]">Etapa 3: Cosecha</span>
+                      <Sprout className="h-3.5 w-3.5 shrink-0 text-[#196F3D]" />
                     </div>
-                    <p className="text-xs font-bold text-stone-800 dark:text-stone-200">Fruto Fresco Cosechado</p>
-                    <p className="text-[11px] sm:text-xs text-stone-600 dark:text-stone-400 leading-snug">Empacado en origen con trazabilidad completa directo al consumidor final.</p>
+                    <p className="text-xs font-bold text-[#18201C]">Fruto Fresco Cosechado</p>
+                    <p className="text-[11px] sm:text-xs text-stone-600 leading-snug">Empacado en origen con trazabilidad completa directo al consumidor final.</p>
                   </div>
                 </div>
 
                 {/* Footer CTA Demo Link */}
-                <div className="pt-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-stone-200 dark:border-stone-800">
-                  <div className="flex items-center gap-2 text-xs text-stone-500">
-                    <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                <div className="pt-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-stone-200/80">
+                  <div className="flex items-center gap-2 text-xs text-stone-600">
+                    <CheckCircle2 className="h-4 w-4 text-[#196F3D] shrink-0" />
                     <span>Tus clientes ven la historia de tu fruta sin descargar ninguna aplicación.</span>
                   </div>
 
                   <Link href="/trace/DEMO-2026" target="_blank" className="w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-bold text-xs gap-1.5 rounded-xl h-10 px-4">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto border-[#196F3D] text-[#196F3D] hover:bg-emerald-50/70 font-bold text-xs gap-1.5 rounded-xl h-10 px-4 transition-colors">
                       <span>Ver ejemplo de Historial</span>
                       <ExternalLink className="h-3.5 w-3.5" />
                     </Button>
