@@ -61,7 +61,7 @@ export default function Home() {
 
       {/* Hero Section AgTech B2B Sobrio */}
       <main className="flex-1">
-        <section className="relative px-6 lg:px-8 py-20 sm:py-28 md:py-36 overflow-hidden bg-[#0D2618] min-h-[calc(100vh-80px)] flex items-center justify-center">
+        <section className="relative px-4 sm:px-6 lg:px-8 overflow-hidden bg-[#0D2618] min-h-[calc(100vh-80px)] flex flex-col justify-between">
           {/* Background Video with opacity */}
           <div className="absolute inset-0 z-0">
             <video
@@ -78,7 +78,11 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#0D2618] via-[#0D2618]/70 to-[#0D2618]/30"></div>
           </div>
 
-          <div className="relative z-10 mx-auto max-w-4xl text-center px-4 sm:px-6 flex flex-col items-center">
+          {/* Espacio superior para balancear el centrado vertical */}
+          <div className="h-4 sm:h-8"></div>
+
+          {/* Contenido principal centrado */}
+          <div className="relative z-10 mx-auto max-w-4xl text-center px-2 sm:px-6 flex flex-col items-center my-auto py-6 sm:py-8">
             {/* Etiqueta superior en texto limpio en mayúsculas con espaciado */}
             <span className="tracking-[0.2em] uppercase text-xs sm:text-sm font-semibold text-emerald-300/90 mb-4 sm:mb-5">
               TRAZABILIDAD AGRÍCOLA
@@ -94,30 +98,23 @@ export default function Home() {
               Optimizá el rendimiento, controlá la sanidad y maximizá la rentabilidad de tus lotes con mapas satelitales, IA y trazabilidad en PDF.
             </p>
 
-            {/* Botón principal sólido en verde esmeralda sobrio (#1E8449) y enlace inferior */}
-            <div className="mt-8 sm:mt-10 flex flex-col items-center gap-3.5">
+            {/* Botón principal sólido en verde esmeralda sobrio (#1E8449) */}
+            <div className="mt-8 sm:mt-10 flex items-center justify-center">
               <ContactModal
                 buttonText="Probar Demo Gratis"
                 buttonSize="lg"
                 buttonClassName="bg-[#1E8449] hover:bg-[#196F3D] text-white px-8 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-md hover:shadow-lg transition-all font-semibold"
               />
-
-              <a
-                href="#funciones"
-                className="text-white/80 hover:text-white text-xs sm:text-sm transition-colors py-1 inline-flex items-center gap-1"
-              >
-                Ver funciones del sistema
-              </a>
             </div>
+          </div>
 
-            {/* Fila horizontal limpia separada por divisores verticales sutiles */}
-            <div className="mt-12 sm:mt-14 pt-6 border-t border-white/10 w-full max-w-lg flex items-center justify-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-emerald-100/70 font-medium tracking-wide">
-              <span>Monitoreo por lote</span>
-              <span className="text-white/20">|</span>
-              <span>Reportes con QR</span>
-              <span className="text-white/20">|</span>
-              <span>Uso offline</span>
-            </div>
+          {/* Fila horizontal ubicada en el límite inferior del video */}
+          <div className="relative z-10 w-full max-w-2xl mx-auto pb-5 sm:pb-7 pt-4 border-t border-white/10 flex items-center justify-center gap-3 sm:gap-6 text-[11px] sm:text-xs md:text-sm text-emerald-100/75 font-medium tracking-wide">
+            <span>Monitoreo por lote</span>
+            <span className="text-white/25">|</span>
+            <span>Reportes con QR</span>
+            <span className="text-white/25">|</span>
+            <span>Uso offline</span>
           </div>
         </section>
 
