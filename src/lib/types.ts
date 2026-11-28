@@ -43,6 +43,8 @@ export type User = {
   subscriptionExpiryDate?: string;
   subscriptionPrice?: number;
   mercadoPagoSubscriptionId?: string;
+  subscriptionAutoRenew?: boolean;
+  subscriptionCancelledAt?: string;
   establishmentId?: string;
 
   // Customization fields

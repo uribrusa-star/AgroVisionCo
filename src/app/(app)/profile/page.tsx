@@ -27,7 +27,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { NAV_ITEMS, getDefaultBottomNavItems } from '@/lib/navigation-config';
 import { cn } from '@/lib/utils';
 import { db } from '@/lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { UserCredentialDialog } from '@/components/user-credential-dialog';
 import { canUserManageAttendance } from '@/lib/types';
 
@@ -58,6 +68,8 @@ export default function ProfilePage() {
   const [isCredentialOpen, setIsCredentialOpen] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const isPresent = (appData.attendanceLogs || []).some(l => 
     l.status === 'in_progress' && currentUser &&
@@ -367,6 +379,40 @@ export default function ProfilePage() {
     }
   };
 
+  const handleCancelSubscription = async () => {
+    if (!currentUser?.id) return;
+    setIsCancelling(true);
+    try {
+      await updateDoc(doc(db, 'users', currentUser.id), {
+        subscriptionAutoRenew: false,
+        subscriptionCancelledAt: new Date().toISOString(),
+      });
+
+      if (setCurrentUser) {
+        setCurrentUser({
+          ...currentUser,
+          subscriptionAutoRenew: false,
+          subscriptionCancelledAt: new Date().toISOString(),
+        });
+      }
+
+      setIsCancelDialogOpen(false);
+      toast({
+        title: "Cancelación procesada",
+        description: "Tu solicitud de baja fue registrada. Mantendrás acceso a todas tus funciones hasta la fecha de vencimiento actual.",
+      });
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+      toast({
+        variant: "destructive",
+        title: "Error al cancelar",
+        description: "No se pudo procesar la baja en este momento. Por favor, intenta de nuevo o comunícate con soporte.",
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   return (
     <>
       <PageHeader title="Mi Perfil" description="Administre sus ajustes de cuenta, seguridad y preferencias de notificaciones." />
@@ -449,13 +495,25 @@ export default function ProfilePage() {
                     <div>
                       <p className="font-semibold text-lg">
                         Estado: {
-                          currentUser.subscriptionStatus === 'active' ? <span className="text-green-600">Activa</span> : 
-                          <span className="text-orange-500">Inactiva / Vencida</span>
+                          currentUser.subscriptionStatus === 'active' ? (
+                            currentUser.subscriptionAutoRenew === false || currentUser.subscriptionCancelledAt ? (
+                              <span className="text-amber-600 dark:text-amber-400">Activa (Baja programada)</span>
+                            ) : (
+                              <span className="text-green-600 dark:text-green-400">Activa</span>
+                            )
+                          ) : (
+                            <span className="text-orange-500">Inactiva / Vencida</span>
+                          )
                         }
                       </p>
                       {currentUser.subscriptionExpiryDate && (
                         <p className="text-sm text-muted-foreground mt-1">
-                          Vence el: {new Date(currentUser.subscriptionExpiryDate).toLocaleDateString()}
+                          Vence el: {new Date(currentUser.subscriptionExpiryDate).toLocaleDateString('es-AR')}
+                        </p>
+                      )}
+                      {(currentUser.subscriptionAutoRenew === false || currentUser.subscriptionCancelledAt) && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                          No se renovará al finalizar tu período actual.
                         </p>
                       )}
                       {!currentUser.subscriptionStatus && (
@@ -477,15 +535,68 @@ export default function ProfilePage() {
                           )}
                         </div>
                       ) : (
-                        <Button variant="outline" disabled className="w-full sm:w-auto text-green-600 border-green-200 bg-green-50/50">
-                          Suscripción al día
-                        </Button>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          <Button variant="outline" disabled className="w-full sm:w-auto text-green-600 border-green-200 bg-green-50/50 dark:bg-green-950/30">
+                            Suscripción al día
+                          </Button>
+                          {currentUser.subscriptionAutoRenew !== false && !currentUser.subscriptionCancelledAt && (
+                            <Button
+                              variant="ghost"
+                              onClick={() => setIsCancelDialogOpen(true)}
+                              className="w-full sm:w-auto text-stone-500 hover:text-red-600 hover:bg-red-50 dark:text-stone-400 dark:hover:text-red-400 dark:hover:bg-red-950/30 text-xs sm:text-sm font-medium"
+                            >
+                              Cancelar suscripción
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )}
+
+            {/* Modal de confirmación para cancelar suscripción */}
+            <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Deseas cancelar tu suscripción?</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2 text-stone-600 dark:text-stone-300 text-left pt-2">
+                    <span>
+                      Al solicitar la baja, <strong>no perderás el acceso inmediatamente</strong>. Seguirás teniendo acceso completo a tus lotes, cuadrillas, mapas y métricas hasta la fecha de vencimiento actual:
+                    </span>
+                    {currentUser?.subscriptionExpiryDate && (
+                      <span className="block p-2.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-semibold text-stone-800 dark:text-stone-100 text-center">
+                        📅 Vencimiento del ciclo: {new Date(currentUser.subscriptionExpiryDate).toLocaleDateString('es-AR')}
+                      </span>
+                    )}
+                    <span className="block text-xs text-stone-500">
+                      Al cumplirse dicha fecha, la cuenta pasará a estado inactivo y no se renovará ni se generará ningún cobro adicional. Podrás volver a reactivar tu plan cuando lo desees.
+                    </span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="gap-2 sm:gap-0">
+                  <AlertDialogCancel disabled={isCancelling}>Volver atrás</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleCancelSubscription();
+                    }}
+                    disabled={isCancelling}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isCancelling ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      "Confirmar cancelación"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <Card className="shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                 <CardHeader className="flex flex-row items-center gap-2">
