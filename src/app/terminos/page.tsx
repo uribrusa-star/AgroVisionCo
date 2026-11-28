@@ -12,7 +12,7 @@ export default function TerminosPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-green-950 py-12 px-6">
       <div className="max-w-3xl mx-auto bg-white dark:bg-green-900/20 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-green-800/50">
-        <Link href="/">
+        <Link href="/#footer">
           <Button variant="ghost" className="mb-6 -ml-4 gap-2">
             <ArrowLeft className="w-4 h-4" />
             Volver
@@ -80,6 +80,15 @@ export default function TerminosPage() {
               Estos Términos y Condiciones se rigen por las leyes de la República Argentina. Para cualquier divergencia, reclamo o conflicto derivado del uso de la Plataforma, las partes se someten a la jurisdicción de los Tribunales Ordinarios de la Ciudad de Santa Fe, Provincia de Santa Fe, renunciando a cualquier otro fuero o jurisdicción.
             </p>
           </section>
+
+          <div className="pt-6 border-t border-gray-100 dark:border-green-800/50 flex justify-between items-center">
+            <Link href="/#footer">
+              <Button variant="outline" className="gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Volver
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

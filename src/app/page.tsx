@@ -405,7 +405,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 dark:bg-green-950 border-t dark:border-green-900 mt-auto">
+      <footer id="footer" className="bg-gray-50 dark:bg-green-950 border-t dark:border-green-900 mt-auto scroll-mt-10">
         <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
           <div className="flex justify-center space-x-6 md:order-2">
             <Link href="/terminos" className="text-sm leading-6 text-gray-500 hover:text-gray-900 dark:text-green-200/60 dark:hover:text-green-50">
