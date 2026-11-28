@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BarChart3,
   MapPin,
@@ -134,8 +134,20 @@ export function CoreFeaturesShowcase() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const activeFeature = FEATURES[activeIndex];
+
+  // Auto-scroll the active tab into view on mobile devices
+  useEffect(() => {
+    if (tabRefs.current[activeIndex]) {
+      tabRefs.current[activeIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [activeIndex]);
 
   // Auto-advance timer every 1 minute with smooth progress indicator
   useEffect(() => {
@@ -168,9 +180,12 @@ export function CoreFeaturesShowcase() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Selector de pestañas horizontal - Garantizado en 1 sola línea en PC */}
-      <div className="w-full p-1.5 rounded-2xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 shadow-inner">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
+      {/* Selector de pestañas: scroll horizontal táctil en móvil (< lg) y 1 sola fila en PC (lg+) */}
+      <div className="relative w-full p-1.5 rounded-2xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/80 shadow-inner">
+        <div
+          className="flex lg:grid lg:grid-cols-6 gap-1.5 sm:gap-2 overflow-x-auto py-0.5 px-0.5 scroll-smooth snap-x snap-mandatory lg:snap-none [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {FEATURES.map((item, index) => {
             const Icon = item.icon;
             const isActive = index === activeIndex;
@@ -178,15 +193,18 @@ export function CoreFeaturesShowcase() {
             return (
               <button
                 key={item.id}
+                ref={(el) => {
+                  tabRefs.current[index] = el;
+                }}
                 onClick={() => handleSelectTab(index)}
-                className={`relative flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 overflow-hidden text-center whitespace-nowrap ${
+                className={`relative shrink-0 lg:shrink flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 lg:px-2.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 overflow-hidden text-center whitespace-nowrap snap-center ${
                   isActive
                     ? 'bg-white dark:bg-stone-900 text-green-700 dark:text-green-400 shadow-md ring-1 ring-green-600/20'
                     : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-white/60 dark:hover:bg-stone-700/50'
                 }`}
               >
                 <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-green-600 dark:text-green-400' : 'text-stone-400'}`} />
-                <span className="truncate">{item.tabLabel}</span>
+                <span>{item.tabLabel}</span>
 
                 {/* Barra de progreso de auto-rotación de 1 minuto en la pestaña activa */}
                 {isActive && (
@@ -201,9 +219,12 @@ export function CoreFeaturesShowcase() {
         </div>
       </div>
 
-      {/* Control discreto de pausa y rotación */}
+      {/* Control de pausa, rotación e indicación de navegación táctil */}
       <div className="flex items-center justify-between px-3 pt-2 text-[11px] text-stone-500 dark:text-stone-400">
         <span className="hidden sm:inline">Posa el cursor para pausar y leer con tranquilidad</span>
+        <span className="inline-flex sm:hidden items-center gap-1 text-green-700 dark:text-green-400 font-medium">
+          <span>Desliza lateralmente para explorar</span>
+        </span>
         <button
           onClick={() => setIsPaused(!isPaused)}
           className="ml-auto hover:text-green-700 dark:hover:text-green-400 transition-colors flex items-center gap-1.5 font-medium"
@@ -220,11 +241,33 @@ export function CoreFeaturesShowcase() {
         className="mt-4 rounded-3xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-2xl overflow-hidden transition-all duration-500 animate-in fade-in-50"
       >
         <div className="p-5 sm:p-6 lg:p-7">
+          {/* Encabezado visible únicamente en Móvil para que el título aparezca ANTES de la imagen */}
+          <div className="block lg:hidden space-y-2 mb-4">
+            <div className="flex items-center justify-between gap-2">
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border-green-200 dark:border-green-800 text-[10px] font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-green-600 dark:text-green-400" />
+                <span>{activeFeature.badge}</span>
+              </Badge>
+              <span className="text-xs text-stone-400 font-semibold">
+                {activeIndex + 1} de {FEATURES.length}
+              </span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-green-50 font-headline">
+              {activeFeature.title}
+            </h3>
+
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-green-200/80 leading-relaxed">
+              {activeFeature.description}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
             
-            {/* Columna Izquierda (4 columnas): Título, Descripción y los 3 Beneficios en un vistazo */}
+            {/* Columna Izquierda (4 columnas en PC): Título en PC y los 3 Beneficios */}
             <div className="lg:col-span-4 space-y-4 order-2 lg:order-1">
-              <div className="space-y-2">
+              {/* En PC se muestra aquí el título y descripción */}
+              <div className="hidden lg:block space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <Badge className="bg-green-100 text-green-800 dark:bg-green-950/80 dark:text-green-300 border-green-200 dark:border-green-800 text-[10px] font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3 text-green-600 dark:text-green-400" />
@@ -264,11 +307,12 @@ export function CoreFeaturesShowcase() {
 
               <div className="pt-1 text-[11px] text-stone-500 flex items-center gap-1.5">
                 <Maximize2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                <span>Haz clic en la captura de la derecha para verla en pantalla completa.</span>
+                <span className="hidden sm:inline">Haz clic en la captura de la derecha para verla en pantalla completa.</span>
+                <span className="inline sm:hidden">Toca la captura para verla en pantalla completa.</span>
               </div>
             </div>
 
-            {/* Columna Derecha (8 columnas): Gran captura en alta definición */}
+            {/* Columna Derecha (8 columnas en PC): Gran captura en alta definición */}
             <div className="lg:col-span-8 order-1 lg:order-2 flex items-center justify-center">
               <div className="w-full">
                 <FeatureMockupDialog
