@@ -340,13 +340,13 @@ export default function Home() {
                 {/* Header Badge & Title */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-stone-200/80">
                   <div className="flex items-start sm:items-center gap-3.5 w-full sm:w-auto">
-                    <div className="w-12 h-12 rounded-full bg-white border border-stone-200 p-0.5 shrink-0 flex items-center justify-center shadow-xs overflow-hidden">
+                    <div className="relative w-12 h-12 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] rounded-full bg-white border border-stone-200 shadow-xs overflow-hidden shrink-0 flex items-center justify-center">
                       <Image 
                         src="/logoBPA-sinfondo.png" 
                         alt="Sello BPA AgroVista" 
-                        width={46} 
-                        height={46} 
-                        className="w-full h-full object-contain" 
+                        fill
+                        sizes="48px"
+                        className="object-contain p-0.5" 
                       />
                     </div>
                     <div className="space-y-1 min-w-0 flex-1">

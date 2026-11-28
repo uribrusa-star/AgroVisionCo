@@ -202,15 +202,16 @@ export default function TracePage() {
                         </CardHeader>
 
                         <CardContent className="p-3.5 sm:p-4.5 flex-1 flex flex-col justify-between space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                            {/* 4 tarjetas en 2 columnas y 2 filas tanto en móvil como en PC */}
+                            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                                 {/* Fecha de Cosecha */}
-                                <div className="flex items-center gap-2.5 p-2.5 sm:p-3 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <Calendar className="h-4 w-4" />
+                                <div className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-500">Fecha de Cosecha</p>
-                                        <p className="font-bold text-xs sm:text-sm text-[#0D2618] mt-0.5 leading-tight">
+                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Fecha Cosecha</p>
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 leading-tight truncate">
                                             {new Date(data.harvestDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </p>
                                     </div>
@@ -219,68 +220,68 @@ export default function TracePage() {
                                 {/* Establecimiento (Quinta) */}
                                 <div 
                                     onClick={() => setShowEstablishmentModal(true)}
-                                    className="flex items-center gap-2.5 p-2.5 sm:p-3 bg-[#FAF9F6] hover:bg-white rounded-xl border border-stone-200 hover:border-emerald-700/40 cursor-pointer transition-all shadow-2xs group"
+                                    className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] hover:bg-white rounded-xl border border-stone-200 hover:border-emerald-700/40 cursor-pointer transition-all shadow-2xs group"
                                 >
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <Home className="h-4 w-4" />
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-center justify-between gap-1">
-                                            <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                                            <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">
                                                 Establecimiento
                                             </p>
-                                            <span className="text-[9px] font-bold text-[#196F3D] group-hover:text-emerald-700 flex items-center gap-0.5">
-                                                Fotos <ArrowUpRight className="h-2 w-2" />
+                                            <span className="text-[8px] sm:text-[9px] font-bold text-[#196F3D] group-hover:text-emerald-700 flex items-center shrink-0">
+                                                Fotos ↗
                                             </span>
                                         </div>
-                                        <p className="font-bold text-xs sm:text-sm text-[#0D2618] mt-0.5 truncate group-hover:text-[#196F3D] transition-colors">
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate group-hover:text-[#196F3D] transition-colors">
                                             {data.establishmentName || 'Quinta Las Fresas'}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Lote de Origen */}
-                                <div className="flex items-center gap-2.5 p-2.5 sm:p-3 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <Leaf className="h-4 w-4" />
+                                <div className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Leaf className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-500">Lote de Origen</p>
-                                        <p className="font-bold text-xs sm:text-sm text-[#0D2618] mt-0.5 truncate">
+                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Lote Origen</p>
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate">
                                             {data.batchId}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Recolector */}
-                                <div className="flex items-center gap-2.5 p-2.5 sm:p-3 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-                                    <div className="w-8 h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
-                                        <User className="h-4 w-4" />
+                                <div className="flex items-center gap-2 p-2 sm:p-2.5 bg-[#FAF9F6] rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0F2A1D] text-emerald-300 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-stone-500">Cuadrillero</p>
-                                        <p className="font-bold text-xs sm:text-sm text-[#0D2618] mt-0.5 truncate">
+                                        <p className="text-[8.5px] sm:text-[9.5px] font-bold uppercase tracking-wider text-stone-500 truncate">Cuadrillero</p>
+                                        <p className="font-bold text-[11px] sm:text-xs md:text-sm text-[#0D2618] mt-0.5 truncate">
                                             {data.collectorName}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Tarjeta Destacada con Sello Oficial BPA Propio (100% del círculo, sin bordes vacíos) */}
+                            {/* Tarjeta Destacada con Sello Oficial BPA Propio */}
                             {data.bpaCertified && (
                                 <div 
                                     onClick={() => setShowBpaModal(true)}
                                     className="p-2.5 sm:p-3 bg-[#0F2A1D] hover:bg-[#133525] rounded-xl border border-emerald-800/80 cursor-pointer transition-all shadow-sm flex items-center justify-between gap-3 group mt-1"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
-                                        {/* Sello Oficial BPA AgroVista recortado al 100% del círculo */}
-                                        <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white p-0.5 shrink-0 flex items-center justify-center shadow-md border border-emerald-600/60 overflow-hidden group-hover:scale-105 transition-transform">
+                                        {/* Sello Oficial BPA AgroVista con dimensiones fijas garantizadas */}
+                                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] sm:min-w-[56px] sm:min-h-[56px] sm:max-w-[56px] sm:max-h-[56px] rounded-full bg-white border border-emerald-600/60 shadow-md overflow-hidden shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
                                             <Image 
                                                 src="/logoBPA-sinfondo.png" 
                                                 alt="Sello Oficial BPA AgroVista" 
-                                                width={56} 
-                                                height={56} 
-                                                className="w-full h-full object-contain"
+                                                fill
+                                                sizes="(max-width: 640px) 48px, 56px"
+                                                className="object-contain p-0.5"
                                                 priority
                                             />
                                         </div>
@@ -542,13 +543,13 @@ export default function TracePage() {
                 <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden rounded-2xl bg-white text-[#18201C] border border-stone-200 shadow-2xl flex flex-col">
                     <DialogHeader className="p-4 sm:p-5 pb-3 border-b border-emerald-950 bg-[#0F2A1D] text-white relative z-10 shrink-0">
                         <div className="flex items-center gap-3">
-                            <div className="w-13 h-13 rounded-full bg-white p-0.5 shrink-0 flex items-center justify-center shadow-md overflow-hidden">
+                            <div className="relative w-12 h-12 sm:w-14 sm:h-14 min-w-[48px] min-h-[48px] max-w-[48px] max-h-[48px] sm:min-w-[56px] sm:min-h-[56px] sm:max-w-[56px] sm:max-h-[56px] rounded-full bg-white border border-emerald-600/60 shadow-md overflow-hidden shrink-0 flex items-center justify-center">
                                 <Image 
                                     src="/logoBPA-sinfondo.png" 
                                     alt="Sello Oficial BPA" 
-                                    width={52} 
-                                    height={52} 
-                                    className="w-full h-full object-contain" 
+                                    fill
+                                    sizes="(max-width: 640px) 48px, 56px"
+                                    className="object-contain p-0.5" 
                                 />
                             </div>
                             <div className="min-w-0">
