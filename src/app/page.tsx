@@ -79,32 +79,29 @@ export default function Home() {
           </div>
 
           <div className="relative z-10 mx-auto max-w-4xl text-center px-4 sm:px-6">
-            {/* Píldora de identidad y contexto local */}
-            <div className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium text-emerald-200 mb-5 sm:mb-6 shadow-sm transition-all">
-              <span className="text-sm">🍓</span>
+            {/* Píldora de identidad refinada y compacta */}
+            <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/15 backdrop-blur-md px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-medium text-emerald-200 mb-4 sm:mb-5 shadow-xs">
+              <span className="text-xs">🍓</span>
               <span>Gestión Agrícola • Nacida en Coronda</span>
             </div>
 
-            {/* Título de alto impacto en 2-3 líneas limpias */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white font-headline drop-shadow-md leading-tight sm:leading-tight">
-              El control total de tu cosecha de frutillas.
+            {/* Título */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white font-headline drop-shadow-md leading-tight sm:leading-tight">
+              Trazabilidad Agrícola para Producción de Frutillas
             </h1>
 
-            {/* Subtítulo ligero y claro */}
-            <p className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl leading-relaxed text-emerald-100/90 max-w-2xl mx-auto drop-shadow-sm font-normal">
-              Escaneo QR en surco, liquidación de cuadrillas y costos al día. Simple, rápido y sin planillas de papel.
+            {/* Subtítulo equilibrado */}
+            <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg leading-relaxed text-emerald-50/90 max-w-3xl mx-auto drop-shadow-sm font-normal">
+              AgroVista, sistema de gestión nacido en <strong>Coronda</strong>; diseñado específicamente para optimizar el rendimiento, controlar sanidad y maximizar las ganancias de tus lotes de frutilla. Con IA, reportes automáticos en PDF, mapas interactivos y mucho más.
             </p>
 
-            {/* Botón CTA con aire visual y micro-texto de confianza */}
-            <div className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-2.5">
+            {/* Botón CTA sin emoji */}
+            <div className="mt-8 sm:mt-10 flex items-center justify-center">
               <ContactModal
-                buttonText="Probar Demo Gratis 🚀"
+                buttonText="Probar Demo Gratis"
                 buttonSize="lg"
                 buttonClassName="bg-green-500 hover:bg-green-400 text-green-950 px-8 py-5 sm:py-6 text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl transition-all font-bold"
               />
-              <span className="text-xs text-emerald-200/70 font-medium tracking-wide">
-                Sin descargas pesadas • Acceso instantáneo
-              </span>
             </div>
           </div>
         </section>
