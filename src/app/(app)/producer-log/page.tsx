@@ -9,17 +9,19 @@ import { NotesHistory } from './notes-history';
 import { HarvestSummary } from './harvest-summary';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { DollarSign, Hand, TrendingDown, TrendingUp, Percent, Scale, Eye, EyeOff, NotebookPen } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { AppDataContext } from '@/context/app-data-context.tsx';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { CostDistributionChart } from '../dashboard/cost-distribution-chart';
-import { IncomeChart } from './income-chart';
-import { MonthlyHarvestChart } from '../monthly-harvest-chart';
-import { ProfitabilityTrendChart } from './profitability-trend-chart';
 import { SmartHarvestAlerts } from './smart-harvest-alerts';
-import { A4LabelsGenerator } from './a4-labels-generator';
 import { ExportButton } from './export-button';
 import { WeatherCard } from '@/components/weather-card';
+
+const CostDistributionChart = dynamic(() => import('../dashboard/cost-distribution-chart').then(m => m.CostDistributionChart), { ssr: false });
+const IncomeChart = dynamic(() => import('./income-chart').then(m => m.IncomeChart), { ssr: false });
+const MonthlyHarvestChart = dynamic(() => import('../monthly-harvest-chart').then(m => m.MonthlyHarvestChart), { ssr: false });
+const ProfitabilityTrendChart = dynamic(() => import('./profitability-trend-chart').then(m => m.ProfitabilityTrendChart), { ssr: false });
+const A4LabelsGenerator = dynamic(() => import('./a4-labels-generator').then(m => m.A4LabelsGenerator), { ssr: false });
 
 
 export default function ProducerLogPage() {

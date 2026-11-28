@@ -25,11 +25,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, FileText } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { AdminAnalytics } from './admin-analytics';
 import { generateSubscriptionReceiptPDF } from '@/lib/pdf-generator';
-import { generateWeatherAlerts } from '@/ai/flows/generate-weather-alerts';
-import { AdminMap } from '@/components/admin-map';
-import { WebAnalyticsView } from './web-analytics-view';
+
+const AdminMap = dynamic(() => import('@/components/admin-map').then((mod) => mod.AdminMap), {
+  loading: () => <div className="h-[600px] w-full flex items-center justify-center bg-muted/20 animate-pulse rounded-xl text-muted-foreground text-sm">Cargando mapa global...</div>,
+  ssr: false,
+});
+
+const WebAnalyticsView = dynamic(() => import('./web-analytics-view').then((mod) => mod.WebAnalyticsView), {
+  loading: () => <div className="h-64 w-full flex items-center justify-center bg-muted/20 animate-pulse rounded-xl text-muted-foreground text-sm">Cargando analítica web...</div>,
+  ssr: false,
+});
 
 const CreateProducerSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres."),

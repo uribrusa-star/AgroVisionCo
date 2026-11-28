@@ -1,6 +1,3 @@
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { AttendanceLog } from './types';
@@ -9,12 +6,13 @@ function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9_\-]/g, '_');
 }
 
-export function exportAttendanceToExcel(
+export async function exportAttendanceToExcel(
   logs: AttendanceLog[],
   periodTitle: string = 'Historial',
   establishmentName: string = 'AgroVista'
 ) {
   if (!logs || logs.length === 0) return;
+  const XLSX = await import('xlsx');
 
   const dataRows = logs.map((log) => {
     let dayName = '-';
@@ -91,12 +89,15 @@ export function exportAttendanceToExcel(
   XLSX.writeFile(wb, filename);
 }
 
-export function exportAttendanceToPDF(
+export async function exportAttendanceToPDF(
   logs: AttendanceLog[],
   periodTitle: string = 'Historial',
   establishmentName: string = 'AgroVista'
 ) {
   if (!logs || logs.length === 0) return;
+
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
 
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();

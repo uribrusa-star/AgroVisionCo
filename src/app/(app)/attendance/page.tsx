@@ -163,7 +163,7 @@ export default function AttendancePage() {
     setIsExportingExcel(true);
     try {
       await new Promise(r => setTimeout(r, 60));
-      exportAttendanceToExcel(filteredHistoryLogs, getPeriodLabel(), establishmentData?.producer || 'AgroVista');
+      await exportAttendanceToExcel(filteredHistoryLogs, getPeriodLabel(), establishmentData?.producer || 'AgroVista');
       toast({
         title: "Planilla Excel Generada",
         description: `Se descargó la planilla con ${filteredHistoryLogs.length} asistencias.`,
@@ -191,7 +191,7 @@ export default function AttendancePage() {
     setIsExportingPDF(true);
     try {
       await new Promise(r => setTimeout(r, 60));
-      exportAttendanceToPDF(filteredHistoryLogs, getPeriodLabel(), establishmentData?.producer || 'AgroVista');
+      await exportAttendanceToPDF(filteredHistoryLogs, getPeriodLabel(), establishmentData?.producer || 'AgroVista');
       toast({
         title: "Informe PDF Generado",
         description: `Se descargó el reporte con ${filteredHistoryLogs.length} asistencias.`,

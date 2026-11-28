@@ -226,7 +226,7 @@ export default function ProfilePage() {
     try {
       setIsExportingExcel(true);
       await new Promise(resolve => setTimeout(resolve, 60));
-      exportAllProducerDataToExcel(appData);
+      await exportAllProducerDataToExcel(appData);
       toast({
         title: "Planilla Excel Generada",
         description: "Se ha descargado el archivo con todos los datos y registros de tu establecimiento.",

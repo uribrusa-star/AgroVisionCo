@@ -1,13 +1,13 @@
 
 import { Transaction, CollectorPaymentLog, PackagingLog, CulturalPracticeLog } from './types';
-import * as XLSX from 'xlsx';
 
-export const exportTransactionsToExcel = (
+export const exportTransactionsToExcel = async (
     transactions: Transaction[],
     collectorPayments: CollectorPaymentLog[],
     packagingLogs: PackagingLog[],
     culturalPracticeLogs: CulturalPracticeLog[]
 ) => {
+    const XLSX = await import('xlsx');
     const rows: any[] = [];
 
     // Add Transactions

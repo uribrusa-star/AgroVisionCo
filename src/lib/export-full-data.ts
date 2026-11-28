@@ -1,6 +1,3 @@
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { AppData, Batch } from './types';
@@ -52,7 +49,8 @@ function formatLocation(location: any): string {
  * Exporta todos los datos cargados del establecimiento a un archivo Excel (.xlsx) con pestañas organizadas.
  * Incluye el 100% de los datos históricos sin ningún recorte.
  */
-export const exportAllProducerDataToExcel = (data: AppData) => {
+export const exportAllProducerDataToExcel = async (data: AppData) => {
+  const XLSX = await import('xlsx');
   const {
     establishmentData,
     batches = [],
@@ -379,6 +377,8 @@ async function getLogoDataUri(): Promise<string | null> {
  * Incluye el 100% de los datos históricos sin cortes artificiales.
  */
 export const exportAllProducerDataToPDF = async (data: AppData) => {
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
   const {
     establishmentData,
     batches = [],

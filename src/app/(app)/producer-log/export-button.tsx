@@ -12,7 +12,7 @@ export function ExportButton() {
     const { transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs, loading } = useContext(AppDataContext);
     const { toast } = useToast();
 
-    const handleExport = () => {
+    const handleExport = async () => {
         try {
             if (transactions.length === 0 && collectorPaymentLogs.length === 0 && packagingLogs.length === 0 && culturalPracticeLogs.length === 0) {
                 toast({
@@ -23,7 +23,7 @@ export function ExportButton() {
                 return;
             }
 
-            exportTransactionsToExcel(transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs);
+            await exportTransactionsToExcel(transactions, collectorPaymentLogs, packagingLogs, culturalPracticeLogs);
             
             toast({
                 title: "Exportación exitosa",
